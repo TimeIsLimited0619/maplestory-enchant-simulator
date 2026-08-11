@@ -348,10 +348,14 @@ function resetAllInventoryEquipStates() {
 
 function resetEquippedItemState() {
   if (!currentEnchantItem) {
-    if (!window.confirm('目前欄位未放置裝備。確定要重置所有裝備的強化狀態嗎？')) {
-      return;
-    }
-    resetAllInventoryEquipStates();
+    showAppConfirm({
+      title: '重置所有裝備狀態',
+      message: '目前欄位未放置裝備。\n確定要重置所有裝備的強化狀態嗎？',
+      confirmText: '確定重置',
+      cancelText: '取消',
+    }).then((ok) => {
+      if (ok) resetAllInventoryEquipStates();
+    });
     return;
   }
 
@@ -374,6 +378,80 @@ function resetEquippedItemState() {
     SessionPersistenceModule.scheduleSave();
   }
   addLog(`[系統] 已重置【${name}】的強化狀態。`, 'log-info');
+}
+
+/**
+ * 介面內確認彈窗（取代 window.confirm）
+ * @returns {Promise<boolean>}
+ */
+function showAppConfirm({
+  title = '確認',
+  message = '',
+  confirmText = '確定',
+  cancelText = '取消',
+} = {}) {
+  const overlay = document.getElementById('msConfirmOverlay');
+  const titleEl = document.getElementById('msConfirmTitle');
+  const messageEl = document.getElementById('msConfirmMessage');
+  const okBtn = document.getElementById('msConfirmOkBtn');
+  const cancelBtn = document.getElementById('msConfirmCancelBtn');
+
+  if (!overlay || !okBtn || !cancelBtn) {
+    return Promise.resolve(window.confirm(message));
+  }
+
+  if (titleEl) titleEl.textContent = title;
+  if (messageEl) messageEl.textContent = message;
+  okBtn.textContent = confirmText;
+  cancelBtn.textContent = cancelText;
+
+  return new Promise((resolve) => {
+    const finish = (result) => {
+      cleanup();
+      overlay.classList.add('hidden');
+      overlay.setAttribute('aria-hidden', 'true');
+      resolve(result);
+    };
+
+    const onOk = (event) => {
+      event.preventDefault();
+      finish(true);
+    };
+    const onCancel = (event) => {
+      event.preventDefault();
+      finish(false);
+    };
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        finish(false);
+      } else if (event.key === 'Enter') {
+        event.preventDefault();
+        event.stopPropagation();
+        finish(true);
+      }
+    };
+    const onBackdrop = (event) => {
+      if (event.target === overlay) finish(false);
+    };
+
+    const cleanup = () => {
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      overlay.removeEventListener('click', onBackdrop);
+      window.removeEventListener('keydown', onKeyDown, true);
+    };
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    overlay.addEventListener('click', onBackdrop);
+    window.addEventListener('keydown', onKeyDown, true);
+
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+    okBtn.focus?.();
+  });
 }
 
 function syncInspectModules() {
@@ -807,39 +885,357 @@ async function finishEnchantBootOverlay() {
   window.setTimeout(() => overlay.remove(), 320);
 }
 
+function isInfoCardOpen() {
+  const overlay = document.getElementById('msInfoCardOverlay');
+  return Boolean(overlay && !overlay.classList.contains('hidden'));
+}
+
+function closeInfoCard() {
+  const overlay = document.getElementById('msInfoCardOverlay');
+  if (!overlay || overlay.classList.contains('hidden')) return;
+
+  overlay.classList.add('hidden');
+  overlay.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('ms-info-card-open');
+
+  if (overlay._msInfoCardCloseHandler) {
+    const btn = document.getElementById('msInfoCardCloseBtn');
+    btn?.removeEventListener('click', overlay._msInfoCardCloseHandler);
+    overlay._msInfoCardCloseHandler = null;
+  }
+}
+
+function showInfoCard() {
+  const overlay = document.getElementById('msInfoCardOverlay');
+  const closeBtn = document.getElementById('msInfoCardCloseBtn');
+  if (!overlay || !closeBtn || isInfoCardOpen()) return;
+
+  overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('ms-info-card-open');
+
+  const onClose = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    closeInfoCard();
+  };
+
+  overlay._msInfoCardCloseHandler = onClose;
+  closeBtn.addEventListener('click', onClose);
+  closeBtn.focus?.();
+}
+
+async function finishBootAndShowInfoCard() {
+  await finishEnchantBootOverlay();
+  // 等載入層淡出後再顯示說明卡
+  window.setTimeout(() => {
+    showInfoCard();
+  }, 280);
+}
+
 async function runEnchantBootPreload() {
   updateEnchantBootProgress(0, 1, '正在收集介面素材…');
 
   const restorePanels = warmEnchantPanelsForCssBackgrounds();
+  let chromeUrls = [];
   try {
-    // 讓暖機樣式生效後再收集 CSS url
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-
-    const urls = [
+    chromeUrls = [
       ...collectStylesheetImageUrls(),
       ...collectDomImageUrls(),
       ...collectDatabaseIconUrls(),
     ];
-
-    await preloadUrlBatch(urls, {
-      concurrency: 14,
-      onProgress: updateEnchantBootProgress,
-      statusText: '正在載入介面素材…',
-    });
   } finally {
     restorePanels();
-    // 還原後維持目前分類狀態
     if (typeof syncMainPanelIdleState === 'function') syncMainPanelIdleState();
     if (typeof updateNonePageControls === 'function') updateNonePageControls();
   }
 
-  updateEnchantBootProgress(1, 1, '載入完成');
-  await finishEnchantBootOverlay();
+  const effectPlan = collectAllEffectPreloadPlan();
+  const chromeUniqueCount = new Set(chromeUrls.map(normalizePreloadUrl).filter(Boolean)).size;
+  const effectCount = effectPlan.jobs.length;
+  const total = Math.max(1, chromeUniqueCount + effectCount);
 
-  // 特效幀改在介面就緒後背景繼續載，不擋操作
-  scheduleIdleWork(() => {
-    refreshEffectTestBars();
-  }, 800);
+  updateEnchantBootProgress(0, total, '正在載入全部素材…');
+
+  let done = 0;
+  const report = (statusText) => {
+    updateEnchantBootProgress(done, total, statusText);
+  };
+
+  // 1) 介面素材
+  await preloadUrlBatch(chromeUrls, {
+    concurrency: 14,
+    onProgress: (batchDone) => {
+      done = batchDone;
+      report(`正在載入介面素材…（${batchDone}/${chromeUniqueCount}）`);
+    },
+    statusText: '正在載入介面素材…',
+  });
+
+  // 2) 全部特效／翻牌幀（寫入各模組自己的快取）
+  if (effectCount) {
+    const effectOffset = chromeUniqueCount;
+    await preloadEffectJobs(effectPlan.jobs, {
+      concurrency: 10,
+      onProgress: (batchDone, batchTotal) => {
+        done = effectOffset + batchDone;
+        report(`正在載入特效素材…（${batchDone}/${batchTotal}）`);
+      },
+    });
+    effectPlan.markDone();
+  }
+
+  done = total;
+  updateEnchantBootProgress(total, total, '全部載入完成');
+  await finishBootAndShowInfoCard();
+  refreshEffectTestBars();
+}
+
+/**
+ * 收集所有強化特效／翻牌預載任務，並提供完成後標記。
+ * @returns {{ urls: string[], jobs: Array<{ url: string, preloadOne: Function }>, markDone: Function }}
+ */
+function collectAllEffectPreloadPlan() {
+  const jobs = [];
+  const seen = new Set();
+  const markFns = [];
+
+  const safeUrls = (fn) => {
+    try {
+      const result = fn();
+      return Array.isArray(result) ? result.filter(Boolean) : [];
+    } catch (_) {
+      return [];
+    }
+  };
+
+  const addJob = (url, preloadOne) => {
+    if (!url || typeof preloadOne !== 'function') return;
+    const key = String(url);
+    if (seen.has(key)) return;
+    seen.add(key);
+    jobs.push({ url: key, preloadOne });
+  };
+
+  const addModuleUrls = (mod, urls, onDone) => {
+    if (!mod || typeof mod.preloadOne !== 'function') return;
+    (urls || []).forEach((url) => addJob(url, (u) => mod.preloadOne(u)));
+    if (typeof onDone === 'function') markFns.push(onDone);
+  };
+
+  const collectDeepImageUrls = (value, out = []) => {
+    if (!value) return out;
+    if (typeof value === 'string') {
+      if (/images\//i.test(value) && /\.(png|jpe?g|gif|webp)(?:$|\?)/i.test(value)) {
+        out.push(value);
+      }
+      return out;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((item) => collectDeepImageUrls(item, out));
+      return out;
+    }
+    if (typeof value === 'object') {
+      Object.values(value).forEach((item) => collectDeepImageUrls(item, out));
+    }
+    return out;
+  };
+
+  // 自動強化面板素材
+  [
+    typeof AUTO_ENCHANT_STAR_FORCE !== 'undefined' ? AUTO_ENCHANT_STAR_FORCE : null,
+    typeof AUTO_ENCHANT_POTENTIAL !== 'undefined' ? AUTO_ENCHANT_POTENTIAL : null,
+    typeof AUTO_ENCHANT_ADD_POTENTIAL !== 'undefined' ? AUTO_ENCHANT_ADD_POTENTIAL : null,
+    typeof AUTO_ENCHANT_BONUS_STAT !== 'undefined' ? AUTO_ENCHANT_BONUS_STAT : null,
+  ].forEach((cfg) => {
+    collectDeepImageUrls(cfg).forEach((url) => {
+      addJob(url, (u) => preloadEnchantAsset(u));
+    });
+  });
+
+  // 星力
+  if (typeof StarForceEffectModule !== 'undefined' && typeof STARFORCE_EFFECT !== 'undefined') {
+    const mod = StarForceEffectModule;
+    const urls = safeUrls(() => [
+      ...mod.collectSpecUrls('try', STARFORCE_EFFECT.try, false),
+      ...mod.collectSpecUrls('success', STARFORCE_EFFECT.success, true),
+      ...mod.collectSpecUrls('fail', STARFORCE_EFFECT.fail, true),
+    ]);
+    addModuleUrls(mod, urls, () => { mod._preloadDone = true; });
+  }
+
+  // 卷軸
+  if (typeof ScrollEffectModule !== 'undefined' && typeof SCROLL_EFFECT !== 'undefined') {
+    const mod = ScrollEffectModule;
+    const urls = safeUrls(() => [
+      ...mod.collectSpecUrls('try', null, SCROLL_EFFECT.try, false),
+      ...mod.collectSpecUrls('success', 0, SCROLL_EFFECT.success?.['0'], true),
+      ...mod.collectSpecUrls('success', 1, mod.getSpec?.('success', 1), true),
+      ...mod.collectSpecUrls('fail', null, SCROLL_EFFECT.fail, true),
+    ]);
+    addModuleUrls(mod, urls, () => { mod._preloadDone = true; });
+  }
+
+  // 鐵鎚
+  if (typeof HammerEffectModule !== 'undefined' && typeof HAMMER_EFFECT !== 'undefined') {
+    const mod = HammerEffectModule;
+    const successKey = mod.SUCCESS_VARIANT ?? 0;
+    const successSpec = HAMMER_EFFECT.success?.[successKey]
+      || HAMMER_EFFECT.success?.['0']
+      || Object.values(HAMMER_EFFECT.success || {})[0];
+    const urls = safeUrls(() => [
+      ...mod.collectSpecUrls('try', null, HAMMER_EFFECT.try, false),
+      ...(successSpec ? mod.collectSpecUrls('success', successKey, successSpec, true) : []),
+      ...mod.collectSpecUrls('fail', null, HAMMER_EFFECT.fail, true),
+    ]);
+    addModuleUrls(mod, urls, () => { mod._preloadDone = true; });
+  }
+
+  // 靈魂武器
+  if (typeof SoulWeaponEffectModule !== 'undefined') {
+    const mod = SoulWeaponEffectModule;
+    const urls = safeUrls(() => [
+      ...mod.collectSpecUrls('enchanter', 'try', mod.getSpec?.('enchanter', 'try'), false),
+      ...mod.collectSpecUrls('enchanter', 'success', mod.getSpec?.('enchanter', 'success'), true),
+      ...mod.collectSpecUrls('enchanter', 'fail', mod.getSpec?.('enchanter', 'fail'), true),
+      ...mod.collectSpecUrls('soul', 'normal', mod.getSpec?.('soul', 'normal'), true),
+      ...mod.collectSpecUrls('soul', 'magnificent', mod.getSpec?.('soul', 'magnificent'), true),
+      ...mod.collectSpecUrls('soul', 'fail', mod.getSpec?.('soul', 'fail'), true),
+    ]);
+    addModuleUrls(mod, urls, () => { mod._preloadDone = true; });
+  }
+
+  // 卓越
+  if (typeof ExceptionalEffectModule !== 'undefined') {
+    const mod = ExceptionalEffectModule;
+    const urls = safeUrls(() => [
+      ...mod.collectSpecUrls('enchant', 'try', mod.getSpec?.('enchant', 'try', 0), false, 0),
+      ...mod.collectSpecUrls('enchant', 'try', mod.getSpec?.('enchant', 'try', 1), false, 1),
+      ...mod.collectSpecUrls('enchant', 'success', mod.getSpec?.('enchant', 'success'), true),
+      ...mod.collectSpecUrls('enchant', 'fail', mod.getSpec?.('enchant', 'fail'), true),
+      ...mod.collectSpecUrls('extract', 'normal', mod.getSpec?.('extract', 'normal'), true),
+    ]);
+    addModuleUrls(mod, urls, () => { mod._preloadDone = true; });
+  }
+
+  // 潛能（四階全部）
+  if (typeof PotentialEffectModule !== 'undefined' && typeof POTENTIAL_EFFECT_BY_RANK !== 'undefined') {
+    const mod = PotentialEffectModule;
+    const ranks = Object.keys(POTENTIAL_EFFECT_BY_RANK);
+    ranks.forEach((rankId) => {
+      const data = mod.getRankData?.(rankId);
+      if (!data) return;
+      const trySpec = data.try;
+      const spec1 = mod.getSuccessSpec?.(rankId, 1);
+      const spec2 = mod.getSuccessSpec?.(rankId, 2);
+      const urls = safeUrls(() => {
+        const list = [];
+        if (trySpec) list.push(...mod.collectSpecUrls(rankId, 'try', null, trySpec, false));
+        if (spec1) list.push(...mod.collectSpecUrls(rankId, 'success', 1, spec1, true));
+        if (data.hasRankUpSuccess && spec2) {
+          list.push(...mod.collectSpecUrls(rankId, 'success', 2, spec2, true));
+        }
+        return list;
+      });
+      addModuleUrls(mod, urls, null);
+    });
+    markFns.push(() => {
+      ranks.forEach((rankId) => mod._preloadDone?.add?.(rankId));
+    });
+  }
+
+  // 附加能力／星火（全部 variant）
+  if (typeof BonusStatEffectModule !== 'undefined' && typeof BONUS_STAT_EFFECT !== 'undefined') {
+    const mod = BonusStatEffectModule;
+    const variants = Object.keys(BONUS_STAT_EFFECT.variants || {});
+    variants.forEach((variant) => {
+      const entry = BONUS_STAT_EFFECT.variants[variant];
+      if (!entry) return;
+      const urls = safeUrls(() => {
+        const list = [];
+        if (entry.try) list.push(...mod.collectSpecUrls(variant, 'try', null, entry.try, false));
+        if (entry.success?.['0']) {
+          list.push(...mod.collectSpecUrls(variant, 'success', 0, entry.success['0'], true));
+        }
+        if (entry.success?.['1']) {
+          list.push(...mod.collectSpecUrls(variant, 'success', 1, entry.success['1'], true));
+        }
+        return list;
+      });
+      addModuleUrls(mod, urls, null);
+    });
+    markFns.push(() => {
+      variants.forEach((variant) => mod._preloadDone?.add?.(variant));
+    });
+  }
+
+  // 恢復方塊翻牌（主潛能 + 附加潛能）
+  const memoriaMods = [];
+  if (typeof PotentialMemoriaChoiceEffectModule !== 'undefined') {
+    memoriaMods.push(PotentialMemoriaChoiceEffectModule);
+  }
+  if (typeof AddPotentialMemoriaChoiceEffectModule !== 'undefined') {
+    memoriaMods.push(AddPotentialMemoriaChoiceEffectModule);
+  }
+  memoriaMods.forEach((mod) => {
+    const urls = safeUrls(() => {
+      const list = [...(mod.collectPreloadUrls?.() || [])];
+      const rankUp = mod.getSpec?.()?.rankUp || {};
+      Object.keys(rankUp).forEach((rankId) => {
+        list.push(...(mod.collectRankUpPreloadUrls?.(rankId) || []));
+      });
+      return list;
+    });
+    addModuleUrls(mod, urls, () => { mod._preloadDone = true; });
+  });
+
+  // 暗黑輪迴星火 BEFORE/AFTER 翻牌
+  if (typeof BonusStatChoiceEffectModule !== 'undefined') {
+    const mod = BonusStatChoiceEffectModule;
+    addModuleUrls(mod, safeUrls(() => mod.collectPreloadUrls?.() || []), () => {
+      mod._preloadDone = true;
+    });
+  }
+
+  return {
+    urls: jobs.map((job) => job.url),
+    jobs,
+    markDone() {
+      markFns.forEach((fn) => {
+        try { fn(); } catch (_) { /* ignore */ }
+      });
+    },
+  };
+}
+
+async function preloadEffectJobs(jobs, { concurrency = 10, onProgress = null } = {}) {
+  const list = Array.isArray(jobs) ? jobs : [];
+  let done = 0;
+  const total = list.length;
+  if (onProgress) onProgress(done, total);
+  if (!total) return;
+
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(concurrency, total) }, async () => {
+    while (cursor < list.length) {
+      const index = cursor;
+      cursor += 1;
+      const job = list[index];
+      try {
+        // 同步寫入各特效模組快取；同時進共用快取
+        await Promise.all([
+          preloadEnchantAsset(job.url),
+          Promise.resolve(job.preloadOne(job.url)),
+        ]);
+      } catch (_) {
+        /* ignore single asset failures */
+      }
+      done += 1;
+      if (onProgress) onProgress(done, total);
+    }
+  });
+  await Promise.all(workers);
 }
 
 function refreshEffectTestBars() {
@@ -1038,28 +1434,34 @@ function addLog(text, className = '') {
   logBox.scrollTop = logBox.scrollHeight;
 }
 
-function formatMesoAmount(amount) {
-  const n = Math.floor(Number(amount) || 0);
-  if (n === 0) return '0 楓幣';
+/** 楓幣分段：兆(10^12)／億(10^8)／萬(10^4)／個；為 0 的段不顯示單位 */
+function formatMesoParts(amount) {
+  const n = Math.floor(Math.abs(Number(amount) || 0));
+  if (n === 0) return '0';
 
-  const yi = Math.floor(n / 100000000);
+  const zhao = Math.floor(n / 1000000000000);
+  const yi = Math.floor((n % 1000000000000) / 100000000);
   const wan = Math.floor((n % 100000000) / 10000);
   const rest = n % 10000;
 
   let text = '';
+  if (zhao > 0) text += `${zhao}兆`;
   if (yi > 0) text += `${yi}億`;
   if (wan > 0) text += `${wan}萬`;
-  if (rest > 0 || !text) text += `${rest}`;
+  if (rest > 0) text += `${rest}`;
+  return text || '0';
+}
 
-  return `${text} 楓幣`;
+function formatMesoAmount(amount) {
+  const n = Math.floor(Number(amount) || 0);
+  const sign = n < 0 ? '-' : '';
+  return `${sign}${formatMesoParts(n)} 楓幣`;
 }
 
 function formatMesoFullDisplay(amount) {
   const n = Math.floor(Number(amount) || 0);
-  const yi = Math.floor(n / 100000000);
-  const wan = Math.floor((n % 100000000) / 10000);
-  const rest = n % 10000;
-  return `${yi}億${wan}萬${rest}`;
+  const sign = n < 0 ? '-' : '';
+  return `${sign}${formatMesoParts(n)}`;
 }
 
 function resetTotalCost() {
@@ -1160,7 +1562,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (typeof calculateCost === 'function') calculateCost();
 
   runEnchantBootPreload().catch(() => {
-    finishEnchantBootOverlay();
+    finishBootAndShowInfoCard();
   });
 
   document.getElementById('totalCostDisplay')?.addEventListener('dblclick', resetTotalCost);

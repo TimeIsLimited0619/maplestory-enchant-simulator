@@ -329,6 +329,17 @@ function splitPotentialLineDisplay(line) {
   };
 }
 
+const ATK_POW_EASTER_EGG_TEXT = 'CYY是給';
+const ATK_POW_EASTER_EGG_CHANCE = 0.01;
+
+/** 戰鬥力增減顯示彩蛋：約 1% 機率替換成指定文字 */
+function maybeAtkPowEasterEgg(formattedText, rawValue = null) {
+  if (formattedText == null || formattedText === '' || formattedText === '-') return formattedText;
+  if (rawValue != null && Number(rawValue) === 0) return formattedText;
+  if (Math.random() >= ATK_POW_EASTER_EGG_CHANCE) return formattedText;
+  return ATK_POW_EASTER_EGG_TEXT;
+}
+
 function formatPotentialAtkPow(value) {
   const n = Math.floor(Number(value) || 0);
   const sign = n < 0 ? '- ' : '';
@@ -340,5 +351,5 @@ function formatPotentialAtkPow(value) {
   if (yi > 0) text += `${yi}億 `;
   if (wan > 0) text += `${wan}萬 `;
   if (rest > 0 || !text) text += `${rest}`;
-  return `${sign}${text.trim()}`;
+  return maybeAtkPowEasterEgg(`${sign}${text.trim()}`, n);
 }

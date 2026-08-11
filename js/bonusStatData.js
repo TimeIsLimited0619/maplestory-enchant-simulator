@@ -575,7 +575,10 @@ function bonusStatMatchesTargets(state, targets, equip = null) {
 
 function formatBonusStatAtkPow(delta) {
   const n = Math.round(Number(delta) || 0);
-  if (n > 0) return `+${n.toLocaleString()}`;
-  if (n < 0) return n.toLocaleString();
-  return '-';
+  let text = '-';
+  if (n > 0) text = `+${n.toLocaleString()}`;
+  else if (n < 0) text = n.toLocaleString();
+  return typeof maybeAtkPowEasterEgg === 'function'
+    ? maybeAtkPowEasterEgg(text, n)
+    : text;
 }

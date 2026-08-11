@@ -10,18 +10,100 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <!-- 自訂 CSS -->
-  <link rel="stylesheet" href="css/style.css?v=20260812boot1">
+  <link rel="stylesheet" href="css/style.css?v=20260812confirm1">
 </head>
 <body class="enchant-boot-loading">
 
   <div id="enchantBootOverlay" class="enchant-boot-overlay" aria-live="polite" aria-busy="true">
     <div class="enchant-boot-panel">
       <div class="enchant-boot-title">楓之谷做裝模擬器</div>
-      <div class="enchant-boot-status" id="enchantBootStatus">正在載入介面素材…</div>
+      <div class="enchant-boot-status" id="enchantBootStatus">正在載入全部素材…</div>
       <div class="enchant-boot-bar">
         <div class="enchant-boot-bar-fill" id="enchantBootBarFill"></div>
       </div>
       <div class="enchant-boot-progress" id="enchantBootProgress">0%</div>
+    </div>
+  </div>
+
+  <!-- 開頁說明卡：資料載入完成後顯示 -->
+  <div id="msInfoCardOverlay" class="ms-info-card-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="msInfoCardTitle">
+    <div class="ms-info-card-modal">
+      <div class="ms-info-card-header">
+        <div class="ms-info-card-title" id="msInfoCardTitle">
+          <span>🍁</span> 楓之谷做裝模擬器
+        </div>
+        <span class="ms-info-card-tag">使用說明 &amp; 規範</span>
+      </div>
+
+      <div class="ms-info-card-body">
+        <div class="ms-info-card-intro">
+          本工具旨在協助玩家評估與計算打造裝備之期望成本與花費，操作邏輯與介面盡可能還原遊戲內真實體驗。
+        </div>
+
+        <div>
+          <div class="ms-info-card-section-title">快捷操作與指南</div>
+          <ul class="ms-info-card-list">
+            <li>
+              <span>📊</span>
+              <span><strong>成本統計：</strong>點擊左下角 Log 可開啟成本統計頁面。</span>
+            </li>
+            <li>
+              <span>💰</span>
+              <span><strong>花費重置：</strong>點擊左下角花費金額，即可重置當前花費。</span>
+            </li>
+            <li>
+              <span>🔙</span>
+              <span><strong>快速返回：</strong>任意頁面按下 <span class="ms-info-card-key">ESC</span> 即可返回初始強化介面。</span>
+            </li>
+            <li>
+              <span>🔄</span>
+              <span><strong>裝備重置：</strong>初始頁面可重置當前裝備；強化槽為空時可一次重置全背包。</span>
+            </li>
+            <li>
+              <span>✨</span>
+              <span><strong>原版動畫：</strong>用心復刻逐格強化特效，歡迎大家不要跳過、多看幾次！</span>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="ms-info-card-section-title">⚠️ 功能備註</div>
+          <p class="ms-info-card-note">
+            使用部分星火或卷軸額外消耗聖者之設定暫未整合，此部分建議玩家手動輔助計算。
+            有希望追加的裝備或功能或是有發現任何Bug可以DC留言給我。
+          </p>
+        </div>
+
+        <div class="ms-info-card-author">
+          <div><span>作者：</span><strong>時閒人</strong></div>
+          <div><span>Discord 回報：</span><strong>timeislimited_0619</strong></div>
+        </div>
+
+        <div class="ms-info-card-disclaimer">
+          <div class="ms-info-card-disclaimer-title">非營利同人免責聲明</div>
+          1. 本工具為非營利同人作品，僅供數據模擬與玩家交流使用，無任何商業營利行為。<br>
+          2. 素材與商標等智慧財產權皆屬韓國 NEXON 及各地區代理營運商（遊戲橘子）所有。<br>
+          3. 各種數值與機率盡量還原官方資料，若有不符合實際機率請以官方最新正式版本為準。
+        </div>
+
+        <button type="button" id="msInfoCardCloseBtn" class="ms-info-card-close-btn">按此處關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 介面內確認彈窗（取代 window.confirm） -->
+  <div id="msConfirmOverlay" class="ms-confirm-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="msConfirmTitle">
+    <div class="ms-confirm-modal">
+      <div class="ms-confirm-header">
+        <div class="ms-confirm-title" id="msConfirmTitle">確認</div>
+      </div>
+      <div class="ms-confirm-body">
+        <p class="ms-confirm-message" id="msConfirmMessage"></p>
+        <div class="ms-confirm-actions">
+          <button type="button" id="msConfirmCancelBtn" class="ms-confirm-btn ms-confirm-btn-cancel">取消</button>
+          <button type="button" id="msConfirmOkBtn" class="ms-confirm-btn ms-confirm-btn-ok">確定</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1813,7 +1895,7 @@
   <script src="js/cubeRates/event8630.js"></script>
   <script src="js/cubeRates/event8420.js"></script>
   <script src="js/cubeRates/index.js"></script>
-  <script src="js/potentialData.js"></script>
+  <script src="js/potentialData.js?v=20260812egg1"></script>
   <script src="js/addPotentialStatValues.js"></script>
   <script src="js/destinyWeaponRestorationCubeValues.js"></script>
   <script src="js/destinyWeaponAddPotentialValues.js"></script>
@@ -1840,7 +1922,7 @@
   <script src="js/potentialMemoriaChoiceEffectData.js?v=20260812s"></script>
   <script src="js/potentialMemoriaChoiceEffect.js?v=20260812s"></script>
   <script src="js/bonusStatValues.js?v=20260811k"></script>
-  <script src="js/bonusStatData.js?v=20260811v"></script>
+  <script src="js/bonusStatData.js?v=20260812egg1"></script>
   <script src="js/bonusStatEffectData.js?v=20260811v"></script>
   <script src="js/bonusStatEffect.js?v=20260812r"></script>
   <script src="js/bonusStat.js?v=20260811v"></script>
@@ -1924,6 +2006,6 @@
   <script src="js/potentialInspect.js"></script>
   <script src="js/equipTooltip.js?v=20260811a"></script>
   <script src="js/costTracker.js?v=20260811v"></script>
-  <script src="js/main.js?v=20260812boot1"></script>
+  <script src="js/main.js?v=20260812mesoZhao1"></script>
 </body>
 </html>
