@@ -89,7 +89,7 @@ const POTENTIAL_CUBE_TYPES = [
     id: 'union',
     name: '結合方塊',
     slotIndex: 3,
-    icon: 'images/potential/uniB.png',
+    icon: 'images/potential/unib.png',
     iconWidth: 39,
     iconHeight: 39,
     mesoCost: 0,

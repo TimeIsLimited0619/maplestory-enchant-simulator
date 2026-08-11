@@ -498,27 +498,7 @@ function loadEquipToSlot(itemId, slotIndex) {
   if (typeof CatValleyEnhanceModule !== 'undefined') {
     CatValleyEnhanceModule.updateButton();
   }
-  if (typeof PotentialEffectModule !== 'undefined') {
-    PotentialEffectModule.updateTestBarVisible();
-  }
-  if (typeof ScrollEffectModule !== 'undefined') {
-    ScrollEffectModule.updateTestBarVisible();
-  }
-  if (typeof HammerEffectModule !== 'undefined') {
-    HammerEffectModule.updateTestBarVisible();
-  }
-  if (typeof SoulWeaponEffectModule !== 'undefined') {
-    SoulWeaponEffectModule.updateTestBarVisible();
-  }
-  if (typeof StarForceEffectModule !== 'undefined') {
-    StarForceEffectModule.updateTestBarVisible();
-  }
-  if (typeof BonusStatEffectModule !== 'undefined') {
-    BonusStatEffectModule.updateTestBarVisible();
-  }
-  if (typeof ExceptionalEffectModule !== 'undefined') {
-    ExceptionalEffectModule.updateTestBarVisible();
-  }
+  scheduleEffectTestBarRefresh();
   syncInspectModules();
 }
 
@@ -578,6 +558,291 @@ function unloadEquipFromSlot() {
   if (typeof CatValleyEnhanceModule !== 'undefined') {
     CatValleyEnhanceModule.updateButton();
   }
+  scheduleEffectTestBarRefresh();
+  syncInspectModules();
+}
+
+// ==========================================
+// 3. Tab 切換與選單分發控制
+// ==========================================
+
+function switchCategoryTab(category, btn) {
+  if (PLACEHOLDER_TAB_CATEGORIES.has(category)) return;
+  if (category !== 'none' && isCategoryDisabled(category)) return;
+
+  document.querySelectorAll('.ms-tab-btn').forEach(tab => tab.classList.remove('checked'));
+  if (btn) btn.classList.add('checked');
+
+  const select = document.getElementById('actionCategory');
+  if (select) select.value = category;
+
+  switchCategory();
+}
+
+function scheduleIdleWork(fn, timeoutMs = 1500) {
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(() => fn(), { timeout: timeoutMs });
+  } else {
+    setTimeout(fn, 0);
+  }
+}
+
+const _enchantAssetPreloadCache = new Map();
+
+function normalizePreloadUrl(url) {
+  if (!url || typeof url !== 'string') return null;
+  let next = url.trim();
+  if (!next || next.startsWith('data:') || next.startsWith('blob:')) return null;
+  if (next.startsWith('url(')) {
+    next = next.slice(4, -1).trim().replace(/^['"]|['"]$/g, '');
+  }
+  if (next.startsWith('../')) next = next.replace(/^\.\.\//, '');
+  try {
+    return new URL(next, window.location.href).href;
+  } catch (_) {
+    return null;
+  }
+}
+
+function preloadEnchantAsset(url) {
+  const absolute = normalizePreloadUrl(url);
+  if (!absolute) return Promise.resolve(null);
+  if (_enchantAssetPreloadCache.has(absolute)) {
+    return _enchantAssetPreloadCache.get(absolute);
+  }
+  const p = new Promise((resolve) => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = () => {
+      if (typeof img.decode === 'function') {
+        img.decode().then(() => resolve(img)).catch(() => resolve(img));
+      } else {
+        resolve(img);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = absolute;
+  });
+  _enchantAssetPreloadCache.set(absolute, p);
+  return p;
+}
+
+function collectStylesheetImageUrls() {
+  const urls = new Set();
+  const urlRe = /url\(\s*(['"]?)([^'")]+)\1\s*\)/gi;
+
+  const harvestText = (text) => {
+    if (!text) return;
+    let match;
+    urlRe.lastIndex = 0;
+    while ((match = urlRe.exec(text))) {
+      const raw = match[2];
+      if (!raw || !/images\//i.test(raw)) continue;
+      urls.add(raw);
+    }
+  };
+
+  Array.from(document.styleSheets || []).forEach((sheet) => {
+    let rules;
+    try {
+      rules = sheet.cssRules;
+    } catch (_) {
+      // 跨網域 stylesheet 無法讀取；略過 CDN
+      return;
+    }
+    Array.from(rules || []).forEach((rule) => {
+      if (rule.style) {
+        ['backgroundImage', 'background', 'listStyleImage', 'borderImageSource', 'maskImage'].forEach((prop) => {
+          harvestText(rule.style[prop]);
+        });
+      }
+      if (rule.cssText) harvestText(rule.cssText);
+    });
+  });
+
+  return [...urls];
+}
+
+function collectDomImageUrls() {
+  const urls = new Set();
+  document.querySelectorAll('img[src]').forEach((img) => {
+    if (img.getAttribute('src')) urls.add(img.getAttribute('src'));
+  });
+  document.querySelectorAll('[style*="url("]').forEach((el) => {
+    const style = el.getAttribute('style') || '';
+    const match = style.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+    if (match?.[2]) urls.add(match[2]);
+  });
+  return [...urls];
+}
+
+function collectDatabaseIconUrls() {
+  const urls = new Set();
+
+  const addIcon = (value) => {
+    if (typeof value === 'string' && /images\//i.test(value)) urls.add(value);
+  };
+
+  if (typeof SCROLL_DATABASE !== 'undefined') {
+    Object.values(SCROLL_DATABASE).forEach((scroll) => addIcon(scroll?.icon));
+  }
+  if (typeof RECOVERY_CARD !== 'undefined') addIcon(RECOVERY_CARD?.icon);
+  if (typeof POTENTIAL_CUBE_TYPES !== 'undefined') {
+    POTENTIAL_CUBE_TYPES.forEach((cube) => addIcon(cube?.icon));
+  }
+  if (typeof ADDPOT_CUBE_TYPES !== 'undefined') {
+    ADDPOT_CUBE_TYPES.forEach((cube) => addIcon(cube?.icon));
+  }
+  if (typeof ADDPOT_IMAGES !== 'undefined') {
+    Object.values(ADDPOT_IMAGES).forEach(addIcon);
+  }
+  if (typeof ITEM_DATABASE !== 'undefined') {
+    Object.values(ITEM_DATABASE).forEach((item) => addIcon(item?.icon));
+  }
+
+  return [...urls];
+}
+
+function warmEnchantPanelsForCssBackgrounds() {
+  const mainPanel = document.getElementById('mainContentPanel');
+  const panels = Array.from(document.querySelectorAll('.ms-control-subpanel'));
+  const activeClasses = [
+    'starforce-active',
+    'hammer-active',
+    'soulWeapon-active',
+    'scroll-active',
+    'potential-active',
+    'additionalPotential-active',
+    'bonusStat-active',
+    'exceptional-active',
+    'none-active',
+    'none-idle',
+    'starforce-idle',
+    'hammer-idle',
+    'soulWeapon-idle',
+    'scroll-idle',
+    'potential-idle',
+    'additionalPotential-idle',
+    'bonusStat-idle',
+    'exceptional-idle',
+  ];
+
+  const prevMain = activeClasses.map((cls) => mainPanel?.classList.contains(cls));
+  const prevHidden = panels.map((panel) => panel.classList.contains('hidden'));
+
+  // 短暫顯示所有子面板，強制瀏覽器載入 display:none 時不會抓的 CSS 底圖
+  panels.forEach((panel) => {
+    panel.classList.remove('hidden');
+    panel.style.position = 'absolute';
+    panel.style.left = '-10000px';
+    panel.style.top = '0';
+    panel.style.visibility = 'hidden';
+    panel.style.pointerEvents = 'none';
+  });
+
+  if (mainPanel) {
+    activeClasses.forEach((cls) => mainPanel.classList.add(cls));
+  }
+
+  // 觸發一次 layout / paint
+  void document.body.offsetHeight;
+
+  return () => {
+    panels.forEach((panel, index) => {
+      panel.style.position = '';
+      panel.style.left = '';
+      panel.style.top = '';
+      panel.style.visibility = '';
+      panel.style.pointerEvents = '';
+      panel.classList.toggle('hidden', prevHidden[index] !== false);
+    });
+    if (mainPanel) {
+      activeClasses.forEach((cls, index) => {
+        mainPanel.classList.toggle(cls, Boolean(prevMain[index]));
+      });
+    }
+  };
+}
+
+function updateEnchantBootProgress(done, total, statusText) {
+  const statusEl = document.getElementById('enchantBootStatus');
+  const fillEl = document.getElementById('enchantBootBarFill');
+  const progressEl = document.getElementById('enchantBootProgress');
+  const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 100;
+  if (statusEl && statusText) statusEl.textContent = statusText;
+  if (fillEl) fillEl.style.width = `${pct}%`;
+  if (progressEl) progressEl.textContent = `${pct}%（${done}/${total}）`;
+}
+
+async function preloadUrlBatch(urls, {
+  concurrency = 12,
+  onProgress = null,
+  statusText = '正在載入介面素材…',
+} = {}) {
+  const list = [...new Set(urls.map(normalizePreloadUrl).filter(Boolean))];
+  let done = 0;
+  const total = list.length;
+  if (onProgress) onProgress(done, total, statusText);
+  if (!total) return;
+
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(concurrency, total) }, async () => {
+    while (cursor < list.length) {
+      const index = cursor;
+      cursor += 1;
+      await preloadEnchantAsset(list[index]);
+      done += 1;
+      if (onProgress) onProgress(done, total, statusText);
+    }
+  });
+  await Promise.all(workers);
+}
+
+async function finishEnchantBootOverlay() {
+  const overlay = document.getElementById('enchantBootOverlay');
+  document.body.classList.remove('enchant-boot-loading');
+  if (!overlay) return;
+  overlay.classList.add('is-done');
+  overlay.setAttribute('aria-busy', 'false');
+  window.setTimeout(() => overlay.remove(), 320);
+}
+
+async function runEnchantBootPreload() {
+  updateEnchantBootProgress(0, 1, '正在收集介面素材…');
+
+  const restorePanels = warmEnchantPanelsForCssBackgrounds();
+  try {
+    // 讓暖機樣式生效後再收集 CSS url
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    const urls = [
+      ...collectStylesheetImageUrls(),
+      ...collectDomImageUrls(),
+      ...collectDatabaseIconUrls(),
+    ];
+
+    await preloadUrlBatch(urls, {
+      concurrency: 14,
+      onProgress: updateEnchantBootProgress,
+      statusText: '正在載入介面素材…',
+    });
+  } finally {
+    restorePanels();
+    // 還原後維持目前分類狀態
+    if (typeof syncMainPanelIdleState === 'function') syncMainPanelIdleState();
+    if (typeof updateNonePageControls === 'function') updateNonePageControls();
+  }
+
+  updateEnchantBootProgress(1, 1, '載入完成');
+  await finishEnchantBootOverlay();
+
+  // 特效幀改在介面就緒後背景繼續載，不擋操作
+  scheduleIdleWork(() => {
+    refreshEffectTestBars();
+  }, 800);
+}
+
+function refreshEffectTestBars() {
   if (typeof PotentialEffectModule !== 'undefined') {
     PotentialEffectModule.updateTestBarVisible();
   }
@@ -599,24 +864,10 @@ function unloadEquipFromSlot() {
   if (typeof ExceptionalEffectModule !== 'undefined') {
     ExceptionalEffectModule.updateTestBarVisible();
   }
-  syncInspectModules();
 }
 
-// ==========================================
-// 3. Tab 切換與選單分發控制
-// ==========================================
-
-function switchCategoryTab(category, btn) {
-  if (PLACEHOLDER_TAB_CATEGORIES.has(category)) return;
-  if (category !== 'none' && isCategoryDisabled(category)) return;
-
-  document.querySelectorAll('.ms-tab-btn').forEach(tab => tab.classList.remove('checked'));
-  if (btn) btn.classList.add('checked');
-
-  const select = document.getElementById('actionCategory');
-  if (select) select.value = category;
-
-  switchCategory();
+function scheduleEffectTestBarRefresh() {
+  scheduleIdleWork(refreshEffectTestBars, 1200);
 }
 
 function switchCategory() {
@@ -665,29 +916,9 @@ function switchCategory() {
   updateActiveModuleEquip();
   updateNoneWaitEquipVisibility();
   updateCategoryTabStates();
-  updateNonePageControls();
   syncInspectModules();
-  if (typeof PotentialEffectModule !== 'undefined') {
-    PotentialEffectModule.updateTestBarVisible();
-  }
-  if (typeof ScrollEffectModule !== 'undefined') {
-    ScrollEffectModule.updateTestBarVisible();
-  }
-  if (typeof HammerEffectModule !== 'undefined') {
-    HammerEffectModule.updateTestBarVisible();
-  }
-  if (typeof SoulWeaponEffectModule !== 'undefined') {
-    SoulWeaponEffectModule.updateTestBarVisible();
-  }
-  if (typeof StarForceEffectModule !== 'undefined') {
-    StarForceEffectModule.updateTestBarVisible();
-  }
-  if (typeof BonusStatEffectModule !== 'undefined') {
-    BonusStatEffectModule.updateTestBarVisible();
-  }
-  if (typeof ExceptionalEffectModule !== 'undefined') {
-    ExceptionalEffectModule.updateTestBarVisible();
-  }
+  // 特效預載改到 idle，避免與首次切頁底圖解碼搶主執行緒
+  scheduleEffectTestBarRefresh();
 }
 
 function updateActiveModuleEquip() {
@@ -927,6 +1158,10 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   if (typeof calculateCost === 'function') calculateCost();
+
+  runEnchantBootPreload().catch(() => {
+    finishEnchantBootOverlay();
+  });
 
   document.getElementById('totalCostDisplay')?.addEventListener('dblclick', resetTotalCost);
   document.getElementById('btnResetEquipState')?.addEventListener('click', resetEquippedItemState);

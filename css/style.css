@@ -34,6 +34,76 @@ body {
   display: none !important; 
 }
 
+/* 開頁完整預載：阻擋互動直到介面素材就緒 */
+body.enchant-boot-loading #pageEnhance {
+  pointer-events: none;
+  user-select: none;
+}
+
+.enchant-boot-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 10, 14, 0.92);
+  color: #f2efe6;
+  font-family: 'Microsoft JhengHei', 'PingFang TC', 'Noto Sans TC', sans-serif;
+}
+
+.enchant-boot-overlay.is-done {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s ease;
+}
+
+.enchant-boot-panel {
+  width: min(420px, calc(100vw - 40px));
+  padding: 28px 24px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #2a3038 0%, #1a1e24 100%);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
+
+.enchant-boot-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.enchant-boot-status {
+  font-size: 13px;
+  opacity: 0.9;
+  margin-bottom: 16px;
+  min-height: 1.4em;
+}
+
+.enchant-boot-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.enchant-boot-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6ec8ff 0%, #9af0c8 100%);
+  transition: width 0.12s linear;
+}
+
+.enchant-boot-progress {
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: 0.75;
+  letter-spacing: 0.04em;
+}
+
 
 /* ==========================================
    2. 左側邊欄 (Sidebar & Tab Buttons)

@@ -10,9 +10,20 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <!-- 自訂 CSS -->
-  <link rel="stylesheet" href="css/style.css?v=20260812inv1">
+  <link rel="stylesheet" href="css/style.css?v=20260812boot1">
 </head>
-<body>
+<body class="enchant-boot-loading">
+
+  <div id="enchantBootOverlay" class="enchant-boot-overlay" aria-live="polite" aria-busy="true">
+    <div class="enchant-boot-panel">
+      <div class="enchant-boot-title">楓之谷做裝模擬器</div>
+      <div class="enchant-boot-status" id="enchantBootStatus">正在載入介面素材…</div>
+      <div class="enchant-boot-bar">
+        <div class="enchant-boot-bar-fill" id="enchantBootBarFill"></div>
+      </div>
+      <div class="enchant-boot-progress" id="enchantBootProgress">0%</div>
+    </div>
+  </div>
 
   <!-- 楓之谷 UI 強化模擬器 (三欄式主架構) -->
   <div id="pageEnhance">
@@ -1108,7 +1119,7 @@
             <div class="pt-uni-confirm-bg" aria-hidden="true"></div>
             <div class="pt-uni-confirm-content">
               <div class="pt-uni-stock">
-                <img class="pt-uni-stock-icon" src="images/potential/uniB.png" alt="">
+                <img class="pt-uni-stock-icon" src="images/potential/unib.png" alt="">
                 <span id="ptUniCubeCount" class="pt-uni-stock-count">999+</span>
               </div>
               <div id="ptUniActionsBefore" class="pt-uni-actions pt-uni-actions--before">
@@ -1913,6 +1924,6 @@
   <script src="js/potentialInspect.js"></script>
   <script src="js/equipTooltip.js?v=20260811a"></script>
   <script src="js/costTracker.js?v=20260811v"></script>
-  <script src="js/main.js"></script>
+  <script src="js/main.js?v=20260812boot1"></script>
 </body>
 </html>
