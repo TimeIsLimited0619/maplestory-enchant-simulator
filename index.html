@@ -1,0 +1,1918 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>楓之谷做裝模擬器 - 楓之谷 UI 樣式版</title>
+  
+  <!-- 第三方 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- 自訂 CSS -->
+  <link rel="stylesheet" href="css/style.css?v=20260812inv1">
+</head>
+<body>
+
+  <!-- 楓之谷 UI 強化模擬器 (三欄式主架構) -->
+  <div id="pageEnhance">
+    <div class="ms-container-3col">
+      
+      <!-- 1. 左側邊欄 Tab 選單 -->
+      <div class="ms-sidebar">
+        <div class="ms-sidebar-buttons">
+          <button class="ms-tab-btn tab-star" id="tabStar" onclick="switchCategoryTab('star', this)"></button> 
+          <button class="ms-tab-btn tab-scroll" id="tabScroll" onclick="switchCategoryTab('scroll', this)"></button>
+          <button class="ms-tab-btn tab-hammer" id="tabHammer" onclick="switchCategoryTab('hammer', this)"></button>
+          <button class="ms-tab-btn tab-soulWeapon" id="tabSoulWeapon" onclick="switchCategoryTab('soulWeapon', this)"></button>
+          <button class="ms-tab-btn tab-bonusStat" id="tabbonusStat" onclick="switchCategoryTab('bonusStat', this)"></button>
+          <button class="ms-tab-btn tab-potential" id="tabpotential" onclick="switchCategoryTab('potential', this)"></button>
+          <button class="ms-tab-btn tab-additionalPotential" id="tabadditionalPotential" onclick="switchCategoryTab('additionalPotential', this)"></button>
+          <button class="ms-tab-btn tab-exceptional" id="tabexceptional" onclick="switchCategoryTab('exceptional', this)"></button>
+        </div>
+
+        <!-- 隱藏的 Category Select (由左側按鈕連動) -->
+        <select id="actionCategory" onchange="switchCategory()" class="hidden">
+          <option value="none" selected>待機</option>
+          <option value="star">★ 星力強化</option>
+          <option value="scroll">📜 榮耀卷軸強化</option>
+          <option value="hammer">🔨 白金鐵鎚</option>
+          <option value="soulWeapon">👻 靈魂武器</option>
+          <option value="bonusStat">🔥 附加屬性</option>
+          <option value="potential">🔮 潛能</option>
+          <option value="additionalPotential">🟢 附加潛能</option>
+          <option value="exceptional">👑 卓越強化</option>
+        </select>
+
+        <!-- 底部楓幣花費顯示 -->
+        <div class="ms-sidebar-cost-val" id="totalCostDisplay">0</div>
+
+        <!-- 系統 Log（卓越強化下方空間） -->
+        <div class="ms-sidebar-log ms-sidebar-log-clickable" id="logBox" title="點擊開啟成本統計">
+          <div class="log-info">[系統] 歡迎使用楓之谷做裝模擬器，請從右側背包拖曳裝備放置於中間。</div>
+        </div>
+
+        <button type="button" class="ms-sidebar-reset-btn hidden" id="btnResetEquipState">重置裝備狀態</button>
+
+        <button type="button" class="ms-sidebar-inspect-btn hidden" id="ptInspectBtn">詞條查詢</button>
+        <button type="button" class="ms-sidebar-inspect-btn hidden" id="bsInspectBtn">機率表</button>
+      </div> 
+
+      <!-- 2. 中間強化主面板 -->
+      <div class="ms-main-content" id="mainContentPanel">
+
+        <!-- 中央裝備放置區 (與等待箭頭) -->
+        <div class="ms-equip-area">
+          <div class="sf-idle-slot" id="sfIdleSlot"></div>
+          <div class="hm-idle-slot" id="hmIdleSlot"></div>
+          <div class="sw-idle-slot" id="swIdleSlot"></div>
+          <div class="sc-idle-slot" id="scIdleSlot"></div>
+          <div class="pt-idle-slot" id="ptIdleSlot"></div>
+          <div class="ap-idle-slot" id="apIdleSlot"></div>
+          <div class="ex-idle-slot" id="exIdleSlot"></div>
+          <div id="none_waitEquip"></div>
+          <div class="ms-drop-zone" id="equipDropZone" ondrop="dropEquip(event)" ondragover="allowDrop(event)"></div>
+          <div class="sf-item-name" id="sfItemName">請放置裝備</div>
+        </div>
+
+        <div id="ptEffectBackHost" class="pt-effect-host pt-effect-host-back hidden" aria-hidden="true">
+          <img class="pt-effect-sprite pt-effect-back" alt="" draggable="false">
+        </div>
+        <div id="ptEffectEquipHost" class="pt-effect-equip-host hidden" aria-hidden="true">
+          <img class="pt-effect-equip" alt="" draggable="false">
+        </div>
+        <div id="ptEffectFrontHost" class="pt-effect-host pt-effect-host-front hidden" aria-hidden="true">
+          <img class="pt-effect-sprite pt-effect-front" alt="" draggable="false">
+        </div>
+        <div id="ptEffectTextHost" class="pt-effect-host pt-effect-host-text hidden" aria-hidden="true">
+          <img class="pt-effect-sprite pt-effect-text" alt="" draggable="false">
+        </div>
+
+        <div id="scEffectBackHost" class="sc-effect-host sc-effect-host-back hidden" aria-hidden="true">
+          <img class="sc-effect-sprite sc-effect-back" alt="" draggable="false">
+        </div>
+        <div id="scEffectEquipHost" class="sc-effect-equip-host hidden" aria-hidden="true">
+          <img class="sc-effect-equip" alt="" draggable="false">
+        </div>
+        <div id="scEffectSummary0Host" class="sc-effect-host sc-effect-host-summary hidden" aria-hidden="true">
+          <img class="sc-effect-sprite sc-effect-summary0" alt="" draggable="false">
+        </div>
+        <div id="scEffectSummary1Host" class="sc-effect-host sc-effect-host-summary hidden" aria-hidden="true">
+          <img class="sc-effect-sprite sc-effect-summary1" alt="" draggable="false">
+        </div>
+        <div id="scEffectFrontHost" class="sc-effect-host sc-effect-host-front hidden" aria-hidden="true">
+          <img class="sc-effect-sprite sc-effect-front" alt="" draggable="false">
+        </div>
+        <div id="scEffectTextHost" class="sc-effect-host sc-effect-host-text hidden" aria-hidden="true">
+          <img class="sc-effect-sprite sc-effect-text" alt="" draggable="false">
+        </div>
+
+        <div id="hmEffectBackHost" class="hm-effect-host hm-effect-host-back hidden" aria-hidden="true">
+          <img class="hm-effect-sprite hm-effect-back" alt="" draggable="false">
+        </div>
+        <div id="hmEffectEquipHost" class="hm-effect-equip-host hidden" aria-hidden="true">
+          <img class="hm-effect-equip" alt="" draggable="false">
+        </div>
+        <div id="hmEffectSummary1Host" class="hm-effect-host hm-effect-host-summary hidden" aria-hidden="true">
+          <img class="hm-effect-sprite hm-effect-summary1" alt="" draggable="false">
+        </div>
+        <div id="hmEffectSummary2Host" class="hm-effect-host hm-effect-host-summary hidden" aria-hidden="true">
+          <img class="hm-effect-sprite hm-effect-summary2" alt="" draggable="false">
+        </div>
+        <div id="hmEffectFrontHost" class="hm-effect-host hm-effect-host-front hidden" aria-hidden="true">
+          <img class="hm-effect-sprite hm-effect-front" alt="" draggable="false">
+        </div>
+        <div id="hmEffectTextHost" class="hm-effect-host hm-effect-host-text hidden" aria-hidden="true">
+          <img class="hm-effect-sprite hm-effect-text" alt="" draggable="false">
+        </div>
+
+        <div id="swEffectBackHost" class="sw-effect-host sw-effect-host-back hidden" aria-hidden="true">
+          <img class="sw-effect-sprite sw-effect-back" alt="" draggable="false">
+        </div>
+        <div id="swEffectEquipHost" class="sw-effect-equip-host hidden" aria-hidden="true">
+          <img class="sw-effect-equip" alt="" draggable="false">
+        </div>
+        <div id="swEffectFrontHost" class="sw-effect-host sw-effect-host-front hidden" aria-hidden="true">
+          <img class="sw-effect-sprite sw-effect-front" alt="" draggable="false">
+        </div>
+        <div id="swEffectTextHost" class="sw-effect-host sw-effect-host-text hidden" aria-hidden="true">
+          <img class="sw-effect-sprite sw-effect-text" alt="" draggable="false">
+        </div>
+
+        <div id="sfEffectBackHost" class="sf-effect-host sf-effect-host-back hidden" aria-hidden="true">
+          <img class="sf-effect-sprite sf-effect-back" alt="" draggable="false">
+        </div>
+        <div id="sfEffectEquipHost" class="sf-effect-equip-host hidden" aria-hidden="true">
+          <img class="sf-effect-equip" alt="" draggable="false">
+        </div>
+        <div id="sfEffectSummaryHost" class="sf-effect-host sf-effect-host-summary hidden" aria-hidden="true">
+          <img class="sf-effect-sprite sf-effect-summary" alt="" draggable="false">
+        </div>
+        <div id="sfEffectFrontHost" class="sf-effect-host sf-effect-host-front hidden" aria-hidden="true">
+          <img class="sf-effect-sprite sf-effect-front" alt="" draggable="false">
+        </div>
+        <div id="sfEffectTextHost" class="sf-effect-host sf-effect-host-text hidden" aria-hidden="true">
+          <img class="sf-effect-sprite sf-effect-text" alt="" draggable="false">
+        </div>
+
+        <div id="bsEffectBackHost" class="bs-effect-host bs-effect-host-back hidden" aria-hidden="true">
+          <img class="bs-effect-sprite bs-effect-back" alt="" draggable="false">
+        </div>
+        <div id="bsEffectEquipHost" class="bs-effect-equip-host hidden" aria-hidden="true">
+          <img class="bs-effect-equip" alt="" draggable="false">
+        </div>
+        <div id="bsEffectFrontHost" class="bs-effect-host bs-effect-host-front hidden" aria-hidden="true">
+          <img class="bs-effect-sprite bs-effect-front" alt="" draggable="false">
+        </div>
+        <div id="bsEffectTextHost" class="bs-effect-host bs-effect-host-text hidden" aria-hidden="true">
+          <img class="bs-effect-sprite bs-effect-text" alt="" draggable="false">
+        </div>
+
+        <div id="exEffectBackHost" class="ex-effect-host ex-effect-host-back hidden" aria-hidden="true">
+          <img class="ex-effect-sprite ex-effect-back" alt="" draggable="false">
+        </div>
+        <div id="exEffectEquipHost" class="ex-effect-equip-host hidden" aria-hidden="true">
+          <img class="ex-effect-equip" alt="" draggable="false">
+        </div>
+        <div id="exEffectFrontHost" class="ex-effect-host ex-effect-host-front hidden" aria-hidden="true">
+          <img class="ex-effect-sprite ex-effect-front" alt="" draggable="false">
+        </div>
+        <div id="exEffectTextHost" class="ex-effect-host ex-effect-host-text hidden" aria-hidden="true">
+          <img class="ex-effect-sprite ex-effect-text" alt="" draggable="false">
+        </div>
+
+        <!-- 強化操作控制區 -->
+        <!-- 4. 強化操作控制區 (多面板中控台) -->
+<div class="ms-controls-container my-2">
+
+  <!-- ==========================================
+       [1/7] 星力強化中控台 (Starforce Panel)
+       ========================================== -->
+  <div id="panel-star" class="ms-control-subpanel ms-starforce-canvas hidden">
+
+    <!-- 待機畫面（未放置裝備） -->
+    <div id="sfIdlePanel" class="sf-idle-panel">
+      <div class="sf-idle-lower"></div>
+      <p id="sfBlockedMessage" class="sf-blocked-message hidden">此裝備本身無強化次數，無法進行星力強化</p>
+    </div>
+
+    <!-- 強化中畫面（已放置裝備） -->
+    <div id="sfActivePanel" class="sf-active-panel hidden">
+    <div class="sf-stars-area">
+      <div id="starImgContainer"></div>
+    </div>
+
+    <!-- ★17 ▶▶▶ ★18 -->
+    <div id="statsDiffPanel" class="sf-transition hidden">
+      <div id="starBeforeImg"></div>
+      <img
+        class="sf-diff-arrow"
+        src="images/starforce/Enchant_starForce _ diff _ normal_0.png"
+        alt=""
+      >
+      <div id="starAfterImg"></div>
+    </div>
+
+    <!-- 提升數值 (使用 statBox 底圖) -->
+    <div class="sf-stat-box">
+      <div id="statsDiffList" class="sf-stat-values"></div>
+    </div>
+
+    <!-- 成功機率 (使用 probBox 底圖) -->
+    <div class="sf-prob-box">
+      <div class="sf-prob-values">
+        <div class="sf-prob-line">成功 <span id="rateSuccess">0%</span></div>
+        <div class="sf-prob-line">失敗 <span id="rateFail">0%</span></div>
+      </div>
+    </div>
+
+    <!-- 右下角選項（僅已放置裝備時顯示） -->
+    <div class="sf-bottom-options">
+      <label class="sf-auto-label" for="chkPreventDrop">
+        <input type="checkbox" id="chkPreventDrop" class="sf-auto-toggle-input">
+        <span class="sf-auto-toggle" aria-hidden="true"></span>
+        防止下滑
+      </label>
+
+      <label class="sf-auto-label" for="chkAutoEnhance">
+        <input type="checkbox" id="chkAutoEnhance" class="sf-auto-toggle-input">
+        <span class="sf-auto-toggle" aria-hidden="true"></span>
+        自動強化
+      </label>
+
+      <label class="sf-auto-label" for="chkStarAnim">
+        <input type="checkbox" id="chkStarAnim" class="sf-auto-toggle-input" checked>
+        <span class="sf-auto-toggle" aria-hidden="true"></span>
+        強化動畫
+      </label>
+    </div>
+
+    </div><!-- /sfActivePanel -->
+
+    <!-- 使用費用：楓幣 / 卷軸（待機選卷 / 強化中共用） -->
+    <div id="sfCostArea" class="sf-cost-area hidden" aria-hidden="true">
+      <div id="sfCostMeso" class="sf-cost-box sf-cost-meso">
+        <div class="sf-cost-inner">
+          <img
+            class="sf-cost-icon"
+            src="images/starforce/starForce.costMeso.canvas_mesoIcon.png"
+            alt=""
+            aria-hidden="true"
+          >
+          <span id="mesoCostDisplay" class="sf-cost-value">0 楓幣</span>
+        </div>
+      </div>
+
+      <div id="sfCostItem" class="sf-cost-item hidden" aria-hidden="true">
+        <img id="sfCostItemIcon" class="sf-cost-item-icon" alt="" draggable="false">
+        <p id="sfCostItemName" class="sf-cost-item-name"></p>
+      </div>
+    </div>
+
+    <!-- 強化按鈕 (遊戲素材) -->
+    <button
+      class="sf-btn-enhance"
+      id="btnStarEnhance"
+      type="button"
+      aria-label="強化"
+      disabled
+      onclick="StarForceModule.handleEnhanceClick()"
+    ></button>
+
+    <!-- 進階選項（已由 costItemBox + 背包消耗欄取代，保留供除錯） -->
+    <details class="sf-advanced hidden" aria-hidden="true">
+      <summary>進階選項（星力卷軸）</summary>
+      <select id="starMethodSelect" class="form-select form-select-sm mt-1" onchange="StarForceModule.updateUI()">
+        <option value="normal">一般星力點擊</option>
+        <option value="scroll_set20_100">星力20星強化卷</option>
+        <option value="scroll_under23_30">追加一星強化卷30%&nbsp;&nbsp;&nbsp;(23星)</option>
+        <option value="scroll_under23_100">追加一星強化卷100% (23星)</option>
+        <option value="scroll_24_100">追加一星強化卷100% (24星)</option>
+        <option value="scroll_25_30">追加一星強化卷30%&nbsp;&nbsp;&nbsp;(25星)</option>
+      </select>
+    </details>
+  </div>
+
+  <!-- ==========================================
+       [2/7] 卷軸強化中控台 (Scroll Panel)
+       ========================================== -->
+  <div id="panel-scroll" class="ms-control-subpanel ms-scroll-canvas hidden">
+
+    <!-- 待機畫面（未放置裝備） -->
+    <div id="scIdlePanel" class="sc-idle-panel">
+      <div class="sc-idle-lower"></div>
+    </div>
+
+    <!-- 已放置裝備 -->
+    <div id="scActivePanel" class="sc-active-panel hidden">
+
+      <!-- 卷軸次數列 -->
+      <div class="sc-summary-area">
+        <div id="scScrollRow" class="sc-scroll-row"></div>
+        <div id="scBonusRow" class="sc-bonus-row hidden">
+          <div id="scGoldenSlot" class="sc-golden-slot"></div>
+          <img class="sc-add-icon" src="images/hammer/hammer.summaryIcon.0.add.png" alt="+">
+          <div id="scBonusSlots" class="sc-bonus-slots"></div>
+        </div>
+      </div>
+
+      <!-- 提升數值 -->
+      <div class="sc-stat-box">
+        <div id="scStatList" class="sc-stat-values"></div>
+      </div>
+
+      <!-- 成功機率 -->
+      <div class="sc-prob-box">
+        <div class="sc-prob-values">
+          <div class="sc-prob-line">成功 <span id="scRateSuccess">0%</span></div>
+        </div>
+      </div>
+
+    </div><!-- /scActivePanel -->
+
+    <!-- 分頁與下方選擇區（待機/使用中共用） -->
+    <div class="sc-bottom-area">
+      <div class="sc-tab-bar">
+        <button type="button" id="scTabTrace" class="sc-tab sc-tab-trace" aria-label="咒文的痕跡"></button>
+        <button type="button" id="scTabSpecial" class="sc-tab sc-tab-special" aria-label="專用卷軸"></button>
+      </div>
+
+      <!-- 咒文的痕跡 -->
+      <div id="scTracePanel" class="sc-cost-trace">
+        <img
+          id="scTraceIdleArt"
+          class="sc-idle-trace-art"
+          src="images/scroll/scroll.layer_waitEquipTrace.png"
+          alt=""
+        >
+        <div id="scTraceHint" class="sc-trace-hint">將根據登錄的裝備來決定卷軸種類與咒文的痕跡使用量。</div>
+        <div id="scTraceGrid" class="sc-trace-grid hidden"></div>
+      </div>
+
+      <!-- 專用卷軸：可視 2 排 × 9 格，總共 5 排，滾輪捲動 -->
+      <div id="scScrollPanel" class="sc-cost-scroll hidden">
+        <div id="scSelectedName" class="sc-selected-name"></div>
+        <div id="scScrollHint" class="sc-scroll-hint">請選擇要使用的道具。</div>
+        <div id="scScrollViewport" class="sc-scroll-viewport">
+          <div id="scScrollGrid" class="sc-scroll-grid"></div>
+        </div>
+        <div id="scScrollScrollbar" class="sc-scroll-scrollbar" aria-hidden="true">
+          <div id="scScrollTrack" class="sc-scroll-track">
+            <div id="scScrollThumb" class="sc-scroll-thumb"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 恢復卡（非漆黑卷軸時顯示） -->
+    <div id="scRecoveryBar" class="sc-recovery-bar hidden">
+      <label class="sc-recovery-toggle" for="scRecoveryCheck">
+        <input type="checkbox" id="scRecoveryCheck" class="sc-recovery-check-input">
+        <span class="sc-recovery-pill">
+          <img id="scRecoveryIcon" class="sc-recovery-icon" src="images/scroll/scroll.costScroll.switchSpecialScroll.icon.returnConsume.png" alt="恢復卡">
+          <span id="scRecoveryCount" class="sc-recovery-count">0 個</span>
+        </span>
+      </label>
+    </div>
+
+    <!-- 使用按鈕 -->
+    <button
+      class="sc-btn-use"
+      id="btnScrollUse"
+      type="button"
+      aria-label="使用"
+      disabled
+      onclick="ScrollModule.handleUseClick()"
+    ></button>
+
+    <!-- 自動強化 / 強化動畫（右下角） -->
+    <div id="scBottomOptions" class="sc-bottom-options hidden">
+      <label class="sc-auto-label" for="chkScrollAutoEnhance">
+        <input type="checkbox" id="chkScrollAutoEnhance" class="sc-auto-toggle-input">
+        <span class="sc-auto-toggle" aria-hidden="true"></span>
+        自動強化
+      </label>
+      <label class="sc-auto-label" for="chkScrollAnim">
+        <input type="checkbox" id="chkScrollAnim" class="sc-auto-toggle-input" checked>
+        <span class="sc-auto-toggle" aria-hidden="true"></span>
+        強化動畫
+      </label>
+    </div>
+
+    <!-- 自動強化目標（面板右側外側） -->
+    <aside id="scAutoTargets" class="sc-auto-targets hidden" aria-label="自動強化目標">
+      <div id="scAutoTargetList" class="sc-auto-target-list"></div>
+    </aside>
+
+    <!-- 卷軸詳細資訊（hover） -->
+    <div id="scScrollTooltip" class="sc-scroll-tooltip hidden" aria-hidden="true">
+      <img id="scScrollTooltipImg" class="sc-scroll-tooltip-img" src="" alt="">
+    </div>
+
+  </div>
+
+  <!-- ==========================================
+       [3/7] 強化次數增加中控台 (Hammer Panel)
+       ========================================== -->
+  <div id="panel-hammer" class="ms-control-subpanel ms-hammer-canvas hidden">
+
+    <!-- 待機畫面（未放置裝備） -->
+    <div id="hmIdlePanel" class="hm-idle-panel">
+      <div class="hm-idle-lower"></div>
+      <p id="hmBlockedMessage" class="hm-blocked-message hidden">此裝備本身無強化次數，無法增加強化次數</p>
+    </div>
+
+    <!-- 已放置裝備 -->
+    <div id="hmActivePanel" class="hm-active-panel hidden">
+
+      <!-- 卷軸 / 鐵鎚 次數列 -->
+      <div class="hm-summary-area">
+        <div id="hmScrollRow" class="hm-scroll-row"></div>
+        <div class="hm-hammer-row">
+          <div id="hmGoldenSlot" class="hm-golden-slot"></div>
+          <img class="hm-add-icon" src="images/hammer/hammer.summaryIcon.0.add.png" alt="+">
+          <div id="hmPlatinumRow" class="hm-hammer-icons"></div>
+        </div>
+      </div>
+
+      <!-- 提升數值 -->
+      <div class="hm-stat-box">
+        <div id="hmStatList" class="hm-stat-values"></div>
+      </div>
+
+      <!-- 成功機率 -->
+      <div class="hm-prob-box">
+        <div class="hm-prob-values">
+          <div class="hm-prob-line">成功 <span id="hmRateSuccess">0%</span></div>
+          <div class="hm-prob-line">失敗 <span id="hmRateFail">0%</span></div>
+        </div>
+      </div>
+
+      <!-- 道具選擇 -->
+      <div class="hm-cost-box">
+        <div id="hmSelectedName" class="hm-selected-name"></div>
+        <div id="hmMaterialGrid" class="hm-material-grid"></div>
+      </div>
+
+      <!-- 自動敲白槌 / 強化動畫 -->
+      <div class="hm-bottom-options">
+        <label class="hm-auto-label" for="chkHammerAutoEnhance">
+          <input type="checkbox" id="chkHammerAutoEnhance" class="hm-auto-toggle-input">
+          <span class="hm-auto-toggle" aria-hidden="true"></span>
+          自動敲白槌
+        </label>
+        <label class="hm-auto-label" for="chkHammerAnim">
+          <input type="checkbox" id="chkHammerAnim" class="hm-auto-toggle-input" checked>
+          <span class="hm-auto-toggle" aria-hidden="true"></span>
+          強化動畫
+        </label>
+      </div>
+
+    </div><!-- /hmActivePanel -->
+
+    <!-- 使用按鈕 -->
+    <button
+      class="hm-btn-use"
+      id="btnHammerUse"
+      type="button"
+      aria-label="使用"
+      disabled
+      onclick="HammerModule.handleUseClick()"
+    ></button>
+
+  </div>
+
+  <!-- ==========================================
+       靈魂武器中控台 (Soul Weapon Panel)
+       ========================================== -->
+  <div id="panel-soulWeapon" class="ms-control-subpanel ms-soulWeapon-canvas hidden">
+
+    <div id="swIdlePanel" class="sw-idle-panel">
+      <div class="sw-idle-lower"></div>
+      <p id="swBlockedMessage" class="sw-blocked-message hidden">此裝備無法進行靈魂武器強化</p>
+    </div>
+
+    <div id="swActivePanel" class="sw-active-panel hidden" data-mode="enchanter">
+
+      <div id="swSummaryNotSoul" class="sw-summary-not-soul"></div>
+      <div id="swSummarySoul" class="sw-summary-soul hidden">
+        <div id="swSummaryText" class="sw-summary-text sw-summary-normal">尚未賦予靈魂</div>
+      </div>
+
+      <div id="swDetailEnchanter" class="sw-detail-enchanter">
+        <div class="sw-enchanter-result"></div>
+        <div class="sw-enchanter-prob-row">
+          <span class="sw-enchanter-prob-name">成功機率</span>
+          <span id="swEnchanterProb" class="sw-enchanter-prob-detail">-</span>
+        </div>
+      </div>
+
+      <div id="swDetailSoul" class="sw-detail-soul hidden">
+        <div id="swMagnificentText" class="sw-magnificent-text hidden">
+          <button
+            type="button"
+            id="swSoulOptionsNotice"
+            class="sw-soul-options-notice"
+            aria-label="可賦予屬性一覽"
+          ></button>
+        </div>
+        <div class="sw-soul-stat-row">
+          <pre id="swSoulStatBefore" class="sw-soul-stat sw-soul-stat-before">無</pre>
+          <pre id="swSoulStatAfter" class="sw-soul-stat sw-soul-stat-after">-</pre>
+        </div>
+      </div>
+
+      <div id="swWaitItem" class="sw-wait-item sw-wait-enchanter"></div>
+
+      <div class="sw-cost-box">
+        <div id="swSelectedName" class="sw-selected-name"></div>
+        <div id="swMaterialGrid" class="sw-material-grid"></div>
+      </div>
+
+      <div class="sw-bottom-options">
+        <label class="sw-auto-label" for="chkSoulWeaponAnim">
+          <input type="checkbox" id="chkSoulWeaponAnim" class="sw-auto-toggle-input" checked>
+          <span class="sw-auto-toggle" aria-hidden="true"></span>
+          強化動畫
+        </label>
+      </div>
+
+    </div>
+
+    <button
+      class="sw-btn-confirm sw-btn-enchanter"
+      id="btnSoulEnchanter"
+      type="button"
+      aria-label="轉換"
+      disabled
+      onclick="SoulWeaponModule.handleConfirmClick()"
+    ></button>
+    <button
+      class="sw-btn-confirm sw-btn-soul hidden"
+      id="btnSoulApply"
+      type="button"
+      aria-label="賦予"
+      disabled
+      onclick="SoulWeaponModule.handleConfirmClick()"
+    ></button>
+
+    <div id="swSoulGemTooltip" class="sw-soulgem-tooltip hidden" aria-hidden="true">
+      <img id="swSoulGemTooltipImg" class="sw-soulgem-tooltip-img" src="" alt="">
+    </div>
+
+    <div id="swSoulOptionsTooltip" class="sw-soul-options-tooltip hidden" aria-hidden="true">
+      <pre id="swSoulOptionsTooltipList" class="sw-soul-options-tooltip-list"></pre>
+    </div>
+
+  </div>
+
+  <!-- ==========================================
+       卓越強化中控台 (Exceptional Panel)
+       ========================================== -->
+  <div id="panel-exceptional" class="ms-control-subpanel ms-exceptional-canvas hidden">
+
+    <div id="exIdlePanel" class="ex-idle-panel">
+      <div class="ex-idle-lower"></div>
+      <p id="exBlockedMessage" class="ex-blocked-message hidden">此裝備無法進行卓越強化</p>
+    </div>
+
+    <div id="exActivePanel" class="ex-active-panel hidden" data-subtab="enchant">
+
+      <button type="button" class="ex-tab-btn ex-tab-enchant checked" id="exTabEnchant" aria-label="追加強化"></button>
+      <button type="button" class="ex-tab-btn ex-tab-extract" id="exTabExtract" aria-label="提取"></button>
+
+      <div id="exSummaryBox" class="ex-summary-box">
+        <div id="exSummaryBefore" class="ex-summary-before"></div>
+        <div id="exSummaryArrow" class="ex-summary-arrow ex-arrow-red-to-white"></div>
+        <div id="exSummaryAfter" class="ex-summary-after"></div>
+        <div id="exSummarySingle" class="ex-summary-single hidden" aria-hidden="true"></div>
+      </div>
+
+      <div id="exEnchantPanel" class="ex-subpanel ex-subpanel-enchant">
+        <div class="ex-stat-box">
+          <div class="ex-stat-row">
+            <pre id="exStatPreview" class="ex-stat-preview">-</pre>
+          </div>
+        </div>
+        <div class="ex-prob-box">
+          <span class="ex-prob-label">成功機率</span>
+          <span id="exProbValue" class="ex-prob-value">-</span>
+        </div>
+        <div class="ex-cost-box">
+          <img id="exHammerIcon" class="ex-hammer-icon" src="" alt="">
+          <div class="ex-cost-text">
+            <span id="exHammerName" class="ex-hammer-name"></span>
+            <span class="ex-hammer-count">
+              <span class="ex-hammer-x">×</span>
+              <span class="ex-hammer-num">1</span>
+            </span>
+          </div>
+        </div>
+        <div class="ex-enchant-help" id="exEnchantHelp" aria-hidden="true"></div>
+      </div>
+
+      <div id="exExtractPanel" class="ex-subpanel ex-subpanel-extract hidden">
+        <div class="ex-stat-box ex-stat-box-extract">
+          <div class="ex-stat-row">
+            <pre id="exExtractStatList" class="ex-stat-preview">無</pre>
+          </div>
+        </div>
+        <div class="ex-income-box">
+          <img id="exExtractHammerIcon" class="ex-hammer-icon" src="" alt="">
+          <div class="ex-cost-text">
+            <span id="exExtractHammerName" class="ex-hammer-name"></span>
+            <span class="ex-hammer-count">
+              <span class="ex-hammer-x">×</span>
+              <span id="exExtractHammerCount" class="ex-hammer-num">0</span>
+            </span>
+          </div>
+        </div>
+        <div class="ex-extract-help" aria-hidden="true"></div>
+      </div>
+
+      <div class="ex-bottom-options">
+        <label class="ex-auto-label" for="chkExceptionalAnim">
+          <input type="checkbox" id="chkExceptionalAnim" class="ex-auto-toggle-input" checked>
+          <span class="ex-auto-toggle" aria-hidden="true"></span>
+          強化動畫
+        </label>
+      </div>
+
+    </div>
+
+    <button
+      class="ex-btn-action ex-btn-enchant"
+      id="btnExEnchant"
+      type="button"
+      aria-label="追加強化"
+      disabled
+      onclick="ExceptionalModule.handleEnchantClick()"
+    ></button>
+    <button
+      class="ex-btn-action ex-btn-extract hidden"
+      id="btnExExtract"
+      type="button"
+      aria-label="提取"
+      disabled
+      onclick="ExceptionalModule.handleExtractClick()"
+    ></button>
+
+    <div id="exHammerTooltip" class="ex-hammer-tooltip hidden" aria-hidden="true">
+      <img id="exHammerTooltipImg" class="ex-hammer-tooltip-img" src="" alt="">
+    </div>
+
+  </div>
+
+  <div id="exExtractConfirmModal" class="ex-extract-confirm-modal hidden" aria-hidden="true">
+    <div class="ex-extract-confirm-backdrop" id="exExtractConfirmBackdrop"></div>
+    <div class="ex-extract-confirm-panel ex-extract-confirm-fade" role="dialog" aria-modal="true" aria-labelledby="exExtractConfirmTitle">
+      <p id="exExtractConfirmTitle" class="ex-extract-confirm-title">確定要萃取卓越強化嗎？</p>
+      <p id="exExtractConfirmDetail" class="ex-extract-confirm-detail"></p>
+      <div class="ex-extract-confirm-actions">
+        <button type="button" id="btnExExtractConfirmOk" class="ex-extract-confirm-btn ex-extract-confirm-btn-ok">確定</button>
+        <button type="button" id="btnExExtractConfirmCancel" class="ex-extract-confirm-btn ex-extract-confirm-btn-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       [5/7] 潛能中控台 (Potential Panel)
+       ========================================== -->
+  <div id="panel-potential" class="ms-control-subpanel ms-potential-canvas hidden">
+
+    <!-- 待機畫面（未放置裝備） -->
+    <div id="ptIdlePanel" class="pt-idle-panel">
+      <div class="pt-idle-lower"></div>
+    </div>
+
+    <!-- 已放置裝備 -->
+    <div id="ptActivePanel" class="pt-active-panel hidden">
+
+      <div id="ptRankBox" class="pt-rank-box" aria-hidden="true"></div>
+
+      <div class="pt-stat-box">
+        <div id="ptStatList" class="pt-stat-values"></div>
+      </div>
+
+      <div class="pt-atk-box">
+        <span id="ptAtkPowChange" class="pt-atk-value">-</span>
+      </div>
+
+    </div><!-- /ptActivePanel -->
+
+    <!-- 方塊背包（待機/使用中共用，無分頁） -->
+    <div class="pt-bottom-area">
+      <div class="pt-cost-cubes">
+        <div id="ptSelectedName" class="pt-selected-name"></div>
+        <div id="ptCubeHint" class="pt-cube-hint">請選擇要使用的方塊。</div>
+        <div id="ptCubeGrid" class="pt-cube-grid">
+          <button type="button" class="pt-cube-slot" data-slot-index="0"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="1"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="2"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="3"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="4"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="5"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="6"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="7"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="8"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="9"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="10"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="11"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="12"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="13"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="14"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="15"></button>
+        </div>
+      </div>
+      <div id="ptHelpArea" class="pt-help-area hidden" aria-hidden="true">
+        <img id="ptHelpImage" class="pt-help-image" src="" alt="">
+      </div>
+    </div>
+
+    <div id="ptMesoCostRow" class="ap-meso-cost-row" aria-hidden="false">
+      <div class="ap-meso-cost-bar">
+        <img
+          class="ap-meso-icon"
+          src="images/additionalPotentail/additionalPotential.mesoTextGroup.canvas_mesoIcon.png"
+          alt=""
+          aria-hidden="true"
+        >
+        <span id="ptMesoCost" class="ap-meso-cost">-</span>
+      </div>
+    </div>
+
+    <button
+      class="pt-btn-reset"
+      id="btnPotentialReset"
+      type="button"
+      aria-label="重新設定"
+      disabled
+      onclick="PotentialModule.handleResetClick()"
+    ></button>
+
+    <div id="ptBottomOptions" class="pt-bottom-options hidden">
+      <label class="pt-auto-label" for="chkPotentialAuto">
+        <input type="checkbox" id="chkPotentialAuto" class="pt-auto-toggle-input">
+        <span class="pt-auto-toggle" aria-hidden="true"></span>
+        自動強化
+      </label>
+      <label class="pt-auto-label" for="chkPotentialAnim">
+        <input type="checkbox" id="chkPotentialAnim" class="pt-auto-toggle-input" checked>
+        <span class="pt-auto-toggle" aria-hidden="true"></span>
+        強化動畫
+      </label>
+    </div>
+
+  </div>
+
+  <!-- ==========================================
+       [6/7] 附加潛能中控台 (Additional Potential Panel)
+       ========================================== -->
+  <div id="panel-additionalPotential" class="ms-control-subpanel ms-potential-canvas hidden">
+
+    <div id="apIdlePanel" class="pt-idle-panel">
+      <div class="pt-idle-lower"></div>
+    </div>
+
+    <div id="apActivePanel" class="pt-active-panel hidden">
+
+      <div id="apRankBox" class="pt-rank-box" aria-hidden="true"></div>
+
+      <div class="pt-stat-box">
+        <div id="apStatList" class="pt-stat-values"></div>
+      </div>
+
+      <div class="pt-atk-box">
+        <span id="apAtkPowChange" class="pt-atk-value">-</span>
+      </div>
+
+    </div>
+
+    <div class="pt-bottom-area">
+      <div class="pt-cost-cubes">
+        <div id="apSelectedName" class="pt-selected-name"></div>
+        <div id="apCubeHint" class="pt-cube-hint">請選擇要使用的方塊。</div>
+        <div id="apCubeGrid" class="pt-cube-grid">
+          <button type="button" class="pt-cube-slot" data-slot-index="0"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="1"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="2"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="3"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="4"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="5"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="6"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="7"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="8"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="9"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="10"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="11"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="12"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="13"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="14"></button>
+          <button type="button" class="pt-cube-slot" data-slot-index="15"></button>
+        </div>
+      </div>
+      <div id="apHelpArea" class="pt-help-area hidden" aria-hidden="true">
+        <img id="apHelpImage" class="pt-help-image" src="" alt="">
+      </div>
+    </div>
+
+    <div id="apMesoCostRow" class="ap-meso-cost-row" aria-hidden="false">
+      <div class="ap-meso-cost-bar">
+        <img
+          class="ap-meso-icon"
+          src="images/additionalPotentail/additionalPotential.mesoTextGroup.canvas_mesoIcon.png"
+          alt=""
+          aria-hidden="true"
+        >
+        <span id="apMesoCost" class="ap-meso-cost">-</span>
+      </div>
+    </div>
+
+    <button
+      class="pt-btn-reset"
+      id="btnAddPotentialReset"
+      type="button"
+      aria-label="重新設定"
+      disabled
+      onclick="AddPotentialModule.handleResetClick()"
+    ></button>
+
+    <div id="apBottomOptions" class="pt-bottom-options hidden">
+      <label class="pt-auto-label" for="chkAddPotentialAuto">
+        <input type="checkbox" id="chkAddPotentialAuto" class="pt-auto-toggle-input">
+        <span class="pt-auto-toggle" aria-hidden="true"></span>
+        自動強化
+      </label>
+      <label class="pt-auto-label" for="chkAddPotentialAnim">
+        <input type="checkbox" id="chkAddPotentialAnim" class="pt-auto-toggle-input" checked>
+        <span class="pt-auto-toggle" aria-hidden="true"></span>
+        強化動畫
+      </label>
+    </div>
+
+  </div>
+
+  <!-- ==========================================
+       [6b] 附加能力中控台 (Bonus Stat Panel)
+       ========================================== -->
+  <div id="panel-bonusStat" class="ms-control-subpanel ms-bonus-stat-canvas hidden">
+
+    <div id="bsIdlePanel" class="bs-idle-panel">
+      <div class="bs-idle-lower"></div>
+    </div>
+
+    <div id="bsActivePanel" class="bs-active-panel hidden">
+
+      <div id="bsSummaryBox" class="bs-summary-box" aria-label="星火等級總和">
+        <img id="bsSummaryFrame" class="bs-summary-frame bs-pixel-image" alt="" draggable="false">
+        <img id="bsSummaryLevel" class="bs-summary-level bs-pixel-image" alt="" draggable="false">
+      </div>
+
+      <div class="bs-stat-box">
+        <div class="bs-stat-detail-wrap">
+          <img
+            id="bsStatDetailLabel"
+            class="bs-stat-detail-label bs-pixel-image"
+            alt="詳細資訊"
+            draggable="false"
+          >
+          <button
+            type="button"
+            id="bsStatDetailToggle"
+            class="bs-stat-detail-toggle"
+            title="詳細資訊"
+            aria-label="詳細資訊"
+            aria-pressed="false"
+            onclick="BonusStatModule.toggleStatDetail()"
+          >
+            <img id="bsStatDetailIndicator" class="bs-stat-detail-indicator bs-pixel-image" alt="" draggable="false">
+          </button>
+        </div>
+        <div id="bsStatList" class="bs-stat-values"></div>
+      </div>
+
+      <div class="bs-atk-box">
+        <span id="bsAtkPowChange" class="bs-atk-value">-</span>
+      </div>
+
+    </div>
+
+    <div id="bsBottomArea" class="bs-bottom-area">
+      <div class="bs-cost-tabs">
+        <button type="button" id="bsCostTabMeso" class="bs-cost-tab bs-cost-tab-meso" aria-label="楓幣" onclick="BonusStatModule.setCostTab('meso')"></button>
+        <button type="button" id="bsCostTabItem" class="bs-cost-tab bs-cost-tab-item" aria-label="道具" onclick="BonusStatModule.setCostTab('item')"></button>
+      </div>
+
+      <div id="bsCostMesoPanel" class="bs-cost-meso-panel">
+        <div class="bs-meso-row">
+          <img class="bs-meso-icon" src="images/bonusStat/bonusStat_mesoTextGroup_canvas_mesoIcon.png" alt="">
+          <span id="bsMesoCost" class="bs-meso-cost">0 楓幣</span>
+        </div>
+      </div>
+
+      <div id="bsCostItemPanel" class="bs-cost-item-panel hidden">
+        <div id="bsSelectedItemName" class="bs-selected-item-name"></div>
+        <div id="bsItemGrid" class="bs-item-grid">
+          <button type="button" class="bs-item-slot" data-slot-index="0"></button>
+          <button type="button" class="bs-item-slot" data-slot-index="1"></button>
+        </div>
+      </div>
+    </div>
+
+    <div id="bsHelpArea" class="bs-help-area hidden" aria-hidden="true">
+      <img id="bsHelpImage" class="bs-help-image" src="" alt="">
+    </div>
+
+    <div id="bsItemTooltip" class="bs-item-tooltip hidden" aria-hidden="true">
+      <img id="bsItemTooltipImg" class="bs-item-tooltip-img" src="" alt="">
+    </div>
+
+    <button
+      class="bs-btn-reset bs-btn-reset-main"
+      id="btnBonusStatReset"
+      type="button"
+      aria-label="重新設定"
+      disabled
+      onclick="BonusStatModule.handleResetClick('normal')"
+    ></button>
+    <button
+      class="bs-btn-reset bs-btn-reset-vip1"
+      id="btnBonusStatReset1"
+      type="button"
+      aria-label="VIP重新設定"
+      disabled
+      onclick="BonusStatModule.handleResetClick('normal')"
+    ></button>
+    <button
+      class="bs-btn-reset bs-btn-reset-vip3"
+      id="btnBonusStatReset3"
+      type="button"
+      aria-label="VIP三次重新設定"
+      disabled
+      onclick="BonusStatModule.handleResetClick('triple')"
+    ></button>
+
+    <div id="bsBottomOptions" class="bs-bottom-options hidden">
+      <label class="bs-auto-label" for="chkBonusStatAuto">
+        <input type="checkbox" id="chkBonusStatAuto" class="bs-auto-toggle-input">
+        <span class="bs-auto-toggle" aria-hidden="true"></span>
+        自動強化
+      </label>
+      <label class="bs-auto-label" for="chkBonusStatAnim">
+        <input type="checkbox" id="chkBonusStatAnim" class="bs-auto-toggle-input" checked>
+        <span class="bs-auto-toggle" aria-hidden="true"></span>
+        強化動畫
+      </label>
+    </div>
+
+  </div>
+
+</div>
+
+      </div>
+
+      <!-- 3. 右側背包欄 -->
+      <div class="ms-inventory-column">
+      <div class="ms-inventory inv-mode-min" id="inventoryPanel">
+        <button type="button" class="inv-size-btn inv-size-full" id="invBtnFull" aria-label="大背包"></button>
+        <button type="button" class="inv-size-btn inv-size-min hidden" id="invBtnMin" aria-label="小背包"></button>
+
+        <div class="inv-tabs inv-tabs-min" id="invTabsMin">
+          <button type="button" class="inv-tab inv-tab-equip checked" data-tab="equip" aria-label="裝備"></button>
+          <button type="button" class="inv-tab inv-tab-consume" data-tab="consume" aria-label="消耗"></button>
+        </div>
+
+        <div class="inv-tabs inv-tabs-full hidden" id="invTabsFull">
+          <button type="button" class="inv-tab inv-tab-equip checked" data-tab="equip" aria-label="裝備"></button>
+          <button type="button" class="inv-tab inv-tab-consume" data-tab="consume" aria-label="消耗"></button>
+        </div>
+
+        <button type="button" class="inv-sort-btn" id="invBtnSortEquip" aria-label="整理裝備背包" title="整理裝備（武器→副武器→飾品→防具）"></button>
+
+        <div class="inv-slot-count inv-slot-count-equip" id="invSlotCountEquip">
+          <span id="invSlotCountEquipCurrent">0</span>
+        </div>
+        <div class="inv-slot-count inv-slot-count-consume hidden" id="invSlotCountConsume">
+          <span id="invSlotCountConsumeCurrent">0</span>
+        </div>
+
+        <div class="inv-body">
+          <div class="inv-viewport" id="invViewport">
+            <div class="ms-inventory-grid" id="inventoryGrid"></div>
+          </div>
+          <div class="inv-scrollbar" id="invScrollbar">
+            <div class="inv-scroll-track" id="invScrollTrack"></div>
+            <div class="inv-scroll-thumb" id="invScrollThumb"></div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <!-- 恢復卡：卷軸成功確認彈窗（覆蓋三欄 + 背景虛化） -->
+      <div id="scrollRecoveryModal" class="sc-recovery-modal hidden" aria-hidden="true">
+        <div class="sc-recovery-modal-backdrop"></div>
+        <div class="sc-recovery-modal-panel">
+          <div class="sc-recovery-panel-bg sc-recovery-fade-target" aria-hidden="true"></div>
+          <div class="sc-recovery-equip-slot sc-recovery-fade-target">
+            <img id="scRecoveryEquipIcon" class="sc-recovery-equip-icon" src="" alt="">
+          </div>
+          <div class="sc-recovery-choices">
+            <button type="button" id="btnRecoveryCancel" class="sc-recovery-btn sc-recovery-btn-cancel" aria-label="取消使用卷軸"></button>
+            <div class="sc-recovery-apply-wrap">
+              <img id="scRecoveryApplyHighlight" class="sc-recovery-apply-highlight hidden" alt="" aria-hidden="true">
+              <button type="button" id="btnRecoveryApply" class="sc-recovery-btn sc-recovery-btn-apply" aria-label="套用卷軸屬性">
+                <div id="scRecoveryApplyStats" class="sc-recovery-apply-stats"></div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 閃炫方塊：六選三彈窗（覆蓋三欄 + 背景虛化） -->
+      <div id="ptHexaOverlay" class="pt-hexa-modal hidden" aria-hidden="true">
+        <div class="pt-hexa-modal-backdrop"></div>
+        <div class="pt-hexa-modal-panel">
+          <div class="pt-hexa-info-top pt-hexa-fade-target">
+            <img class="pt-hexa-info-top-img" src="images/potential/hexaUI/fullScreen_hexa.canvas_infoTop.png" alt="">
+            <span id="ptHexaPickCount" class="pt-hexa-pick-count">0 / 3</span>
+          </div>
+
+          <div class="pt-hexa-choice-box pt-hexa-fade-target">
+            <div id="ptHexaTitle" class="pt-hexa-title" aria-hidden="true"></div>
+            <div id="ptHexaOptionList" class="pt-hexa-option-list"></div>
+            <div class="pt-hexa-atk-area">
+              <div id="ptHexaAtkOutline" class="pt-hexa-atk-outline hidden" aria-hidden="true"></div>
+              <span id="ptHexaAtkPow" class="pt-hexa-atk-value">-</span>
+            </div>
+          </div>
+
+          <div id="ptHexaConfirmBox" class="pt-hexa-confirm-box pt-hexa-fade-target">
+            <div class="pt-hexa-confirm-bg" aria-hidden="true"></div>
+            <div class="pt-hexa-confirm-content">
+              <div class="pt-hexa-stock">
+                <img class="pt-hexa-stock-icon" src="images/potential/hexab.png" alt="">
+                <span id="ptHexaCubeCount" class="pt-hexa-stock-count">999+</span>
+              </div>
+              <div id="ptHexaActionsBefore" class="pt-hexa-actions pt-hexa-actions--before">
+                <button
+                  type="button"
+                  id="ptHexaBtnOk"
+                  class="pt-hexa-btn pt-hexa-btn-ok"
+                  disabled
+                  onclick="PotentialModule.confirmHexaSelection()"
+                ></button>
+              </div>
+              <div id="ptHexaActionsAfter" class="pt-hexa-actions pt-hexa-actions--after hidden">
+                <button
+                  type="button"
+                  id="ptHexaBtnUse"
+                  class="pt-hexa-btn pt-hexa-btn-use"
+                  onclick="PotentialModule.applyHexaSelection()"
+                ></button>
+                <div class="pt-hexa-sub-actions">
+                  <button
+                    type="button"
+                    id="ptHexaBtnExit"
+                    class="pt-hexa-btn pt-hexa-btn-exit"
+                    onclick="PotentialModule.exitHexaOverlay()"
+                  ></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 結合方塊：選排重骰彈窗 -->
+      <div id="ptUniOverlay" class="pt-uni-modal hidden" aria-hidden="true">
+        <div class="pt-uni-modal-backdrop"></div>
+        <div class="pt-uni-modal-panel">
+          <div class="pt-uni-info-top pt-uni-fade-target">
+            <img class="pt-uni-info-top-img" src="images/potential/uniUI/fullScreen_uni.canvas_infoTop.png" alt="">
+          </div>
+
+          <div class="pt-uni-choice-box pt-uni-fade-target">
+            <div id="ptUniTitle" class="pt-uni-title" aria-hidden="true"></div>
+            <div id="ptUniLineList" class="pt-uni-line-list"></div>
+            <div class="pt-uni-atk-area">
+              <div id="ptUniAtkOutline" class="pt-uni-atk-outline hidden" aria-hidden="true"></div>
+              <span id="ptUniAtkPow" class="pt-uni-atk-value">-</span>
+            </div>
+          </div>
+
+          <div class="pt-uni-info-btm pt-uni-fade-target">
+            <img class="pt-uni-info-btm-img" src="images/potential/uniUI/fullScreen_uni.canvas_infoBtm.png" alt="">
+          </div>
+
+          <div id="ptUniConfirmBox" class="pt-uni-confirm-box pt-uni-fade-target">
+            <div class="pt-uni-confirm-bg" aria-hidden="true"></div>
+            <div class="pt-uni-confirm-content">
+              <div class="pt-uni-stock">
+                <img class="pt-uni-stock-icon" src="images/potential/uniB.png" alt="">
+                <span id="ptUniCubeCount" class="pt-uni-stock-count">999+</span>
+              </div>
+              <div id="ptUniActionsBefore" class="pt-uni-actions pt-uni-actions--before">
+                <button
+                  type="button"
+                  id="ptUniBtnReselectBefore"
+                  class="pt-uni-btn pt-uni-btn-reselect-before"
+                  onclick="PotentialModule.reselectUniLine()"
+                ></button>
+                <button
+                  type="button"
+                  id="ptUniBtnReset"
+                  class="pt-uni-btn pt-uni-btn-reset"
+                  onclick="PotentialModule.resetUniLine()"
+                ></button>
+                <button
+                  type="button"
+                  id="ptUniBtnExitBefore"
+                  class="pt-uni-btn pt-uni-btn-exit-before"
+                  onclick="PotentialModule.exitUniOverlay()"
+                ></button>
+              </div>
+              <div id="ptUniActionsAfter" class="pt-uni-actions pt-uni-actions--after hidden">
+                <button
+                  type="button"
+                  id="ptUniBtnReselectAfter"
+                  class="pt-uni-btn pt-uni-btn-reselect-after"
+                  onclick="PotentialModule.reselectUniLine()"
+                ></button>
+                <div class="pt-uni-sub-actions">
+                  <button
+                    type="button"
+                    id="ptUniBtnExitAfter"
+                    class="pt-uni-btn pt-uni-btn-exit-after"
+                    onclick="PotentialModule.exitUniOverlay()"
+                  ></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 恢復方塊：BEFORE / AFTER 選擇彈窗 -->
+      <div id="ptMemoriaOverlay" class="pt-memoria-modal hidden" aria-hidden="true">
+        <div class="pt-memoria-modal-backdrop"></div>
+        <div class="pt-memoria-modal-panel">
+          <div class="pt-memoria-equip-slot pt-memoria-fade-target">
+            <img id="ptMemoriaProgressAlert" class="pt-memoria-progress-alert hidden" alt="" aria-hidden="true">
+            <img id="ptMemoriaEquipIcon" class="pt-memoria-equip-icon" src="" alt="">
+          </div>
+
+          <div class="pt-memoria-info-top pt-memoria-fade-target">
+            <img class="pt-memoria-info-top-img" src="images/fullscreen_potential/fullScreen_potential_canvas_infoTop.png" alt="">
+          </div>
+
+          <div class="pt-memoria-compare-row">
+            <button
+              type="button"
+              id="ptMemoriaBefore"
+              class="pt-memoria-choice-box pt-memoria-choice-box--before"
+              onclick="PotentialModule.selectMemoriaSide('before')"
+            >
+              <div class="pt-memoria-choice-hover" aria-hidden="true"></div>
+              <div id="ptMemoriaTitleBefore" class="pt-memoria-title" aria-hidden="true"></div>
+              <div id="ptMemoriaLinesBefore" class="pt-memoria-line-list"></div>
+              <div class="pt-memoria-atk-area">
+                <span id="ptMemoriaAtkBefore" class="pt-memoria-atk-value">-</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              id="ptMemoriaAfter"
+              class="pt-memoria-choice-box pt-memoria-choice-box--after"
+              onclick="PotentialModule.selectMemoriaSide('after')"
+            >
+              <div class="pt-memoria-choice-hover" aria-hidden="true"></div>
+              <div id="ptMemoriaTitleAfter" class="pt-memoria-title" aria-hidden="true"></div>
+              <div id="ptMemoriaLinesAfter" class="pt-memoria-line-list"></div>
+              <div class="pt-memoria-atk-area">
+                <span id="ptMemoriaAtkAfter" class="pt-memoria-atk-value">-</span>
+              </div>
+            </button>
+          </div>
+
+          <div class="pt-memoria-info-btm pt-memoria-fade-target">
+            <img class="pt-memoria-info-btm-img" src="images/fullscreen_potential/fullScreen_potential_canvas_infoBtm.png" alt="">
+          </div>
+
+          <div id="ptMemoriaConfirmBox" class="pt-memoria-confirm-box pt-memoria-fade-target">
+            <div class="pt-memoria-confirm-bg" aria-hidden="true"></div>
+            <div class="pt-memoria-confirm-content">
+              <div class="pt-memoria-stock">
+                <img class="pt-memoria-stock-icon" src="images/potential/memoriaB.png" alt="">
+                <span id="ptMemoriaCubeCount" class="pt-memoria-stock-count">999+</span>
+              </div>
+              <div class="pt-memoria-actions">
+                <button
+                  type="button"
+                  id="ptMemoriaBtnReset"
+                  class="pt-memoria-btn pt-memoria-btn-reset"
+                  onclick="PotentialModule.onMemoriaResetButtonClick()"
+                ></button>
+                <div class="pt-memoria-cost-rows">
+                  <span class="pt-memoria-cost-cube">1</span>
+                  <span class="pt-memoria-cost-meso">-</span>
+                </div>
+                <div class="pt-memoria-held-meso">
+                  <span id="ptMemoriaHeldMeso">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 閃亮附加方塊：六選三彈窗 -->
+      <div id="apHexaOverlay" class="pt-hexa-modal hidden" aria-hidden="true">
+        <div class="pt-hexa-modal-backdrop"></div>
+        <div class="pt-hexa-modal-panel">
+          <div class="pt-hexa-info-top">
+            <img class="pt-hexa-info-top-img" src="images/potential/hexaUI/fullScreen_hexa.canvas_infoTop.png" alt="">
+            <span id="apHexaPickCount" class="pt-hexa-pick-count">0 / 3</span>
+          </div>
+
+          <div class="pt-hexa-choice-box">
+            <div id="apHexaTitle" class="pt-hexa-title" aria-hidden="true"></div>
+            <div id="apHexaOptionList" class="pt-hexa-option-list"></div>
+            <div class="pt-hexa-atk-area">
+              <div id="apHexaAtkOutline" class="pt-hexa-atk-outline hidden" aria-hidden="true"></div>
+              <span id="apHexaAtkPow" class="pt-hexa-atk-value">-</span>
+            </div>
+          </div>
+
+          <div id="apHexaConfirmBox" class="pt-hexa-confirm-box">
+            <div class="pt-hexa-confirm-bg" aria-hidden="true"></div>
+            <div class="pt-hexa-confirm-content">
+              <div class="pt-hexa-stock">
+                <img class="pt-hexa-stock-icon" src="images/additionalPotentail/ahexab.png" alt="">
+                <span id="apHexaCubeCount" class="pt-hexa-stock-count">999+</span>
+              </div>
+              <div id="apHexaActionsBefore" class="pt-hexa-actions pt-hexa-actions--before">
+                <button
+                  type="button"
+                  id="apHexaBtnOk"
+                  class="pt-hexa-btn pt-hexa-btn-ok"
+                  disabled
+                  onclick="AddPotentialModule.confirmHexaSelection()"
+                ></button>
+              </div>
+              <div id="apHexaActionsAfter" class="pt-hexa-actions pt-hexa-actions--after hidden">
+                <button
+                  type="button"
+                  id="apHexaBtnUse"
+                  class="pt-hexa-btn pt-hexa-btn-use"
+                  onclick="AddPotentialModule.applyHexaSelection()"
+                ></button>
+                <div class="pt-hexa-sub-actions">
+                  <button
+                    type="button"
+                    id="apHexaBtnExit"
+                    class="pt-hexa-btn pt-hexa-btn-exit"
+                    onclick="AddPotentialModule.exitHexaOverlay()"
+                  ></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 結合附加方塊：選排重骰彈窗 -->
+      <div id="apUniOverlay" class="pt-uni-modal hidden" aria-hidden="true">
+        <div class="pt-uni-modal-backdrop"></div>
+        <div class="pt-uni-modal-panel">
+          <div class="pt-uni-info-top">
+            <img class="pt-uni-info-top-img" src="images/potential/uniUI/fullScreen_uni.canvas_infoTop.png" alt="">
+          </div>
+
+          <div class="pt-uni-choice-box">
+            <div id="apUniTitle" class="pt-uni-title" aria-hidden="true"></div>
+            <div id="apUniLineList" class="pt-uni-line-list"></div>
+            <div class="pt-uni-atk-area">
+              <div id="apUniAtkOutline" class="pt-uni-atk-outline hidden" aria-hidden="true"></div>
+              <span id="apUniAtkPow" class="pt-uni-atk-value">-</span>
+            </div>
+          </div>
+
+          <div class="pt-uni-info-btm">
+            <img class="pt-uni-info-btm-img" src="images/potential/uniUI/fullScreen_uni.canvas_infoBtm.png" alt="">
+          </div>
+
+          <div id="apUniConfirmBox" class="pt-uni-confirm-box">
+            <div class="pt-uni-confirm-bg" aria-hidden="true"></div>
+            <div class="pt-uni-confirm-content">
+              <div class="pt-uni-stock">
+                <img class="pt-uni-stock-icon" src="images/additionalPotentail/aunib.png" alt="">
+                <span id="apUniCubeCount" class="pt-uni-stock-count">999+</span>
+              </div>
+              <div id="apUniActionsBefore" class="pt-uni-actions pt-uni-actions--before">
+                <button
+                  type="button"
+                  id="apUniBtnReselectBefore"
+                  class="pt-uni-btn pt-uni-btn-reselect-before"
+                  onclick="AddPotentialModule.reselectUniLine()"
+                ></button>
+                <button
+                  type="button"
+                  id="apUniBtnReset"
+                  class="pt-uni-btn pt-uni-btn-reset"
+                  onclick="AddPotentialModule.resetUniLine()"
+                ></button>
+                <button
+                  type="button"
+                  id="apUniBtnExitBefore"
+                  class="pt-uni-btn pt-uni-btn-exit-before"
+                  onclick="AddPotentialModule.exitUniOverlay()"
+                ></button>
+              </div>
+              <div id="apUniActionsAfter" class="pt-uni-actions pt-uni-actions--after hidden">
+                <button
+                  type="button"
+                  id="apUniBtnReselectAfter"
+                  class="pt-uni-btn pt-uni-btn-reselect-after"
+                  onclick="AddPotentialModule.reselectUniLine()"
+                ></button>
+                <div class="pt-uni-sub-actions">
+                  <button
+                    type="button"
+                    id="apUniBtnExitAfter"
+                    class="pt-uni-btn pt-uni-btn-exit-after"
+                    onclick="AddPotentialModule.exitUniOverlay()"
+                  ></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 恢復附加方塊：BEFORE / AFTER 選擇彈窗 -->
+      <div id="apMemoriaOverlay" class="pt-memoria-modal hidden" aria-hidden="true">
+        <div class="pt-memoria-modal-backdrop"></div>
+        <div class="pt-memoria-modal-panel">
+          <div class="pt-memoria-equip-slot pt-memoria-fade-target">
+            <img id="apMemoriaProgressAlert" class="pt-memoria-progress-alert hidden" alt="" aria-hidden="true">
+            <img id="apMemoriaEquipIcon" class="pt-memoria-equip-icon" src="" alt="">
+          </div>
+
+          <div class="pt-memoria-info-top pt-memoria-fade-target">
+            <img class="pt-memoria-info-top-img" src="images/fullscreen_potential/fullScreen_potential_canvas_infoTop.png" alt="">
+          </div>
+
+          <div class="pt-memoria-compare-row">
+            <button
+              type="button"
+              id="apMemoriaBefore"
+              class="pt-memoria-choice-box pt-memoria-choice-box--before"
+              onclick="AddPotentialModule.selectMemoriaSide('before')"
+            >
+              <div class="pt-memoria-choice-hover" aria-hidden="true"></div>
+              <div id="apMemoriaTitleBefore" class="pt-memoria-title" aria-hidden="true"></div>
+              <div id="apMemoriaLinesBefore" class="pt-memoria-line-list"></div>
+              <div class="pt-memoria-atk-area">
+                <span id="apMemoriaAtkBefore" class="pt-memoria-atk-value">-</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              id="apMemoriaAfter"
+              class="pt-memoria-choice-box pt-memoria-choice-box--after"
+              onclick="AddPotentialModule.selectMemoriaSide('after')"
+            >
+              <div class="pt-memoria-choice-hover" aria-hidden="true"></div>
+              <div id="apMemoriaTitleAfter" class="pt-memoria-title" aria-hidden="true"></div>
+              <div id="apMemoriaLinesAfter" class="pt-memoria-line-list"></div>
+              <div class="pt-memoria-atk-area">
+                <span id="apMemoriaAtkAfter" class="pt-memoria-atk-value">-</span>
+              </div>
+            </button>
+          </div>
+
+          <div class="pt-memoria-info-btm pt-memoria-fade-target">
+            <img class="pt-memoria-info-btm-img" src="images/fullscreen_potential/fullScreen_potential_canvas_infoBtm.png" alt="">
+          </div>
+
+          <div id="apMemoriaConfirmBox" class="pt-memoria-confirm-box pt-memoria-fade-target">
+            <div class="pt-memoria-confirm-bg" aria-hidden="true"></div>
+            <div class="pt-memoria-confirm-content">
+              <div class="pt-memoria-stock">
+                <img class="pt-memoria-stock-icon" src="images/additionalPotentail/amemoriab.png" alt="">
+                <span id="apMemoriaCubeCount" class="pt-memoria-stock-count">999+</span>
+              </div>
+              <div class="pt-memoria-actions">
+                <button
+                  type="button"
+                  id="apMemoriaBtnReset"
+                  class="pt-memoria-btn pt-memoria-btn-reset"
+                  onclick="AddPotentialModule.onMemoriaResetButtonClick()"
+                ></button>
+                <div class="pt-memoria-cost-rows">
+                  <span class="pt-memoria-cost-cube">1</span>
+                  <span class="pt-memoria-cost-meso">-</span>
+                </div>
+                <div class="pt-memoria-held-meso">
+                  <span id="apMemoriaHeldMeso">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 附加潛能自動重設（Enchant.img/autoEnchant/additionalPotential） -->
+      <div id="aeApOverlay" class="ae-pot-modal hidden" aria-hidden="true">
+        <div class="ae-pot-modal-backdrop" onclick="AutoEnchantAddPotentialModule.onBackdropClick()"></div>
+        <div class="ae-pot-modal-panel">
+          <div id="aeApPanel" class="ae-pot-panel" role="dialog" aria-labelledby="aeApTitle">
+            <h3 id="aeApTitle" class="ae-pot-sr-only">附加潛在能力自動重設</h3>
+
+            <div class="ae-pot-rows">
+              <div class="ae-pot-row ae-pot-row-1">
+                <span id="aeApTitle1" class="ae-pot-row-num ae-pot-row-num-1" aria-hidden="true"></span>
+                <button type="button" id="aeApReset1" class="ae-pot-row-reset" title="初始化" onclick="AutoEnchantAddPotentialModule.resetGroup(0)"></button>
+                <select id="aeApG0L0" class="ae-pot-row-combo ae-pot-row-combo-1" aria-label="第1組第1排" onchange="AutoEnchantAddPotentialModule.setGroupTarget(0,0,this.value)"></select>
+                <select id="aeApG0L1" class="ae-pot-row-combo ae-pot-row-combo-2" aria-label="第1組第2排" onchange="AutoEnchantAddPotentialModule.setGroupTarget(0,1,this.value)"></select>
+                <select id="aeApG0L2" class="ae-pot-row-combo ae-pot-row-combo-3" aria-label="第1組第3排" onchange="AutoEnchantAddPotentialModule.setGroupTarget(0,2,this.value)"></select>
+              </div>
+              <div class="ae-pot-row ae-pot-row-2">
+                <span id="aeApTitle2" class="ae-pot-row-num ae-pot-row-num-2" aria-hidden="true"></span>
+                <button type="button" id="aeApReset2" class="ae-pot-row-reset" title="初始化" onclick="AutoEnchantAddPotentialModule.resetGroup(1)"></button>
+                <select id="aeApG1L0" class="ae-pot-row-combo ae-pot-row-combo-1" aria-label="第2組第1排" onchange="AutoEnchantAddPotentialModule.setGroupTarget(1,0,this.value)"></select>
+                <select id="aeApG1L1" class="ae-pot-row-combo ae-pot-row-combo-2" aria-label="第2組第2排" onchange="AutoEnchantAddPotentialModule.setGroupTarget(1,1,this.value)"></select>
+                <select id="aeApG1L2" class="ae-pot-row-combo ae-pot-row-combo-3" aria-label="第2組第3排" onchange="AutoEnchantAddPotentialModule.setGroupTarget(1,2,this.value)"></select>
+              </div>
+              <div class="ae-pot-row ae-pot-row-3">
+                <span id="aeApTitle3" class="ae-pot-row-num ae-pot-row-num-3" aria-hidden="true"></span>
+                <button type="button" id="aeApReset3" class="ae-pot-row-reset" title="初始化" onclick="AutoEnchantAddPotentialModule.resetGroup(2)"></button>
+                <select id="aeApG2L0" class="ae-pot-row-combo ae-pot-row-combo-1" aria-label="第3組第1排" onchange="AutoEnchantAddPotentialModule.setGroupTarget(2,0,this.value)"></select>
+                <select id="aeApG2L1" class="ae-pot-row-combo ae-pot-row-combo-2" aria-label="第3組第2排" onchange="AutoEnchantAddPotentialModule.setGroupTarget(2,1,this.value)"></select>
+                <select id="aeApG2L2" class="ae-pot-row-combo ae-pot-row-combo-3" aria-label="第3組第3排" onchange="AutoEnchantAddPotentialModule.setGroupTarget(2,2,this.value)"></select>
+              </div>
+              <div class="ae-pot-row ae-pot-row-4">
+                <span id="aeApTitle4" class="ae-pot-row-num ae-pot-row-num-4" aria-hidden="true"></span>
+                <button type="button" id="aeApReset4" class="ae-pot-row-reset" title="初始化" onclick="AutoEnchantAddPotentialModule.resetGroup(3)"></button>
+                <select id="aeApG3L0" class="ae-pot-row-combo ae-pot-row-combo-1" aria-label="第4組第1排" onchange="AutoEnchantAddPotentialModule.setGroupTarget(3,0,this.value)"></select>
+                <select id="aeApG3L1" class="ae-pot-row-combo ae-pot-row-combo-2" aria-label="第4組第2排" onchange="AutoEnchantAddPotentialModule.setGroupTarget(3,1,this.value)"></select>
+                <select id="aeApG3L2" class="ae-pot-row-combo ae-pot-row-combo-3" aria-label="第4組第3排" onchange="AutoEnchantAddPotentialModule.setGroupTarget(3,2,this.value)"></select>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              id="aeApStopAtk"
+              class="ae-pot-stop-atk"
+              title="超速模式"
+              onclick="AutoEnchantAddPotentialModule.toggleOverspeedMode()"
+            >
+              <span class="ae-pot-stop-atk-check" aria-hidden="true"></span>
+            </button>
+
+            <img id="aeApProgressAlert" class="ae-pot-progress-alert hidden" alt="" aria-hidden="true">
+
+            <div class="ae-pot-actions">
+              <button
+                type="button"
+                id="aeApBtnAction"
+                class="ae-pot-btn ae-pot-btn-action"
+                onclick="AutoEnchantAddPotentialModule.onActionClick()"
+              ></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 附加能力自動重設（Enchant.img/autoEnchant/bonusStat） -->
+      <div id="aeBsOverlay" class="ae-bs-modal hidden" aria-hidden="true">
+        <div class="ae-bs-modal-backdrop" aria-hidden="true"></div>
+        <div class="ae-bs-modal-panel">
+          <div id="aeBsPanel" class="ae-bs-panel" role="dialog" aria-labelledby="aeBsTitle">
+            <h3 id="aeBsTitle" class="ae-bs-sr-only">附加能力自動重設</h3>
+
+            <div id="aeBsRows" class="ae-bs-rows">
+              <div id="aeBsRow0" class="ae-bs-row ae-bs-row-0">
+                <div class="ae-bs-stat-combo-wrap" data-index="0">
+                  <button type="button" class="ae-bs-stat-combo-trigger" aria-label="目標1 屬性" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="ae-bs-stat-combo-label">不選擇</span>
+                  </button>
+                  <div class="ae-bs-stat-combo-list hidden" role="listbox" aria-label="目標1 屬性">
+                    <button type="button" class="ae-bs-stat-combo-option ae-bs-stat-combo-option--none" data-value="" role="option">不選擇</button>
+                    <div class="ae-bs-stat-combo-sep" aria-hidden="true"></div>
+                    <div class="ae-bs-stat-combo-scroll"></div>
+                  </div>
+                </div>
+                <input id="aeBsValue0" class="ae-bs-value-input" type="text" inputmode="numeric" maxlength="4" aria-label="目標1 數值" oninput="AutoEnchantBonusStatModule.setGroupMinValue(0, this.value)">
+              </div>
+              <div id="aeBsRow1" class="ae-bs-row ae-bs-row-1">
+                <div class="ae-bs-stat-combo-wrap" data-index="1">
+                  <button type="button" class="ae-bs-stat-combo-trigger" aria-label="目標2 屬性" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="ae-bs-stat-combo-label">不選擇</span>
+                  </button>
+                  <div class="ae-bs-stat-combo-list hidden" role="listbox" aria-label="目標2 屬性">
+                    <button type="button" class="ae-bs-stat-combo-option ae-bs-stat-combo-option--none" data-value="" role="option">不選擇</button>
+                    <div class="ae-bs-stat-combo-sep" aria-hidden="true"></div>
+                    <div class="ae-bs-stat-combo-scroll"></div>
+                  </div>
+                </div>
+                <input id="aeBsValue1" class="ae-bs-value-input" type="text" inputmode="numeric" maxlength="4" aria-label="目標2 數值" oninput="AutoEnchantBonusStatModule.setGroupMinValue(1, this.value)">
+              </div>
+              <div id="aeBsRow2" class="ae-bs-row ae-bs-row-2">
+                <div class="ae-bs-stat-combo-wrap" data-index="2">
+                  <button type="button" class="ae-bs-stat-combo-trigger" aria-label="目標3 屬性" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="ae-bs-stat-combo-label">不選擇</span>
+                  </button>
+                  <div class="ae-bs-stat-combo-list hidden" role="listbox" aria-label="目標3 屬性">
+                    <button type="button" class="ae-bs-stat-combo-option ae-bs-stat-combo-option--none" data-value="" role="option">不選擇</button>
+                    <div class="ae-bs-stat-combo-sep" aria-hidden="true"></div>
+                    <div class="ae-bs-stat-combo-scroll"></div>
+                  </div>
+                </div>
+                <input id="aeBsValue2" class="ae-bs-value-input" type="text" inputmode="numeric" maxlength="4" aria-label="目標3 數值" oninput="AutoEnchantBonusStatModule.setGroupMinValue(2, this.value)">
+              </div>
+              <div id="aeBsRow3" class="ae-bs-row ae-bs-row-3">
+                <div class="ae-bs-stat-combo-wrap" data-index="3">
+                  <button type="button" class="ae-bs-stat-combo-trigger" aria-label="目標4 屬性" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="ae-bs-stat-combo-label">不選擇</span>
+                  </button>
+                  <div class="ae-bs-stat-combo-list hidden" role="listbox" aria-label="目標4 屬性">
+                    <button type="button" class="ae-bs-stat-combo-option ae-bs-stat-combo-option--none" data-value="" role="option">不選擇</button>
+                    <div class="ae-bs-stat-combo-sep" aria-hidden="true"></div>
+                    <div class="ae-bs-stat-combo-scroll"></div>
+                  </div>
+                </div>
+                <input id="aeBsValue3" class="ae-bs-value-input" type="text" inputmode="numeric" maxlength="4" aria-label="目標4 數值" oninput="AutoEnchantBonusStatModule.setGroupMinValue(3, this.value)">
+              </div>
+            </div>
+
+            <button
+              type="button"
+              id="aeBsStopOverspeed"
+              class="ae-bs-stop-overspeed"
+              title="高速模式"
+              onclick="AutoEnchantBonusStatModule.toggleOverspeedMode()"
+            >
+              <span class="ae-bs-stop-check" aria-hidden="true"></span>
+            </button>
+
+            <img id="aeBsProgressAlert" class="ae-bs-progress-alert hidden" alt="" aria-hidden="true">
+
+            <button
+              type="button"
+              id="aeBsResetAll"
+              class="ae-bs-btn-reset"
+              title="初始化"
+              onclick="AutoEnchantBonusStatModule.resetAll()"
+            ></button>
+
+            <div class="ae-bs-actions">
+              <button
+                type="button"
+                id="aeBsBtnAction"
+                class="ae-bs-btn ae-bs-btn-action"
+                onclick="AutoEnchantBonusStatModule.onActionClick()"
+              ></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 附加能力 BEFORE/AFTER 選擇（fullScreen_bonusStat） -->
+      <div id="bsChoiceOverlay" class="bs-choice-modal hidden" aria-hidden="true">
+        <div class="bs-choice-modal-backdrop"></div>
+        <div class="bs-choice-modal-panel">
+          <div class="bs-choice-info-top bs-choice-fade-target">
+            <img id="bsChoiceInfoTopImg" class="bs-choice-info-top-img bs-pixel-image" src="images/fullScreenbonusStat/fullScreen_bonusStat_canvas_infoTop.png" alt="" draggable="false">
+            <img id="bsChoiceProgressAlert" class="bs-choice-progress-alert hidden" alt="" aria-hidden="true">
+          </div>
+
+          <div class="bs-choice-compare-row bs-choice-fade-target">
+            <button type="button" id="bsChoiceBefore" class="bs-choice-box bs-choice-box--before" onclick="BonusStatChoiceModule.selectSide('before')">
+              <div class="bs-choice-hover" aria-hidden="true"></div>
+              <div id="bsChoiceLevelBefore" class="bs-choice-level">Lv.0</div>
+              <div id="bsChoiceLinesBefore" class="bs-choice-line-list"></div>
+              <div id="bsChoiceSumBefore" class="bs-choice-sum-list"></div>
+              <div class="bs-choice-atk-area">
+                <span id="bsChoiceAtkBefore" class="bs-choice-atk-value">-</span>
+              </div>
+            </button>
+
+            <button type="button" id="bsChoiceAfter" class="bs-choice-box bs-choice-box--after" onclick="BonusStatChoiceModule.selectSide('after')">
+              <div class="bs-choice-hover" aria-hidden="true"></div>
+              <div id="bsChoiceLevelAfter" class="bs-choice-level">Lv.0</div>
+              <div id="bsChoiceLinesAfter" class="bs-choice-line-list"></div>
+              <div id="bsChoiceSumAfter" class="bs-choice-sum-list"></div>
+              <div class="bs-choice-atk-area">
+                <span id="bsChoiceAtkAfter" class="bs-choice-atk-value">-</span>
+              </div>
+            </button>
+          </div>
+
+          <div class="bs-choice-info-btm bs-choice-fade-target">
+            <img class="bs-choice-info-btm-img bs-pixel-image" src="images/fullScreenbonusStat/fullScreen_bonusStat_canvas_infoBtm.png" alt="" draggable="false">
+            <span id="bsChoiceRollHint" class="bs-choice-roll-hint"></span>
+          </div>
+
+          <div id="bsChoiceConfirmBox" class="bs-choice-confirm-box bs-choice-fade-target">
+            <div class="bs-choice-confirm-bg" aria-hidden="true"></div>
+            <div class="bs-choice-confirm-content">
+              <div class="bs-choice-confirm-stock">
+                <img id="bsChoiceStockIcon" class="bs-choice-confirm-stock-icon bs-pixel-image" src="" alt="" draggable="false">
+                <span id="bsChoiceStockCount" class="bs-choice-confirm-stock-count">0</span>
+              </div>
+              <div class="bs-choice-confirm-actions">
+                <button
+                  type="button"
+                  id="bsChoiceBtnConfirm"
+                  class="bs-choice-confirm-btn"
+                  aria-label="重新設定1次"
+                  onclick="BonusStatChoiceModule.onConfirmButtonClick()"
+                ></button>
+                <div class="bs-choice-confirm-cost">
+                  <span id="bsChoiceCostCount" class="bs-choice-confirm-cost-count">1</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 主潛能自動重設（Enchant.img/autoEnchant/potential） -->
+      <div id="aePotOverlay" class="ae-pot-modal hidden" aria-hidden="true">
+        <div class="ae-pot-modal-backdrop" onclick="AutoEnchantPotentialModule.onBackdropClick()"></div>
+        <div class="ae-pot-modal-panel">
+          <div id="aePotPanel" class="ae-pot-panel" role="dialog" aria-labelledby="aePotTitle">
+            <h3 id="aePotTitle" class="ae-pot-sr-only">潛在能力自動重設</h3>
+
+            <div class="ae-pot-rows">
+              <div class="ae-pot-row ae-pot-row-1">
+                <span id="aePotTitle1" class="ae-pot-row-num ae-pot-row-num-1" aria-hidden="true"></span>
+                <button type="button" id="aePotReset1" class="ae-pot-row-reset" title="初始化" onclick="AutoEnchantPotentialModule.resetGroup(0)"></button>
+                <select id="aePotG0L0" class="ae-pot-row-combo ae-pot-row-combo-1" aria-label="第1組第1排" onchange="AutoEnchantPotentialModule.setGroupTarget(0,0,this.value)"></select>
+                <select id="aePotG0L1" class="ae-pot-row-combo ae-pot-row-combo-2" aria-label="第1組第2排" onchange="AutoEnchantPotentialModule.setGroupTarget(0,1,this.value)"></select>
+                <select id="aePotG0L2" class="ae-pot-row-combo ae-pot-row-combo-3" aria-label="第1組第3排" onchange="AutoEnchantPotentialModule.setGroupTarget(0,2,this.value)"></select>
+              </div>
+              <div class="ae-pot-row ae-pot-row-2">
+                <span id="aePotTitle2" class="ae-pot-row-num ae-pot-row-num-2" aria-hidden="true"></span>
+                <button type="button" id="aePotReset2" class="ae-pot-row-reset" title="初始化" onclick="AutoEnchantPotentialModule.resetGroup(1)"></button>
+                <select id="aePotG1L0" class="ae-pot-row-combo ae-pot-row-combo-1" aria-label="第2組第1排" onchange="AutoEnchantPotentialModule.setGroupTarget(1,0,this.value)"></select>
+                <select id="aePotG1L1" class="ae-pot-row-combo ae-pot-row-combo-2" aria-label="第2組第2排" onchange="AutoEnchantPotentialModule.setGroupTarget(1,1,this.value)"></select>
+                <select id="aePotG1L2" class="ae-pot-row-combo ae-pot-row-combo-3" aria-label="第2組第3排" onchange="AutoEnchantPotentialModule.setGroupTarget(1,2,this.value)"></select>
+              </div>
+              <div class="ae-pot-row ae-pot-row-3">
+                <span id="aePotTitle3" class="ae-pot-row-num ae-pot-row-num-3" aria-hidden="true"></span>
+                <button type="button" id="aePotReset3" class="ae-pot-row-reset" title="初始化" onclick="AutoEnchantPotentialModule.resetGroup(2)"></button>
+                <select id="aePotG2L0" class="ae-pot-row-combo ae-pot-row-combo-1" aria-label="第3組第1排" onchange="AutoEnchantPotentialModule.setGroupTarget(2,0,this.value)"></select>
+                <select id="aePotG2L1" class="ae-pot-row-combo ae-pot-row-combo-2" aria-label="第3組第2排" onchange="AutoEnchantPotentialModule.setGroupTarget(2,1,this.value)"></select>
+                <select id="aePotG2L2" class="ae-pot-row-combo ae-pot-row-combo-3" aria-label="第3組第3排" onchange="AutoEnchantPotentialModule.setGroupTarget(2,2,this.value)"></select>
+              </div>
+              <div class="ae-pot-row ae-pot-row-4">
+                <span id="aePotTitle4" class="ae-pot-row-num ae-pot-row-num-4" aria-hidden="true"></span>
+                <button type="button" id="aePotReset4" class="ae-pot-row-reset" title="初始化" onclick="AutoEnchantPotentialModule.resetGroup(3)"></button>
+                <select id="aePotG3L0" class="ae-pot-row-combo ae-pot-row-combo-1" aria-label="第4組第1排" onchange="AutoEnchantPotentialModule.setGroupTarget(3,0,this.value)"></select>
+                <select id="aePotG3L1" class="ae-pot-row-combo ae-pot-row-combo-2" aria-label="第4組第2排" onchange="AutoEnchantPotentialModule.setGroupTarget(3,1,this.value)"></select>
+                <select id="aePotG3L2" class="ae-pot-row-combo ae-pot-row-combo-3" aria-label="第4組第3排" onchange="AutoEnchantPotentialModule.setGroupTarget(3,2,this.value)"></select>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              id="aePotStopAtk"
+              class="ae-pot-stop-atk"
+              title="超速模式"
+              onclick="AutoEnchantPotentialModule.toggleOverspeedMode()"
+            >
+              <span class="ae-pot-stop-atk-check" aria-hidden="true"></span>
+            </button>
+
+            <img id="aePotProgressAlert" class="ae-pot-progress-alert hidden" alt="" aria-hidden="true">
+
+            <div class="ae-pot-actions">
+              <button
+                type="button"
+                id="aePotBtnAction"
+                class="ae-pot-btn ae-pot-btn-action"
+                onclick="AutoEnchantPotentialModule.onActionClick()"
+              ></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 星力自動強化（Enchant.img/autoEnchant/starForce） -->
+      <div id="aeSfOverlay" class="ae-sf-modal hidden" aria-hidden="true">
+        <div class="ae-sf-modal-backdrop" onclick="AutoEnchantStarForceModule.close()"></div>
+        <div class="ae-sf-modal-panel">
+          <div id="aeSfPanel" class="ae-sf-panel" role="dialog" aria-labelledby="aeSfTitle">
+            <h3 id="aeSfTitle" class="ae-sf-sr-only">星力自動強化</h3>
+
+            <div id="aeSfStarBefore" class="ae-sf-star-before" aria-label="目前星數">0</div>
+
+            <input
+              id="aeSfStarTarget"
+              class="ae-sf-star-target"
+              type="text"
+              inputmode="numeric"
+              maxlength="2"
+              aria-label="目標星數"
+              oninput="AutoEnchantStarForceModule.onTargetInput(this.value)"
+            >
+
+            <img id="aeSfProgressAlert" class="ae-sf-progress-alert hidden" alt="" aria-hidden="true">
+
+            <div class="ae-sf-protect-row">
+              <button type="button" id="aeSfProtect15" class="ae-sf-protect-btn" disabled aria-disabled="true">15星防破壞</button>
+              <button type="button" id="aeSfProtect16" class="ae-sf-protect-btn" disabled aria-disabled="true">16星防破壞</button>
+              <button type="button" id="aeSfProtect17" class="ae-sf-protect-btn" disabled aria-disabled="true">17星防破壞</button>
+            </div>
+
+            <div class="ae-sf-target-controls">
+              <button type="button" id="aeSfBtnUp" class="ae-sf-btn ae-sf-btn-up" aria-label="目標星數加一" onclick="AutoEnchantStarForceModule.adjustTarget(1)"></button>
+              <button type="button" id="aeSfBtnDown" class="ae-sf-btn ae-sf-btn-down" aria-label="目標星數減一" onclick="AutoEnchantStarForceModule.adjustTarget(-1)"></button>
+              <button type="button" id="aeSfBtnAll" class="ae-sf-btn ae-sf-btn-all" aria-label="目標設為最高星數" onclick="AutoEnchantStarForceModule.setTargetMax()"></button>
+            </div>
+
+            <div class="ae-sf-actions">
+              <button
+                type="button"
+                id="aeSfBtnAction"
+                class="ae-sf-btn ae-sf-btn-action"
+                onclick="AutoEnchantStarForceModule.onActionClick()"
+              ></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div> <!-- /.ms-container-3col -->
+  </div> <!-- /#pageEnhance -->
+
+  <!-- 隱藏的統計欄位 (供 main.js 數據寫入，避免報錯) -->
+  <div class="hidden">
+    <span id="cntStarNormal">0次</span>
+    <span id="cntScrollSet20">0張</span>
+    <span id="cntScroll23_100">0張</span>
+    <span id="cntScroll23_30">0張</span>
+    <span id="cntScroll24">0張</span>
+    <span id="cntScroll25">0張</span>
+    <span id="cntHammerDetail">0/0</span>
+    <span id="cntScrollDetail">0/0</span>
+    <span id="cntRestore">0次</span>
+    <input id="price23_100" value="0">
+    <input id="price24" value="0">
+    <input id="price25" value="0">
+    <input id="priceHammer" value="0">
+    <input id="priceGlory" value="0">
+  </div>
+
+  <!-- JavaScript 載入 (順序：資料庫 -> 數據配置 -> 互動邏輯) -->
+  <script src="js/item.js"></script>
+  <script src="js/sessionPersistence.js"></script>
+  <script src="js/equipTooltipData.js?v=20260810a"></script>
+  <script src="js/inventory.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/modalAnimation.js"></script>
+  <script src="js/scrollData.js?v=20260812acc1"></script>
+  <script src="js/scrollEffectData.js"></script>
+  <script src="js/scrollEffect.js"></script>
+  <script src="js/starforceEffectData.js"></script>
+  <script src="js/starforceEffect.js"></script>
+  <script src="js/starforceScrollData.js"></script>
+  <script src="js/starforce.js"></script>
+  <script src="js/autoEnchantData.js?v=20260812r"></script>
+  <script src="js/autoEnchantStarForce.js"></script>
+  <script src="js/scroll.js?v=20260810k"></script>
+  <script src="js/hammerEffectData.js"></script>
+  <script src="js/hammerEffect.js"></script>
+  <script src="js/hammer.js?v=20260810a"></script>
+  <script src="js/soulWeaponEffectData.js"></script>
+  <script src="js/soulWeaponEffect.js"></script>
+  <script src="js/soulWeapon.js"></script>
+  <script src="js/exceptionalData.js"></script>
+  <script src="js/exceptionalEffectData.js"></script>
+  <script src="js/exceptionalEffect.js"></script>
+  <script src="js/exceptional.js"></script>
+  <script src="js/catValleyEnhanceData.js"></script>
+  <script src="js/catValleyEnhance.js"></script>
+  <script src="js/cubeRates/event8421.js"></script>
+  <script src="js/cubeRates/event8422.js"></script>
+  <script src="js/cubeRates/event8630.js"></script>
+  <script src="js/cubeRates/event8420.js"></script>
+  <script src="js/cubeRates/index.js"></script>
+  <script src="js/potentialData.js"></script>
+  <script src="js/addPotentialStatValues.js"></script>
+  <script src="js/destinyWeaponRestorationCubeValues.js"></script>
+  <script src="js/destinyWeaponAddPotentialValues.js"></script>
+  <script src="js/normalWeapon151200PotentialValues.js"></script>
+  <script src="js/armorAccessory151250MainPotentialValues.js"></script>
+  <script src="js/armorAccessory151200AddPotentialValues.js"></script>
+  <script src="js/armorAccessory201250AddPotentialValues.js"></script>
+  <script src="js/energyBadgePotentialValues.js"></script>
+  <script src="js/potentialStatValues.js"></script>
+  <script src="js/potentialCube.js"></script>
+  <script src="js/potentialEffectData.js"></script>
+  <script src="js/potentialEffect.js"></script>
+  <script src="js/potential.js?v=20260812n"></script>
+  <script src="js/potentialHexa.js"></script>
+  <script src="js/potentialUni.js"></script>
+  <script src="js/potentialMemoria.js?v=20260812q"></script>
+  <script src="js/autoEnchantPotential.js?v=20260812n"></script>
+  <script src="js/addPotentialData.js"></script>
+  <script src="js/addPotential.js?v=20260812n"></script>
+  <script src="js/addPotentialHexa.js"></script>
+  <script src="js/addPotentialUni.js"></script>
+  <script src="js/addPotentialMemoria.js?v=20260812r"></script>
+  <script src="js/autoEnchantAddPotential.js?v=20260812t"></script>
+  <script src="js/potentialMemoriaChoiceEffectData.js?v=20260812s"></script>
+  <script src="js/potentialMemoriaChoiceEffect.js?v=20260812s"></script>
+  <script src="js/bonusStatValues.js?v=20260811k"></script>
+  <script src="js/bonusStatData.js?v=20260811v"></script>
+  <script src="js/bonusStatEffectData.js?v=20260811v"></script>
+  <script src="js/bonusStatEffect.js?v=20260812r"></script>
+  <script src="js/bonusStat.js?v=20260811v"></script>
+  <script src="js/bonusStatChoice.js?v=20260811t"></script>
+  <script src="js/autoEnchantBonusStat.js?v=20260811u"></script>
+  <script src="js/bonusStatChoiceEffectData.js?v=20260812f"></script>
+  <script src="js/bonusStatChoiceEffect.js?v=20260812h"></script>
+
+  <!-- 追加屬性機率表 -->
+  <div class="pt-inspect-overlay hidden" id="bsInspectOverlay">
+    <div class="pt-inspect-panel" id="bsInspectPanel">
+      <div class="pt-inspect-header">
+        <div>
+          <h3 class="pt-inspect-title" id="bsInspectTitle">追加屬性機率一覽</h3>
+          <pre class="pt-inspect-meta" id="bsInspectMeta"></pre>
+        </div>
+        <div class="pt-inspect-controls">
+          <label class="pt-inspect-cube-label">
+            星火
+            <select id="bsInspectTypeSelect"></select>
+          </label>
+          <button type="button" class="pt-inspect-close" id="bsInspectClose">關閉</button>
+        </div>
+      </div>
+      <div class="pt-inspect-body" id="bsInspectBody"></div>
+    </div>
+  </div>
+
+  <!-- 潛能詞條查詢（debug） -->
+  <div class="pt-inspect-overlay hidden" id="ptInspectOverlay">
+    <div class="pt-inspect-panel" id="ptInspectPanel">
+      <div class="pt-inspect-header">
+        <div>
+          <h3 class="pt-inspect-title" id="ptInspectTitle">潛能詞條一覽</h3>
+          <pre class="pt-inspect-meta" id="ptInspectMeta"></pre>
+        </div>
+        <div class="pt-inspect-controls">
+          <label class="pt-inspect-cube-label">
+            方塊
+            <select id="ptInspectCubeSelect"></select>
+          </label>
+          <button type="button" class="pt-inspect-close" id="ptInspectClose">關閉</button>
+        </div>
+      </div>
+      <div class="pt-inspect-body" id="ptInspectBody"></div>
+    </div>
+  </div>
+
+  <!-- 成本統計 -->
+  <div id="costTrackerOverlay" class="cost-tracker-overlay hidden" aria-hidden="true">
+    <div id="costTrackerBackdrop" class="cost-tracker-backdrop"></div>
+    <div class="cost-tracker-panel" role="dialog" aria-labelledby="costTrackerTitle">
+      <div class="cost-tracker-header">
+        <h3 id="costTrackerTitle" class="cost-tracker-title">成本統計</h3>
+        <button type="button" id="costTrackerClose" class="cost-tracker-close" aria-label="關閉">×</button>
+      </div>
+      <p class="cost-tracker-hint">設定各項目單價後，系統會依使用次數自動計算總成本。單價輸入會自動熱儲存；楓幣花費以實際消耗計入。重新整理頁面會重置進度，請用「匯出／匯入存檔」保存與還原。</p>
+      <div id="costTrackerBody" class="cost-tracker-body"></div>
+      <div class="cost-tracker-footer">
+        <div class="cost-tracker-total-row">
+          <span>總成本</span>
+          <strong id="costTrackerTotal">0</strong>
+        </div>
+        <div class="cost-tracker-actions">
+          <div class="cost-tracker-actions-left">
+            <button type="button" id="costTrackerExportSave" class="cost-tracker-btn">匯出存檔</button>
+            <button type="button" id="costTrackerImportSave" class="cost-tracker-btn">匯入存檔</button>
+            <input type="file" id="costTrackerImportFile" class="cost-tracker-import-file" accept=".json,application/json" hidden>
+          </div>
+          <div class="cost-tracker-actions-right">
+            <button type="button" id="costTrackerSavePrices" class="cost-tracker-btn cost-tracker-btn-primary">儲存單價</button>
+            <button type="button" id="costTrackerUnitToggle" class="cost-tracker-btn cost-tracker-btn-toggle" title="切換單價輸入單位">每1=1億</button>
+            <button type="button" id="costTrackerReset" class="cost-tracker-btn">重置統計</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/bonusStatInspect.js"></script>
+  <script src="js/potentialInspect.js"></script>
+  <script src="js/equipTooltip.js?v=20260811a"></script>
+  <script src="js/costTracker.js?v=20260811v"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

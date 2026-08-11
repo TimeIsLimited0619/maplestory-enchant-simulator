@@ -1,0 +1,70 @@
+{
+  "source": "UI.Enchant.img.xml",
+  "sections": {
+    "Enchant.img/potential": "靜態 UI 布局（約 line 2419）",
+    "Enchant.img/effect/potential": "強化演出動畫序列（約 line 27165，effect 節點下）"
+  },
+  "layout": {
+    "itemIcon": { "x": 166, "y": 112 },
+    "itemIconScale": 2,
+    "itemName": { "x": 200, "y": 155 },
+    "effectAnchor": { "x": 209, "y": 114 },
+    "textScreenOffset": { "x": 214, "y": 115 },
+    "statL": { "x": 105, "y": 349 },
+    "ceiling": { "x": 372, "y": 224 },
+    "particle": {
+      "waitEquip": { "pos": { "x": 209, "y": 114 }, "uol": "UI/Enchant.img/particle/itemIcon_waitEquip_blue" },
+      "onEquip": { "pos": { "x": 209, "y": 114 }, "uol": "UI/Enchant.img/particle/itemIcon_onEquip_blue" }
+    }
+  },
+  "tierUpgrade": {
+    "ranks": ["rare", "epic", "unique"],
+    "thresholds": [5, 10, 20, 30, 40, 50, 100],
+    "origin": { "x": -158, "y": -42 },
+    "pathPattern": "potential/tierUpgrade/{rank}/{threshold}"
+  },
+  "animation": {
+    "frameDelayMs": 60,
+    "tryFrames": 12,
+    "ranks": {
+      "rare": {
+        "try": { "layers": ["itemIcon/front"], "note": "back 僅 delay，無 PNG outlink" },
+        "success": {
+          "0": { "layers": ["itemIcon/front", "textScreen"], "textScreenReuse": "effect/starForce/5/success/textScreen", "frames": { "front": 12, "textScreen": 10 } },
+          "1": { "layers": ["itemIcon/front", "itemIcon/back"], "frames": { "front": 12, "back": 12 } },
+          "2": { "layers": ["itemIcon/front", "itemIcon/back"], "frames": { "front": 12, "back": 12 } }
+        }
+      },
+      "epic": { "sameStructureAs": "rare" },
+      "unique": { "sameStructureAs": "rare" },
+      "legendary": {
+        "try": { "layers": ["itemIcon/front"] },
+        "success": {
+          "0": { "layers": ["itemIcon/front", "textScreen"] },
+          "1": { "layers": ["itemIcon/front", "itemIcon/back"] },
+          "note": "無 success/2（已是最高階）"
+        }
+      }
+    },
+    "fail": null,
+    "totalUniqueOutlinks": 460,
+    "duplicateBlock": "effect/addtionalPotential 重用相同 potential 素材路徑"
+  },
+  "renderStack": [
+    "itemIcon/back（success/1、/2 才有 PNG）",
+    "裝備圖示（itemIconScale=2，置於 vector:itemIcon）",
+    "itemIcon/front（try 與 success 光效）",
+    "textScreen（success/0 全屏成功字，共用 starForce 素材）",
+    "tierUpgrade 閃光（升階時叠加）"
+  ],
+  "assetPath": {
+    "wzOutlinkPrefix": "UI/_Canvas/Enchant.img/",
+    "suggestedLocal": "images/potential/effect/potential/{rank}/{phase}/..."
+  },
+  "playbackFlow": [
+    "1. 點方塊 → 依目前潛能階級播放 {rank}/try（12 帧 loop，60ms/帧）",
+    "2. 結果：同階洗潛 → {rank}/success/0 + textScreen",
+    "3. 升階 → {rank}/success/1 或 /2 + tierUpgrade/{newRank}/{threshold}% 閃光",
+    "4. 裝備圖示錨點 (209,114)，每帧 origin 為該帧 sprite 在面板上的絕對偏移"
+  ]
+}

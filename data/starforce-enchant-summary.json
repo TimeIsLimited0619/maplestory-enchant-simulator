@@ -1,0 +1,127 @@
+{
+  "source": "UI.Enchant.img.xml",
+  "sections": {
+    "Enchant.img/starForce": "靜態 UI（約 line 281）",
+    "Enchant.img/effect/starForce": "星力強化演出（約 line 14011）"
+  },
+  "defaultTier": "1",
+  "typeMappingNote": "星數 → effect tier（type/normal）；素材僅 tier 1 時共用 defaultTier",
+  "layout": {
+    "itemIcon": {
+      "x": 166,
+      "y": 112
+    },
+    "itemName": {
+      "x": 200,
+      "y": 155
+    },
+    "summary": {
+      "x": 209,
+      "y": 260
+    },
+    "textScreenOffset": {
+      "x": 214,
+      "y": 115
+    },
+    "effectAnchor": {
+      "x": 209,
+      "y": 114
+    },
+    "itemIconScale": 2,
+    "summaryStarSpace": {
+      "X1": 0,
+      "X5": 10,
+      "Y": 5
+    }
+  },
+  "playbackFlow": [
+    "1. 一般星力強化 → try（itemIcon 12帧）",
+    "2. 成功 → success（itemIcon + summaryIcon + textScreen）",
+    "3. 失敗/維持/降星 → fail（itemIcon + textScreen）"
+  ],
+  "phases": {
+    "try": {
+      "durationMs": 720,
+      "layers": {
+        "itemIcon/back": {
+          "frameCount": 12,
+          "pngCount": 0,
+          "uniqueOutlinks": 0,
+          "delayMs": 60
+        },
+        "itemIcon/front": {
+          "frameCount": 12,
+          "pngCount": 12,
+          "uniqueOutlinks": 12,
+          "delayMs": 60
+        },
+        "summaryIcon": {
+          "frameCount": 6,
+          "pngCount": 6,
+          "uniqueOutlinks": 4,
+          "delayMs": 60
+        }
+      },
+      "note": "try 只播 itemIcon；summaryIcon ping-pong 無獨立素材"
+    },
+    "success": {
+      "durationMs": 720,
+      "layers": {
+        "itemIcon/back": {
+          "frameCount": 12,
+          "pngCount": 12,
+          "uniqueOutlinks": 12,
+          "delayMs": 60
+        },
+        "itemIcon/front": {
+          "frameCount": 12,
+          "pngCount": 12,
+          "uniqueOutlinks": 12,
+          "delayMs": 60
+        },
+        "summaryIcon": {
+          "frameCount": 9,
+          "pngCount": 9,
+          "uniqueOutlinks": 9,
+          "delayMs": 60
+        },
+        "textScreen": {
+          "frameCount": 9,
+          "pngCount": 9,
+          "uniqueOutlinks": 9,
+          "delayMs": 60
+        }
+      },
+      "hasTextScreen": true
+    },
+    "fail": {
+      "durationMs": 720,
+      "layers": {
+        "itemIcon/back": {
+          "frameCount": 12,
+          "pngCount": 0,
+          "uniqueOutlinks": 0,
+          "delayMs": 60
+        },
+        "itemIcon/front": {
+          "frameCount": 12,
+          "pngCount": 12,
+          "uniqueOutlinks": 12,
+          "delayMs": 60
+        },
+        "textScreen": {
+          "frameCount": 11,
+          "pngCount": 11,
+          "uniqueOutlinks": 11,
+          "delayMs": 60
+        }
+      },
+      "note": "keep / drop 共用 fail 演出"
+    }
+  },
+  "assetPathPattern": {
+    "wzPrefix": "UI/_Canvas/Enchant.img/effect/starForce/1/",
+    "local": "images/starforce/effect/1/{phase}/...",
+    "example": "images/starforce/effect/1/try/itemIcon/front/starForce.1.try.itemIcon.front.0.png"
+  }
+}

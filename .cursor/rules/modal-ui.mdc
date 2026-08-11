@@ -1,0 +1,28 @@
+---
+description: 新彈窗 UI 規範 — 素材原始尺寸、淡入淡出
+globs: index.html,css/style.css,js/**/*.js
+alwaysApply: false
+---
+
+# Modal & Asset UI Conventions
+
+Apply to **new** modal/overlay work only. Do not retroactively resize or re-animate completed screens unless the user asks.
+
+## Asset sizing
+
+- Use each image's **native pixel dimensions** for containers, buttons, and sprites.
+- Set explicit `width` / `height` (or `background-size` at native size). Avoid stretching art with `100% 100%` unless the asset is designed to scale.
+
+## Modal fade animations
+
+- Every new full-screen overlay must **fade in on open** and **fade out on close**.
+- Use `js/modalAnimation.js`:
+  - `beginModalFadeIn(modal)` — on open
+  - `beginModalFadeOut(modal, onDone)` — simple full-modal close
+  - `clearModalFadeState(modal)` — reset classes on forced close
+- CSS pattern:
+  - Backdrop: `transition: opacity 0.45s ease`
+  - Content: `*-fade-target` with `transition: opacity 0.35s ease`
+  - Open: `.is-opening:not(.is-opening-ready) { opacity: 0 }` → add `.is-opening-ready` after double `requestAnimationFrame`
+  - Close: `.is-closing { opacity: 0 }` for simple modals
+- Staged close (e.g. memoria, recovery card): keep existing `is-closing` rules; only add fade-in via `beginModalFadeIn`.

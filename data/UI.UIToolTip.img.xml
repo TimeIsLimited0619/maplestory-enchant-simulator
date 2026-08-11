@@ -1,0 +1,2437 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<dir name="UIToolTip.img">
+  <dir name="Item">
+    <dir name="GrowthInfoGauge">
+      <png name="box" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/GrowthInfoGauge/box" />
+      </png>
+      <dir name="gauge">
+        <png name="0" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAJCAYAAADzRkbkAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAnSURBVBhXY/j//8x/hlX/Gf4zzAQRHSCiHESkgYhQEOECltjN8B8AMMMXP2OGJugAAAAASUVORK5CYII=">
+          <vector name="origin" value="0, -2" />
+        </png>
+        <png name="1" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAJCAYAAADzRkbkAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAnSURBVBhXY/j//8x/hlX/Gf4zzAQRHSCiHESkgYhQEOECltjN8B8AMMMXP2OGJugAAAAASUVORK5CYII=">
+          <vector name="origin" value="0, -2" />
+        </png>
+        <png name="2" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAJCAYAAADzRkbkAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAnSURBVBhXY/j//8x/hlX/Gf4zzAQRHSCiHESkgYhQEOECltjN8B8AMMMXP2OGJugAAAAASUVORK5CYII=">
+          <vector name="origin" value="0, -2" />
+        </png>
+      </dir>
+    </dir>
+    <dir name="Common">
+      <dir name="frame">
+        <png name="nw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="7, 7" />
+          <int32 name="z" value="0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/frame/nw" />
+        </png>
+        <png name="ne" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="7, 7" />
+          <int32 name="z" value="0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/frame/ne" />
+        </png>
+        <png name="sw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="7, 7" />
+          <int32 name="z" value="0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/frame/sw" />
+        </png>
+        <png name="se" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="7, 7" />
+          <int32 name="z" value="0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/frame/se" />
+        </png>
+        <png name="n" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAOCAYAAADuQ3ZcAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABBSURBVBhXY1DRMfnKEJJR8pbB1jv8JYO1Z8hLBgtX/xcM5k4+LxhM7D2eMxjbuj1nMLRyfs5gYOHwjEHP1BadAAAwnxb7El8TWwAAAABJRU5ErkJggg==">
+          <vector name="origin" value="0, 7" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="s" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAPCAYAAAAlH6X5AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAcSURBVBhXY9AztX3GQCbhHhLzikFFx+QriGAAAEvOFidpXpAmAAAAAElFTkSuQmCC">
+          <vector name="origin" value="0, 7" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="w" value="iVBORw0KGgoAAAANSUhEUgAAAA4AAAABCAYAAADuHp8EAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAXSURBVBhXY1DRMfnqHhLzSs/U9hkpGABgChWj9abIlwAAAABJRU5ErkJggg==">
+          <vector name="origin" value="7, 0" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="e" value="iVBORw0KGgoAAAANSUhEUgAAAA8AAAABCAYAAAAB3PQ6AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAbSURBVBhXY9AztX1GCnYPiXmlomPyVUXHhAEAqxIWJ3ieJfQAAAAASUVORK5CYII=">
+          <vector name="origin" value="7, 0" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="c" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY9AztX0GAAK8AYes8WmhAAAAAElFTkSuQmCC">
+          <vector name="origin" value="0, 0" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="dotline" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAADCAYAAABS3WWCAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAUSURBVBhXY5BV1vrPYO0V+BJMAAAfvgToI/AiqwAAAABJRU5ErkJggg==">
+          <vector name="origin" value="0, 1" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="cover" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==" />
+        <int32 name="width" value="300" />
+        <int32 name="marginX" value="15" />
+        <int32 name="marginY" value="10" />
+        <int32 name="dotlineMarginUpside" value="5" />
+        <int32 name="dotlineMarginDownside" value="8" />
+      </dir>
+      <dir name="ItemIcon">
+        <png name="base" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="0, 0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/ItemIcon/base" />
+        </png>
+        <png name="shade" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="0, 0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/ItemIcon/shade" />
+        </png>
+        <png name="cover" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==" />
+      </dir>
+      <dir name="info">
+        <dir name="0">
+          <dir name="0">
+            <string name="type" value="itemName" />
+            <dir name="addOption">
+              <dir name="0">
+                <string name="font" value="Dotum" />
+                <string name="fontColor" value="FFFFFFFF" />
+                <int32 name="fontSize" value="14" />
+                <int32 name="fontBold" value="1" />
+                <string name="type" value="gender" />
+              </dir>
+              <dir name="1">
+                <string name="font" value="Dotum" />
+                <string name="fontColor" value="FFFFCC00" />
+                <int32 name="fontSize" value="14" />
+                <int32 name="fontBold" value="1" />
+                <string name="type" value="inUse" />
+              </dir>
+              <dir name="2">
+                <string name="font" value="Dotum" />
+                <string name="fontColor" value="ffb7bfc5" />
+                <int32 name="fontSize" value="14" />
+                <int32 name="fontBold" value="1" />
+                <string name="type" value="bag" />
+              </dir>
+              <dir name="3">
+                <string name="font" value="Dotum" />
+                <string name="fontColor" value="FF66FFFF" />
+                <int32 name="fontSize" value="14" />
+                <int32 name="fontBold" value="1" />
+                <string name="type" value="genderFree" />
+              </dir>
+              <dir name="4">
+                <string name="font" value="Dotum" />
+                <string name="fontColor" value="FF66FFFF" />
+                <int32 name="fontSize" value="14" />
+                <int32 name="fontBold" value="1" />
+                <string name="type" value="mapleHome" />
+              </dir>
+            </dir>
+            <dir name="normal">
+              <string name="font" value="Dotum" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="14" />
+              <int32 name="fontBold" value="1" />
+            </dir>
+            <int32 name="align" value="1" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+          </dir>
+          <dir name="1">
+            <string name="type" value="label" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <int32 name="align" value="1" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+          </dir>
+          <dir name="2">
+            <string name="type" value="quest" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <int32 name="align" value="1" />
+          </dir>
+          <dir name="3">
+            <string name="type" value="trade" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <int32 name="align" value="1" />
+          </dir>
+          <dir name="4">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <string name="type" value="consumableFrom" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <int32 name="align" value="1" />
+          </dir>
+          <dir name="5">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <string name="type" value="shopLimit" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <int32 name="align" value="1" />
+          </dir>
+          <dir name="6">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <string name="type" value="timeLimit" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <dir name="addOption">
+              <dir name="expire">
+                <string name="font" value="Dotum" />
+                <string name="fontColor" value="FFFF8A18" />
+                <int32 name="fontSize" value="12" />
+                <int32 name="fontBold" value="0" />
+              </dir>
+            </dir>
+            <int32 name="align" value="1" />
+          </dir>
+          <dir name="7">
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="make" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="14" />
+              <int32 name="fontBold" value="1" />
+            </dir>
+            <int32 name="align" value="1" />
+          </dir>
+          <dir name="8">
+            <string name="type" value="giftSender" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <int32 name="align" value="1" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+          </dir>
+          <dir name="9">
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="creator" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="14" />
+              <int32 name="fontBold" value="1" />
+            </dir>
+            <int32 name="align" value="1" />
+          </dir>
+          <dir name="10">
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="sellPrice" />
+            <dir name="normal">
+              <string name="font" value="Dotum" />
+              <string name="fontColor" value="FFFFCC00" />
+              <int32 name="fontSize" value="12" />
+            </dir>
+            <int32 name="align" value="1" />
+          </dir>
+        </dir>
+        <dir name="1">
+          <int32 name="alignOffset" value="90" />
+          <dir name="ItemIcon">
+            <vector name="itemIconPos" value="15, -3" />
+            <int32 name="descOffset" value="3" />
+          </dir>
+          <dir name="haveMark">
+            <vector name="pos" value="15, 0" />
+          </dir>
+          <dir name="0">
+            <dir name="normal">
+              <int32 name="sectionSpace" value="10" />
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <dir name="addOption">
+              <dir name="0">
+                <string name="font" value="削圓" />
+                <string name="fontColor" value="FFFF8A18" />
+                <int32 name="fontSize" value="12" />
+                <int32 name="fontBold" value="0" />
+                <string name="type" value="disabled" />
+              </dir>
+            </dir>
+            <string name="type" value="reqLevel" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+          </dir>
+          <dir name="1">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <dir name="addOption">
+              <dir name="0">
+                <string name="font" value="削圓" />
+                <string name="fontColor" value="FFFF8A18" />
+                <int32 name="fontSize" value="12" />
+                <int32 name="fontBold" value="0" />
+                <string name="type" value="disabled" />
+              </dir>
+            </dir>
+            <string name="type" value="reqSkill" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+          </dir>
+          <dir name="2">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <string name="type" value="desc" />
+          </dir>
+          <dir name="3">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <string name="type" value="listAvailable" />
+          </dir>
+          <dir name="4">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <string name="type" value="incTendency" />
+          </dir>
+          <dir name="5">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <string name="type" value="shareNameTag" />
+          </dir>
+          <dir name="6">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <string name="type" value="recipeUseCount" />
+          </dir>
+          <dir name="7">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <string name="type" value="recipeValidDay" />
+          </dir>
+          <dir name="8">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <string name="type" value="itemCooltime" />
+          </dir>
+          <dir name="9">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <string name="type" value="flatRate" />
+          </dir>
+          <dir name="10">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <string name="type" value="bossMesoWorth" />
+          </dir>
+          <dir name="11">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <string name="type" value="noDefaultEffect" />
+          </dir>
+          <dir name="100">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <string name="type" value="cashTradingEnable" />
+          </dir>
+          <dir name="12">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <string name="type" value="burningItem" />
+          </dir>
+        </dir>
+        <dir name="2">
+          <dir name="0">
+            <string name="type" value="preview" />
+            <int32 name="sectionSpace" value="9" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+          </dir>
+          <int32 name="ignoreLine" value="1" />
+          <int32 name="upperSpace" value="5" />
+        </dir>
+        <dir name="3">
+          <dir name="0">
+            <string name="type" value="desc_leftalign" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+          </dir>
+          <dir name="102">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="housingFurnitureSlotCount" />
+          </dir>
+          <dir name="101">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="expChair" />
+          </dir>
+          <dir name="100">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="itemSkillOptionReqLevel" />
+          </dir>
+          <dir name="1">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <string name="type" value="openedRecipe" />
+          </dir>
+          <dir name="2">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFCC00" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="pointCost" />
+          </dir>
+          <dir name="3">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFCC00" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="howToUse" />
+          </dir>
+          <dir name="4">
+            <string name="type" value="only" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+          </dir>
+          <dir name="5">
+            <string name="type" value="cantAccountSharable" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+          </dir>
+          <dir name="6">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFCC00" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="sequenceDoping" />
+          </dir>
+          <dir name="7">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="cashTradeInfo" />
+          </dir>
+          <dir name="8">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="karma" />
+          </dir>
+          <dir name="9">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="expireOnNonPremiumLogin" />
+          </dir>
+          <dir name="10">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="expireOnLogout" />
+          </dir>
+          <dir name="11">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="noMoveToLocker" />
+          </dir>
+          <dir name="12">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="monthlyOnce" />
+          </dir>
+          <dir name="13">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="buyLevelLimit" />
+          </dir>
+          <dir name="14">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FF66FFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="genderFree" />
+          </dir>
+          <dir name="15">
+            <dir name="normal">
+              <string name="font" value="굴림" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="homeThemeExtractItem" />
+          </dir>
+          <dir name="16">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="mvpItem" />
+          </dir>
+          <dir name="17">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="desc_buffManager" />
+          </dir>
+        </dir>
+        <dir name="fontEmphasis">
+          <string name="font" value="削圓" />
+          <string name="fontColor" value="FFFFCC00" />
+          <int32 name="fontSize" value="12" />
+          <int32 name="fontBold" value="0" />
+        </dir>
+      </dir>
+    </dir>
+    <dir name="Equip">
+      <dir name="frame">
+        <dir name="common">
+          <png name="top" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="162, 15" />
+            <int32 name="z" value="0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/top" />
+          </png>
+          <png name="mid" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="162, 0" />
+            <int32 name="z" value="0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/mid" />
+          </png>
+          <png name="btm" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="162, 6" />
+            <int32 name="z" value="0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/btm" />
+          </png>
+          <png name="line" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="162, 1" />
+            <int32 name="z" value="0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/line" />
+          </png>
+          <png name="box" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, 0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/box" />
+          </png>
+          <png name="cover" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==" />
+          <dir name="category">
+            <png name="w" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="4, 7" />
+              <int32 name="z" value="0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/category/w" />
+            </png>
+            <png name="c" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAOCAYAAADuQ3ZcAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAQSURBVBhXY+hfc8aYgVICAEoyHy2eqI6fAAAAAElFTkSuQmCC">
+              <vector name="origin" value="0, 7" />
+              <int32 name="z" value="0" />
+            </png>
+            <png name="e" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="4, 7" />
+              <int32 name="z" value="0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/category/e" />
+            </png>
+          </dir>
+        </dir>
+        <dir name="genesis">
+          <png name="top" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="162, 15" />
+            <int32 name="z" value="0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/top" />
+          </png>
+          <png name="mid" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="162, 0" />
+            <int32 name="z" value="0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/mid" />
+          </png>
+          <png name="btm" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="162, 6" />
+            <int32 name="z" value="0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/btm" />
+          </png>
+          <png name="line" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="162, 1" />
+            <int32 name="z" value="0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/line" />
+          </png>
+          <png name="box" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, 0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/box" />
+          </png>
+          <png name="cover" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==" />
+          <dir name="category">
+            <png name="w" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="4, 7" />
+              <int32 name="z" value="0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/category/w" />
+            </png>
+            <png name="c" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAOCAYAAADuQ3ZcAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAQSURBVBhXY+hfc8aYgVICAEoyHy2eqI6fAAAAAElFTkSuQmCC">
+              <vector name="origin" value="0, 7" />
+              <int32 name="z" value="0" />
+            </png>
+            <png name="e" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="4, 7" />
+              <int32 name="z" value="0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/category/e" />
+            </png>
+          </dir>
+        </dir>
+        <dir name="destiny">
+          <png name="top" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="162, 15" />
+            <int32 name="z" value="0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/top" />
+          </png>
+          <png name="mid" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="162, 0" />
+            <int32 name="z" value="0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/mid" />
+          </png>
+          <png name="btm" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="162, 6" />
+            <int32 name="z" value="0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/btm" />
+          </png>
+          <png name="line" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="162, 1" />
+            <int32 name="z" value="0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/line" />
+          </png>
+          <png name="box" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, 0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/box" />
+          </png>
+          <png name="cover" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==" />
+          <dir name="category">
+            <png name="w" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="4, 7" />
+              <int32 name="z" value="0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/category/w" />
+            </png>
+            <png name="c" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAOCAYAAADuQ3ZcAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAQSURBVBhXY+hfc8aYgVICAEoyHy2eqI6fAAAAAElFTkSuQmCC">
+              <vector name="origin" value="0, 7" />
+              <int32 name="z" value="0" />
+            </png>
+            <png name="e" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="4, 7" />
+              <int32 name="z" value="0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/category/e" />
+            </png>
+          </dir>
+        </dir>
+        <dir name="set">
+          <png name="top" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="149, 15" />
+            <int32 name="z" value="0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/set/top" />
+          </png>
+          <png name="mid" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="149, 0" />
+            <int32 name="z" value="0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/set/mid" />
+          </png>
+          <png name="btm" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="149, 6" />
+            <int32 name="z" value="0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/set/btm" />
+          </png>
+          <png name="line" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="149, 1" />
+            <int32 name="z" value="0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/set/line" />
+          </png>
+          <png name="cover" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==" />
+          <dir name="boxNormal">
+            <png name="w" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="4, 7" />
+              <int32 name="z" value="0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/category/w" />
+            </png>
+            <png name="c" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAOCAYAAADuQ3ZcAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAQSURBVBhXY+hfc8aYgVICAEoyHy2eqI6fAAAAAElFTkSuQmCC">
+              <vector name="origin" value="0, 7" />
+              <int32 name="z" value="0" />
+            </png>
+            <png name="e" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="4, 7" />
+              <int32 name="z" value="0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/category/e" />
+            </png>
+          </dir>
+          <dir name="boxLucky">
+            <png name="w" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="4, 8" />
+              <int32 name="z" value="0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/set/boxLucky/w" />
+            </png>
+            <png name="c" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAQCAYAAADXnxW3AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAQSURBVBhXY+hfc8aYgXoEAJk7I6EYboF1AAAAAElFTkSuQmCC">
+              <vector name="origin" value="0, 8" />
+              <int32 name="z" value="0" />
+            </png>
+            <png name="e" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="4, 8" />
+              <int32 name="z" value="0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/set/boxLucky/e" />
+            </png>
+          </dir>
+        </dir>
+      </dir>
+      <dir name="itemIcon">
+        <png name="base" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="0, 0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/ItemIcon/base" />
+        </png>
+        <png name="shade" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="0, 0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/ItemIcon/shade" />
+        </png>
+        <png name="cover" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==" />
+      </dir>
+      <dir name="font">
+        <dir name="common">
+          <dir name="itemName">
+            <string name="font" value="Dotum" />
+            <string name="fontColor" value="FFFFFFFF" />
+            <int32 name="fontSize" value="14" />
+            <int32 name="fontBold" value="1" />
+          </dir>
+          <dir name="itemNameGray">
+            <string name="font" value="Dotum" />
+            <string name="fontColor" value="FFB7BFC5" />
+            <int32 name="fontSize" value="14" />
+            <int32 name="fontBold" value="1" />
+          </dir>
+          <dir name="normal">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFFFFFFF" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+          <dir name="normalBold">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFFFFFFF" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="1" />
+          </dir>
+          <dir name="gray">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFB7BFC5" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+          <dir name="grayBold">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFB7BFC5" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="1" />
+          </dir>
+          <dir name="darkGray">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FF85919F" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+          <dir name="red">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFFF8A18" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+          <dir name="emphasis">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFFFCC00" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+          <dir name="abilityTimeLimited">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFFFF54D" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+        </dir>
+        <dir name="starForce">
+          <dir name="normal">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFFFCC00" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+        </dir>
+        <dir name="scroll">
+          <dir name="normal">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFAFADFF" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+        </dir>
+        <dir name="bonusStat">
+          <dir name="normal">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FF0AE3AD" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+        </dir>
+        <dir name="potential">
+          <dir name="normal">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FF85919F" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+          <dir name="rare">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FF66FFFF" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+          <dir name="epic">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFBB77FF" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+          <dir name="unique">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFFFCC00" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+          <dir name="legendary">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFCCFF00" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+        </dir>
+        <dir name="additionalPotential">
+          <dir name="normal">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FF85919F" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+          <dir name="rare">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FF66FFFF" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+          <dir name="epic">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFBB77FF" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+          <dir name="unique">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFFFCC00" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+          <dir name="legendary">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFCCFF00" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+        </dir>
+        <dir name="soul">
+          <dir name="normal">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFFFFFFF" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+        </dir>
+        <dir name="exceptional">
+          <dir name="normal">
+            <string name="font" value="MD摩利斯9" />
+            <string name="fontColor" value="FFFF3333" />
+            <int32 name="fontSize" value="12" />
+            <int32 name="fontBold" value="0" />
+          </dir>
+        </dir>
+      </dir>
+      <dir name="imgFont">
+        <dir name="atkPow">
+          <dir name="plus">
+            <png name="sign" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/plus/sign" />
+            </png>
+            <png name="0" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/plus/0" />
+            </png>
+            <png name="1" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/plus/1" />
+            </png>
+            <png name="2" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/plus/2" />
+            </png>
+            <png name="3" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/plus/3" />
+            </png>
+            <png name="4" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/plus/4" />
+            </png>
+            <png name="5" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/plus/5" />
+            </png>
+            <png name="6" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/plus/6" />
+            </png>
+            <png name="7" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/plus/7" />
+            </png>
+            <png name="8" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/plus/8" />
+            </png>
+            <png name="9" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/plus/9" />
+            </png>
+            <png name="a" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/plus/a" />
+            </png>
+            <png name="b" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/plus/b" />
+            </png>
+            <int32 name="space" value="2" />
+          </dir>
+          <dir name="minus">
+            <png name="sign" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/minus/sign" />
+            </png>
+            <png name="0" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/minus/0" />
+            </png>
+            <png name="1" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/minus/1" />
+            </png>
+            <png name="2" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/minus/2" />
+            </png>
+            <png name="3" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/minus/3" />
+            </png>
+            <png name="4" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/minus/4" />
+            </png>
+            <png name="5" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/minus/5" />
+            </png>
+            <png name="6" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/minus/6" />
+            </png>
+            <png name="7" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/minus/7" />
+            </png>
+            <png name="8" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/minus/8" />
+            </png>
+            <png name="9" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/minus/9" />
+            </png>
+            <png name="a" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/minus/a" />
+            </png>
+            <png name="b" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/minus/b" />
+            </png>
+            <int32 name="space" value="2" />
+          </dir>
+          <png name="equipped" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, 0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/imgFont/atkPow/equipped" />
+          </png>
+        </dir>
+      </dir>
+      <dir name="textIcon">
+        <dir name="starForce">
+          <png name="normal" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, -2" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/starForce/normal" />
+          </png>
+          <png name="enhanced" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, -2" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/starForce/enhanced" />
+          </png>
+          <png name="empty" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, 0" />
+            <string name="_outlink" value="UI/_Canvas/Enchant.img/starForce/summaryStar/empty" />
+          </png>
+          <png name="star" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, 0" />
+            <string name="_outlink" value="UI/_Canvas/Enchant.img/starForce/summaryStar/normal" />
+          </png>
+          <png name="blue" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, 0" />
+            <string name="_outlink" value="UI/_Canvas/Enchant.img/starForce/summaryStar/blue" />
+          </png>
+        </dir>
+        <dir name="scroll">
+          <png name="normal" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, -2" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/scroll/normal" />
+          </png>
+          <png name="enhanced" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, -2" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/scroll/enhanced" />
+          </png>
+        </dir>
+        <dir name="bonusStat">
+          <png name="normal" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, -2" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/bonusStat/normal" />
+          </png>
+          <png name="enhanced" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, -2" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/bonusStat/enhanced" />
+          </png>
+          <dir name="number">
+            <png name="0" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/bonusStat/statIcon/0" />
+            </png>
+            <png name="1" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/bonusStat/statIcon/1" />
+            </png>
+            <png name="2" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/bonusStat/statIcon/2" />
+            </png>
+            <png name="3" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/bonusStat/statIcon/3" />
+            </png>
+            <png name="4" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/bonusStat/statIcon/4" />
+            </png>
+            <png name="5" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/bonusStat/statIcon/5" />
+            </png>
+            <png name="6" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/bonusStat/statIcon/6" />
+            </png>
+            <png name="7" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/bonusStat/statIcon/7" />
+            </png>
+            <png name="8" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/bonusStat/statIcon/8" />
+            </png>
+            <png name="9" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/bonusStat/statIcon/9" />
+            </png>
+          </dir>
+        </dir>
+        <dir name="potential">
+          <png name="normal" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, 0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/normal" />
+          </png>
+          <dir name="title">
+            <png name="normal" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/title/normal" />
+            </png>
+            <png name="rare" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/potential/statIcon/rare" />
+            </png>
+            <png name="epic" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/potential/statIcon/epic" />
+            </png>
+            <png name="unique" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/potential/statIcon/unique" />
+            </png>
+            <png name="legendary" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/potential/statIcon/legendary" />
+            </png>
+          </dir>
+          <dir name="detail">
+            <png name="normal" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==" />
+            <png name="rare" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/detail/rare" />
+            </png>
+            <png name="epic" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/detail/epic" />
+            </png>
+            <png name="unique" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/detail/unique" />
+            </png>
+            <png name="legendary" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/detail/legendary" />
+            </png>
+          </dir>
+        </dir>
+        <dir name="additionalPotential">
+          <png name="normal" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, 0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/additionalPotential/normal" />
+          </png>
+          <dir name="title">
+            <png name="normal" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/title/normal" />
+            </png>
+            <png name="rare" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/potential/statIcon/rare" />
+            </png>
+            <png name="epic" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/potential/statIcon/epic" />
+            </png>
+            <png name="unique" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/potential/statIcon/unique" />
+            </png>
+            <png name="legendary" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/Enchant.img/potential/statIcon/legendary" />
+            </png>
+          </dir>
+          <dir name="detail">
+            <png name="normal" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==" />
+            <png name="rare" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/detail/rare" />
+            </png>
+            <png name="epic" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/detail/epic" />
+            </png>
+            <png name="unique" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/detail/unique" />
+            </png>
+            <png name="legendary" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, -2" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/detail/legendary" />
+            </png>
+          </dir>
+        </dir>
+        <dir name="soulWeapon">
+          <png name="normal" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, 0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/soulWeapon/normal" />
+          </png>
+        </dir>
+        <dir name="exceptional">
+          <png name="normal" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, -2" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/title/normal" />
+          </png>
+          <png name="enhanced" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, -2" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/exceptional/enhanced" />
+          </png>
+        </dir>
+        <dir name="set">
+          <png name="normal" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, 0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/set/normal" />
+          </png>
+          <png name="guide" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, 0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/set/guide" />
+          </png>
+          <png name="lucky" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, 0" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/set/lucky" />
+          </png>
+        </dir>
+        <dir name="hammer">
+          <png name="normal" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, -2" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/hammer/normal" />
+          </png>
+          <png name="enhanced" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+            <vector name="origin" value="0, -2" />
+            <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/hammer/enhanced" />
+          </png>
+        </dir>
+        <dir name="magicEnchant">
+          <dir name="title">
+            <png name="normal" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/title/normal" />
+            </png>
+            <png name="rare" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/magicEnchant/title/rare" />
+            </png>
+            <png name="epic" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/magicEnchant/title/epic" />
+            </png>
+            <png name="unique" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/magicEnchant/title/unique" />
+            </png>
+            <png name="legendary" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/magicEnchant/title/legendary" />
+            </png>
+          </dir>
+          <dir name="detail">
+            <png name="normal" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/title/normal" />
+            </png>
+            <png name="rare" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/detail/rare" />
+            </png>
+            <png name="epic" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/detail/epic" />
+            </png>
+            <png name="unique" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/detail/unique" />
+            </png>
+            <png name="legendary" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="0, 0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/textIcon/potential/detail/legendary" />
+            </png>
+          </dir>
+        </dir>
+      </dir>
+      <dir name="particle">
+        <dir name="starForce">
+          <dir name="type">
+            <dir name="normal">
+              <int32 name="0" value="-1" />
+              <int32 name="1" value="-1" />
+              <int32 name="2" value="-1" />
+              <int32 name="3" value="-1" />
+              <int32 name="4" value="-1" />
+              <int32 name="5" value="-1" />
+              <int32 name="6" value="-1" />
+              <int32 name="7" value="-1" />
+              <int32 name="8" value="-1" />
+              <int32 name="9" value="-1" />
+              <int32 name="10" value="-1" />
+              <int32 name="11" value="-1" />
+              <int32 name="12" value="-1" />
+              <int32 name="13" value="-1" />
+              <int32 name="14" value="-1" />
+              <int32 name="15" value="-1" />
+            </dir>
+            <dir name="normal2">
+              <int32 name="0" value="-1" />
+              <int32 name="1" value="-1" />
+              <int32 name="2" value="-1" />
+              <int32 name="3" value="-1" />
+              <int32 name="4" value="-1" />
+              <int32 name="5" value="-1" />
+              <int32 name="6" value="-1" />
+              <int32 name="7" value="-1" />
+              <int32 name="8" value="-1" />
+              <int32 name="9" value="-1" />
+              <int32 name="10" value="-1" />
+              <int32 name="11" value="-1" />
+              <int32 name="12" value="-1" />
+              <int32 name="13" value="-1" />
+              <int32 name="14" value="-1" />
+              <int32 name="15" value="-1" />
+              <int32 name="16" value="-1" />
+              <int32 name="17" value="-1" />
+              <int32 name="18" value="-1" />
+              <int32 name="19" value="-1" />
+              <int32 name="20" value="-1" />
+              <int32 name="21" value="-1" />
+              <int32 name="22" value="-1" />
+              <int32 name="23" value="0" />
+              <int32 name="24" value="0" />
+              <int32 name="25" value="0" />
+              <int32 name="26" value="0" />
+              <int32 name="27" value="0" />
+              <int32 name="28" value="0" />
+              <int32 name="29" value="0" />
+              <int32 name="30" value="0" />
+            </dir>
+            <dir name="superior">
+              <int32 name="0" value="-1" />
+              <int32 name="1" value="-1" />
+              <int32 name="2" value="-1" />
+              <int32 name="3" value="-1" />
+              <int32 name="4" value="-1" />
+              <int32 name="5" value="-1" />
+              <int32 name="6" value="-1" />
+              <int32 name="7" value="-1" />
+              <int32 name="8" value="-1" />
+              <int32 name="9" value="-1" />
+              <int32 name="10" value="-1" />
+              <int32 name="11" value="-1" />
+              <int32 name="12" value="-1" />
+              <int32 name="13" value="-1" />
+              <int32 name="14" value="-1" />
+              <int32 name="15" value="-1" />
+            </dir>
+          </dir>
+          <dir name="0">
+            <vector name="offset" value="0, 14" />
+            <png name="0" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="160, 23" />
+              <int32 name="z" value="0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/particle/starForce/0/0" />
+            </png>
+            <png name="1" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="161, 22" />
+              <int32 name="z" value="0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/particle/starForce/0/1" />
+            </png>
+            <png name="2" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="161, 23" />
+              <int32 name="z" value="0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/particle/starForce/0/2" />
+            </png>
+            <png name="3" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="161, 22" />
+              <int32 name="z" value="0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/particle/starForce/0/3" />
+            </png>
+            <png name="4" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="161, 21" />
+              <int32 name="z" value="0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/particle/starForce/0/4" />
+            </png>
+            <png name="5" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+              <vector name="origin" value="160, 22" />
+              <int32 name="z" value="0" />
+              <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/particle/starForce/0/5" />
+            </png>
+          </dir>
+        </dir>
+      </dir>
+      <dir name="space">
+        <int32 name="frameMarginX" value="15" />
+        <int32 name="frameMarginY" value="10" />
+        <int32 name="frameSpaceY" value="0" />
+        <int32 name="exOptionFirstOffsetX" value="20" />
+        <int32 name="exOptionSecondOffsetX" value="167" />
+        <int32 name="textIconSpaceX" value="4" />
+        <int32 name="reqInfoOffsetX" value="100" />
+        <int32 name="categorySpaceX" value="3" />
+        <int32 name="paragraphSpace" value="4" />
+        <int32 name="statUpgradeOffsetX" value="123" />
+        <int32 name="apUpperOffsetY" value="16" />
+        <int32 name="apLowerOffsetY" value="19" />
+        <int32 name="genderOffsetX" value="20" />
+        <int32 name="itemIconSpaceY" value="2" />
+        <int32 name="starSpaceX" value="0" />
+        <int32 name="starSpaceY" value="8" />
+        <int32 name="starBlockSpaceX" value="10" />
+        <int32 name="apSignSpaceX" value="7" />
+        <int32 name="nameDescSpaceY" value="5" />
+        <int32 name="starParagraphSpaceY" value="10" />
+        <int32 name="finalStatSpaceX" value="12" />
+        <int32 name="statUpgradeSpaceX" value="6" />
+      </dir>
+      <dir name="set">
+        <int32 name="lineSpace" value="15" />
+        <int32 name="cashLineSpace" value="50" />
+        <vector name="itemPartPos" value="14, 48" />
+        <vector name="itemNamePos" value="89, 48" />
+        <vector name="cashItemIconPos" value="13, 48" />
+        <vector name="cashItemNamePos" value="60, 48" />
+        <vector name="cashItemPartPos" value="283, 48" />
+        <int32 name="itemListBottomMargin" value="7" />
+        <vector name="setPartPos" value="14, 10" />
+        <vector name="setEffectPos" value="89, 10" />
+        <int32 name="setEffectMargin" value="7" />
+        <int32 name="setListBottomMargin" value="12" />
+        <vector name="titleNamePos" value="46, 19" />
+        <vector name="titleCanvasPos" value="14, 20" />
+        <vector name="setCountPos" value="260, 19" />
+        <vector name="jokerRelPos" value="4, 3" />
+        <int32 name="canvasBoxMargin" value="0" />
+      </dir>
+      <dir name="lucky">
+        <int32 name="lineSpace" value="15" />
+        <vector name="setPos" value="14, 49" />
+        <int32 name="setListBottomMargin" value="7" />
+        <int32 name="helpTextTopMargin" value="10" />
+        <int32 name="helpTextBottomMargin" value="19" />
+        <vector name="titleNamePos" value="25, 19" />
+        <vector name="titleCanvasPos" value="14, 22" />
+        <vector name="bodyPartPos" value="264, 19" />
+        <int32 name="canvasBoxMargin" value="1" />
+      </dir>
+    </dir>
+    <dir name="Pet">
+      <int32 name="petStatMarginY" value="0" />
+      <int32 name="petSkillMarginY" value="6" />
+      <dir name="ItemIcon">
+        <png name="base" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="0, 0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/ItemIcon/base" />
+        </png>
+        <png name="shade" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="0, 0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/ItemIcon/shade" />
+        </png>
+        <png name="cover" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==" />
+      </dir>
+      <dir name="frame">
+        <png name="nw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="7, 7" />
+          <int32 name="z" value="0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/frame/nw" />
+        </png>
+        <png name="ne" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="7, 7" />
+          <int32 name="z" value="0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/frame/ne" />
+        </png>
+        <png name="sw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="7, 7" />
+          <int32 name="z" value="0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/frame/sw" />
+        </png>
+        <png name="se" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="7, 7" />
+          <int32 name="z" value="0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/frame/se" />
+        </png>
+        <png name="n" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAOCAYAAADuQ3ZcAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABBSURBVBhXY1DRMfnKEJJR8pbB1jv8JYO1Z8hLBgtX/xcM5k4+LxhM7D2eMxjbuj1nMLRyfs5gYOHwjEHP1BadAAAwnxb7El8TWwAAAABJRU5ErkJggg==">
+          <vector name="origin" value="0, 7" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="s" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAPCAYAAAAlH6X5AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAcSURBVBhXY9AztX3GQCbhHhLzikFFx+QriGAAAEvOFidpXpAmAAAAAElFTkSuQmCC">
+          <vector name="origin" value="0, 7" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="w" value="iVBORw0KGgoAAAANSUhEUgAAAA4AAAABCAYAAADuHp8EAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAXSURBVBhXY1DRMfnqHhLzSs/U9hkpGABgChWj9abIlwAAAABJRU5ErkJggg==">
+          <vector name="origin" value="7, 0" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="e" value="iVBORw0KGgoAAAANSUhEUgAAAA8AAAABCAYAAAAB3PQ6AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAbSURBVBhXY9AztX1GCnYPiXmlomPyVUXHhAEAqxIWJ3ieJfQAAAAASUVORK5CYII=">
+          <vector name="origin" value="7, 0" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="c" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY9AztX0GAAK8AYes8WmhAAAAAElFTkSuQmCC">
+          <vector name="origin" value="0, 0" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="dotline" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAADCAYAAABS3WWCAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAUSURBVBhXY5BV1vrPYO0V+BJMAAAfvgToI/AiqwAAAABJRU5ErkJggg==">
+          <vector name="origin" value="0, 1" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="cover" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==" />
+        <int32 name="width" value="300" />
+        <int32 name="marginX" value="15" />
+        <int32 name="marginY" value="10" />
+        <int32 name="dotlineMarginUpside" value="5" />
+        <int32 name="dotlineMarginDownside" value="8" />
+      </dir>
+      <dir name="info">
+        <dir name="0">
+          <dir name="0">
+            <string name="type" value="name" />
+            <dir name="normal">
+              <string name="font" value="Dotum" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="14" />
+              <int32 name="fontBold" value="1" />
+            </dir>
+            <int32 name="align" value="1" />
+            <int32 name="lineSpace" value="7" />
+            <int32 name="sectionSpace" value="6" />
+          </dir>
+          <dir name="1">
+            <string name="type" value="grade" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <int32 name="align" value="1" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+          </dir>
+          <dir name="2">
+            <string name="type" value="trade" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <int32 name="align" value="1" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+          </dir>
+          <dir name="3">
+            <string name="type" value="petType" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <int32 name="align" value="1" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+          </dir>
+          <dir name="4">
+            <string name="type" value="timeLimit" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <int32 name="align" value="1" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+          </dir>
+          <dir name="5">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="limitedLife" />
+            <int32 name="align" value="1" />
+          </dir>
+          <dir name="6">
+            <string name="type" value="giftSender" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <int32 name="align" value="1" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+          </dir>
+          <dir name="7">
+            <string name="type" value="shopLimit" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <int32 name="align" value="1" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+          </dir>
+        </dir>
+        <dir name="1">
+          <int32 name="alignOffset" value="90" />
+          <dir name="ItemIcon">
+            <vector name="itemIconPos" value="15, -3" />
+            <int32 name="descOffset" value="3" />
+          </dir>
+          <dir name="0">
+            <string name="type" value="petStat" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFCCFF00" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+          </dir>
+          <dir name="1">
+            <string name="type" value="desc" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+          </dir>
+          <dir name="2">
+            <string name="type" value="wonderSetEffect" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFFFFF" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+          </dir>
+          <dir name="3">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFCC00" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="9" />
+            <string name="type" value="petCommandInfo" />
+          </dir>
+        </dir>
+        <dir name="2">
+          <dir name="0">
+            <string name="type" value="petSkill" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFFCC00" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+          </dir>
+          <dir name="1">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="color" />
+          </dir>
+          <dir name="2">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="lookChange" />
+          </dir>
+          <dir name="3">
+            <string name="type" value="noScroll" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+          </dir>
+          <dir name="4">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="expireOnNonPremiumLogin" />
+          </dir>
+          <dir name="5">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="expireOnLogout" />
+          </dir>
+          <dir name="6">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="monthlyOnce" />
+          </dir>
+          <dir name="7">
+            <string name="type" value="buyLevelLimit" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+          </dir>
+          <dir name="8">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="cashTradeInfo" />
+          </dir>
+          <dir name="9">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="noMoveToLocker" />
+          </dir>
+        </dir>
+        <dir name="3">
+          <dir name="100">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="CapsuleBuff" />
+          </dir>
+        </dir>
+        <dir name="4">
+          <dir name="100">
+            <string name="type" value="karma" />
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFB7BFC5" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+          </dir>
+          <dir name="101">
+            <dir name="normal">
+              <string name="font" value="削圓" />
+              <string name="fontColor" value="FFFF8A18" />
+              <int32 name="fontSize" value="12" />
+              <int32 name="fontBold" value="0" />
+            </dir>
+            <int32 name="lineSpace" value="6" />
+            <int32 name="sectionSpace" value="6" />
+            <string name="type" value="mixable" />
+          </dir>
+        </dir>
+        <dir name="fontEmphasis">
+          <string name="font" value="削圓" />
+          <string name="fontColor" value="FFFFCC00" />
+          <int32 name="fontSize" value="12" />
+          <int32 name="fontBold" value="0" />
+        </dir>
+      </dir>
+    </dir>
+    <dir name="Package">
+      <dir name="font">
+        <dir name="normal">
+          <string name="font" value="削圓" />
+          <string name="fontColor" value="FFFFFFFF" />
+          <int32 name="fontSize" value="12" />
+          <int32 name="fontBold" value="0" />
+        </dir>
+        <dir name="discount">
+          <string name="font" value="削圓" />
+          <string name="fontColor" value="FFF71034" />
+          <int32 name="fontSize" value="12" />
+          <int32 name="fontBold" value="0" />
+        </dir>
+        <dir name="packageDate">
+          <string name="font" value="削圓" />
+          <string name="fontColor" value="FFFF8A18" />
+          <int32 name="fontSize" value="12" />
+          <int32 name="fontBold" value="0" />
+        </dir>
+        <dir name="packageName">
+          <string name="font" value="Dotum" />
+          <string name="fontColor" value="FFFFFFFF" />
+          <int32 name="fontSize" value="14" />
+          <int32 name="fontBold" value="1" />
+        </dir>
+        <dir name="emphasis">
+          <string name="font" value="削圓" />
+          <string name="fontColor" value="FFFFCC00" />
+          <int32 name="fontSize" value="12" />
+          <int32 name="fontBold" value="0" />
+        </dir>
+      </dir>
+    </dir>
+    <dir name="PetSkill">
+      <int32 name="petStatMarginY" value="10" />
+      <int32 name="titleY" value="17" />
+      <vector name="vector:icon" value="16, 39" />
+      <vector name="vector:desc" value="58, 41" />
+      <int32 name="lineGap" value="50" />
+      <int32 name="width" value="261" />
+      <int32 name="bottomMargin" value="10" />
+      <vector name="vector:iconBackgrnd" value="12, 36" />
+      <png name="canvas:meso" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 32" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/PetSkill/canvas:meso" />
+      </png>
+      <string name="string:meso" value="撿拾楓幣" />
+    </dir>
+  </dir>
+  <dir name="Guild">
+    <dir name="frameLike">
+      <png name="nw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="23, 21" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Guild/frameLike/nw" />
+      </png>
+      <png name="ne" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="-1, 21" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Guild/frameLike/ne" />
+      </png>
+      <png name="sw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="23, -1" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Guild/frameLike/sw" />
+      </png>
+      <png name="se" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="-1, -1" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Guild/frameLike/se" />
+      </png>
+      <png name="n" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAVCAYAAACHUoQEAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAA0SURBVBhXY2BgYBBkQCGUUAljhrS7d/8zhO4+847BZdVuDMJ45ipUYuY7BqWOVSACzIISADAII2ZUM3LNAAAAAElFTkSuQmCC">
+        <vector name="origin" value="0, 21" />
+      </png>
+      <png name="s" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAVCAYAAACHUoQEAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAkSURBVBhXY1DqmPmOgVyifOY7BuPdu98xMDAwGMMJJTghiCAAcPEf4eLM5rkAAAAASUVORK5CYII=">
+        <vector name="origin" value="0, -1" />
+      </png>
+      <png name="w" value="iVBORw0KGgoAAAANSUhEUgAAABcAAAABCAYAAAA1pTUmAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAsSURBVBhXY2BgYBBEwkpQbAzCxrt3/1cqn3lXqWPmOzguh7Mh4gg+TB6uHgCtPSPuh1vNbQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="23, 0" />
+      </png>
+      <png name="e" value="iVBORw0KGgoAAAANSUhEUgAAABcAAAABCAYAAAA1pTUmAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAtSURBVBhXY1DqmPkOjMuhdMfMu2h8mDxEHEm98e7d7xgYGIwZGBiUkLAgDAMAN7gj3R4k4fYAAAAASUVORK5CYII=">
+        <vector name="origin" value="-1, 0" />
+      </png>
+      <png name="c" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY1DqmPkOAARFAjIPca+KAAAAAElFTkSuQmCC">
+        <vector name="origin" value="0, 0" />
+      </png>
+    </dir>
+  </dir>
+  <dir name="AchievementLink">
+    <png name="icon" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+      <vector name="origin" value="-124, -34" />
+      <int32 name="z" value="1" />
+      <string name="_outlink" value="UI/_Canvas/UIToolTip.img/AchievementLink/icon" />
+    </png>
+  </dir>
+  <dir name="Skill">
+    <dir name="Frame">
+      <png name="nw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="7, 7" />
+        <int32 name="z" value="0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/frame/nw" />
+      </png>
+      <png name="ne" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="7, 7" />
+        <int32 name="z" value="0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/frame/ne" />
+      </png>
+      <png name="sw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="7, 7" />
+        <int32 name="z" value="0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/frame/sw" />
+      </png>
+      <png name="se" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="7, 7" />
+        <int32 name="z" value="0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/frame/se" />
+      </png>
+      <png name="n" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAOCAYAAADuQ3ZcAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABBSURBVBhXY1DRMfnKEJJR8pbB1jv8JYO1Z8hLBgtX/xcM5k4+LxhM7D2eMxjbuj1nMLRyfs5gYOHwjEHP1BadAAAwnxb7El8TWwAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 7" />
+        <int32 name="z" value="0" />
+      </png>
+      <png name="s" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAPCAYAAAAlH6X5AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAcSURBVBhXY9AztX3GQCbhHhLzikFFx+QriGAAAEvOFidpXpAmAAAAAElFTkSuQmCC">
+        <vector name="origin" value="0, 7" />
+        <int32 name="z" value="0" />
+      </png>
+      <png name="w" value="iVBORw0KGgoAAAANSUhEUgAAAA4AAAABCAYAAADuHp8EAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAXSURBVBhXY1DRMfnqHhLzSs/U9hkpGABgChWj9abIlwAAAABJRU5ErkJggg==">
+        <vector name="origin" value="7, 0" />
+        <int32 name="z" value="0" />
+      </png>
+      <png name="e" value="iVBORw0KGgoAAAANSUhEUgAAAA8AAAABCAYAAAAB3PQ6AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAbSURBVBhXY9AztX1GCnYPiXmlomPyVUXHhAEAqxIWJ3ieJfQAAAAASUVORK5CYII=">
+        <vector name="origin" value="7, 0" />
+        <int32 name="z" value="0" />
+      </png>
+      <png name="c" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY9AztX0GAAK8AYes8WmhAAAAAElFTkSuQmCC">
+        <vector name="origin" value="0, 0" />
+        <int32 name="z" value="0" />
+      </png>
+      <png name="dotline_w" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="7, 1" />
+        <int32 name="z" value="0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Skill/Frame/dotline_w" />
+      </png>
+      <png name="dotline_c" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAADCAYAAABS3WWCAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAUSURBVBhXY5BV1vrPYO0V+BJMAAAfvgToI/AiqwAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 1" />
+        <int32 name="z" value="0" />
+      </png>
+      <png name="dotline_e" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="7, 1" />
+        <int32 name="z" value="0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Skill/Frame/dotline_e" />
+      </png>
+      <png name="cover" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==" />
+      <png name="iconBackgrnd" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Skill/Frame/iconBackgrnd" />
+      </png>
+      <int32 name="lineOffset" value="13" />
+      <int32 name="levelOffset" value="5" />
+      <int32 name="textOffset" value="13" />
+      <int32 name="originTopOffset" value="3" />
+      <int32 name="originBottomOffset" value="8" />
+    </dir>
+  </dir>
+  <dir name="EasyMove">
+    <dir name="Frame">
+      <png name="nw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="9, 36" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/EasyMove/Frame/nw" />
+      </png>
+      <png name="ne" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 36" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/EasyMove/Frame/ne" />
+      </png>
+      <png name="sw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="9, 0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/EasyMove/Frame/sw" />
+      </png>
+      <png name="se" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/EasyMove/Frame/se" />
+      </png>
+      <png name="n" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 36" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/EasyMove/Frame/n" />
+      </png>
+      <png name="s" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/EasyMove/Frame/s" />
+      </png>
+      <png name="w" value="iVBORw0KGgoAAAANSUhEUgAAAAkAAAACCAYAAACKVvbTAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAaSURBVBhXY1DRMfnqHhLzSs/U9hkuzECMIgAA2hwJfrVVlgAAAABJRU5ErkJggg==">
+        <vector name="origin" value="9, 0" />
+      </png>
+      <png name="e" value="iVBORw0KGgoAAAANSUhEUgAAAAkAAAACCAYAAACKVvbTAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAcSURBVBhXY9AztX2GC7uHxLxS0TH5wYAugU0RAPNwHA9jSqgfAAAAAElFTkSuQmCC">
+        <vector name="origin" value="0, 0" />
+      </png>
+      <png name="c" value="iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAUSURBVBhXY9AztX2mZ2r7kgHGAAAyqwYfZdF2aAAAAABJRU5ErkJggg==">
+        <vector name="origin" value="1, 1" />
+      </png>
+      <png name="dotline" value="iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAaSURBVBhXY9DQN3unqK73k8HE3u25tVfgSwAx4gZK56mYtAAAAABJRU5ErkJggg==">
+        <vector name="origin" value="1, 1" />
+        <int32 name="z" value="0" />
+      </png>
+    </dir>
+  </dir>
+  <dir name="Default">
+    <dir name="frame">
+      <dir name="fixed">
+        <png name="top" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="162, 15" />
+          <int32 name="z" value="0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/top" />
+        </png>
+        <png name="mid" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="162, 0" />
+          <int32 name="z" value="0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/mid" />
+        </png>
+        <png name="btm" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="162, 6" />
+          <int32 name="z" value="0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/btm" />
+        </png>
+        <png name="line" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="162, 1" />
+          <int32 name="z" value="0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Equip/frame/common/line" />
+        </png>
+        <png name="cover" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==" />
+      </dir>
+      <dir name="flexible">
+        <png name="nw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="7, 7" />
+          <int32 name="z" value="0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/frame/nw" />
+        </png>
+        <png name="ne" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="7, 7" />
+          <int32 name="z" value="0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/frame/ne" />
+        </png>
+        <png name="sw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="7, 7" />
+          <int32 name="z" value="0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/frame/sw" />
+        </png>
+        <png name="se" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+          <vector name="origin" value="7, 7" />
+          <int32 name="z" value="0" />
+          <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/frame/se" />
+        </png>
+        <png name="n" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAOCAYAAADuQ3ZcAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABBSURBVBhXY1DRMfnKEJJR8pbB1jv8JYO1Z8hLBgtX/xcM5k4+LxhM7D2eMxjbuj1nMLRyfs5gYOHwjEHP1BadAAAwnxb7El8TWwAAAABJRU5ErkJggg==">
+          <vector name="origin" value="0, 7" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="s" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAPCAYAAAAlH6X5AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAcSURBVBhXY9AztX3GQCbhHhLzikFFx+QriGAAAEvOFidpXpAmAAAAAElFTkSuQmCC">
+          <vector name="origin" value="0, 7" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="w" value="iVBORw0KGgoAAAANSUhEUgAAAA4AAAABCAYAAADuHp8EAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAXSURBVBhXY1DRMfnqHhLzSs/U9hkpGABgChWj9abIlwAAAABJRU5ErkJggg==">
+          <vector name="origin" value="7, 0" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="e" value="iVBORw0KGgoAAAANSUhEUgAAAA8AAAABCAYAAAAB3PQ6AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAbSURBVBhXY9AztX1GCnYPiXmlomPyVUXHhAEAqxIWJ3ieJfQAAAAASUVORK5CYII=">
+          <vector name="origin" value="7, 0" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="c" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY9AztX0GAAK8AYes8WmhAAAAAElFTkSuQmCC">
+          <vector name="origin" value="0, 0" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="dotline" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAADCAYAAABS3WWCAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAUSURBVBhXY5BV1vrPYO0V+BJMAAAfvgToI/AiqwAAAABJRU5ErkJggg==">
+          <vector name="origin" value="0, 1" />
+          <int32 name="z" value="0" />
+        </png>
+        <png name="cover" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==" />
+      </dir>
+    </dir>
+    <dir name="ItemIcon">
+      <png name="base" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/ItemIcon/base" />
+      </png>
+      <png name="shade" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Item/Common/ItemIcon/shade" />
+      </png>
+      <png name="cover" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==" />
+      <png name="canvas:Backgrnd" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="4, 36" />
+        <int32 name="z" value="0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Default/ItemIcon/canvas:Backgrnd" />
+      </png>
+      <vector name="vector:icon" value="4, 3" />
+    </dir>
+    <dir name="font">
+      <dir name="normal">
+        <string name="font" value="削圓" />
+        <string name="fontColor" value="FFFFFFFF" />
+        <int32 name="fontSize" value="12" />
+        <int32 name="fontBold" value="0" />
+      </dir>
+      <dir name="orange">
+        <string name="font" value="削圓" />
+        <string name="fontColor" value="FFFFCC00" />
+        <int32 name="fontSize" value="12" />
+        <int32 name="fontBold" value="0" />
+      </dir>
+      <dir name="green">
+        <string name="font" value="削圓" />
+        <string name="fontColor" value="FFCCFF00" />
+        <int32 name="fontSize" value="12" />
+        <int32 name="fontBold" value="0" />
+      </dir>
+      <dir name="gold">
+        <string name="font" value="削圓" />
+        <string name="fontColor" value="fffdf514" />
+        <int32 name="fontSize" value="12" />
+        <int32 name="fontBold" value="0" />
+      </dir>
+      <dir name="blue">
+        <string name="font" value="削圓" />
+        <string name="fontColor" value="ff77ccff" />
+        <int32 name="fontSize" value="12" />
+        <int32 name="fontBold" value="0" />
+      </dir>
+      <dir name="red">
+        <string name="font" value="削圓" />
+        <string name="fontColor" value="FFFF8A18" />
+        <int32 name="fontSize" value="12" />
+        <int32 name="fontBold" value="0" />
+      </dir>
+      <dir name="title">
+        <string name="font" value="Dotum" />
+        <string name="fontColor" value="FFFFFFFF" />
+        <int32 name="fontSize" value="14" />
+        <int32 name="fontBold" value="1" />
+      </dir>
+      <dir name="auctionTitle">
+        <string name="font" value="削圓" />
+        <string name="fontColor" value="FFCCCCCC" />
+        <int32 name="fontSize" value="12" />
+        <int32 name="fontBold" value="0" />
+      </dir>
+      <dir name="auctionPrice">
+        <string name="font" value="削圓" />
+        <string name="fontColor" value="FFFFCC00" />
+        <int32 name="fontSize" value="12" />
+        <int32 name="fontBold" value="0" />
+      </dir>
+    </dir>
+  </dir>
+  <dir name="Login">
+    <dir name="FrameEXP">
+      <png name="nw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="10, 10" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Login/FrameEXP/nw" />
+      </png>
+      <png name="ne" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 10" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Login/FrameEXP/ne" />
+      </png>
+      <png name="sw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="10, 0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Login/FrameEXP/sw" />
+      </png>
+      <png name="se" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Login/FrameEXP/se" />
+      </png>
+      <png name="n" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAKCAYAAAB10jRKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAQSURBVBhXY9AztT3DQAoBAFpPDjnarBaEAAAAAElFTkSuQmCC">
+        <vector name="origin" value="0, 10" />
+      </png>
+      <png name="s" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAKCAYAAAB10jRKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAQSURBVBhXY9AztT3DQAoBAFpPDjnarBaEAAAAAElFTkSuQmCC">
+        <vector name="origin" value="0, 0" />
+      </png>
+      <png name="w" value="iVBORw0KGgoAAAANSUhEUgAAAAoAAAABCAYAAADn9T9+AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAPSURBVBhXY9AztT1DDAYAGkoOOSurmKgAAAAASUVORK5CYII=">
+        <vector name="origin" value="10, 0" />
+      </png>
+      <png name="e" value="iVBORw0KGgoAAAANSUhEUgAAAAoAAAABCAYAAADn9T9+AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAPSURBVBhXY9AztT1DDAYAGkoOOSurmKgAAAAASUVORK5CYII=">
+        <vector name="origin" value="0, 0" />
+      </png>
+      <png name="c" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY9AztT0DAAKiAW3uUAh3AAAAAElFTkSuQmCC">
+        <vector name="origin" value="0, 0" />
+      </png>
+    </dir>
+    <dir name="FrameRaceInfo">
+      <png name="nw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="10, 10" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Login/FrameRaceInfo/nw" />
+      </png>
+      <png name="ne" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 10" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Login/FrameRaceInfo/ne" />
+      </png>
+      <png name="sw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="10, 0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Login/FrameRaceInfo/sw" />
+      </png>
+      <png name="se" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Login/FrameRaceInfo/se" />
+      </png>
+      <png name="n" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAKCAYAAAB10jRKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAQSURBVBhXY1Arnv+fgRQCABxzFifRIKBHAAAAAElFTkSuQmCC">
+        <vector name="origin" value="0, 10" />
+      </png>
+      <png name="s" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAKCAYAAAB10jRKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAQSURBVBhXY1Arnv+fgRQCABxzFifRIKBHAAAAAElFTkSuQmCC">
+        <vector name="origin" value="0, 0" />
+      </png>
+      <png name="w" value="iVBORw0KGgoAAAANSUhEUgAAAAoAAAABCAYAAADn9T9+AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAPSURBVBhXY1Arnv+fGAwAuLAWJzpIe3UAAAAASUVORK5CYII=">
+        <vector name="origin" value="10, 0" />
+      </png>
+      <png name="e" value="iVBORw0KGgoAAAANSUhEUgAAAAoAAAABCAYAAADn9T9+AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAPSURBVBhXY1Arnv+fGAwAuLAWJzpIe3UAAAAASUVORK5CYII=">
+        <vector name="origin" value="0, 0" />
+      </png>
+      <png name="c" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY1Arnv8fAAQzAjh9Uaj+AAAAAElFTkSuQmCC">
+        <vector name="origin" value="0, 0" />
+      </png>
+    </dir>
+    <dir name="FrameBlue">
+      <png name="nw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="20, 10" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Login/FrameBlue/nw" />
+      </png>
+      <png name="ne" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 10" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Login/FrameBlue/ne" />
+      </png>
+      <png name="sw" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="20, 0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Login/FrameBlue/sw" />
+      </png>
+      <png name="se" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAALSURBVBhXY2AAAgAABQABqtXIUQAAAABJRU5ErkJggg==">
+        <vector name="origin" value="0, 0" />
+        <string name="_outlink" value="UI/_Canvas/UIToolTip.img/Login/FrameBlue/se" />
+      </png>
+      <png name="n" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAKCAYAAAB10jRKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAQSURBVBhXY+BuX/aMgRQCAAQsFS3uOaJxAAAAAElFTkSuQmCC">
+        <vector name="origin" value="0, 10" />
+      </png>
+      <png name="s" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAAKCAYAAAB10jRKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAQSURBVBhXY+BuX/aMgRQCAAQsFS3uOaJxAAAAAElFTkSuQmCC">
+        <vector name="origin" value="0, 0" />
+      </png>
+      <png name="w" value="iVBORw0KGgoAAAANSUhEUgAAABQAAAABCAYAAADeko4lAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAPSURBVBhXY+BuX/aMmhgAmLcqWcauVRkAAAAASUVORK5CYII=">
+        <vector name="origin" value="20, 0" />
+      </png>
+      <png name="e" value="iVBORw0KGgoAAAANSUhEUgAAABQAAAABCAYAAADeko4lAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAPSURBVBhXY+BuX/aMmhgAmLcqWcauVRkAAAAASUVORK5CYII=">
+        <vector name="origin" value="0, 0" />
+      </png>
+      <png name="c" value="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY+BuX/YMAAP4Ah9kU+OzAAAAAElFTkSuQmCC">
+        <vector name="origin" value="0, 0" />
+      </png>
+    </dir>
+  </dir>
+</dir>

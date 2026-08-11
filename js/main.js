@@ -1,0 +1,936 @@
+// ==========================================
+// 1. 全域狀態與裝備載入
+// ==========================================
+
+const TAB_BUTTON_IDS = {
+  star: 'tabStar',
+  scroll: 'tabScroll',
+  hammer: 'tabHammer',
+  soulWeapon: 'tabSoulWeapon',
+  bonusStat: 'tabbonusStat',
+  potential: 'tabpotential',
+  additionalPotential: 'tabadditionalPotential',
+  exceptional: 'tabexceptional'
+};
+
+/** 左側占位分頁：可點擊但不切換畫面 */
+const PLACEHOLDER_TAB_CATEGORIES = new Set([]);
+
+function getActiveCategory() {
+  return document.getElementById('actionCategory')?.value || 'none';
+}
+
+function getCurrentStarCount(item) {
+  if (!item) return 0;
+  if (typeof StarForceModule !== 'undefined' && StarForceModule.itemData === item) {
+    return StarForceModule.currentStars;
+  }
+  return item.star || 0;
+}
+
+function areAllHammersExhaustedForItem(item) {
+  if (!item) return false;
+  const goldenMax = item.maxGoldenHammer ?? 1;
+  const platinumMax = item.maxPlatinumHammer ?? 5;
+  return (item.goldenHammerUsed || 0) >= goldenMax
+    && (item.platinumHammerUsed || 0) >= platinumMax;
+}
+
+/** 裝備是否仍可使用該分頁功能（無裝備時一律可進入瀏覽） */
+function isCategoryAvailable(category, item = currentEnchantItem) {
+  if (!item) return true;
+
+  switch (category) {
+    case 'star':
+      return canUseStarForce(item)
+        && getCurrentStarCount(item) < (item.maxStar || 30);
+    case 'hammer':
+      return hasBaseUpgradeSlots(item) && !areAllHammersExhaustedForItem(item);
+    case 'scroll':
+      return hasBaseUpgradeSlots(item);
+    case 'soulWeapon':
+      return typeof canUseSoulWeapon === 'function'
+        ? canUseSoulWeapon(item)
+        : true;
+    case 'bonusStat':
+      return typeof canUseBonusStat === 'function'
+        ? canUseBonusStat(item)
+        : true;
+    case 'exceptional':
+      return typeof canUseExceptional === 'function'
+        ? canUseExceptional(item)
+        : false;
+    case 'potential':
+    case 'additionalPotential':
+      return typeof isMedalItem === 'function' ? !isMedalItem(item) : true;
+    default:
+      return true;
+  }
+}
+
+function isCategoryDisabled(category) {
+  if (category === 'none') return false;
+  return !isCategoryAvailable(category);
+}
+
+function updateCategoryTabStates() {
+  Object.entries(TAB_BUTTON_IDS).forEach(([category, tabId]) => {
+    const btn = document.getElementById(tabId);
+    if (btn) btn.disabled = isCategoryDisabled(category);
+  });
+
+  const activeCat = getActiveCategory();
+  if (activeCat !== 'none' && isCategoryDisabled(activeCat)) {
+    switchCategoryTab('none', null);
+  }
+}
+
+// ==========================================
+// 2. 背包與裝備拖曳載入邏輯
+// ==========================================
+
+function allowDrop(e) {
+  e.preventDefault();
+}
+
+function dropEquip(e) {
+  e.preventDefault();
+  const data = e.dataTransfer.getData('text/plain');
+  if (!data) return;
+
+  try {
+    const { itemId, slotIndex, tab } = JSON.parse(data);
+    if (tab && tab !== 'equip') return;
+    loadEquipToSlot(itemId, slotIndex);
+  } catch (err) {
+    console.error('拖曳解析失敗:', err);
+  }
+}
+
+function createEnchantState(itemData, slotIndex) {
+  return {
+    ...itemData,
+    slotIndex,
+    itemId: itemData.itemId || itemData.id,
+    star: itemData.star || 0,
+    starConsecutiveDrops: itemData.starConsecutiveDrops || 0,
+    scrollUsed: 0,
+    scrollFailUses: 0,
+    scrollSlotResults: [],
+    scrollStat: 0,
+    scrollAtk: 0,
+    scrollMatk: 0,
+    scrollStr: 0,
+    scrollDex: 0,
+    scrollInt: 0,
+    scrollLuk: 0,
+    scrollDef: 0,
+    scrollHp: 0,
+    scrollMp: 0,
+    scrollSpeed: 0,
+    scrollJump: 0,
+    scrollDamR: 0,
+    scrollBdR: 0,
+    scrollImdR: 0,
+    scrollAllStatR: 0,
+    catValleyLevel: itemData.catValleyLevel || 0,
+    medalEnhanceLevel: itemData.medalEnhanceLevel || 0,
+    goldenHammerUsed: 0,
+    platinumHammerUsed: 0,
+    upgradeSlots: itemData.upgradeSlots,
+    maxUpgradeSlots: itemData.maxUpgradeSlots,
+    baseMaxUpgradeSlots: itemData.maxUpgradeSlots,
+    maxGoldenHammer: itemData.maxGoldenHammer ?? 1,
+    maxPlatinumHammer: itemData.maxPlatinumHammer ?? 5,
+    potential: itemData.potential
+      ? JSON.parse(JSON.stringify(itemData.potential))
+      : (typeof shouldStartWithoutPotential === 'function' && shouldStartWithoutPotential(itemData)
+        ? getEmptyPotentialState()
+        : getDefaultPotentialState()),
+    additionalPotential: itemData.additionalPotential
+      ? JSON.parse(JSON.stringify(itemData.additionalPotential))
+      : (typeof shouldStartWithoutPotential === 'function' && shouldStartWithoutPotential(itemData)
+        ? getEmptyAddPotentialState()
+        : getDefaultAddPotentialState(itemData.reqLevel)),
+    bonusStat: itemData.bonusStat
+      ? JSON.parse(JSON.stringify(itemData.bonusStat))
+      : getDefaultBonusStatState(),
+    soul: itemData.soul
+      ? JSON.parse(JSON.stringify(itemData.soul))
+      : {
+          enchanterApplied: Boolean(itemData.soulEnchanterApplied),
+          grade: itemData.soulGrade || null,
+          name: itemData.soulName || '',
+          option: itemData.soulOption || null,
+          stats: itemData.soulStats || null,
+        },
+    soulEnchanterApplied: Boolean(itemData.soulEnchanterApplied || itemData.soul?.enchanterApplied),
+    soulGrade: itemData.soulGrade || itemData.soul?.grade || null,
+    soulName: itemData.soulName || itemData.soul?.name || '',
+    soulOption: itemData.soulOption || itemData.soul?.option || null,
+    soulStats: itemData.soulStats || itemData.soul?.stats || null,
+    exceptional: itemData.exceptional
+      ? JSON.parse(JSON.stringify(itemData.exceptional))
+      : { level: 0 },
+  };
+}
+
+function cloneEnchantState(state) {
+  return JSON.parse(JSON.stringify(state));
+}
+
+function syncEnchantStateFromModules(item) {
+  if (!item) return;
+  if (typeof StarForceModule !== 'undefined' && StarForceModule.itemData === item) {
+    item.star = StarForceModule.currentStars;
+    item.starConsecutiveDrops = StarForceModule.getStarConsecutiveDrops?.() ?? item.starConsecutiveDrops ?? 0;
+  }
+}
+
+function syncEnchantStateToModules(item) {
+  if (!item) return;
+  if (typeof StarForceModule !== 'undefined' && StarForceModule.itemData === item) {
+    StarForceModule.currentStars = item.star ?? 0;
+    StarForceModule.setStarConsecutiveDrops?.(item.starConsecutiveDrops ?? 0);
+  }
+}
+
+function refreshActiveModuleUI() {
+  if (!currentEnchantItem) return;
+
+  const item = currentEnchantItem;
+  const cat = getActiveCategory();
+  if (cat === 'none') return;
+
+  const refreshBoundModule = (module, beforeUpdate) => {
+    if (!module || module.itemData !== item || typeof module.updateUI !== 'function') {
+      return false;
+    }
+    if (typeof beforeUpdate === 'function') beforeUpdate(module, item);
+    module.updateUI();
+    return true;
+  };
+
+  let refreshed = false;
+  if (cat === 'star') {
+    refreshed = refreshBoundModule(
+      typeof StarForceModule !== 'undefined' ? StarForceModule : null,
+      (module, equip) => {
+        module.currentStars = equip.star ?? 0;
+        module.setStarConsecutiveDrops?.(equip.starConsecutiveDrops ?? 0);
+      },
+    );
+  } else if (cat === 'hammer') {
+    refreshed = refreshBoundModule(typeof HammerModule !== 'undefined' ? HammerModule : null);
+  } else if (cat === 'soulWeapon') {
+    refreshed = refreshBoundModule(typeof SoulWeaponModule !== 'undefined' ? SoulWeaponModule : null);
+  } else if (cat === 'scroll') {
+    refreshed = refreshBoundModule(typeof ScrollModule !== 'undefined' ? ScrollModule : null);
+  } else if (cat === 'potential') {
+    refreshed = refreshBoundModule(typeof PotentialModule !== 'undefined' ? PotentialModule : null);
+  } else if (cat === 'additionalPotential') {
+    refreshed = refreshBoundModule(typeof AddPotentialModule !== 'undefined' ? AddPotentialModule : null);
+  } else if (cat === 'bonusStat') {
+    refreshed = refreshBoundModule(typeof BonusStatModule !== 'undefined' ? BonusStatModule : null);
+  } else if (cat === 'exceptional') {
+    refreshed = refreshBoundModule(typeof ExceptionalModule !== 'undefined' ? ExceptionalModule : null);
+  }
+
+  if (!refreshed) {
+    updateActiveModuleEquip();
+  }
+}
+
+function refreshEquippedItemUI() {
+  if (!currentEnchantItem) {
+    updateCategoryTabStates();
+    return;
+  }
+
+  syncEnchantStateFromModules(currentEnchantItem);
+  syncEnchantStateToModules(currentEnchantItem);
+  saveInventoryItemState(currentEnchantItem.slotIndex, currentEnchantItem);
+
+  refreshActiveModuleUI();
+  updateCategoryTabStates();
+
+  if (typeof EquipTooltipModule !== 'undefined') {
+    EquipTooltipModule.refreshIfShowing();
+  }
+
+  syncInspectModules();
+}
+
+function saveInventoryItemState(slotIndex, state) {
+  if (!state) {
+    playerInventoryState[slotIndex] = null;
+    if (typeof SessionPersistenceModule !== 'undefined') {
+      SessionPersistenceModule.scheduleSave();
+    }
+    return;
+  }
+  syncEnchantStateFromModules(state);
+  const snapshot = cloneEnchantState(state);
+  delete snapshot.slotIndex;
+  playerInventoryState[slotIndex] = snapshot;
+  if (typeof SessionPersistenceModule !== 'undefined') {
+    SessionPersistenceModule.scheduleSave();
+  }
+}
+
+function loadEnchantStateForSlot(itemId, slotIndex) {
+  const template = ITEM_DATABASE[itemId];
+  if (!template) return null;
+
+  const saved = playerInventoryState[slotIndex];
+  if (saved && saved.itemId === itemId) {
+    const fresh = createEnchantState(template, slotIndex);
+    return {
+      ...fresh,
+      ...cloneEnchantState(saved),
+      // 分類／模板欄位一律以 item.js 為準，避免工作階段舊資料蓋掉 islot 變更
+      slotIndex,
+      itemId,
+      id: itemId,
+      name: template.name,
+      icon: template.icon,
+      mainType: template.mainType,
+      subType: template.subType,
+      islot: template.islot,
+      vslot: template.vslot,
+      reqLevel: template.reqLevel,
+      reqJob: template.reqJob,
+      reqJob2: template.reqJob2,
+      reqSpecJob: template.reqSpecJob,
+      weaponTier: template.weaponTier,
+      atlas: template.atlas,
+      baseStats: template.baseStats,
+      wz: template.wz,
+      potential: saved.potential
+        ? cloneEnchantState({ potential: saved.potential }).potential
+        : fresh.potential,
+      additionalPotential: saved.additionalPotential
+        ? cloneEnchantState({ additionalPotential: saved.additionalPotential }).additionalPotential
+        : fresh.additionalPotential
+    };
+  }
+
+  return createEnchantState(template, slotIndex);
+}
+
+function resetAllInventoryEquipStates() {
+  for (let i = 0; i < playerInventoryState.length; i++) {
+    playerInventoryState[i] = null;
+  }
+
+  if (currentEnchantItem) {
+    const template = ITEM_DATABASE[currentEnchantItem.itemId];
+    if (template) {
+      currentEnchantItem = createEnchantState(template, currentEnchantItem.slotIndex);
+    } else {
+      currentEnchantItem = null;
+    }
+  }
+
+  updateActiveModuleEquip();
+  updateStatusPanel();
+  updateCategoryTabStates();
+  initInventory();
+  syncInspectModules();
+  if (typeof CatValleyEnhanceModule !== 'undefined') {
+    CatValleyEnhanceModule.updateButton();
+  }
+  if (typeof SessionPersistenceModule !== 'undefined') {
+    SessionPersistenceModule.scheduleSave();
+  }
+  addLog('[系統] 已重置所有裝備的強化狀態。', 'log-info');
+}
+
+function resetEquippedItemState() {
+  if (!currentEnchantItem) {
+    if (!window.confirm('目前欄位未放置裝備。確定要重置所有裝備的強化狀態嗎？')) {
+      return;
+    }
+    resetAllInventoryEquipStates();
+    return;
+  }
+
+  const { slotIndex, itemId, name } = currentEnchantItem;
+  const template = ITEM_DATABASE[itemId];
+  if (!template) return;
+
+  playerInventoryState[slotIndex] = null;
+  currentEnchantItem = createEnchantState(template, slotIndex);
+
+  updateActiveModuleEquip();
+  updateStatusPanel();
+  updateCategoryTabStates();
+  initInventory();
+  syncInspectModules();
+  if (typeof CatValleyEnhanceModule !== 'undefined') {
+    CatValleyEnhanceModule.updateButton();
+  }
+  if (typeof SessionPersistenceModule !== 'undefined') {
+    SessionPersistenceModule.scheduleSave();
+  }
+  addLog(`[系統] 已重置【${name}】的強化狀態。`, 'log-info');
+}
+
+function syncInspectModules() {
+  if (typeof PotentialInspectModule !== 'undefined') {
+    PotentialInspectModule.updateVisibility();
+    if (PotentialInspectModule.isOpen) PotentialInspectModule.render();
+  }
+  if (typeof BonusStatInspectModule !== 'undefined') {
+    BonusStatInspectModule.updateVisibility();
+    if (BonusStatInspectModule.isOpen) BonusStatInspectModule.render();
+  }
+}
+
+const BLOCKING_OVERLAY_IDS = [
+  'scrollRecoveryModal',
+  'ptInspectOverlay',
+  'bsInspectOverlay',
+  'ptHexaOverlay',
+  'ptUniOverlay',
+  'ptMemoriaOverlay',
+  'apHexaOverlay',
+  'apUniOverlay',
+  'apMemoriaOverlay',
+  'bsChoiceOverlay',
+  'aeBsOverlay',
+  'exExtractConfirmModal'
+];
+
+function isBlockingOverlayOpen() {
+  return BLOCKING_OVERLAY_IDS.some((id) => {
+    const el = document.getElementById(id);
+    return el && !el.classList.contains('hidden');
+  });
+}
+
+function handleGlobalEscapeKey() {
+  if (typeof ExceptionalModule !== 'undefined' && ExceptionalModule.isExtractConfirmOpen?.()) {
+    ExceptionalModule.closeExtractConfirm();
+    return;
+  }
+  if (isBlockingOverlayOpen()) return;
+  if (getActiveCategory() === 'none') return;
+  switchCategoryTab('none', null);
+}
+
+function updateNonePageControls() {
+  const resetBtn = document.getElementById('btnResetEquipState');
+  if (resetBtn) {
+    resetBtn.classList.toggle('hidden', getActiveCategory() !== 'none');
+  }
+}
+
+function syncMainPanelIdleState() {
+  const cat = getActiveCategory();
+  const mainPanel = document.getElementById('mainContentPanel');
+  if (!mainPanel) return;
+
+  const hasEquip = Boolean(currentEnchantItem);
+  const hasSfScroll = cat === 'star'
+    && typeof StarForceModule !== 'undefined'
+    && Boolean(StarForceModule.selectedScrollId);
+
+  mainPanel.classList.toggle('none-active', cat === 'none');
+  mainPanel.classList.toggle('none-idle', cat === 'none' && !hasEquip);
+  mainPanel.classList.toggle('starforce-idle', cat === 'star' && !hasEquip);
+  mainPanel.classList.toggle('starforce-scroll-idle', cat === 'star' && !hasEquip && hasSfScroll);
+  mainPanel.classList.toggle('hammer-idle', cat === 'hammer' && !hasEquip);
+  mainPanel.classList.toggle('soulWeapon-idle', cat === 'soulWeapon' && !hasEquip);
+  mainPanel.classList.toggle('scroll-idle', cat === 'scroll' && !hasEquip);
+  mainPanel.classList.toggle('potential-idle', cat === 'potential' && !hasEquip);
+  mainPanel.classList.toggle('additionalPotential-idle', cat === 'additionalPotential' && !hasEquip);
+  mainPanel.classList.toggle('bonusStat-idle', cat === 'bonusStat' && !hasEquip);
+  mainPanel.classList.toggle('exceptional-idle', cat === 'exceptional' && !hasEquip);
+}
+
+function updateNoneWaitEquipVisibility() {
+  syncMainPanelIdleState();
+  updateNonePageControls();
+}
+
+function loadEquipToSlot(itemId, slotIndex) {
+  if (currentEnchantItem) {
+    unloadEquipFromSlot();
+  }
+
+  const itemData = ITEM_DATABASE[itemId];
+  if (!itemData) return;
+
+  currentEnchantItem = loadEnchantStateForSlot(itemId, slotIndex);
+
+  const dropZone = document.getElementById('equipDropZone');
+  if (dropZone) {
+    dropZone.innerHTML = `
+      <img src="${itemData.icon}"
+           alt="${itemData.name}"
+           id="enchantedEquipImg"
+           title="雙擊卸下裝備">
+    `;
+
+    const equipImg = document.getElementById('enchantedEquipImg');
+    if (equipImg) {
+      equipImg.ondblclick = () => unloadEquipFromSlot();
+    }
+  }
+
+  const invItemImg = document.getElementById(`inv_item_equip_${slotIndex}`);
+  const invFrame = invItemImg?.parentElement;
+  if (invFrame?.classList.contains('inv-item-frame')) {
+    invFrame.classList.add('equipped-hidden');
+  }
+
+  const sfItemName = document.getElementById('sfItemName');
+  if (sfItemName) sfItemName.innerText = itemData.name;
+
+  addLog(`[系統] 已成功載入【${itemData.name}】！`, 'log-success');
+  updateStatusPanel();
+  updateActiveModuleEquip();
+  updateNoneWaitEquipVisibility();
+  updateCategoryTabStates();
+  syncMainPanelIdleState();
+  initInventory();
+  if (typeof CatValleyEnhanceModule !== 'undefined') {
+    CatValleyEnhanceModule.updateButton();
+  }
+  if (typeof PotentialEffectModule !== 'undefined') {
+    PotentialEffectModule.updateTestBarVisible();
+  }
+  if (typeof ScrollEffectModule !== 'undefined') {
+    ScrollEffectModule.updateTestBarVisible();
+  }
+  if (typeof HammerEffectModule !== 'undefined') {
+    HammerEffectModule.updateTestBarVisible();
+  }
+  if (typeof SoulWeaponEffectModule !== 'undefined') {
+    SoulWeaponEffectModule.updateTestBarVisible();
+  }
+  if (typeof StarForceEffectModule !== 'undefined') {
+    StarForceEffectModule.updateTestBarVisible();
+  }
+  if (typeof BonusStatEffectModule !== 'undefined') {
+    BonusStatEffectModule.updateTestBarVisible();
+  }
+  if (typeof ExceptionalEffectModule !== 'undefined') {
+    ExceptionalEffectModule.updateTestBarVisible();
+  }
+  syncInspectModules();
+}
+
+function unloadEquipFromSlot() {
+  if (!currentEnchantItem) return;
+
+  const slotIndex = currentEnchantItem.slotIndex;
+  const itemName = currentEnchantItem.name;
+
+  saveInventoryItemState(slotIndex, currentEnchantItem);
+
+  const invItemImg = document.getElementById(`inv_item_equip_${slotIndex}`);
+  const invFrame = invItemImg?.parentElement;
+  if (invFrame?.classList.contains('inv-item-frame')) {
+    invFrame.classList.remove('equipped-hidden');
+  }
+
+  const dropZone = document.getElementById('equipDropZone');
+  if (dropZone) dropZone.innerHTML = '';
+
+  const sfItemName = document.getElementById('sfItemName');
+  if (sfItemName) sfItemName.innerText = '請放置裝備';
+
+  addLog(`[系統] 已將【${itemName}】放回背包（強化進度已保留）。`, 'log-fail');
+  currentEnchantItem = null;
+
+  updateStatusPanel();
+  if (typeof StarForceModule !== 'undefined') {
+    StarForceModule.clearEquipState();
+  }
+  if (typeof HammerModule !== 'undefined') {
+    HammerModule.resetState();
+  }
+  if (typeof SoulWeaponModule !== 'undefined') {
+    SoulWeaponModule.resetState();
+  }
+  if (typeof ScrollModule !== 'undefined') {
+    ScrollModule.resetState();
+  }
+  if (typeof PotentialModule !== 'undefined') {
+    PotentialModule.resetState();
+  }
+  if (typeof AddPotentialModule !== 'undefined') {
+    AddPotentialModule.resetState();
+  }
+  if (typeof BonusStatModule !== 'undefined') {
+    BonusStatModule.resetState();
+  }
+  if (typeof ExceptionalModule !== 'undefined') {
+    ExceptionalModule.resetState();
+  }
+  updateActiveModuleEquip();
+  updateNoneWaitEquipVisibility();
+  updateCategoryTabStates();
+  syncMainPanelIdleState();
+  initInventory();
+  if (typeof CatValleyEnhanceModule !== 'undefined') {
+    CatValleyEnhanceModule.updateButton();
+  }
+  if (typeof PotentialEffectModule !== 'undefined') {
+    PotentialEffectModule.updateTestBarVisible();
+  }
+  if (typeof ScrollEffectModule !== 'undefined') {
+    ScrollEffectModule.updateTestBarVisible();
+  }
+  if (typeof HammerEffectModule !== 'undefined') {
+    HammerEffectModule.updateTestBarVisible();
+  }
+  if (typeof SoulWeaponEffectModule !== 'undefined') {
+    SoulWeaponEffectModule.updateTestBarVisible();
+  }
+  if (typeof StarForceEffectModule !== 'undefined') {
+    StarForceEffectModule.updateTestBarVisible();
+  }
+  if (typeof BonusStatEffectModule !== 'undefined') {
+    BonusStatEffectModule.updateTestBarVisible();
+  }
+  if (typeof ExceptionalEffectModule !== 'undefined') {
+    ExceptionalEffectModule.updateTestBarVisible();
+  }
+  syncInspectModules();
+}
+
+// ==========================================
+// 3. Tab 切換與選單分發控制
+// ==========================================
+
+function switchCategoryTab(category, btn) {
+  if (PLACEHOLDER_TAB_CATEGORIES.has(category)) return;
+  if (category !== 'none' && isCategoryDisabled(category)) return;
+
+  document.querySelectorAll('.ms-tab-btn').forEach(tab => tab.classList.remove('checked'));
+  if (btn) btn.classList.add('checked');
+
+  const select = document.getElementById('actionCategory');
+  if (select) select.value = category;
+
+  switchCategory();
+}
+
+function switchCategory() {
+  const activeCat = getActiveCategory();
+
+  if (typeof aeCloseAllAutoEnchantOverlays === 'function') {
+    aeCloseAllAutoEnchantOverlays();
+  }
+
+  if (typeof EquipTooltipModule !== 'undefined') {
+    EquipTooltipModule.hide();
+  }
+
+  if (
+    activeCat !== 'star'
+    && typeof StarForceModule !== 'undefined'
+    && StarForceModule.selectedScrollId
+  ) {
+    StarForceModule.clearSelectedScroll();
+  }
+
+  const mainPanel = document.getElementById('mainContentPanel');
+
+  document.querySelectorAll('.ms-control-subpanel').forEach(panel => {
+    panel.classList.add('hidden');
+  });
+
+  if (activeCat !== 'none') {
+    const activePanel = document.getElementById(`panel-${activeCat}`);
+    if (activePanel) activePanel.classList.remove('hidden');
+  }
+
+  if (mainPanel) {
+    mainPanel.classList.toggle('starforce-active', activeCat === 'star');
+    mainPanel.classList.toggle('hammer-active', activeCat === 'hammer');
+    mainPanel.classList.toggle('soulWeapon-active', activeCat === 'soulWeapon');
+    mainPanel.classList.toggle('scroll-active', activeCat === 'scroll');
+    mainPanel.classList.toggle('potential-active', activeCat === 'potential');
+    mainPanel.classList.toggle('additionalPotential-active', activeCat === 'additionalPotential');
+    mainPanel.classList.toggle('bonusStat-active', activeCat === 'bonusStat');
+    mainPanel.classList.toggle('exceptional-active', activeCat === 'exceptional');
+  }
+
+  syncMainPanelIdleState();
+
+  updateActiveModuleEquip();
+  updateNoneWaitEquipVisibility();
+  updateCategoryTabStates();
+  updateNonePageControls();
+  syncInspectModules();
+  if (typeof PotentialEffectModule !== 'undefined') {
+    PotentialEffectModule.updateTestBarVisible();
+  }
+  if (typeof ScrollEffectModule !== 'undefined') {
+    ScrollEffectModule.updateTestBarVisible();
+  }
+  if (typeof HammerEffectModule !== 'undefined') {
+    HammerEffectModule.updateTestBarVisible();
+  }
+  if (typeof SoulWeaponEffectModule !== 'undefined') {
+    SoulWeaponEffectModule.updateTestBarVisible();
+  }
+  if (typeof StarForceEffectModule !== 'undefined') {
+    StarForceEffectModule.updateTestBarVisible();
+  }
+  if (typeof BonusStatEffectModule !== 'undefined') {
+    BonusStatEffectModule.updateTestBarVisible();
+  }
+  if (typeof ExceptionalEffectModule !== 'undefined') {
+    ExceptionalEffectModule.updateTestBarVisible();
+  }
+}
+
+function updateActiveModuleEquip() {
+  const cat = getActiveCategory();
+
+  if (cat === 'none') {
+    if (typeof StarForceModule !== 'undefined') StarForceModule.resetState();
+    if (typeof HammerModule !== 'undefined') HammerModule.resetState();
+    if (typeof SoulWeaponModule !== 'undefined') SoulWeaponModule.resetState();
+    if (typeof ScrollModule !== 'undefined') ScrollModule.resetState();
+    if (typeof PotentialModule !== 'undefined') PotentialModule.resetState();
+    if (typeof AddPotentialModule !== 'undefined') AddPotentialModule.resetState();
+    if (typeof BonusStatModule !== 'undefined') BonusStatModule.resetState();
+    if (typeof ExceptionalModule !== 'undefined') ExceptionalModule.resetState();
+    syncMainPanelIdleState();
+    return;
+  }
+
+  if (cat === 'star' && typeof StarForceModule !== 'undefined') {
+    if (currentEnchantItem) {
+      StarForceModule.loadEquip(currentEnchantItem);
+    } else {
+      StarForceModule.clearEquipState();
+    }
+  } else if (cat === 'hammer' && typeof HammerModule !== 'undefined') {
+    if (currentEnchantItem) {
+      HammerModule.loadEquip(currentEnchantItem);
+    } else {
+      HammerModule.resetState();
+    }
+  } else if (cat === 'soulWeapon' && typeof SoulWeaponModule !== 'undefined') {
+    if (currentEnchantItem) {
+      SoulWeaponModule.loadEquip(currentEnchantItem);
+    } else {
+      SoulWeaponModule.resetState();
+    }
+  } else if (cat === 'scroll' && typeof ScrollModule !== 'undefined') {
+    if (currentEnchantItem) {
+      ScrollModule.loadEquip(currentEnchantItem);
+    } else {
+      ScrollModule.resetState();
+    }
+  } else if (cat === 'potential' && typeof PotentialModule !== 'undefined') {
+    if (currentEnchantItem) {
+      PotentialModule.loadEquip(currentEnchantItem);
+    } else {
+      PotentialModule.resetState();
+    }
+  } else if (cat === 'additionalPotential' && typeof AddPotentialModule !== 'undefined') {
+    if (currentEnchantItem) {
+      AddPotentialModule.loadEquip(currentEnchantItem);
+    } else {
+      AddPotentialModule.resetState();
+    }
+  } else if (cat === 'bonusStat' && typeof BonusStatModule !== 'undefined') {
+    if (currentEnchantItem) {
+      BonusStatModule.loadEquip(currentEnchantItem);
+    } else {
+      BonusStatModule.resetState();
+    }
+  } else if (cat === 'exceptional' && typeof ExceptionalModule !== 'undefined') {
+    if (currentEnchantItem) {
+      ExceptionalModule.loadEquip(currentEnchantItem);
+    } else {
+      ExceptionalModule.resetState();
+    }
+  }
+
+  syncMainPanelIdleState();
+}
+
+function handleMainAction() {
+  if (!currentEnchantItem) {
+    alert('請先將裝備放入中間強化槽！');
+    return;
+  }
+
+  const cat = document.getElementById('actionCategory')?.value;
+  if (cat === 'star' && typeof StarForceModule !== 'undefined') {
+    StarForceModule.handleEnhanceClick();
+  } else if (cat === 'scroll' && typeof ScrollModule !== 'undefined') {
+    ScrollModule.handleUseClick();
+  } else if (cat === 'potential' && typeof PotentialModule !== 'undefined') {
+    PotentialModule.handleResetClick();
+  } else if (cat === 'additionalPotential' && typeof AddPotentialModule !== 'undefined') {
+    AddPotentialModule.handleResetClick();
+  } else if (cat === 'bonusStat' && typeof BonusStatModule !== 'undefined') {
+    BonusStatModule.handleResetClick();
+  } else if (cat === 'hammer' && typeof HammerModule !== 'undefined') {
+    HammerModule.handleUseClick();
+  } else if (cat === 'soulWeapon' && typeof SoulWeaponModule !== 'undefined') {
+    SoulWeaponModule.handleConfirmClick();
+  } else if (cat === 'exceptional' && typeof ExceptionalModule !== 'undefined') {
+    if (ExceptionalModule.subTab === 'extract') {
+      ExceptionalModule.handleExtractClick();
+    } else {
+      ExceptionalModule.handleEnchantClick();
+    }
+  }
+}
+
+function updateStatusPanel() {
+  refreshEquippedItemUI();
+}
+
+// ==========================================
+// 4. 全域工具 (Log 紀錄與金額計算)
+// ==========================================
+
+function addLog(text, className = '') {
+  const logBox = document.getElementById('logBox');
+  if (!logBox) return;
+  const newLog = document.createElement('div');
+  if (className) newLog.classList.add(className);
+  newLog.innerText = `[${new Date().toLocaleTimeString()}] ${text}`;
+  logBox.appendChild(newLog);
+  logBox.scrollTop = logBox.scrollHeight;
+}
+
+function formatMesoAmount(amount) {
+  const n = Math.floor(Number(amount) || 0);
+  if (n === 0) return '0 楓幣';
+
+  const yi = Math.floor(n / 100000000);
+  const wan = Math.floor((n % 100000000) / 10000);
+  const rest = n % 10000;
+
+  let text = '';
+  if (yi > 0) text += `${yi}億`;
+  if (wan > 0) text += `${wan}萬`;
+  if (rest > 0 || !text) text += `${rest}`;
+
+  return `${text} 楓幣`;
+}
+
+function formatMesoFullDisplay(amount) {
+  const n = Math.floor(Number(amount) || 0);
+  const yi = Math.floor(n / 100000000);
+  const wan = Math.floor((n % 100000000) / 10000);
+  const rest = n % 10000;
+  return `${yi}億${wan}萬${rest}`;
+}
+
+function resetTotalCost() {
+  if (typeof CostTrackerModule !== 'undefined') {
+    CostTrackerModule.resetAll();
+    return;
+  }
+
+  if (typeof StarForceModule === 'undefined') return;
+
+  const stats = StarForceModule.getStatsCount();
+  stats.mesoSpent = 0;
+  stats.scroll23_100 = 0;
+  stats.scroll24 = 0;
+  stats.scroll25 = 0;
+  StarForceModule.updateStatsUI();
+  calculateCost();
+  addLog('💰 已重置花費統計。', 'log-info');
+}
+
+function calculateCost() {
+  if (typeof CostTrackerModule !== 'undefined') {
+    const total = CostTrackerModule.getTotalCost();
+    const display = document.getElementById('totalCostDisplay');
+    if (display) display.innerText = total.toLocaleString();
+    return;
+  }
+
+  const p23 = parseFloat(document.getElementById('price23_100')?.value) || 0;
+  const p24 = parseFloat(document.getElementById('price24')?.value) || 0;
+  const p25 = parseFloat(document.getElementById('price25')?.value) || 0;
+
+  const starStats = typeof CostTrackerModule !== 'undefined'
+    ? CostTrackerModule.getStarStats()
+    : (typeof StarForceModule !== 'undefined' ? StarForceModule.getStatsCount() : {});
+
+  const total =
+    (starStats.mesoSpent || 0) +
+    ((starStats.scroll23_100 || 0) * p23) +
+    ((starStats.scroll24 || 0) * p24) +
+    ((starStats.scroll25 || 0) * p25);
+
+  const display = document.getElementById('totalCostDisplay');
+  if (display) display.innerText = total.toLocaleString();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (typeof seedStarForceScrollConsumeInventory === 'function'
+    && !(typeof SessionPersistenceModule !== 'undefined' && SessionPersistenceModule.hasSavedSession())) {
+    seedStarForceScrollConsumeInventory();
+  }
+  // 無論有無存檔，開頁再合併一次：補齊 ITEM_DATABASE 新增裝備
+  if (typeof SessionPersistenceModule !== 'undefined') {
+    SessionPersistenceModule.mergeDefaultEquipInventory();
+  }
+  if (typeof StarForceModule !== 'undefined') {
+    StarForceModule.bindCostItemEvents();
+  }
+  InventoryModule.init();
+  if (typeof EquipTooltipModule !== 'undefined') {
+    EquipTooltipModule.init();
+  }
+  if (typeof StarForceModule !== 'undefined') {
+    StarForceModule.syncMethodSelectWidth();
+  }
+  switchCategoryTab('none', null);
+  updateCategoryTabStates();
+  updateNonePageControls();
+  if (typeof PotentialInspectModule !== 'undefined') {
+    PotentialInspectModule.init();
+  }
+  if (typeof BonusStatInspectModule !== 'undefined') {
+    BonusStatInspectModule.init();
+  }
+  if (typeof AutoEnchantPotentialModule !== 'undefined') {
+    AutoEnchantPotentialModule.initPanelHooks();
+  }
+  if (typeof AutoEnchantAddPotentialModule !== 'undefined') {
+    AutoEnchantAddPotentialModule.initPanelHooks();
+  }
+  if (typeof AutoEnchantBonusStatModule !== 'undefined') {
+    AutoEnchantBonusStatModule.initPanelHooks();
+  }
+  if (typeof AutoEnchantStarForceModule !== 'undefined') {
+    AutoEnchantStarForceModule.initPanelHooks();
+  }
+  if (typeof CostTrackerModule !== 'undefined') {
+    CostTrackerModule.init();
+  }
+
+  if (typeof SessionPersistenceModule !== 'undefined') {
+    SessionPersistenceModule.applyDeferredSavePayload();
+    SessionPersistenceModule.restoreEquippedItem();
+    SessionPersistenceModule.bindAutoSave();
+    SessionPersistenceModule.scheduleSave();
+  }
+
+  if (typeof calculateCost === 'function') calculateCost();
+
+  document.getElementById('totalCostDisplay')?.addEventListener('dblclick', resetTotalCost);
+  document.getElementById('btnResetEquipState')?.addEventListener('click', resetEquippedItemState);
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') handleGlobalEscapeKey();
+  });
+});
