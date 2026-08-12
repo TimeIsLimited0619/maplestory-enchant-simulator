@@ -104,8 +104,27 @@ function consumePotentialScroll(scrollId, amount = 1) {
 /**
  * 提升至傳說後，以恢復方塊規則重骰一次詞條（非三排必傳說）。
  */
+function getLegendaryPotentialScrollBlockReason(item, target) {
+  if (!item) return '無法套用至該裝備';
+  if (typeof isMedalItem === 'function' && isMedalItem(item)) {
+    return target === 'additional'
+      ? '勳章無法使用附加傳說潛在能力卷軸'
+      : '勳章無法使用傳說潛在能力卷軸';
+  }
+  return null;
+}
+
+function canApplyLegendaryPotentialScroll(item, target) {
+  return !getLegendaryPotentialScrollBlockReason(item, target);
+}
+
 function applyLegendaryPotentialGrade(item, target) {
   if (!item) return { ok: false, reason: 'no_item' };
+
+  const blockReason = getLegendaryPotentialScrollBlockReason(item, target);
+  if (blockReason) {
+    return { ok: false, reason: 'blocked', message: blockReason };
+  }
 
   const isAdd = target === 'additional';
   const field = isAdd ? 'additionalPotential' : 'potential';

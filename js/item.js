@@ -118,6 +118,27 @@ function isMedalItem(item) {
   return item.islot === 'Md' || item.subType === 'medal';
 }
 
+/** 裝備是否已具備可用潛能詞條（空 lines = 尚未賦予潛能） */
+function hasEquipPotentialLines(item, which = 'main') {
+  if (!item) return false;
+  const pot = which === 'additional' ? item.additionalPotential : item.potential;
+  return Array.isArray(pot?.lines) && pot.lines.length > 0;
+}
+
+/** 可使用主潛能強化（方塊等）；勳章／尚未賦予潛能者不可 */
+function canUsePotentialEnhancement(item) {
+  if (!item) return false;
+  if (isMedalItem(item)) return false;
+  return hasEquipPotentialLines(item, 'main');
+}
+
+/** 可使用附加潛能強化；勳章／尚未賦予附加潛能者不可 */
+function canUseAdditionalPotentialEnhancement(item) {
+  if (!item) return false;
+  if (isMedalItem(item)) return false;
+  return hasEquipPotentialLines(item, 'additional');
+}
+
 /** 預設無主／附潛（改由傳說潛能卷等道具賦予） */
 function shouldStartWithoutPotential(item) {
   return Boolean(item);

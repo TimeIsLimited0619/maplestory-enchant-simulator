@@ -39,6 +39,10 @@ const AutoEnchantPotentialModule = {
 
   getAutoEnchantBlockReason() {
     const cube = PotentialModule.getSelectedCube();
+    const cubeBlock = typeof getPotentialCubeBlockReason === 'function'
+      ? getPotentialCubeBlockReason(cube, PotentialModule.itemData)
+      : null;
+    if (cubeBlock) return cubeBlock;
     const base = aePotGetAutoEnchantLegendaryBlockReason(
       cube,
       PotentialModule.itemData?.potential,

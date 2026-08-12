@@ -53,15 +53,17 @@ const PotentialModule = {
 
   selectCube(cubeId) {
     if (!this.itemData) return;
-    if (typeof isMedalItem === 'function' && isMedalItem(this.itemData)) {
-      if (typeof addLog === 'function') {
-        addLog('⚠️ 勳章無法使用方塊洗主要潛能。', 'log-fail');
-      }
-      return;
-    }
 
     const cube = getPotentialCubeById(cubeId);
     if (!cube) return;
+
+    const blockReason = typeof getPotentialCubeBlockReason === 'function'
+      ? getPotentialCubeBlockReason(cube, this.itemData)
+      : null;
+    if (blockReason) {
+      addLog(`⚠️ ${blockReason}`, 'log-fail');
+      return;
+    }
 
     getPlayerCubeCount(cube.id);
     this.selectedCubeId = this.selectedCubeId === cubeId ? null : cubeId;
@@ -183,7 +185,12 @@ const PotentialModule = {
       if (!cube) return;
 
       slot.dataset.cubeId = cube.id;
-      slot.disabled = !hasEquip;
+      const blockReason = typeof getPotentialCubeBlockReason === 'function'
+        ? getPotentialCubeBlockReason(cube, this.itemData)
+        : null;
+      const blocked = Boolean(blockReason);
+      slot.disabled = !hasEquip || blocked;
+      slot.classList.toggle('is-blocked', blocked);
 
       if (cube.icon) {
         const w = cube.iconWidth || 32;
@@ -257,9 +264,13 @@ const PotentialModule = {
       ae && (ae.isOpen || ae.isRunning || ae.memorialAutoOverlayActive)
     );
     const animating = typeof PotentialEffectModule !== 'undefined' && PotentialEffectModule.isPlaying();
+    const cube = this.getSelectedCube();
+    const blockReason = typeof getPotentialCubeBlockReason === 'function'
+      ? getPotentialCubeBlockReason(cube, this.itemData)
+      : null;
     if (!btn) return;
     const hide = overlayOpen || autoUiActive;
-    btn.disabled = !(this.itemData && this.selectedCubeId) || hide || animating;
+    btn.disabled = !(this.itemData && this.selectedCubeId && !blockReason) || hide || animating;
     btn.classList.toggle('hidden', hide);
     this.renderMesoCost();
   },
@@ -290,6 +301,13 @@ const PotentialModule = {
     const cube = this.getSelectedCube();
     if (!cube) {
       return addLog('⚠️ 請先選擇要使用的方塊！', 'log-fail');
+    }
+
+    const blockReason = typeof getPotentialCubeBlockReason === 'function'
+      ? getPotentialCubeBlockReason(cube, this.itemData)
+      : null;
+    if (blockReason) {
+      return addLog(`⚠️ ${blockReason}`, 'log-fail');
     }
 
     if (cube.hexaPick) {
@@ -370,6 +388,16 @@ const PotentialModule = {
     this.setIdleMode(isIdle);
     this.renderCubeGrid();
     this.renderCostAndHint();
+
+    if (this.selectedCubeId) {
+      const selected = this.getSelectedCube();
+      if (typeof getPotentialCubeBlockReason === 'function'
+        && getPotentialCubeBlockReason(selected, this.itemData)) {
+        this.selectedCubeId = null;
+        this.renderCubeGrid();
+        this.renderCostAndHint();
+      }
+    }
 
     if (typeof PotentialEffectModule !== 'undefined') {
       PotentialEffectModule.updateTestBarVisible();

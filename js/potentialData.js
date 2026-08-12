@@ -159,6 +159,22 @@ function getPotentialCubeBySlot(slotIndex) {
   return POTENTIAL_CUBE_TYPES.find((cube) => cube.slotIndex === slotIndex) || null;
 }
 
+function getPotentialCubeBlockReason(cube, itemData) {
+  if (!cube || !itemData) return null;
+  if (typeof isMedalItem === 'function' && isMedalItem(itemData)) {
+    return '勳章無法使用方塊洗潛能';
+  }
+  if (typeof hasEquipPotentialLines === 'function'
+    && !hasEquipPotentialLines(itemData, 'main')) {
+    return '需先使用傳說潛在能力卷軸賦予潛能';
+  }
+  return null;
+}
+
+function canUsePotentialCube(cube, itemData) {
+  return !getPotentialCubeBlockReason(cube, itemData);
+}
+
 /** 無潛能起始狀態（空詞條） */
 function getEmptyPotentialState() {
   return {

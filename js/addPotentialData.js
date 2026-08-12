@@ -138,6 +138,10 @@ function getAddPotCubeBlockReason(cube, itemData) {
   if (typeof isMedalItem === 'function' && isMedalItem(itemData)) {
     return '勳章無法使用方塊洗附加潛能';
   }
+  if (typeof hasEquipPotentialLines === 'function'
+    && !hasEquipPotentialLines(itemData, 'additional')) {
+    return '需先使用附加傳說潛在能力卷軸賦予附加潛能';
+  }
   if (!itemData.additionalPotential) return null;
   if (cube.requiresLegendary && !isAddPotLegendaryRank(itemData.additionalPotential.rank)) {
     return '絕對附加方塊僅限傳說等級附加潛能裝備使用';

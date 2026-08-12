@@ -642,7 +642,7 @@ const InventoryModule = {
       : { ok: false };
     if (!result?.ok) {
       if (typeof addLog === 'function') {
-        addLog('[消耗] 套用失敗。', 'log-fail');
+        addLog(`[消耗] ${result?.message || '套用失敗。'}`, 'log-fail');
       }
       return false;
     }

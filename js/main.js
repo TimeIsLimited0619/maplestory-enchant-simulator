@@ -61,8 +61,13 @@ function isCategoryAvailable(category, item = currentEnchantItem) {
         ? canUseExceptional(item)
         : false;
     case 'potential':
+      return typeof canUsePotentialEnhancement === 'function'
+        ? canUsePotentialEnhancement(item)
+        : (typeof isMedalItem === 'function' ? !isMedalItem(item) : true);
     case 'additionalPotential':
-      return typeof isMedalItem === 'function' ? !isMedalItem(item) : true;
+      return typeof canUseAdditionalPotentialEnhancement === 'function'
+        ? canUseAdditionalPotentialEnhancement(item)
+        : (typeof isMedalItem === 'function' ? !isMedalItem(item) : true);
     default:
       return true;
   }
