@@ -9544,6 +9544,11 @@ select, input[type="number"] {
   background-position: 2px 1px;
 }
 
+.bs-auto-label:has(.bs-auto-toggle-input:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 /* fullScreen_bonusStat choice */
 .bs-choice-modal {
   position: fixed;
@@ -10378,6 +10383,15 @@ select, input[type="number"] {
 .ae-bs-btn-reset:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.ae-bs-tier-mode-label {
+  position: absolute;
+  right: 10px;
+  left: auto;
+  bottom: 10px;
+  height: 24px;
+  z-index: 2;
 }
 
 .ae-bs-btn-action {

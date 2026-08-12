@@ -54,6 +54,10 @@ const BonusStatInspectModule = {
     if (!cat && this.isOpen) this.close();
   },
 
+  isAwakenedStarFireType(starFireType) {
+    return starFireType === 'awakened' || starFireType === 'blackAwakened';
+  },
+
   getStarFireTypeOptions() {
     return Object.keys(BONUS_STAT_STAR_LEVEL_PROB || {}).map((key) => ({
       id: key,
@@ -90,21 +94,80 @@ const BonusStatInspectModule = {
     return typeof BonusStatModule !== 'undefined' ? BonusStatModule.itemData : null;
   },
 
-  buildStarLevelRows(starFireType) {
-    const prob = BONUS_STAT_STAR_LEVEL_PROB?.[starFireType]
-      || BONUS_STAT_STAR_LEVEL_PROB?.enhanced
-      || {};
-    const rows = Object.entries(prob)
-      .map(([level, rate]) => ({
-        level,
+  normalizeProbRows(entries, labelFn) {
+    const rows = entries
+      .map(([key, rate]) => ({
+        key,
+        label: labelFn(key),
         rate: bsParsePercentString(rate),
         rateText: `${bsParsePercentString(rate).toFixed(2)}%`,
       }))
       .filter((row) => row.rate > 0)
-      .sort((a, b) => Number(a.level) - Number(b.level));
+      .sort((a, b) => Number(a.key) - Number(b.key));
 
     const rateSum = rows.reduce((sum, row) => sum + row.rate, 0);
-    return { rows, rateSum, rateSumText: `${rateSum.toFixed(2)}%` };
+    return {
+      rows,
+      rateSum,
+      rateSumText: `${rateSum.toFixed(2)}%`,
+    };
+  },
+
+  buildStarLevelRows(starFireType) {
+    const prob = BONUS_STAT_STAR_LEVEL_PROB?.[starFireType]
+      || BONUS_STAT_STAR_LEVEL_PROB?.enhanced
+      || {};
+    return this.normalizeProbRows(
+      Object.entries(prob),
+      (level) => `星火 ${level}`
+    );
+  },
+
+  buildAwakenedBaseTierRows() {
+    return this.normalizeProbRows(
+      Object.entries(BONUS_STAT_AWAKENED_BASE_TIER_PROB || {}),
+      (tier) => `T${tier}`
+    );
+  },
+
+  buildAwakenedBonusRows() {
+    return this.normalizeProbRows(
+      Object.entries(BONUS_STAT_AWAKENED_TIER_BONUS_PROB || {}),
+      (bonus) => `+${bonus}`
+    );
+  },
+
+  /** 基礎階 × 加值 → 最終 1~9 階機率 */
+  buildAwakenedFinalTierRows() {
+    const baseProb = BONUS_STAT_AWAKENED_BASE_TIER_PROB || {};
+    const bonusProb = BONUS_STAT_AWAKENED_TIER_BONUS_PROB || {};
+    const maxTier = typeof BONUS_STAT_STAR_LINE_TIERS === 'number' ? BONUS_STAT_STAR_LINE_TIERS : 9;
+
+    const baseEntries = Object.entries(baseProb)
+      .map(([k, v]) => ({ tier: Number(k), weight: bsParsePercentString(v) }))
+      .filter((e) => e.weight > 0 && Number.isFinite(e.tier));
+    const bonusEntries = Object.entries(bonusProb)
+      .map(([k, v]) => ({ bonus: Number(k), weight: bsParsePercentString(v) }))
+      .filter((e) => e.weight > 0 && Number.isFinite(e.bonus));
+
+    const baseSum = baseEntries.reduce((s, e) => s + e.weight, 0);
+    const bonusSum = bonusEntries.reduce((s, e) => s + e.weight, 0);
+    const finalWeights = {};
+
+    if (baseSum > 0 && bonusSum > 0) {
+      baseEntries.forEach((base) => {
+        bonusEntries.forEach((bonus) => {
+          const tier = Math.max(1, Math.min(maxTier, base.tier + bonus.bonus));
+          const p = (base.weight / baseSum) * (bonus.weight / bonusSum) * 100;
+          finalWeights[tier] = (finalWeights[tier] || 0) + p;
+        });
+      });
+    }
+
+    return this.normalizeProbRows(
+      Object.entries(finalWeights),
+      (tier) => `${tier} 階`
+    );
   },
 
   buildLineCountRows(item) {
@@ -182,25 +245,42 @@ const BonusStatInspectModule = {
     const available = pool.filter(
       (name) => typeof bsCanRollStat !== 'function' || bsCanRollStat(name, item)
     );
-    const rate = available.length ? 100 / available.length : 0;
+    const rateMap = typeof bsGetStatPickRates === 'function'
+      ? bsGetStatPickRates(item)
+      : null;
 
-    const rows = available.map((statName) => ({
-      statName,
-      display: this.getStatDisplayText(statName, item),
-      valueRange: this.getStatValueRangeText(statName, item),
-      rate: available.length ? 1 / available.length : 0,
-      rateText: `${rate.toFixed(4)}%`,
-    }));
+    const rows = available.map((statName) => {
+      const rate = rateMap?.has(statName)
+        ? rateMap.get(statName)
+        : (available.length ? 100 / available.length : 0);
+      return {
+        statName,
+        display: this.getStatDisplayText(statName, item),
+        valueRange: this.getStatValueRangeText(statName, item),
+        rate: rate / 100,
+        rateText: `${Number(rate).toFixed(4)}%`,
+      };
+    });
+
+    const rateSum = rows.reduce((sum, row) => sum + ((row.rate || 0) * 100), 0);
+    const hasAllStatBias = available.includes('全屬性%') && available.length > 1;
 
     return {
       rows,
       rateSum: available.length ? 1 : 0,
-      rateSumText: available.length ? '100.0000%' : '0%',
+      rateSumText: `${rateSum.toFixed(4)}%`,
       poolType: typeof bsIsWeaponItem === 'function' && bsIsWeaponItem(item) ? '武器' : '防具',
+      sectionTitle: hasAllStatBias
+        ? `詞條種類（全屬性% ${BONUS_STAT_ALLSTAT_PICK_RATE ?? 3}%，其餘均分）`
+        : '詞條種類（等機率）',
     };
   },
 
   buildLineTierNote(starFireType) {
+    if (this.isAwakenedStarFireType(starFireType)) {
+      return '詞條階級：先抽基礎 T1~T5，再抽加值（覺醒／暗黑共用；最終 clamp 1~9）';
+    }
+
     const sampleLevels = Object.keys(BONUS_STAT_STAR_LEVEL_PROB?.[starFireType] || {})
       .map(Number)
       .filter((level) => level >= 2)
@@ -208,25 +288,100 @@ const BonusStatInspectModule = {
 
     if (!sampleLevels.length) return '';
 
-    const lines = sampleLevels.map((level) => {
-      let effective = level;
-      if (starFireType === 'awakened' || starFireType === 'blackAwakened') {
-        effective = Math.min(7, Math.max(3, level + 2));
-      }
+    return sampleLevels.map((level) => {
       const maxTier = Math.min(
         BONUS_STAT_STAR_LINE_TIERS,
-        Math.max(1, (effective - 1) * 2)
+        Math.max(1, (level - 1) * 2)
       );
       const each = maxTier ? (100 / maxTier).toFixed(4) : '0';
-      const effectiveNote = effective !== level ? `（計算等級 ${effective}）` : '';
-      return `星火${level}${effectiveNote}：每條詞條星火階 1~${maxTier}，各 ${each}%`;
-    });
+      return `星火${level}：每條詞條星火階 1~${maxTier}，各 ${each}%`;
+    }).join('\n');
+  },
 
-    if (starFireType === 'awakened' || starFireType === 'blackAwakened') {
-      lines.unshift('覺醒星火：決定等級 +2 後作為 3~7 等計算詞條星火階');
+  renderProbTableSection(title, rankClass, summary, columns, rows, mapRow) {
+    return `
+      <section class="pt-inspect-section">
+        <div class="pt-inspect-section-head">
+          <span class="pt-inspect-rank ${rankClass}">${title}</span>
+          <span class="pt-inspect-sum">${summary}</span>
+        </div>
+        <table class="pt-inspect-table">
+          <thead>
+            <tr>
+              ${columns.map((col) => `<th>${col}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(mapRow).join('')}
+          </tbody>
+        </table>
+      </section>
+    `;
+  },
+
+  renderStarTierSections(starFireType) {
+    if (this.isAwakenedStarFireType(starFireType)) {
+      const baseTier = this.buildAwakenedBaseTierRows();
+      const bonus = this.buildAwakenedBonusRows();
+      const finalTier = this.buildAwakenedFinalTierRows();
+
+      return [
+        this.renderProbTableSection(
+          '基礎階級機率（共用）',
+          'pt-inspect-rank-unique',
+          `機率合計 ${baseTier.rateSumText}`,
+          ['基礎階', '機率'],
+          baseTier.rows,
+          (row) => `
+            <tr>
+              <td class="pt-inspect-display">${escapeInspectHtml(row.label)}</td>
+              <td class="pt-inspect-rate">${row.rateText}</td>
+            </tr>
+          `
+        ),
+        this.renderProbTableSection(
+          '加值機率（共用）',
+          'pt-inspect-rank-epic',
+          `機率合計 ${bonus.rateSumText}`,
+          ['加值', '機率'],
+          bonus.rows,
+          (row) => `
+            <tr>
+              <td class="pt-inspect-display">${escapeInspectHtml(row.label)}</td>
+              <td class="pt-inspect-rate">${row.rateText}</td>
+            </tr>
+          `
+        ),
+        this.renderProbTableSection(
+          '最終詞條階級機率',
+          'pt-inspect-rank-legendary',
+          `機率合計 ${finalTier.rateSumText}`,
+          ['詞條階級', '機率'],
+          finalTier.rows,
+          (row) => `
+            <tr>
+              <td class="pt-inspect-display">${escapeInspectHtml(row.label)}</td>
+              <td class="pt-inspect-rate">${row.rateText}</td>
+            </tr>
+          `
+        ),
+      ].join('');
     }
 
-    return lines.join('\n');
+    const starLevel = this.buildStarLevelRows(starFireType);
+    return this.renderProbTableSection(
+      '星火等級機率',
+      'pt-inspect-rank-unique',
+      `機率合計 ${starLevel.rateSumText}`,
+      ['星火等級', '機率'],
+      starLevel.rows,
+      (row) => `
+        <tr>
+          <td class="pt-inspect-display">${escapeInspectHtml(row.label)}</td>
+          <td class="pt-inspect-rate">${row.rateText}</td>
+        </tr>
+      `
+    );
   },
 
   populateTypeSelect() {
@@ -262,7 +417,6 @@ const BonusStatInspectModule = {
     }
 
     const starFireType = this.getSelectedStarFireType();
-    const starLevel = this.buildStarLevelRows(starFireType);
     const lineCount = this.buildLineCountRows(item);
     const statPool = this.buildStatPoolRows(item);
     const typeLabel = BONUS_STAT_INSPECT_STAR_FIRE_LABELS[starFireType] || starFireType;
@@ -278,78 +432,37 @@ const BonusStatInspectModule = {
     }
 
     bodyEl.innerHTML = `
-      <section class="pt-inspect-section">
-        <div class="pt-inspect-section-head">
-          <span class="pt-inspect-rank pt-inspect-rank-unique">星火等級機率</span>
-          <span class="pt-inspect-sum">機率合計 ${starLevel.rateSumText}</span>
-        </div>
-        <table class="pt-inspect-table">
-          <thead>
-            <tr>
-              <th>星火等級</th>
-              <th>機率</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${starLevel.rows.map((row) => `
-              <tr>
-                <td class="pt-inspect-display">星火 ${row.level}</td>
-                <td class="pt-inspect-rate">${row.rateText}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </section>
+      ${this.renderStarTierSections(starFireType)}
 
-      <section class="pt-inspect-section">
-        <div class="pt-inspect-section-head">
-          <span class="pt-inspect-rank pt-inspect-rank-rare">詞條數量機率</span>
-          <span class="pt-inspect-sum">機率合計 ${lineCount.rateSumText} · ${lineCount.scope}</span>
-        </div>
-        <table class="pt-inspect-table">
-          <thead>
-            <tr>
-              <th>詞條數</th>
-              <th>機率</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${lineCount.rows.map((row) => `
-              <tr>
-                <td class="pt-inspect-display">${row.count} 條</td>
-                <td class="pt-inspect-rate">${row.rateText}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </section>
+      ${this.renderProbTableSection(
+        '詞條數量機率',
+        'pt-inspect-rank-rare',
+        `機率合計 ${lineCount.rateSumText} · ${lineCount.scope}`,
+        ['詞條數', '機率'],
+        lineCount.rows,
+        (row) => `
+          <tr>
+            <td class="pt-inspect-display">${row.count} 條</td>
+            <td class="pt-inspect-rate">${row.rateText}</td>
+          </tr>
+        `
+      )}
 
-      <section class="pt-inspect-section">
-        <div class="pt-inspect-section-head">
-          <span class="pt-inspect-rank pt-inspect-rank-legendary">詞條種類（等機率）</span>
-          <span class="pt-inspect-sum">機率合計 ${statPool.rateSumText}</span>
-        </div>
-        <table class="pt-inspect-table">
-          <thead>
-            <tr>
-              <th>詞條</th>
-              <th>顯示</th>
-              <th>機率</th>
-              <th>數值範圍（星火1~9）</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${statPool.rows.map((row) => `
-              <tr>
-                <td class="pt-inspect-stat">${escapeInspectHtml(row.statName)}</td>
-                <td class="pt-inspect-display">${escapeInspectHtml(row.display)}</td>
-                <td class="pt-inspect-rate">${row.rateText}</td>
-                <td class="pt-inspect-scope">${escapeInspectHtml(row.valueRange)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </section>
+      ${this.renderProbTableSection(
+        statPool.sectionTitle || '詞條種類（等機率）',
+        'pt-inspect-rank-legendary',
+        `機率合計 ${statPool.rateSumText}`,
+        ['詞條', '顯示', '機率', '數值範圍（星火1~9）'],
+        statPool.rows,
+        (row) => `
+          <tr>
+            <td class="pt-inspect-stat">${escapeInspectHtml(row.statName)}</td>
+            <td class="pt-inspect-display">${escapeInspectHtml(row.display)}</td>
+            <td class="pt-inspect-rate">${row.rateText}</td>
+            <td class="pt-inspect-scope">${escapeInspectHtml(row.valueRange)}</td>
+          </tr>
+        `
+      )}
     `;
   },
 

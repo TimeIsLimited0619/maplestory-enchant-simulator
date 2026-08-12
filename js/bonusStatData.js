@@ -369,12 +369,30 @@ function getBonusStatStatTotal(lines, statId, equip = null) {
   return total;
 }
 
-function bonusStatTargetMet(state, statId, minValue, equip = null) {
+/** 目標是否達成（詞條階級模式）：存在該詞條且星火階級 ≥ minTier（1~9） */
+function bonusStatTargetMetByTier(state, statId, minTier) {
+  if (!statId) return false;
+  const min = Math.max(0, Math.min(BONUS_STAT_STAR_LINE_TIERS || 9, Math.floor(Number(minTier) || 0)));
+  if (min <= 0) return false;
+  return (state?.lines || []).some((line) => {
+    if (line?.statId !== statId) return false;
+    const tier = Math.floor(Number(line?.starTier) || 0);
+    return tier >= min;
+  });
+}
+
+/** 目標是否達成（屬性總和模式）：該屬性數值總和 ≥ minValue */
+function bonusStatTargetMetByValue(state, statId, minValue, equip = null) {
   if (!statId) return false;
   const min = Number(minValue) || 0;
   if (min <= 0) return false;
   const eq = equip ?? (typeof BonusStatModule !== 'undefined' ? BonusStatModule.itemData : null);
   return getBonusStatStatTotal(state?.lines || [], statId, eq) >= min;
+}
+
+/** @deprecated 預設走階級模式；請改用 bonusStatTargetMetByTier / ByValue */
+function bonusStatTargetMet(state, statId, minTier, _equip = null) {
+  return bonusStatTargetMetByTier(state, statId, minTier);
 }
 
 function formatBonusStatLineDisplay(line, equip = null) {
@@ -552,25 +570,35 @@ function cloneBonusStatState(state) {
   };
 }
 
-function bonusStatLineMatchesTarget(line, statId, minValue, equip = null) {
-  if (!statId) return false;
-  const min = Number(minValue) || 0;
+function bonusStatLineMatchesTarget(line, statId, minTier, _equip = null) {
+  if (!statId || !line) return false;
+  const min = Math.max(0, Math.min(BONUS_STAT_STAR_LINE_TIERS || 9, Math.floor(Number(minTier) || 0)));
   if (min <= 0) return false;
-  const eq = equip ?? (typeof BonusStatModule !== 'undefined' ? BonusStatModule.itemData : null);
-  if (line?.dual?.length) {
-    if (!line.dual.includes(statId)) return false;
-    return (Number(line.value) || 0) >= min;
-  }
   if (line.statId !== statId) return false;
-  return bonusStatLineEffectiveValue(line, eq) >= min;
+  return Math.floor(Number(line.starTier) || 0) >= min;
 }
 
-function bonusStatMatchesTargets(state, targets, equip = null) {
+/**
+ * @param {'tier'|'value'} [mode='tier'] tier=詞條階級；value=屬性數值總和
+ */
+function bonusStatMatchesTargets(state, targets, equip = null, mode = 'tier') {
   if (!targets?.length) return false;
-  const active = targets.filter((t) => t.statId && (Number(t.minValue) || 0) > 0);
-  if (!active.length) return false;
   const eq = equip ?? (typeof BonusStatModule !== 'undefined' ? BonusStatModule.itemData : null);
-  return active.every((target) => bonusStatTargetMet(state, target.statId, target.minValue, eq));
+  const useTier = mode !== 'value';
+
+  const active = targets.filter((t) => {
+    if (!t?.statId) return false;
+    if (useTier) return (Number(t.minTier) || 0) > 0;
+    return (Number(t.minValue) || 0) > 0;
+  });
+  if (!active.length) return false;
+
+  return active.every((target) => {
+    if (useTier) {
+      return bonusStatTargetMetByTier(state, target.statId, target.minTier);
+    }
+    return bonusStatTargetMetByValue(state, target.statId, target.minValue, eq);
+  });
 }
 
 function formatBonusStatAtkPow(delta) {

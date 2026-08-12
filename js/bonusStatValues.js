@@ -15,10 +15,10 @@ const BONUS_STAT_STAR_LEVEL_PROB = {
   },
   "blackAwakened": {
     "2": 0,
-    "3": 85,
+    "3": 5,
     "4": 13,
     "5": 1.5,
-    "6": 0.5
+    "6": 80.5
   },
   "enhanced": {
     "2": 50,
@@ -32,6 +32,25 @@ const BONUS_STAT_STAR_LEVEL_PROB = {
     "4": 22.22,
     "5": 0
   }
+};
+
+/**
+ * 覺醒／暗黑覺醒共用詞條階級：先抽基礎 T1~T5，再抽加值（最終 clamp 1~9）
+ * finalTier = baseTier + bonus
+ */
+const BONUS_STAT_AWAKENED_BASE_TIER_PROB = {
+  1: 37,
+  2: 25,
+  3: 18,
+  4: 12,
+  5: 8,
+};
+
+/** 覺醒／暗黑覺醒共用：基礎階加值 */
+const BONUS_STAT_AWAKENED_TIER_BONUS_PROB = {
+  2: 50,
+  3: 35,
+  4: 15,
 };
 
 const BONUS_STAT_LINE_COUNT_PROB = {
@@ -761,12 +780,32 @@ function bsRollLineCount(isBossGear) {
   ]);
 }
 
+function bsRollWeightedFromProbMap(probMap, keys) {
+  const entries = keys
+    .map((value) => ({ value, weight: Number(probMap?.[value]) || 0 }))
+    .filter((entry) => entry.weight > 0);
+  if (!entries.length) return keys[0];
+  return bsRollWeighted(entries);
+}
+
+/** 覺醒／暗黑：共用基礎 T1~T5 + 加值 → 最終階級 1~9 */
+function bsRollAwakenedLineStarTier(_starFireType) {
+  const baseTier = bsRollWeightedFromProbMap(BONUS_STAT_AWAKENED_BASE_TIER_PROB, [1, 2, 3, 4, 5]);
+  const bonusKeys = Object.keys(BONUS_STAT_AWAKENED_TIER_BONUS_PROB)
+    .map(Number)
+    .filter((n) => Number.isFinite(n))
+    .sort((a, b) => a - b);
+  const bonus = bsRollWeightedFromProbMap(BONUS_STAT_AWAKENED_TIER_BONUS_PROB, bonusKeys);
+  return Math.max(1, Math.min(BONUS_STAT_STAR_LINE_TIERS, baseTier + bonus));
+}
+
 /** 每條附加屬性詞條的星火 tier（1~9） */
 function bsRollLineStarTier(starFireLevel, item, starFireType = 'enhanced') {
-  let effective = starFireLevel;
   if (starFireType === 'awakened' || starFireType === 'blackAwakened') {
-    effective = Math.min(7, Math.max(3, effective + 2));
+    return bsRollAwakenedLineStarTier(starFireType);
   }
+  // enhanced / eternal：由星火等級決定上限後，1~maxTier 均勻
+  const effective = starFireLevel;
   const maxTier = Math.min(BONUS_STAT_STAR_LINE_TIERS, Math.max(1, (effective - 1) * 2));
   return 1 + Math.floor(Math.random() * maxTier);
 }
@@ -785,7 +824,7 @@ function bsGetStatPool(item) {
     : BONUS_STAT_STAT_POOL.armor;
 }
 
-/** 目前裝備實際可洗出的星火屬性 id（供自動目標選單過濾） */
+/** 目前裝備實際可洗出的星火詞條 id（供自動目標選單過濾） */
 function bsGetAvailableBonusStatIds(item) {
   const ids = new Set();
   if (!item) return ids;
@@ -796,6 +835,29 @@ function bsGetAvailableBonusStatIds(item) {
     if (key) ids.add(key);
   });
   return ids;
+}
+
+/** 自動重設選單：可洗出詞條（含雙屬） */
+function bsGetAvailableBonusStatLineOptions(item) {
+  const options = [];
+  if (!item) return options;
+  const pool = bsGetStatPool(item);
+  const seen = new Set();
+  const labelOf = (name) => {
+    if (name === '攻擊力' || name === '物理攻擊力' || name === '物理攻擊力%') return '物理攻擊力';
+    if (name === '魔力' || name === '魔法攻擊力' || name === '魔法攻擊力%') return '魔法攻擊力';
+    if (name === '最大HP') return 'MaxHP';
+    if (name === '最大MP') return 'MaxMP';
+    return String(name).replace(/%$/, '');
+  };
+  pool.forEach((name) => {
+    if (!bsCanRollStat(name, item)) return;
+    const meta = BONUS_STAT_NAME_TO_KEY[name];
+    if (!meta?.key || seen.has(meta.key)) return;
+    seen.add(meta.key);
+    options.push({ key: meta.key, label: labelOf(name) });
+  });
+  return options;
 }
 
 function bsItemHasBaseWatk(item) {
@@ -894,12 +956,58 @@ function bsResolveStatLine(statName, starTier, item) {
   };
 }
 
+/** 全屬性% 固定權重（%）；其餘可洗詞條均分剩餘機率 */
+const BONUS_STAT_ALLSTAT_PICK_RATE = 4;
+
 function bsPickStatFromPool(pool, usedLabels, item) {
   const available = pool.filter(
     (name) => !usedLabels.has(name) && bsCanRollStat(name, item)
   );
   if (!available.length) return null;
-  return available[Math.floor(Math.random() * available.length)];
+
+  const allStatName = '全屬性%';
+  const hasAllStat = available.includes(allStatName);
+  if (!hasAllStat || available.length === 1) {
+    return available[Math.floor(Math.random() * available.length)];
+  }
+
+  const others = available.filter((name) => name !== allStatName);
+  const restRate = Math.max(0, 100 - BONUS_STAT_ALLSTAT_PICK_RATE);
+  const otherWeight = others.length ? restRate / others.length : 0;
+  const entries = [
+    { value: allStatName, weight: BONUS_STAT_ALLSTAT_PICK_RATE },
+    ...others.map((name) => ({ value: name, weight: otherWeight })),
+  ].filter((entry) => entry.weight > 0);
+
+  return bsRollWeighted(entries);
+}
+
+/** 詞條種類機率（與 bsPickStatFromPool 相同規則；usedLabels 可排除已出現詞條） */
+function bsGetStatPickRates(item, usedLabels = null) {
+  const pool = typeof bsGetStatPool === 'function'
+    ? bsGetStatPool(item)
+    : [];
+  const used = usedLabels instanceof Set ? usedLabels : new Set(usedLabels || []);
+  const available = pool.filter(
+    (name) => !used.has(name) && (typeof bsCanRollStat !== 'function' || bsCanRollStat(name, item))
+  );
+  const rates = new Map();
+  if (!available.length) return rates;
+
+  const allStatName = '全屬性%';
+  const hasAllStat = available.includes(allStatName);
+  if (!hasAllStat || available.length === 1) {
+    const each = 100 / available.length;
+    available.forEach((name) => rates.set(name, each));
+    return rates;
+  }
+
+  const others = available.filter((name) => name !== allStatName);
+  const restRate = Math.max(0, 100 - BONUS_STAT_ALLSTAT_PICK_RATE);
+  const otherWeight = others.length ? restRate / others.length : 0;
+  rates.set(allStatName, BONUS_STAT_ALLSTAT_PICK_RATE);
+  others.forEach((name) => rates.set(name, otherWeight));
+  return rates;
 }
 
 function bsRollBonusStatLines(item, starFireType = 'enhanced', starFireLevel = null) {

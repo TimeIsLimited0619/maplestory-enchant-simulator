@@ -5,12 +5,14 @@ const AutoEnchantBonusStatModule = {
   isOpen: false,
   isRunning: false,
   cancelled: false,
-  /** @type {{ statId: string, minValue: number }[]} */
+  /** true=選詞條+階級；false=選屬性+數值總和 */
+  tierSelectMode: true,
+  /** @type {{ statId: string, minTier: number, minValue: number }[]} */
   groupTargets: [
-    { statId: '', minValue: 0 },
-    { statId: '', minValue: 0 },
-    { statId: '', minValue: 0 },
-    { statId: '', minValue: 0 },
+    { statId: '', minTier: 0, minValue: 0 },
+    { statId: '', minTier: 0, minValue: 0 },
+    { statId: '', minTier: 0, minValue: 0 },
+    { statId: '', minTier: 0, minValue: 0 },
   ],
   overspeedMode: false,
   progressFrame: 0,
@@ -37,6 +39,10 @@ const AutoEnchantBonusStatModule = {
     return aePotGetAutoEnchantBatchSize(this.overspeedMode);
   },
 
+  getMatchMode() {
+    return this.tierSelectMode ? 'tier' : 'value';
+  },
+
   getAutoBlockReason() {
     if (!BonusStatModule?.itemData) return '請先放置裝備。';
     if (BonusStatModule.costTab !== 'item') return '請切換至星火道具分頁並選擇星火。';
@@ -56,21 +62,36 @@ const AutoEnchantBonusStatModule = {
   },
 
   groupHasTarget(group) {
-    return Boolean(group?.statId) && (Number(group?.minValue) || 0) > 0;
+    if (!group?.statId) return false;
+    if (this.tierSelectMode) return (Number(group.minTier) || 0) > 0;
+    return (Number(group.minValue) || 0) > 0;
   },
 
   matchesTargets(state) {
     const equip = BonusStatModule.itemData;
-    return bonusStatMatchesTargets(state, this.groupTargets, equip);
+    return bonusStatMatchesTargets(state, this.groupTargets, equip, this.getMatchMode());
   },
 
   canStart() {
     if (!BonusStatModule.itemData?.bonusStat) return false;
     if (this.getAutoBlockReason()) return false;
-    return this.groupTargets.some((g) => g.statId && (Number(g.minValue) || 0) > 0);
+    return this.groupTargets.some((g) => this.groupHasTarget(g));
   },
 
-  getUnavailableStatIds(equip = BonusStatModule.itemData) {
+  attributeCanAppear(statId, availableIds, equip) {
+    if (availableIds?.has(statId)) return true;
+    if (!equip || typeof bsGetStatPool !== 'function') return false;
+    const pool = bsGetStatPool(equip);
+    return pool.some((name) => {
+      if (typeof bsCanRollStat === 'function' && !bsCanRollStat(name, equip)) return false;
+      const meta = BONUS_STAT_NAME_TO_KEY?.[name];
+      if (!meta) return false;
+      if (meta.key === statId) return true;
+      return Boolean(meta.dual?.includes(statId));
+    });
+  },
+
+  getUnavailableAttributeIds(equip = BonusStatModule.itemData) {
     // 武器％詞條在 UI 併入物／魔攻選項，不另開
     const hidden = new Set(['watkPct', 'matkPct']);
     const available = typeof bsGetAvailableBonusStatIds === 'function'
@@ -81,25 +102,44 @@ const AutoEnchantBonusStatModule = {
       if (typeof BONUS_STAT_TYPES !== 'undefined') {
         BONUS_STAT_TYPES.forEach((type) => {
           if (hidden.has(type.id)) return;
-          if (!available.has(type.id)) hidden.add(type.id);
+          if (!this.attributeCanAppear(type.id, available, equip)) {
+            hidden.add(type.id);
+          }
         });
       }
       return hidden;
     }
 
-    // 無裝備時保守隱藏武器專屬％傷
     hidden.add('bossDmg');
     hidden.add('dmg');
-    if (!equip || !bsItemHasBaseWatk(equip)) hidden.add('watk');
-    if (!equip || !bsItemHasBaseMatk(equip)) hidden.add('matk');
+    if (!equip || !bsItemHasBaseWatk?.(equip)) hidden.add('watk');
+    if (!equip || !bsItemHasBaseMatk?.(equip)) hidden.add('matk');
     return hidden;
   },
 
+  getAvailableOptionIds(equip = BonusStatModule.itemData) {
+    if (this.tierSelectMode) {
+      return typeof bsGetAvailableBonusStatIds === 'function'
+        ? bsGetAvailableBonusStatIds(equip)
+        : null;
+    }
+    const hidden = this.getUnavailableAttributeIds(equip);
+    const ids = new Set();
+    if (typeof BONUS_STAT_TYPES !== 'undefined') {
+      BONUS_STAT_TYPES.forEach((type) => {
+        if (!hidden.has(type.id)) ids.add(type.id);
+      });
+    }
+    return ids;
+  },
+
   sanitizeGroupTargets() {
-    const hidden = this.getUnavailableStatIds();
+    const available = this.getAvailableOptionIds();
     this.groupTargets.forEach((group) => {
-      if (group?.statId && hidden.has(group.statId)) {
+      if (!group?.statId) return;
+      if (available && !available.has(group.statId)) {
         group.statId = '';
+        group.minTier = 0;
         group.minValue = 0;
       }
     });
@@ -114,13 +154,51 @@ const AutoEnchantBonusStatModule = {
   },
 
   buildStatOptions() {
-    const hiddenIds = this.getUnavailableStatIds();
+    if (this.tierSelectMode) {
+      const lines = typeof bsGetAvailableBonusStatLineOptions === 'function'
+        ? bsGetAvailableBonusStatLineOptions(BonusStatModule.itemData)
+        : [];
+      return [
+        { key: '', label: '不選擇' },
+        ...lines,
+      ];
+    }
+
+    const hiddenIds = this.getUnavailableAttributeIds();
     return [
       { key: '', label: '不選擇' },
-      ...BONUS_STAT_TYPES
+      ...(typeof BONUS_STAT_TYPES !== 'undefined' ? BONUS_STAT_TYPES : [])
         .filter((t) => !hiddenIds.has(t.id))
         .map((t) => ({ key: t.id, label: t.label })),
     ];
+  },
+
+  emptyGroupTarget() {
+    return { statId: '', minTier: 0, minValue: 0 };
+  },
+
+  syncTierModeCheckbox() {
+    const chk = document.getElementById('chkBonusStatTierMode');
+    if (!chk) return;
+    chk.checked = this.tierSelectMode;
+    chk.disabled = this.isRunning;
+  },
+
+  setTierSelectMode(enabled, { resetTargets = true } = {}) {
+    if (this.isRunning) return;
+    const next = Boolean(enabled);
+    if (next === this.tierSelectMode) {
+      this.syncTierModeCheckbox();
+      return;
+    }
+    this.tierSelectMode = next;
+    if (resetTargets) {
+      for (let i = 0; i < this.groupTargets.length; i += 1) {
+        this.groupTargets[i] = this.emptyGroupTarget();
+      }
+    }
+    this.syncTierModeCheckbox();
+    if (this.isOpen) this.render();
   },
 
   hidePanelForMemorialAuto() {
@@ -212,24 +290,39 @@ const AutoEnchantBonusStatModule = {
 
   initPanelHooks() {
     const chk = document.getElementById('chkBonusStatAuto');
-    if (!chk || chk.dataset.aeHooked) return;
-    chk.dataset.aeHooked = '1';
-    chk.addEventListener('change', () => {
-      if (chk.checked) {
-        if (this.canOpen()) {
-          this.open();
-        } else {
-          chk.checked = false;
-          if (!BonusStatModule?.itemData) {
-            addLog('⚠️ 請先放置裝備。', 'log-fail');
+    if (chk && !chk.dataset.aeHooked) {
+      chk.dataset.aeHooked = '1';
+      chk.addEventListener('change', () => {
+        if (chk.checked) {
+          if (this.canOpen()) {
+            this.open();
+          } else {
+            chk.checked = false;
+            if (!BonusStatModule?.itemData) {
+              addLog('⚠️ 請先放置裝備。', 'log-fail');
+            }
           }
+        } else if (this.isRunning) {
+          this.cancel();
+        } else if (this.isOpen) {
+          this.close();
         }
-      } else if (this.isRunning) {
-        this.cancel();
-      } else if (this.isOpen) {
-        this.close();
-      }
-    });
+      });
+    }
+
+    const tierChk = document.getElementById('chkBonusStatTierMode');
+    if (tierChk && !tierChk.dataset.aeHooked) {
+      tierChk.dataset.aeHooked = '1';
+      this.tierSelectMode = tierChk.checked;
+      tierChk.addEventListener('change', () => {
+        if (this.isRunning) {
+          tierChk.checked = this.tierSelectMode;
+          return;
+        }
+        this.setTierSelectMode(tierChk.checked);
+      });
+    }
+    this.syncTierModeCheckbox();
   },
 
   syncAutoCheckbox() {
@@ -254,6 +347,8 @@ const AutoEnchantBonusStatModule = {
       chk.checked = true;
       chk.disabled = this.choiceAutoSessionActive;
     }
+
+    this.syncTierModeCheckbox();
   },
 
   onEquipChanged() {
@@ -296,17 +391,43 @@ const AutoEnchantBonusStatModule = {
     this.render();
   },
 
+  setGroupNumber(index, raw) {
+    if (this.isRunning) return;
+    if (!this.groupTargets[index]) return;
+    if (this.tierSelectMode) {
+      this.setGroupMinTier(index, raw);
+      return;
+    }
+    this.setGroupMinValue(index, raw);
+  },
+
+  setGroupMinTier(index, raw) {
+    if (this.isRunning) return;
+    if (!this.groupTargets[index]) return;
+    const maxTier = typeof BONUS_STAT_STAR_LINE_TIERS === 'number' ? BONUS_STAT_STAR_LINE_TIERS : 9;
+    const n = Math.max(0, Math.min(maxTier, parseInt(String(raw).replace(/\D/g, ''), 10) || 0));
+    this.groupTargets[index].minTier = n;
+    const input = document.getElementById(`aeBsValue${index}`);
+    if (input && String(input.value) !== String(n || '')) {
+      input.value = n || '';
+    }
+  },
+
   setGroupMinValue(index, raw) {
     if (this.isRunning) return;
     if (!this.groupTargets[index]) return;
     const n = Math.max(0, Math.min(9999, parseInt(String(raw).replace(/\D/g, ''), 10) || 0));
     this.groupTargets[index].minValue = n;
+    const input = document.getElementById(`aeBsValue${index}`);
+    if (input && String(input.value) !== String(n || '')) {
+      input.value = n || '';
+    }
   },
 
   resetGroup(index) {
     if (this.isRunning) return;
     if (!this.groupTargets[index]) return;
-    this.groupTargets[index] = { statId: '', minValue: 0 };
+    this.groupTargets[index] = this.emptyGroupTarget();
     const input = document.getElementById(`aeBsValue${index}`);
     if (input) input.value = '';
     this.render();
@@ -315,7 +436,7 @@ const AutoEnchantBonusStatModule = {
   resetAll() {
     if (this.isRunning) return;
     for (let i = 0; i < this.groupTargets.length; i += 1) {
-      this.groupTargets[i] = { statId: '', minValue: 0 };
+      this.groupTargets[i] = this.emptyGroupTarget();
     }
     this.render();
   },
@@ -479,7 +600,9 @@ const AutoEnchantBonusStatModule = {
     }
     if (!this.canStart()) {
       const reason = this.getAutoBlockReason()
-        || '請設定目標附加能力（屬性與數值），並確認星火道具。';
+        || (this.tierSelectMode
+          ? '請設定目標附加能力（詞條與階級），並確認星火道具。'
+          : '請設定目標附加能力（屬性與數值），並確認星火道具。');
       return addLog(`⚠️ ${reason}`, 'log-fail');
     }
     if (BonusStatModule.costTab !== 'item') {
@@ -681,14 +804,15 @@ const AutoEnchantBonusStatModule = {
     );
     if (cfg.buttons?.ok?.toolTip) {
       const autoBlock = this.getAutoBlockReason();
-      const needTarget = !this.groupTargets.some((g) => g.statId && (Number(g.minValue) || 0) > 0);
+      const needTarget = !this.groupTargets.some((g) => this.groupHasTarget(g));
+      const needTargetHint = this.tierSelectMode
+        ? '請設定至少一項目標詞條與階級。'
+        : '請設定至少一項目標屬性與數值。';
       btnAction.title = this.isRunning
         ? (cfg.buttons.cancel?.toolTip || '')
         : (autoBlock
           ? autoBlock
-          : (needTarget
-            ? '請設定至少一項目標附加能力與數值。'
-            : cfg.buttons.ok.toolTip));
+          : (needTarget ? needTargetHint : cfg.buttons.ok.toolTip));
     }
   },
 
@@ -699,9 +823,14 @@ const AutoEnchantBonusStatModule = {
     const label = wrap.querySelector('.ae-bs-stat-combo-label');
     const scroll = wrap.querySelector('.ae-bs-stat-combo-scroll');
     const trigger = wrap.querySelector('.ae-bs-stat-combo-trigger');
+    const list = wrap.querySelector('.ae-bs-stat-combo-list');
     const current = this.groupTargets[index]?.statId || '';
     const options = this.buildStatOptions();
     const taken = this.getTakenStatIds(index);
+    const optionKind = this.tierSelectMode ? '詞條' : '屬性';
+
+    if (trigger) trigger.setAttribute('aria-label', `目標${index + 1} ${optionKind}`);
+    if (list) list.setAttribute('aria-label', `目標${index + 1} ${optionKind}`);
 
     if (scroll) {
       scroll.innerHTML = '';
@@ -765,8 +894,16 @@ const AutoEnchantBonusStatModule = {
     }
     if (input) {
       input.disabled = this.isRunning;
+      input.maxLength = this.tierSelectMode ? 1 : 4;
+      input.setAttribute(
+        'aria-label',
+        this.tierSelectMode ? `目標${index + 1} 階級` : `目標${index + 1} 數值`
+      );
       if (!this.isRunning) {
-        input.value = this.groupTargets[index]?.minValue || '';
+        const shown = this.tierSelectMode
+          ? this.groupTargets[index]?.minTier
+          : this.groupTargets[index]?.minValue;
+        input.value = shown || '';
       }
     }
     if (trigger?._aeBsComboPaint && !wrap?.classList.contains('is-open')) {

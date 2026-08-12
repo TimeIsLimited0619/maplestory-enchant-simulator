@@ -1483,7 +1483,7 @@ const AUTO_ENCHANT_LOOP_DELAY_MS = 100;
 
 /** 超速模式：與貓谷自動相同（每輪間隔 + 每輪步數） */
 const AUTO_ENCHANT_OVERSPEED_LOOP_DELAY_MS = 5;
-const AUTO_ENCHANT_OVERSPEED_BATCH_SIZE = 10;
+const AUTO_ENCHANT_OVERSPEED_BATCH_SIZE = 40;
 
 function aePotGetAutoEnchantLoopDelayMs(overspeedMode) {
   if (overspeedMode) {
