@@ -540,12 +540,7 @@ const InventoryModule = {
       this.handlePotentialScrollDblClick(scroll.id);
     });
 
-    const countEl = document.createElement('span');
-    countEl.className = 'inv-item-count';
-    countEl.textContent = String(count);
-
     itemFrame.appendChild(scrollImg);
-    itemFrame.appendChild(countEl);
     slot.appendChild(itemFrame);
   },
 
@@ -637,9 +632,11 @@ const InventoryModule = {
       return false;
     }
 
-    const result = typeof applyLegendaryPotentialGrade === 'function'
-      ? applyLegendaryPotentialGrade(item, scroll.target)
-      : { ok: false };
+    const result = typeof applyPotentialScrollGrade === 'function'
+      ? applyPotentialScrollGrade(item, scroll)
+      : (typeof applyLegendaryPotentialGrade === 'function'
+        ? applyLegendaryPotentialGrade(item, scroll.target)
+        : { ok: false });
     if (!result?.ok) {
       if (typeof addLog === 'function') {
         addLog(`[消耗] ${result?.message || '套用失敗。'}`, 'log-fail');
@@ -676,8 +673,14 @@ const InventoryModule = {
     }
 
     const targetLabel = scroll.target === 'additional' ? '附加潛能' : '潛能';
+    const gradeLabel = typeof getPotentialScrollRankLabel === 'function'
+      ? getPotentialScrollRankLabel(scroll.grade || result.grade || 'legendary')
+      : (scroll.grade || '傳說');
     if (typeof addLog === 'function') {
-      addLog(`[消耗] 已對【${item.name || itemId}】使用【${scroll.name}】，${targetLabel}提升至傳說。`, 'log-success');
+      addLog(
+        `[消耗] 已對【${item.name || itemId}】使用【${scroll.name}】，${targetLabel}賦予為${gradeLabel}。`,
+        'log-success'
+      );
     }
     return true;
   },
@@ -728,12 +731,7 @@ const InventoryModule = {
       this.handleStarForceScrollDblClick(scroll.id);
     });
 
-    const countEl = document.createElement('span');
-    countEl.className = 'inv-item-count';
-    countEl.textContent = String(count);
-
     itemFrame.appendChild(scrollImg);
-    itemFrame.appendChild(countEl);
     slot.appendChild(itemFrame);
   },
 
