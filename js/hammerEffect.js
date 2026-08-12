@@ -149,12 +149,19 @@ const HammerEffectModule = {
   },
 
   preloadOne(url) {
+    if (typeof EnchantImagePreload !== 'undefined') {
+      return EnchantImagePreload.preload(url, this._preloadCache);
+    }
     if (!url) return Promise.resolve(null);
     if (this._preloadCache.has(url)) return this._preloadCache.get(url);
     const p = new Promise((resolve) => {
       const img = new Image();
       img.decoding = 'async';
-      img.onload = () => resolve(img);
+      img.onload = () => {
+        if (typeof img.decode === 'function') {
+          img.decode().then(() => resolve(img)).catch(() => resolve(img));
+        } else resolve(img);
+      };
       img.onerror = () => resolve(null);
       img.src = url;
     });
@@ -342,7 +349,6 @@ const HammerEffectModule = {
 
       if (backF?.hasImg) {
         const src = this.assetPath(phase, variant, 'itemIcon/back', backF.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.back, src, true);
         this.setHostVisible(this.hosts.back, true);
         this.placeAnchoredSprite(this.sprites.back, itemAnchor, backF.o);
@@ -353,7 +359,6 @@ const HammerEffectModule = {
 
       if (frontF) {
         const src = this.assetPath(phase, variant, 'itemIcon/front', frontF.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.front, src, true);
         this.setHostVisible(this.hosts.front, true);
         this.placeAnchoredSprite(this.sprites.front, itemAnchor, frontF.o);
@@ -367,15 +372,9 @@ const HammerEffectModule = {
         const host = this.summaryHostForLayer(key);
         if (showSummary && frame?.hasImg && summaryAnchor && sprite) {
           const src = this.assetPath(phase, variant, key, frame.i);
-          const loaded = await this.preloadOne(src);
-          if (loaded) {
-            this.setSprite(sprite, src, true);
-            this.setHostVisible(host, true);
-            this.placeAnchoredSprite(sprite, summaryAnchor, frame.o);
-          } else {
-            this.setSprite(sprite, null, false);
-            this.setHostVisible(host, false);
-          }
+          this.setSprite(sprite, src, true);
+          this.setHostVisible(host, true);
+          this.placeAnchoredSprite(sprite, summaryAnchor, frame.o);
         } else if (sprite) {
           this.setSprite(sprite, null, false);
           this.setHostVisible(host, false);
@@ -384,7 +383,6 @@ const HammerEffectModule = {
 
       if (textF && includeText) {
         const src = this.assetPath(phase, variant, 'textScreen', textF.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.text, src, true);
         this.setHostVisible(this.hosts.text, true);
         this.placeTextScreenSprite(this.sprites.text, textF.o);
@@ -415,11 +413,8 @@ const HammerEffectModule = {
       }
 
       const src = this.assetPath(phase, variant, 'textScreen', textF.i);
-      const loaded = await this.preloadOne(src);
-      if (loaded) {
-        this.setSprite(this.sprites.text, src, true);
-        this.placeTextScreenSprite(this.sprites.text, textF.o);
-      }
+      this.setSprite(this.sprites.text, src, true);
+      this.placeTextScreenSprite(this.sprites.text, textF.o);
       await this.wait(textF?.d || delayDefault);
       if (!this.playing) return;
     }

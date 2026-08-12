@@ -137,12 +137,19 @@ const PotentialEffectModule = {
   },
 
   preloadOne(url) {
+    if (typeof EnchantImagePreload !== 'undefined') {
+      return EnchantImagePreload.preload(url, this._preloadCache);
+    }
     if (!url) return Promise.resolve(null);
     if (this._preloadCache.has(url)) return this._preloadCache.get(url);
     const p = new Promise((resolve) => {
       const img = new Image();
       img.decoding = 'async';
-      img.onload = () => resolve(img);
+      img.onload = () => {
+        if (typeof img.decode === 'function') {
+          img.decode().then(() => resolve(img)).catch(() => resolve(img));
+        } else resolve(img);
+      };
       img.onerror = () => resolve(null);
       img.src = url;
     });
@@ -299,7 +306,6 @@ const PotentialEffectModule = {
 
       if (showBack && backF) {
         const src = this.assetPath(rankId, phase, variant, 'itemIcon/back', backF.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.back, src, true);
         this.placeAnchoredSprite(this.sprites.back, anchor, backF.o);
       } else {
@@ -308,7 +314,6 @@ const PotentialEffectModule = {
 
       if (frontF) {
         const src = this.assetPath(rankId, phase, variant, 'itemIcon/front', frontF.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.front, src, true);
         this.placeAnchoredSprite(this.sprites.front, anchor, frontF.o);
       } else {
@@ -317,7 +322,6 @@ const PotentialEffectModule = {
 
       if (textF && showTextLayer) {
         const src = this.assetPath(rankId, phase, variant, 'textScreen', textF.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.text, src, true);
         this.placeTextScreenSprite(this.sprites.text, textF.o);
       } else {

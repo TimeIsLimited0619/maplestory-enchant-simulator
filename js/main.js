@@ -685,6 +685,10 @@ function normalizePreloadUrl(url) {
 }
 
 function preloadEnchantAsset(url) {
+  // 特效模組多用相對路徑當快取鍵；同步暖機，避免開頁用絕對 URL、播放用相對 URL 各載一次
+  if (typeof EnchantImagePreload !== 'undefined' && url && !/^https?:\/\//i.test(url) && !url.startsWith('data:')) {
+    EnchantImagePreload.preload(url);
+  }
   const absolute = normalizePreloadUrl(url);
   if (!absolute) return Promise.resolve(null);
   if (_enchantAssetPreloadCache.has(absolute)) {

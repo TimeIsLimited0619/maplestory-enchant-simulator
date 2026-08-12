@@ -144,12 +144,19 @@ const StarForceEffectModule = {
   },
 
   preloadOne(url) {
+    if (typeof EnchantImagePreload !== 'undefined') {
+      return EnchantImagePreload.preload(url, this._preloadCache);
+    }
     if (!url) return Promise.resolve(null);
     if (this._preloadCache.has(url)) return this._preloadCache.get(url);
     const p = new Promise((resolve) => {
       const img = new Image();
       img.decoding = 'async';
-      img.onload = () => resolve(img);
+      img.onload = () => {
+        if (typeof img.decode === 'function') {
+          img.decode().then(() => resolve(img)).catch(() => resolve(img));
+        } else resolve(img);
+      };
       img.onerror = () => resolve(null);
       img.src = url;
     });
@@ -352,7 +359,6 @@ const StarForceEffectModule = {
 
       if (backF?.hasImg) {
         const src = this.assetPath(phase, 'itemIcon/back', backF.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.back, src, true);
         this.setHostVisible(this.hosts.back, true);
         this.placeAnchoredSprite(this.sprites.back, itemAnchor, backF.o);
@@ -363,7 +369,6 @@ const StarForceEffectModule = {
 
       if (frontF) {
         const src = this.assetPath(phase, 'itemIcon/front', frontF.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.front, src, true);
         this.setHostVisible(this.hosts.front, true);
         this.placeAnchoredSprite(this.sprites.front, itemAnchor, frontF.o);
@@ -374,15 +379,9 @@ const StarForceEffectModule = {
 
       if (showSummary && summaryF?.hasImg && summaryAnchor && this.sprites.summary) {
         const src = this.assetPath(phase, 'summaryIcon', summaryF.i);
-        const loaded = await this.preloadOne(src);
-        if (loaded) {
-          this.setSprite(this.sprites.summary, src, true);
-          this.setHostVisible(this.hosts.summary, true);
-          this.placeAnchoredSprite(this.sprites.summary, summaryAnchor, summaryF.o);
-        } else {
-          this.setSprite(this.sprites.summary, null, false);
-          this.setHostVisible(this.hosts.summary, false);
-        }
+        this.setSprite(this.sprites.summary, src, true);
+        this.setHostVisible(this.hosts.summary, true);
+        this.placeAnchoredSprite(this.sprites.summary, summaryAnchor, summaryF.o);
       } else if (this.sprites.summary) {
         this.setSprite(this.sprites.summary, null, false);
         this.setHostVisible(this.hosts.summary, false);
@@ -390,7 +389,6 @@ const StarForceEffectModule = {
 
       if (textF && includeText) {
         const src = this.assetPath(phase, 'textScreen', textF.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.text, src, true);
         this.setHostVisible(this.hosts.text, true);
         this.placeTextScreenSprite(this.sprites.text, textF.o);
@@ -430,11 +428,8 @@ const StarForceEffectModule = {
       }
 
       const src = this.assetPath(phase, 'summaryIcon', summaryF.i);
-      const loaded = await this.preloadOne(src);
-      if (loaded) {
-        this.setSprite(this.sprites.summary, src, true);
-        this.placeAnchoredSprite(this.sprites.summary, summaryAnchor, summaryF.o);
-      }
+      this.setSprite(this.sprites.summary, src, true);
+      this.placeAnchoredSprite(this.sprites.summary, summaryAnchor, summaryF.o);
       await this.wait(summaryF?.d || delayDefault);
       if (!this.playing) return;
     }
@@ -508,13 +503,11 @@ const StarForceEffectModule = {
         }
 
         const src = this.assetPath(phase, 'summaryIcon', summaryF.i);
-        await Promise.all(entries.map(async ({ img }) => {
-          const loaded = await this.preloadOne(src);
-          if (!loaded) return;
+        entries.forEach(({ img }) => {
           img.src = src;
           img.style.display = 'block';
           this.placeAnchoredSprite(img, { x: 0, y: 0 }, summaryF.o);
-        }));
+        });
 
         await this.wait(summaryF?.d || delayDefault);
         if (!this.playing) return;
@@ -541,11 +534,8 @@ const StarForceEffectModule = {
       }
 
       const src = this.assetPath(phase, 'textScreen', textF.i);
-      const loaded = await this.preloadOne(src);
-      if (loaded) {
-        this.setSprite(this.sprites.text, src, true);
-        this.placeTextScreenSprite(this.sprites.text, textF.o);
-      }
+      this.setSprite(this.sprites.text, src, true);
+      this.placeTextScreenSprite(this.sprites.text, textF.o);
       await this.wait(textF?.d || delayDefault);
       if (!this.playing) return;
     }

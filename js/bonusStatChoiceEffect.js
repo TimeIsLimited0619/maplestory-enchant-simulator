@@ -209,12 +209,19 @@ const BonusStatChoiceEffectModule = {
   },
 
   preloadOne(url) {
+    if (typeof EnchantImagePreload !== 'undefined') {
+      return EnchantImagePreload.preload(url, this._preloadCache);
+    }
     if (!url) return Promise.resolve(null);
     if (this._preloadCache.has(url)) return this._preloadCache.get(url);
     const p = new Promise((resolve) => {
       const img = new Image();
       img.decoding = 'async';
-      img.onload = () => resolve(img);
+      img.onload = () => {
+        if (typeof img.decode === 'function') {
+          img.decode().then(() => resolve(img)).catch(() => resolve(img));
+        } else resolve(img);
+      };
       img.onerror = () => resolve(null);
       img.src = url;
     });

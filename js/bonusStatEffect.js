@@ -125,12 +125,19 @@ const BonusStatEffectModule = {
   },
 
   preloadOne(url) {
+    if (typeof EnchantImagePreload !== 'undefined') {
+      return EnchantImagePreload.preload(url, this._preloadCache);
+    }
     if (!url) return Promise.resolve(null);
     if (this._preloadCache.has(url)) return this._preloadCache.get(url);
     const p = new Promise((resolve) => {
       const img = new Image();
       img.decoding = 'async';
-      img.onload = () => resolve(img);
+      img.onload = () => {
+        if (typeof img.decode === 'function') {
+          img.decode().then(() => resolve(img)).catch(() => resolve(img));
+        } else resolve(img);
+      };
       img.onerror = () => resolve(null);
       img.src = url;
     });
@@ -300,7 +307,6 @@ const BonusStatEffectModule = {
 
       if (backF?.hasImg) {
         const src = this.assetPath(variant, phase, successVariant, 'itemIcon/back', backF.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.back, src, true);
         this.setHostVisible(this.hosts.back, true);
         this.placeAnchoredSprite(this.sprites.back, itemAnchor, backF.o);
@@ -311,7 +317,6 @@ const BonusStatEffectModule = {
 
       if (frontF?.hasImg !== false && frontF) {
         const src = this.assetPath(variant, phase, successVariant, 'itemIcon/front', frontF.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.front, src, true);
         this.setHostVisible(this.hosts.front, true);
         this.placeAnchoredSprite(this.sprites.front, itemAnchor, frontF.o);
@@ -322,7 +327,6 @@ const BonusStatEffectModule = {
 
       if (textF && includeText && textF.hasImg !== false) {
         const src = this.assetPath(variant, phase, successVariant, 'textScreen', textF.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.text, src, true);
         this.setHostVisible(this.hosts.text, true);
         this.placeTextScreenSprite(this.sprites.text, textF.o);
@@ -353,7 +357,6 @@ const BonusStatEffectModule = {
       }
 
       const src = this.assetPath(variant, phase, successVariant, 'textScreen', textF.i);
-      await this.preloadOne(src);
       this.setSprite(this.sprites.text, src, true);
       this.placeTextScreenSprite(this.sprites.text, textF.o);
       await this.wait(textF?.d || delayDefault);

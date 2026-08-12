@@ -165,12 +165,19 @@ const ScrollEffectModule = {
   },
 
   preloadOne(url) {
+    if (typeof EnchantImagePreload !== 'undefined') {
+      return EnchantImagePreload.preload(url, this._preloadCache);
+    }
     if (!url) return Promise.resolve(null);
     if (this._preloadCache.has(url)) return this._preloadCache.get(url);
     const p = new Promise((resolve) => {
       const img = new Image();
       img.decoding = 'async';
-      img.onload = () => resolve(img);
+      img.onload = () => {
+        if (typeof img.decode === 'function') {
+          img.decode().then(() => resolve(img)).catch(() => resolve(img));
+        } else resolve(img);
+      };
       img.onerror = () => resolve(null);
       img.src = url;
     });
@@ -340,7 +347,6 @@ const ScrollEffectModule = {
 
       if (backF?.hasImg) {
         const src = this.assetPath(phase, variant, 'itemIcon/back', backF.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.back, src, true);
         this.setHostVisible(this.hosts.back, true);
         this.placeAnchoredSprite(this.sprites.back, itemAnchor, backF.o);
@@ -351,7 +357,6 @@ const ScrollEffectModule = {
 
       if (frontF) {
         const src = this.assetPath(phase, variant, 'itemIcon/front', frontF.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.front, src, true);
         this.setHostVisible(this.hosts.front, true);
         this.placeAnchoredSprite(this.sprites.front, itemAnchor, frontF.o);
@@ -362,7 +367,6 @@ const ScrollEffectModule = {
 
       if (showSummary && summary0F?.hasImg && summaryAnchor) {
         const src = this.assetPath(phase, variant, 'summaryIcon/0', summary0F.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.summary0, src, true);
         this.setHostVisible(this.hosts.summary0, true);
         this.placeAnchoredSprite(this.sprites.summary0, summaryAnchor, summary0F.o);
@@ -373,7 +377,6 @@ const ScrollEffectModule = {
 
       if (showSummary && summary1F?.hasImg && summaryAnchor) {
         const src = this.assetPath(phase, variant, 'summaryIcon/1', summary1F.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.summary1, src, true);
         this.setHostVisible(this.hosts.summary1, true);
         this.placeAnchoredSprite(this.sprites.summary1, summaryAnchor, summary1F.o);
@@ -384,7 +387,6 @@ const ScrollEffectModule = {
 
       if (textF && includeText) {
         const src = this.assetPath(phase, variant, 'textScreen', textF.i);
-        await this.preloadOne(src);
         this.setSprite(this.sprites.text, src, true);
         this.setHostVisible(this.hosts.text, true);
         this.placeTextScreenSprite(this.sprites.text, textF.o);
@@ -415,7 +417,6 @@ const ScrollEffectModule = {
       }
 
       const src = this.assetPath(phase, variant, 'textScreen', textF.i);
-      await this.preloadOne(src);
       this.setSprite(this.sprites.text, src, true);
       this.placeTextScreenSprite(this.sprites.text, textF.o);
       await this.wait(textF?.d || delayDefault);

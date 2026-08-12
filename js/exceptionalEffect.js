@@ -104,12 +104,19 @@ const ExceptionalEffectModule = {
   },
 
   preloadOne(url) {
+    if (typeof EnchantImagePreload !== 'undefined') {
+      return EnchantImagePreload.preload(url, this._preloadCache);
+    }
     if (!url) return Promise.resolve(null);
     if (this._preloadCache.has(url)) return this._preloadCache.get(url);
     const p = new Promise((resolve) => {
       const img = new Image();
       img.decoding = 'async';
-      img.onload = () => resolve(img);
+      img.onload = () => {
+        if (typeof img.decode === 'function') {
+          img.decode().then(() => resolve(img)).catch(() => resolve(img));
+        } else resolve(img);
+      };
       img.onerror = () => resolve(null);
       img.src = url;
     });
@@ -179,6 +186,7 @@ const ExceptionalEffectModule = {
     const host = this.hosts[layer];
     const el = this.sprites[layer];
     if (!host || !el || !src) return false;
+    // 播放前應已 preloadUrls；此處再確認 decode 完成，失敗則保留上一幀
     const img = await this.preloadOne(src);
     if (!img) return false;
     if (isText) this.placeTextScreenSprite(el, origin);
