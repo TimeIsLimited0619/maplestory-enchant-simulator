@@ -150,21 +150,8 @@ function canUseAddPotCube(cube, itemData) {
 }
 
 function getDefaultAddPotentialState(reqLevel = 250) {
-  const mpPct = typeof formatAddPotentialStatValue === 'function'
-    ? formatAddPotentialStatValue('最大MP%', 'rare', reqLevel)
-    : '3%';
-  const strPct = typeof formatAddPotentialStatValue === 'function'
-    ? formatAddPotentialStatValue('STR%', 'rare', reqLevel)
-    : '3%';
-  return {
-    rank: 'rare',
-    lines: [
-      { rank: 'rare', label: 'MaxMP', value: mpPct },
-      { rank: 'rare', label: 'MaxMP', value: mpPct },
-      { rank: 'rare', label: 'STR', value: strPct }
-    ],
-    atkPow: 397803310
-  };
+  // 裝備預設無附加潛能；改由附加傳說潛能卷／方塊賦予
+  return getEmptyAddPotentialState();
 }
 
 function getEmptyAddPotentialState() {

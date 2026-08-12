@@ -34,7 +34,7 @@ body {
   display: none !important; 
 }
 
-/* 開頁完整預載：阻擋互動直到介面素材就緒 */
+/* 開頁預載：僅在介面素材就緒前阻擋互動（特效改背景載入） */
 body.enchant-boot-loading #pageEnhance {
   pointer-events: none;
   user-select: none;
@@ -1314,6 +1314,30 @@ body.enchant-boot-loading #pageEnhance {
     1px -1px 0 #000,
     -1px 1px 0 #000,
     1px 1px 0 #000;
+}
+
+/* 潛能卷使用中：自訂游標 */
+body.inv-potential-scroll-use,
+body.inv-potential-scroll-use * {
+  cursor: url('../images/iventory/Basic.img.Cursor.32.0.png') 0 0, pointer !important;
+}
+
+.inv-consume-tooltip {
+  position: fixed;
+  z-index: 100050;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55));
+}
+
+.inv-consume-tooltip.hidden {
+  display: none;
+}
+
+.inv-consume-tooltip-img {
+  display: block;
+  width: 290px;
+  height: auto;
+  image-rendering: pixelated;
 }
 
 /* 背包內的裝備圖片 */
@@ -4884,6 +4908,11 @@ select, input[type="number"] {
   font-size: 12px;
   color: #ffffff;
   pointer-events: auto;
+}
+
+.sc-bottom-options-left {
+  right: auto;
+  left: 14px;
 }
 
 .sc-auto-targets {

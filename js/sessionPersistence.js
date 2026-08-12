@@ -74,6 +74,9 @@ const SessionPersistenceModule = {
     if (typeof playerStarForceScrollInventory !== 'undefined') {
       payload.playerStarForceScrollInventory = { ...playerStarForceScrollInventory };
     }
+    if (typeof playerPotentialScrollInventory !== 'undefined') {
+      payload.playerPotentialScrollInventory = { ...playerPotentialScrollInventory };
+    }
 
     return payload;
   },
@@ -155,6 +158,18 @@ const SessionPersistenceModule = {
         delete playerStarForceScrollInventory[key];
       });
       Object.assign(playerStarForceScrollInventory, data.playerStarForceScrollInventory);
+    }
+
+    if (data.playerPotentialScrollInventory && typeof playerPotentialScrollInventory !== 'undefined') {
+      Object.keys(playerPotentialScrollInventory).forEach((key) => {
+        delete playerPotentialScrollInventory[key];
+      });
+      Object.assign(playerPotentialScrollInventory, data.playerPotentialScrollInventory);
+      if (typeof ensurePotentialScrollCounts === 'function') {
+        ensurePotentialScrollCounts();
+      }
+    } else if (typeof ensurePotentialScrollCounts === 'function') {
+      ensurePotentialScrollCounts();
     }
   },
 
@@ -308,6 +323,12 @@ const SessionPersistenceModule = {
       : null;
 
     this.mergeDefaultEquipInventory();
+    if (typeof ensurePotentialScrollConsumeInventory === 'function') {
+      ensurePotentialScrollConsumeInventory();
+    }
+    if (typeof stripLegacyStarterPotentialsFromInventory === 'function') {
+      stripLegacyStarterPotentialsFromInventory();
+    }
   },
 
   /**

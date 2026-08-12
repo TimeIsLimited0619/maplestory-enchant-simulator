@@ -490,6 +490,13 @@ function isBlockingOverlayOpen() {
 }
 
 function handleGlobalEscapeKey() {
+  if (typeof InventoryModule !== 'undefined' && InventoryModule.pendingPotentialScrollId) {
+    InventoryModule.cancelPotentialScrollUse();
+    if (typeof addLog === 'function') {
+      addLog('[消耗] 已取消使用潛在能力卷軸。', 'log-info');
+    }
+    return;
+  }
   if (typeof ExceptionalModule !== 'undefined' && ExceptionalModule.isExtractConfirmOpen?.()) {
     ExceptionalModule.closeExtractConfirm();
     return;
@@ -960,42 +967,41 @@ async function runEnchantBootPreload() {
   const effectPlan = collectAllEffectPreloadPlan();
   const chromeUniqueCount = new Set(chromeUrls.map(normalizePreloadUrl).filter(Boolean)).size;
   const effectCount = effectPlan.jobs.length;
-  const total = Math.max(1, chromeUniqueCount + effectCount);
+  const chromeTotal = Math.max(1, chromeUniqueCount);
 
-  updateEnchantBootProgress(0, total, '正在載入全部素材…');
+  updateEnchantBootProgress(0, chromeTotal, '正在載入介面素材…');
 
-  let done = 0;
-  const report = (statusText) => {
-    updateEnchantBootProgress(done, total, statusText);
-  };
-
-  // 1) 介面素材
+  // 1) 先載介面素材 → 解除阻擋，可立即操作
   await preloadUrlBatch(chromeUrls, {
     concurrency: 14,
     onProgress: (batchDone) => {
-      done = batchDone;
-      report(`正在載入介面素材…（${batchDone}/${chromeUniqueCount}）`);
+      updateEnchantBootProgress(
+        batchDone,
+        chromeTotal,
+        `正在載入介面素材…（${batchDone}/${chromeUniqueCount}）`
+      );
     },
     statusText: '正在載入介面素材…',
   });
 
-  // 2) 全部特效／翻牌幀（寫入各模組自己的快取）
-  if (effectCount) {
-    const effectOffset = chromeUniqueCount;
-    await preloadEffectJobs(effectPlan.jobs, {
-      concurrency: 10,
-      onProgress: (batchDone, batchTotal) => {
-        done = effectOffset + batchDone;
-        report(`正在載入特效素材…（${batchDone}/${batchTotal}）`);
-      },
-    });
-    effectPlan.markDone();
+  updateEnchantBootProgress(chromeTotal, chromeTotal, '介面載入完成');
+  await finishBootAndShowInfoCard();
+
+  // 2) 特效／翻牌幀背景載入（不阻擋操作；播放前模組仍可按需補載）
+  if (!effectCount) {
+    refreshEffectTestBars();
+    return;
   }
 
-  done = total;
-  updateEnchantBootProgress(total, total, '全部載入完成');
-  await finishBootAndShowInfoCard();
-  refreshEffectTestBars();
+  preloadEffectJobs(effectPlan.jobs, { concurrency: 8 })
+    .then(() => {
+      effectPlan.markDone();
+      refreshEffectTestBars();
+    })
+    .catch(() => {
+      try { effectPlan.markDone(); } catch (_) { /* ignore */ }
+      refreshEffectTestBars();
+    });
 }
 
 /**
@@ -1518,6 +1524,9 @@ window.addEventListener('DOMContentLoaded', () => {
   if (typeof seedStarForceScrollConsumeInventory === 'function'
     && !(typeof SessionPersistenceModule !== 'undefined' && SessionPersistenceModule.hasSavedSession())) {
     seedStarForceScrollConsumeInventory();
+  }
+  if (typeof ensurePotentialScrollConsumeInventory === 'function') {
+    ensurePotentialScrollConsumeInventory();
   }
   // 無論有無存檔，開頁再合併一次：補齊 ITEM_DATABASE 新增裝備
   if (typeof SessionPersistenceModule !== 'undefined') {

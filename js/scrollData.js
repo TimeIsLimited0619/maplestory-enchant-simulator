@@ -171,6 +171,49 @@ const RANDOM_RATE_TABLES = {
   rainbow: RAINBOW_RATE_TABLE
 };
 
+/**
+ * 貓谷卷軸骰值：相對正服 T+2（循環）
+ * 例：T1→T3 機率、…、T10→T1、T11→T2（超出階數迴圈回最高階）
+ */
+const SCROLL_CAT_VALLEY_TIER_SHIFT = 2;
+
+/** true = 貓谷機率（T+2）；false = 正服機率 */
+let scrollUseCatValleyRates = true;
+
+function isScrollCatValleyRatesEnabled() {
+  return scrollUseCatValleyRates !== false;
+}
+
+function setScrollCatValleyRatesEnabled(enabled) {
+  scrollUseCatValleyRates = Boolean(enabled);
+}
+
+/**
+ * 依數值由高到低視為 T1、T2…；每階改用「低 shift 階」的正服機率（超出則循環）。
+ * @param {Array<{val:number, rate:number}>} rates
+ * @param {number} [shift=2]
+ */
+function applyScrollRateTierShift(rates, shift = SCROLL_CAT_VALLEY_TIER_SHIFT) {
+  if (!Array.isArray(rates) || !rates.length || !shift) {
+    return (rates || []).map((entry) => ({ ...entry }));
+  }
+  const sortedDesc = rates
+    .map((entry, index) => ({ ...entry, _i: index }))
+    .sort((a, b) => b.val - a.val || a._i - b._i);
+  const n = sortedDesc.length;
+  const officialRatesDesc = sortedDesc.map((entry) => entry.rate);
+  const shifted = sortedDesc.map((entry, tierIndex) => {
+    const srcIndex = (tierIndex + shift) % n;
+    return { val: entry.val, rate: officialRatesDesc[srcIndex] };
+  });
+  // 還原為原表順序（通常由低到高）
+  const byVal = new Map(shifted.map((entry) => [entry.val, entry.rate]));
+  return rates.map((entry) => ({
+    val: entry.val,
+    rate: byVal.has(entry.val) ? byVal.get(entry.val) : entry.rate,
+  }));
+}
+
 /** 驚訝的混沌卷軸：各屬性獨立骰值（%） */
 const CHAOS_RATE_TABLE = [
   { val: 6, rate: 0.99 },
@@ -1076,16 +1119,24 @@ function canUseScrollOnEquip(scroll, item) {
 
 function getRandomRollRates(scroll) {
   const roll = scroll?.randomRoll || scroll?.multiStatRoll;
-  if (!roll) return GLORY_RATE_TABLE.armor;
+  if (!roll) {
+    return isScrollCatValleyRatesEnabled()
+      ? applyScrollRateTierShift(GLORY_RATE_TABLE.armor)
+      : GLORY_RATE_TABLE.armor.map((entry) => ({ ...entry }));
+  }
 
   const table = RANDOM_RATE_TABLES[roll.tableKey] || GLORY_RATE_TABLE;
   // 飾品與防具同表；缺 key 時優先回退 armor（勿誤用 weapon）
-  return table[roll.ratesKey] || table.armor || table.weapon || GLORY_RATE_TABLE.armor;
+  const base = table[roll.ratesKey] || table.armor || table.weapon || GLORY_RATE_TABLE.armor;
+  if (isScrollCatValleyRatesEnabled()) {
+    return applyScrollRateTierShift(base);
+  }
+  return base.map((entry) => ({ ...entry }));
 }
 
 function getRandomStatRange(scroll) {
   const rates = getRandomRollRates(scroll);
-  const vals = rates.map(entry => entry.val);
+  const vals = rates.map((entry) => entry.val);
   return { min: Math.min(...vals), max: Math.max(...vals) };
 }
 
@@ -1106,12 +1157,14 @@ function rollRandomStatValue(scroll) {
   }
 
   const rates = getRandomRollRates(scroll);
-  const roll = Math.random() * 100;
-  let accumulated = 0;
+  // T+2 循環後權重總和應仍為 100；仍以實際總和為分母較穩
+  const total = rates.reduce((sum, entry) => sum + (Number(entry.rate) || 0), 0);
+  if (total <= 0) return rates[rates.length - 1]?.val ?? 0;
 
+  let roll = Math.random() * total;
   for (const entry of rates) {
-    accumulated += entry.rate;
-    if (roll < accumulated) return entry.val;
+    roll -= Number(entry.rate) || 0;
+    if (roll < 0) return entry.val;
   }
 
   return rates[rates.length - 1].val;

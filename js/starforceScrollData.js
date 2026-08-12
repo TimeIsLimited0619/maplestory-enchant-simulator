@@ -58,6 +58,7 @@ const playerStarForceScrollInventory = {
 
 const CONSUME_ITEM_TYPE = {
   STARFORCE_SCROLL: 'starforce_scroll',
+  POTENTIAL_SCROLL: 'potential_scroll',
 };
 
 function isStarForceScrollConsumeEntry(entry) {

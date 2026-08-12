@@ -159,25 +159,62 @@ function getPotentialCubeBySlot(slotIndex) {
   return POTENTIAL_CUBE_TYPES.find((cube) => cube.slotIndex === slotIndex) || null;
 }
 
-function getDefaultPotentialState() {
-  return {
-    rank: 'rare',
-    lines: [
-      { rank: 'rare', label: 'MaxMP', value: '3%' },
-      { rank: 'rare', label: 'MaxMP', value: '3%' },
-      { rank: 'rare', label: 'STR', value: '3%' }
-    ],
-    atkPow: 397803310
-  };
-}
-
-/** 無潛能（勳章／貓谷潛能專用起始狀態） */
+/** 無潛能起始狀態（空詞條） */
 function getEmptyPotentialState() {
   return {
     rank: 'legendary',
     lines: [],
     atkPow: 0
   };
+}
+
+function getDefaultPotentialState() {
+  // 裝備預設無潛能；改由傳說潛能卷／方塊賦予
+  return getEmptyPotentialState();
+}
+
+/** 舊版內建 rare 預設三排（MaxMP/MaxMP/STR） */
+function isLegacyStarterPotential(pot) {
+  if (!pot || !Array.isArray(pot.lines) || pot.lines.length !== 3) return false;
+  if (pot.rank !== 'rare') return false;
+  const expected = ['MaxMP', 'MaxMP', 'STR'];
+  return pot.lines.every((line, i) => (
+    line
+    && line.rank === 'rare'
+    && line.label === expected[i]
+  ));
+}
+
+/** 清除背包／目前裝備上的舊版預設潛能 */
+function stripLegacyStarterPotentialsFromInventory() {
+  const emptyMain = () => (typeof getEmptyPotentialState === 'function'
+    ? getEmptyPotentialState()
+    : { rank: 'legendary', lines: [], atkPow: 0 });
+  const emptyAdd = () => (typeof getEmptyAddPotentialState === 'function'
+    ? getEmptyAddPotentialState()
+    : { rank: 'legendary', lines: [], atkPow: 0 });
+
+  if (typeof playerInventoryState !== 'undefined' && Array.isArray(playerInventoryState)) {
+    for (let i = 0; i < playerInventoryState.length; i++) {
+      const state = playerInventoryState[i];
+      if (!state) continue;
+      if (isLegacyStarterPotential(state.potential)) {
+        state.potential = emptyMain();
+      }
+      if (isLegacyStarterPotential(state.additionalPotential)) {
+        state.additionalPotential = emptyAdd();
+      }
+    }
+  }
+
+  if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
+    if (isLegacyStarterPotential(currentEnchantItem.potential)) {
+      currentEnchantItem.potential = emptyMain();
+    }
+    if (isLegacyStarterPotential(currentEnchantItem.additionalPotential)) {
+      currentEnchantItem.additionalPotential = emptyAdd();
+    }
+  }
 }
 
 function rollPotentialLineRank(cube, currentRank) {

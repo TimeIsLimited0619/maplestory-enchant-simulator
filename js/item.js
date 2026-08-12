@@ -118,12 +118,9 @@ function isMedalItem(item) {
   return item.islot === 'Md' || item.subType === 'medal';
 }
 
-/** 預設無主／附潛的裝備（勳章、貓谷潛能專用） */
+/** 預設無主／附潛（改由傳說潛能卷等道具賦予） */
 function shouldStartWithoutPotential(item) {
-  if (!item) return false;
-  if (isMedalItem(item)) return true;
-  if (typeof isCatValleyPotentialItem === 'function' && isCatValleyPotentialItem(item)) return true;
-  return false;
+  return Boolean(item);
 }
 
 /** 披風／腰帶／肩膀：主／附加潛能共用披風組機率與數值（即使 mainType 為飾品） */

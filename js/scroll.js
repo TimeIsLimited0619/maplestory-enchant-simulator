@@ -83,6 +83,19 @@ const ScrollModule = {
       });
     }
 
+    const catValleyRatesCheck = document.getElementById('chkScrollCatValleyRates');
+    if (catValleyRatesCheck) {
+      if (typeof isScrollCatValleyRatesEnabled === 'function') {
+        catValleyRatesCheck.checked = isScrollCatValleyRatesEnabled();
+      }
+      catValleyRatesCheck.addEventListener('change', () => {
+        if (typeof setScrollCatValleyRatesEnabled === 'function') {
+          setScrollCatValleyRatesEnabled(catValleyRatesCheck.checked);
+        }
+        this.updateUI();
+      });
+    }
+
     const btnRecoveryCancel = document.getElementById('btnRecoveryCancel');
     const btnRecoveryApply = document.getElementById('btnRecoveryApply');
     if (btnRecoveryCancel) {
@@ -456,6 +469,7 @@ const ScrollModule = {
 
   updateAutoAtkTargetOptions() {
     const optionsWrap = document.getElementById('scBottomOptions');
+    const optionsLeftWrap = document.getElementById('scBottomOptionsLeft');
     const targetsWrap = document.getElementById('scAutoTargets');
     const list = document.getElementById('scAutoTargetList');
     const autoCheck = document.getElementById('chkScrollAutoEnhance');
@@ -466,6 +480,7 @@ const ScrollModule = {
     const showTargets = canAuto && autoOn;
     const hasEquip = Boolean(this.itemData);
     optionsWrap?.classList.toggle('hidden', !hasEquip);
+    optionsLeftWrap?.classList.toggle('hidden', !hasEquip);
     targetsWrap?.classList.toggle('hidden', !showTargets);
     mainPanel?.classList.toggle('scroll-auto-open', showTargets);
 

@@ -10,14 +10,14 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <!-- 自訂 CSS -->
-  <link rel="stylesheet" href="css/style.css?v=20260812autoSix1">
+  <link rel="stylesheet" href="css/style.css?v=20260812ps1">
 </head>
 <body class="enchant-boot-loading">
 
   <div id="enchantBootOverlay" class="enchant-boot-overlay" aria-live="polite" aria-busy="true">
     <div class="enchant-boot-panel">
       <div class="enchant-boot-title">楓之谷做裝模擬器</div>
-      <div class="enchant-boot-status" id="enchantBootStatus">正在載入全部素材…</div>
+      <div class="enchant-boot-status" id="enchantBootStatus">正在載入介面素材…</div>
       <div class="enchant-boot-bar">
         <div class="enchant-boot-bar-fill" id="enchantBootBarFill"></div>
       </div>
@@ -25,7 +25,7 @@
     </div>
   </div>
 
-  <!-- 開頁說明卡：資料載入完成後顯示 -->
+  <!-- 開頁說明卡：介面載入完成後顯示（特效繼續背景載入） -->
   <div id="msInfoCardOverlay" class="ms-info-card-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="msInfoCardTitle">
     <div class="ms-info-card-modal">
       <div class="ms-info-card-header">
@@ -489,6 +489,15 @@
         <input type="checkbox" id="chkScrollAnim" class="sc-auto-toggle-input" checked>
         <span class="sc-auto-toggle" aria-hidden="true"></span>
         強化動畫
+      </label>
+    </div>
+
+    <!-- 貓谷機率（左下角） -->
+    <div id="scBottomOptionsLeft" class="sc-bottom-options sc-bottom-options-left hidden">
+      <label class="sc-auto-label" for="chkScrollCatValleyRates" title="開啟：榮耀／命運等骰值使用貓谷 T+2 循環機率；關閉：正服機率">
+        <input type="checkbox" id="chkScrollCatValleyRates" class="sc-auto-toggle-input" checked>
+        <span class="sc-auto-toggle" aria-hidden="true"></span>
+        貓谷機率
       </label>
     </div>
 
@@ -1862,23 +1871,24 @@
   </div>
 
   <!-- JavaScript 載入 (順序：資料庫 -> 數據配置 -> 互動邏輯) -->
-  <script src="js/item.js"></script>
-  <script src="js/sessionPersistence.js"></script>
+  <script src="js/item.js?v=20260812nopot1"></script>
+  <script src="js/sessionPersistence.js?v=20260812nopot1"></script>
   <script src="js/equipTooltipData.js?v=20260810a"></script>
-  <script src="js/inventory.js"></script>
+  <script src="js/inventory.js?v=20260812nopot1"></script>
   <script src="js/data.js"></script>
   <script src="js/modalAnimation.js"></script>
   <script src="js/imagePreload.js?v=20260812pre1"></script>
-  <script src="js/scrollData.js?v=20260812acc1"></script>
+  <script src="js/scrollData.js?v=20260812cat2"></script>
   <script src="js/scrollEffectData.js"></script>
   <script src="js/scrollEffect.js"></script>
   <script src="js/starforceEffectData.js"></script>
   <script src="js/starforceEffect.js"></script>
   <script src="js/starforceScrollData.js"></script>
+  <script src="js/potentialScrollData.js?v=20260812ps3"></script>
   <script src="js/starforce.js"></script>
   <script src="js/autoEnchantData.js?v=20260812aeSpeed1"></script>
   <script src="js/autoEnchantStarForce.js"></script>
-  <script src="js/scroll.js?v=20260810k"></script>
+  <script src="js/scroll.js?v=20260812catLeft1"></script>
   <script src="js/hammerEffectData.js"></script>
   <script src="js/hammerEffect.js"></script>
   <script src="js/hammer.js?v=20260810a"></script>
@@ -1896,7 +1906,7 @@
   <script src="js/cubeRates/event8630.js"></script>
   <script src="js/cubeRates/event8420.js"></script>
   <script src="js/cubeRates/index.js"></script>
-  <script src="js/potentialData.js?v=20260812atk1"></script>
+  <script src="js/potentialData.js?v=20260812nopot1"></script>
   <script src="js/addPotentialStatValues.js"></script>
   <script src="js/destinyWeaponRestorationCubeValues.js"></script>
   <script src="js/destinyWeaponAddPotentialValues.js"></script>
@@ -1914,7 +1924,7 @@
   <script src="js/potentialUni.js"></script>
   <script src="js/potentialMemoria.js?v=20260812q"></script>
   <script src="js/autoEnchantPotential.js?v=20260812aeSpeed1"></script>
-  <script src="js/addPotentialData.js"></script>
+  <script src="js/addPotentialData.js?v=20260812nopot1"></script>
   <script src="js/addPotential.js?v=20260812n"></script>
   <script src="js/addPotentialHexa.js"></script>
   <script src="js/addPotentialUni.js"></script>
@@ -2007,6 +2017,6 @@
   <script src="js/potentialInspect.js"></script>
   <script src="js/equipTooltip.js?v=20260812dot1"></script>
   <script src="js/costTracker.js?v=20260812priceSel1"></script>
-  <script src="js/main.js?v=20260812pre1"></script>
+  <script src="js/main.js?v=20260812ps1"></script>
 </body>
 </html>

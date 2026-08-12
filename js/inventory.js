@@ -8,6 +8,8 @@ const InventoryModule = {
   draggingThumb: false,
   dragStartY: 0,
   dragStartScroll: 0,
+  /** 潛能卷使用中：等待點選裝備 */
+  pendingPotentialScrollId: null,
 
   SLOT_COUNT: INVENTORY_SLOT_COUNT,
   /** 小背包：4 欄 × 32 列 */
@@ -36,6 +38,14 @@ const InventoryModule = {
 
   init() {
     this.bindEvents();
+    this.bindPotentialScrollUseGuards();
+    this.ensureConsumeTooltip();
+    if (typeof ensurePotentialScrollConsumeInventory === 'function') {
+      ensurePotentialScrollConsumeInventory();
+    }
+    if (typeof stripLegacyStarterPotentialsFromInventory === 'function') {
+      stripLegacyStarterPotentialsFromInventory();
+    }
     this.syncTabUi();
     this.render();
     this.updateSlotCount();
@@ -65,6 +75,117 @@ const InventoryModule = {
     thumb?.addEventListener('mousedown', (e) => this.onThumbMouseDown(e));
     window.addEventListener('mousemove', (e) => this.onThumbMouseMove(e));
     window.addEventListener('mouseup', () => this.onThumbMouseUp());
+  },
+
+  bindPotentialScrollUseGuards() {
+    if (this._potentialScrollGuardsBound) return;
+    this._potentialScrollGuardsBound = true;
+
+    document.addEventListener('contextmenu', (event) => {
+      if (!this.pendingPotentialScrollId) return;
+      event.preventDefault();
+      this.cancelPotentialScrollUse();
+      if (typeof addLog === 'function') {
+        addLog('[消耗] 已取消使用潛在能力卷軸。', 'log-info');
+      }
+    });
+
+    const dropZone = document.getElementById('equipDropZone');
+    dropZone?.addEventListener('click', (event) => {
+      if (!this.pendingPotentialScrollId || !currentEnchantItem) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const itemId = currentEnchantItem.itemId || currentEnchantItem.id;
+      this.applyPendingPotentialScrollToEquip(itemId, currentEnchantItem.slotIndex);
+    });
+  },
+
+  ensureConsumeTooltip() {
+    if (document.getElementById('invConsumeTooltip')) return;
+    const el = document.createElement('div');
+    el.id = 'invConsumeTooltip';
+    el.className = 'inv-consume-tooltip hidden';
+    el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = '<img id="invConsumeTooltipImg" class="inv-consume-tooltip-img" alt="">';
+    document.body.appendChild(el);
+  },
+
+  showConsumeTooltip(anchorEl, hoverSrc) {
+    this.ensureConsumeTooltip();
+    const tip = document.getElementById('invConsumeTooltip');
+    const img = document.getElementById('invConsumeTooltipImg');
+    if (!tip || !img || !hoverSrc || !anchorEl) return;
+
+    this._consumeTooltipToken = (this._consumeTooltipToken || 0) + 1;
+    const token = this._consumeTooltipToken;
+    this._consumeTooltipAnchor = anchorEl;
+
+    const place = () => {
+      if (token !== this._consumeTooltipToken) return;
+      if (!anchorEl.isConnected) return;
+      const rect = anchorEl.getBoundingClientRect();
+      if (!rect.width && !rect.height) return;
+
+      tip.style.left = '-9999px';
+      tip.style.top = '0px';
+      tip.classList.remove('hidden');
+      tip.setAttribute('aria-hidden', 'false');
+
+      const tipW = tip.offsetWidth || img.naturalWidth || 290;
+      const tipH = tip.offsetHeight || img.naturalHeight || 120;
+      let left = rect.right + 8;
+      let top = rect.top;
+      if (left + tipW > window.innerWidth - 8) {
+        left = Math.max(8, rect.left - tipW - 8);
+      }
+      if (top + tipH > window.innerHeight - 8) {
+        top = Math.max(8, window.innerHeight - tipH - 8);
+      }
+      if (top < 8) top = 8;
+      tip.style.left = `${left}px`;
+      tip.style.top = `${top}px`;
+    };
+
+    img.onload = null;
+    img.onerror = null;
+
+    const afterReady = () => {
+      if (token !== this._consumeTooltipToken) return;
+      requestAnimationFrame(place);
+    };
+
+    if (img.getAttribute('src') === hoverSrc && img.complete && img.naturalWidth) {
+      afterReady();
+    } else {
+      img.onload = () => {
+        img.onload = null;
+        afterReady();
+      };
+      img.onerror = () => {
+        img.onerror = null;
+        this.hideConsumeTooltip();
+      };
+      img.src = hoverSrc;
+      tip.classList.remove('hidden');
+      tip.setAttribute('aria-hidden', 'false');
+      if (img.complete && img.naturalWidth) afterReady();
+    }
+  },
+
+  hideConsumeTooltip() {
+    this._consumeTooltipToken = (this._consumeTooltipToken || 0) + 1;
+    this._consumeTooltipAnchor = null;
+    const tip = document.getElementById('invConsumeTooltip');
+    const img = document.getElementById('invConsumeTooltipImg');
+    if (img) {
+      img.onload = null;
+      img.onerror = null;
+    }
+    if (!tip) return;
+    tip.classList.add('hidden');
+    tip.setAttribute('aria-hidden', 'true');
+    tip.style.removeProperty('left');
+    tip.style.removeProperty('top');
   },
 
   setMode(mode) {
@@ -189,6 +310,7 @@ const InventoryModule = {
     if (typeof EquipTooltipModule !== 'undefined') {
       EquipTooltipModule.hide();
     }
+    this.hideConsumeTooltip();
     this.tab = tab;
     this.scrollTop = 0;
 
@@ -225,15 +347,31 @@ const InventoryModule = {
   },
 
   getItemMainPotentialRank(itemId, slotIndex) {
-    if (this.tab !== 'equip') return 'rare';
+    if (this.tab !== 'equip') return null;
+
+    const hasLines = (pot) => Array.isArray(pot?.lines) && pot.lines.length > 0;
+
+    if (
+      typeof currentEnchantItem !== 'undefined'
+      && currentEnchantItem
+      && currentEnchantItem.slotIndex === slotIndex
+      && hasLines(currentEnchantItem.potential)
+      && currentEnchantItem.potential?.rank
+    ) {
+      return currentEnchantItem.potential.rank;
+    }
 
     const saved = playerInventoryState[slotIndex];
-    if (saved?.potential?.rank) return saved.potential.rank;
+    if (hasLines(saved?.potential) && saved.potential.rank) {
+      return saved.potential.rank;
+    }
 
     const template = ITEM_DATABASE[itemId];
-    if (template?.potential?.rank) return template.potential.rank;
+    if (hasLines(template?.potential) && template.potential.rank) {
+      return template.potential.rank;
+    }
 
-    return 'rare';
+    return null;
   },
 
   render() {
@@ -287,7 +425,7 @@ const InventoryModule = {
 
     const itemData = ITEM_DATABASE[itemId];
     const potentialRank = this.getItemMainPotentialRank(itemId, slotIndex);
-    slot.classList.add(`inv-potential-${potentialRank}`);
+    if (potentialRank) slot.classList.add(`inv-potential-${potentialRank}`);
 
     const itemFrame = document.createElement('div');
     itemFrame.className = 'inv-item-frame';
@@ -299,6 +437,10 @@ const InventoryModule = {
     equipImg.draggable = true;
 
     equipImg.ondragstart = (e) => {
+      if (this.pendingPotentialScrollId) {
+        e.preventDefault();
+        return;
+      }
       e.dataTransfer.setData('text/plain', JSON.stringify({
         slotIndex,
         itemId,
@@ -314,7 +456,21 @@ const InventoryModule = {
       });
     };
 
-    equipImg.ondblclick = () => loadEquipToSlot(itemId, slotIndex);
+    equipImg.addEventListener('click', (e) => {
+      if (!this.pendingPotentialScrollId) return;
+      e.preventDefault();
+      e.stopPropagation();
+      this.applyPendingPotentialScrollToEquip(itemId, slotIndex);
+    });
+
+    equipImg.ondblclick = (e) => {
+      if (this.pendingPotentialScrollId) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      loadEquipToSlot(itemId, slotIndex);
+    };
 
     itemFrame.appendChild(equipImg);
     slot.appendChild(itemFrame);
@@ -323,7 +479,207 @@ const InventoryModule = {
   renderConsumeSlot(slot, entry, slotIndex) {
     if (typeof isStarForceScrollConsumeEntry === 'function' && isStarForceScrollConsumeEntry(entry)) {
       this.renderStarForceScrollSlot(slot, entry, slotIndex);
+      return;
     }
+    if (typeof isPotentialScrollConsumeEntry === 'function' && isPotentialScrollConsumeEntry(entry)) {
+      this.renderPotentialScrollSlot(slot, entry, slotIndex);
+    }
+  },
+
+  renderPotentialScrollSlot(slot, entry, slotIndex) {
+    const scroll = typeof getPotentialScrollById === 'function'
+      ? getPotentialScrollById(entry.scrollId)
+      : null;
+    if (!scroll) return;
+
+    const count = typeof getPlayerPotentialScrollCount === 'function'
+      ? getPlayerPotentialScrollCount(scroll.id)
+      : 0;
+    if (count <= 0) return;
+
+    if (this.pendingPotentialScrollId === scroll.id) {
+      slot.classList.add('inv-slot-selected');
+    }
+
+    const itemFrame = document.createElement('div');
+    itemFrame.className = 'inv-item-frame inv-consume-frame';
+
+    const scrollImg = document.createElement('img');
+    scrollImg.src = scroll.icon;
+    scrollImg.alt = scroll.name;
+    scrollImg.id = `inv_item_consume_${slotIndex}`;
+    scrollImg.draggable = true;
+    // 不用 native title，避免與自訂 hover 說明圖搶顯示／造成定位錯亂
+    scrollImg.removeAttribute('title');
+
+    scrollImg.ondragstart = (e) => {
+      e.dataTransfer.setData('text/plain', JSON.stringify({
+        slotIndex,
+        tab: 'consume',
+      }));
+      e.dataTransfer.effectAllowed = 'move';
+      slot.classList.add('inv-dragging');
+    };
+    scrollImg.ondragend = () => {
+      slot.classList.remove('inv-dragging');
+      document.querySelectorAll('.ms-inv-slot.inv-drag-over').forEach((el) => {
+        el.classList.remove('inv-drag-over');
+      });
+    };
+
+    scrollImg.addEventListener('mouseenter', () => {
+      this.showConsumeTooltip(scrollImg, scroll.hover);
+    });
+    scrollImg.addEventListener('mouseleave', () => {
+      this.hideConsumeTooltip();
+    });
+
+    scrollImg.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.handlePotentialScrollDblClick(scroll.id);
+    });
+
+    const countEl = document.createElement('span');
+    countEl.className = 'inv-item-count';
+    countEl.textContent = String(count);
+
+    itemFrame.appendChild(scrollImg);
+    itemFrame.appendChild(countEl);
+    slot.appendChild(itemFrame);
+  },
+
+  beginPotentialScrollUse(scrollId) {
+    this.pendingPotentialScrollId = scrollId;
+    document.body.classList.add('inv-potential-scroll-use');
+    this.hideConsumeTooltip();
+    if (typeof EquipTooltipModule !== 'undefined') {
+      EquipTooltipModule.hide();
+    }
+    if (this.tab !== 'equip') {
+      this.setTab('equip');
+    } else {
+      this.render();
+    }
+  },
+
+  cancelPotentialScrollUse() {
+    if (!this.pendingPotentialScrollId) return;
+    this.pendingPotentialScrollId = null;
+    document.body.classList.remove('inv-potential-scroll-use');
+    if (this.tab === 'consume') this.render();
+  },
+
+  handlePotentialScrollDblClick(scrollId) {
+    const count = typeof getPlayerPotentialScrollCount === 'function'
+      ? getPlayerPotentialScrollCount(scrollId)
+      : 0;
+    if (count <= 0) return;
+
+    if (this.pendingPotentialScrollId === scrollId) {
+      this.cancelPotentialScrollUse();
+      if (typeof addLog === 'function') {
+        addLog('[消耗] 已取消使用潛在能力卷軸。', 'log-info');
+      }
+      return;
+    }
+
+    const scroll = typeof getPotentialScrollById === 'function'
+      ? getPotentialScrollById(scrollId)
+      : null;
+    this.beginPotentialScrollUse(scrollId);
+    if (scroll && typeof addLog === 'function') {
+      addLog(`[消耗] 已選擇【${scroll.name}】，請點選裝備套用。`, 'log-info');
+    }
+  },
+
+  getOrCreateEquipStateForScroll(itemId, slotIndex) {
+    if (currentEnchantItem && currentEnchantItem.slotIndex === slotIndex) {
+      return currentEnchantItem;
+    }
+
+    let state = playerInventoryState[slotIndex];
+    if (state) return state;
+
+    const template = typeof ITEM_DATABASE !== 'undefined' ? ITEM_DATABASE[itemId] : null;
+    if (!template || typeof createEnchantState !== 'function') return null;
+
+    state = createEnchantState(template, slotIndex);
+    playerInventoryState[slotIndex] = state;
+    return state;
+  },
+
+  applyPendingPotentialScrollToEquip(itemId, slotIndex) {
+    const scrollId = this.pendingPotentialScrollId;
+    if (!scrollId) return false;
+
+    const scroll = typeof getPotentialScrollById === 'function'
+      ? getPotentialScrollById(scrollId)
+      : null;
+    if (!scroll) {
+      this.cancelPotentialScrollUse();
+      return false;
+    }
+
+    const count = typeof getPlayerPotentialScrollCount === 'function'
+      ? getPlayerPotentialScrollCount(scrollId)
+      : 0;
+    if (count <= 0) {
+      this.cancelPotentialScrollUse();
+      return false;
+    }
+
+    const item = this.getOrCreateEquipStateForScroll(itemId, slotIndex);
+    if (!item) {
+      if (typeof addLog === 'function') {
+        addLog('[消耗] 無法套用至該裝備。', 'log-fail');
+      }
+      return false;
+    }
+
+    const result = typeof applyLegendaryPotentialGrade === 'function'
+      ? applyLegendaryPotentialGrade(item, scroll.target)
+      : { ok: false };
+    if (!result?.ok) {
+      if (typeof addLog === 'function') {
+        addLog('[消耗] 套用失敗。', 'log-fail');
+      }
+      return false;
+    }
+
+    if (typeof consumePotentialScroll === 'function') {
+      consumePotentialScroll(scrollId, 1);
+    }
+
+    if (currentEnchantItem && currentEnchantItem.slotIndex === slotIndex) {
+      if (typeof refreshEquippedItemUI === 'function') {
+        refreshEquippedItemUI();
+      } else {
+        if (typeof saveInventoryItemState === 'function') {
+          saveInventoryItemState(slotIndex, currentEnchantItem);
+        }
+        if (typeof updateStatusPanel === 'function') updateStatusPanel();
+        if (typeof refreshActiveModuleUI === 'function') refreshActiveModuleUI();
+        if (typeof updateActiveModuleEquip === 'function') updateActiveModuleEquip();
+        if (typeof syncInspectModules === 'function') syncInspectModules();
+      }
+    } else if (typeof saveInventoryItemState === 'function') {
+      saveInventoryItemState(slotIndex, item);
+    }
+
+    this.cancelPotentialScrollUse();
+    this.render();
+    this.updateSlotCount();
+
+    if (typeof SessionPersistenceModule !== 'undefined') {
+      SessionPersistenceModule.scheduleSave();
+    }
+
+    const targetLabel = scroll.target === 'additional' ? '附加潛能' : '潛能';
+    if (typeof addLog === 'function') {
+      addLog(`[消耗] 已對【${item.name || itemId}】使用【${scroll.name}】，${targetLabel}提升至傳說。`, 'log-success');
+    }
+    return true;
   },
 
   renderStarForceScrollSlot(slot, entry, slotIndex) {
@@ -476,6 +832,9 @@ const InventoryModule = {
       if (!entry) return false;
       if (typeof isStarForceScrollConsumeEntry === 'function' && isStarForceScrollConsumeEntry(entry)) {
         return getPlayerStarForceScrollCount(entry.scrollId) > 0;
+      }
+      if (typeof isPotentialScrollConsumeEntry === 'function' && isPotentialScrollConsumeEntry(entry)) {
+        return getPlayerPotentialScrollCount(entry.scrollId) > 0;
       }
       return true;
     }).length;
