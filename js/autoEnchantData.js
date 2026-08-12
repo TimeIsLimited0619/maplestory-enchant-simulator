@@ -1402,6 +1402,7 @@ async function aePotRunHexaAutoEnchant(ctx) {
     isRunning,
     isCancelled,
     loopDelayMs = 8,
+    batchSize = 1,
     onProgress,
     maxRolls = 50000,
   } = ctx;
@@ -1410,30 +1411,33 @@ async function aePotRunHexaAutoEnchant(ctx) {
   let overlayOpened = false;
   let stoppedForManualPick = false;
   const delay = () => new Promise((resolve) => window.setTimeout(resolve, loopDelayMs));
+  const stepsPerTick = Math.max(1, Number(batchSize) || 1);
 
   while (isRunning() && !isCancelled() && attempts < maxRolls) {
-    consumeCube();
-    attempts += 1;
+    let hit = false;
+    for (let i = 0; i < stepsPerTick && isRunning() && !isCancelled() && attempts < maxRolls; i += 1) {
+      consumeCube();
+      attempts += 1;
 
-    const session = rollSession();
-    if (!session) {
-      await delay();
-      continue;
-    }
+      const session = rollSession();
+      if (!session) continue;
 
-    if (!overlayOpened) {
-      openOverlayWithSession(cube, session, { fadeIn: true });
-      overlayOpened = true;
-    } else {
-      updateOverlaySession(session);
-    }
-    onProgress?.({ attempts, phase: 'roll' });
-    aePotSyncHexaAutoEnchantLayout?.();
+      if (!overlayOpened) {
+        openOverlayWithSession(cube, session, { fadeIn: true });
+        overlayOpened = true;
+      } else {
+        updateOverlaySession(session);
+      }
+      onProgress?.({ attempts, phase: 'roll' });
+      aePotSyncHexaAutoEnchantLayout?.();
 
-    if (sessionReady(session)) {
-      stoppedForManualPick = true;
-      break;
+      if (sessionReady(session)) {
+        stoppedForManualPick = true;
+        hit = true;
+        break;
+      }
     }
+    if (hit || stoppedForManualPick) break;
 
     await delay();
   }
@@ -1477,18 +1481,28 @@ const AUTO_ENCHANT_ALLOW_CUBE_SWITCH_WHILE_OPEN = true;
 /** 一般自動重設每輪間隔（毫秒） */
 const AUTO_ENCHANT_LOOP_DELAY_MS = 100;
 
-/** 超速模式每輪間隔（毫秒；0＝盡快重骰） */
-const AUTO_ENCHANT_OVERSPEED_LOOP_DELAY_MS = 1;
+/** 超速模式：與貓谷自動相同（每輪間隔 + 每輪步數） */
+const AUTO_ENCHANT_OVERSPEED_LOOP_DELAY_MS = 5;
+const AUTO_ENCHANT_OVERSPEED_BATCH_SIZE = 10;
 
 function aePotGetAutoEnchantLoopDelayMs(overspeedMode) {
   if (overspeedMode) {
     return typeof AUTO_ENCHANT_OVERSPEED_LOOP_DELAY_MS === 'number'
       ? AUTO_ENCHANT_OVERSPEED_LOOP_DELAY_MS
-      : 0;
+      : 10;
   }
   return typeof AUTO_ENCHANT_LOOP_DELAY_MS === 'number'
     ? AUTO_ENCHANT_LOOP_DELAY_MS
-    : 8;
+    : 100;
+}
+
+function aePotGetAutoEnchantBatchSize(overspeedMode) {
+  if (overspeedMode) {
+    return typeof AUTO_ENCHANT_OVERSPEED_BATCH_SIZE === 'number'
+      ? Math.max(1, AUTO_ENCHANT_OVERSPEED_BATCH_SIZE)
+      : 3;
+  }
+  return 1;
 }
 
 function aePotIsLegendaryRank(rank) {
@@ -1581,6 +1595,7 @@ async function aePotRunUnionAutoEnchant(ctx) {
     isRunning,
     isCancelled,
     loopDelayMs = 8,
+    batchSize = 1,
     onProgress,
     maxCubeUses = 50000,
   } = ctx;
@@ -1589,6 +1604,7 @@ async function aePotRunUnionAutoEnchant(ctx) {
   let reselectUses = 0;
   let resetUses = 0;
   const delay = () => new Promise((resolve) => window.setTimeout(resolve, loopDelayMs));
+  const stepsPerTick = Math.max(1, Number(batchSize) || 1);
 
   while (isRunning() && !isCancelled()) {
     const item = getItem();
@@ -1600,10 +1616,12 @@ async function aePotRunUnionAutoEnchant(ctx) {
     if (!aePotHasUnionResettableLine(potential, groups)) break;
 
     let workLineIndex = -1;
-    while (isRunning() && !isCancelled() && cubeUses < maxCubeUses) {
+    let steps = 0;
+    while (isRunning() && !isCancelled() && cubeUses < maxCubeUses && steps < stepsPerTick) {
       consumeCube();
       cubeUses += 1;
       reselectUses += 1;
+      steps += 1;
       const selectedLine = aePotPickUnionLineIndex();
       onProgress?.({ cubeUses, reselectUses, resetUses, badLineIndex: selectedLine, phase: 'reselect' });
       const latest = getPotential();
@@ -1615,9 +1633,12 @@ async function aePotRunUnionAutoEnchant(ctx) {
         workLineIndex = selectedLine;
         break;
       }
-      await delay();
     }
-    if (workLineIndex < 0) break;
+    if (workLineIndex < 0) {
+      if (shouldStop(getPotential())) break;
+      await delay();
+      continue;
+    }
 
     const next = aePotApplyUnionLineRoll(item, getPotential(), workLineIndex, rateKey, eventId);
     if (!next) break;

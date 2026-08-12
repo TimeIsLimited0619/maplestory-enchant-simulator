@@ -243,17 +243,21 @@ function isCatValleyPotentialItem(item) {
   return CAT_VALLEY_POTENTIAL_ITEM_NAMES.has(String(item.name || ''));
 }
 
-/** 物魔攻 8%，其餘 14%（合計 100%） */
 const CAT_VALLEY_POTENTIAL_POOL = [
-  { label: 'STR', value: '13%', weight: 14 },
-  { label: 'DEX', value: '13%', weight: 14 },
-  { label: 'INT', value: '13%', weight: 14 },
-  { label: 'LUK', value: '13%', weight: 14 },
-  { label: '全屬性', value: '10%', weight: 14 },
-  { label: 'MaxHP', value: '13%', weight: 14 },
-  { label: '物理攻擊力', value: '13%', weight: 8 },
-  { label: '魔法攻擊力', value: '13%', weight: 8 },
+  { label: 'STR', value: '13%', weight: 12.5 },
+  { label: 'DEX', value: '13%', weight: 12.5 },
+  { label: 'INT', value: '13%', weight: 12.5 },
+  { label: 'LUK', value: '13%', weight: 12.5 },
+  { label: '全屬性', value: '10%', weight: 12.5 },
+  { label: 'MaxHP', value: '13%', weight: 12.5 },
+  { label: '物理攻擊力', value: '13%', weight: 12.5 },
+  { label: '魔法攻擊力', value: '13%', weight: 12.5 },
 ];
+
+const CAT_VALLEY_POTENTIAL_ATK_LABELS = new Set(['物理攻擊力', '魔法攻擊力']);
+const CAT_VALLEY_POTENTIAL_ATK_LABEL_LIST = ['物理攻擊力', '魔法攻擊力'];
+/** 清空潛能時觸發大獎機率（0.01%）；觸發後後續「增加」鎖定物攻或魔攻 */
+const CAT_VALLEY_POTENTIAL_JACKPOT_RATE = 0.001;
 
 const CAT_VALLEY_POTENTIAL_COST = {
   addMainTaichu: 100,
@@ -262,31 +266,90 @@ const CAT_VALLEY_POTENTIAL_COST = {
   rerollAdd1Meso: 4000000000, // 40億
 };
 
-function rollCatValleyPotentialLine(usedLabels = new Set()) {
-  let pool = CAT_VALLEY_POTENTIAL_POOL;
-  const filtered = pool.filter((entry) => !usedLabels.has(entry.label));
-  if (filtered.length) pool = filtered;
+function makeCatValleyPotentialLine(label) {
+  const entry = CAT_VALLEY_POTENTIAL_POOL.find((row) => row.label === label)
+    || CAT_VALLEY_POTENTIAL_POOL[CAT_VALLEY_POTENTIAL_POOL.length - 1];
+  return {
+    rank: 'legendary',
+    label: entry.label,
+    value: entry.value,
+    statRaw: `${entry.label}+${entry.value}`,
+  };
+}
 
+function getCatValleyPotentialJackpot(item, which = 'main') {
+  if (!item) return null;
+  const key = which === 'add' ? 'catValleyJackpotAdd' : 'catValleyJackpotMain';
+  const label = item[key];
+  return CAT_VALLEY_POTENTIAL_ATK_LABELS.has(label) ? label : null;
+}
+
+function setCatValleyPotentialJackpot(item, which, label) {
+  if (!item) return;
+  const key = which === 'add' ? 'catValleyJackpotAdd' : 'catValleyJackpotMain';
+  item[key] = CAT_VALLEY_POTENTIAL_ATK_LABELS.has(label) ? label : null;
+}
+
+function clearCatValleyPotentialJackpot(item, which) {
+  if (!item) return;
+  if (which === 'add' || which === 'all') item.catValleyJackpotAdd = null;
+  if (which === 'main' || which === 'all') item.catValleyJackpotMain = null;
+}
+
+function pickCatValleyJackpotAtkLabel() {
+  const idx = Math.random() < 0.5 ? 0 : 1;
+  return CAT_VALLEY_POTENTIAL_ATK_LABEL_LIST[idx];
+}
+
+/**
+ * 清空潛能時判定大獎；觸發則隨機鎖定物攻或魔攻。
+ * @returns {{ jackpotTriggered: boolean, jackpotLabel: string|null }}
+ */
+function rollCatValleyPotentialJackpotOnClear(item, which) {
+  clearCatValleyPotentialJackpot(item, which);
+  if (Math.random() >= CAT_VALLEY_POTENTIAL_JACKPOT_RATE) {
+    return { jackpotTriggered: false, jackpotLabel: null };
+  }
+  const label = pickCatValleyJackpotAtkLabel();
+  setCatValleyPotentialJackpot(item, which, label);
+  return { jackpotTriggered: true, jackpotLabel: label };
+}
+
+/**
+ * @param {Set<string>} usedLabels
+ * @param {{ forcedLabel?: string|null }} [options]
+ */
+function rollCatValleyPotentialLine(usedLabels = new Set(), options = {}) {
+  const forcedLabel = options.forcedLabel;
+  if (forcedLabel && CAT_VALLEY_POTENTIAL_ATK_LABELS.has(forcedLabel)) {
+    // 大獎鎖定：允許同屬性重複（例如三物攻）
+    return makeCatValleyPotentialLine(forcedLabel);
+  }
+
+  const pool = CAT_VALLEY_POTENTIAL_POOL;
   const total = pool.reduce((sum, entry) => sum + entry.weight, 0);
   let roll = Math.random() * total;
   for (const entry of pool) {
     roll -= entry.weight;
-    if (roll <= 0) {
-      return {
-        rank: 'legendary',
-        label: entry.label,
-        value: entry.value,
-        statRaw: `${entry.label}+${entry.value}`,
-      };
-    }
+    if (roll <= 0) return makeCatValleyPotentialLine(entry.label);
   }
-  const fallback = pool[pool.length - 1];
-  return {
-    rank: 'legendary',
-    label: fallback.label,
-    value: fallback.value,
-    statRaw: `${fallback.label}+${fallback.value}`,
-  };
+  return makeCatValleyPotentialLine(pool[pool.length - 1].label);
+}
+
+/** 增加一排潛能（若已有大獎鎖定則強制該攻） */
+function rollCatValleyPotentialAddLine(item, which, usedLabels) {
+  const locked = getCatValleyPotentialJackpot(item, which);
+  return rollCatValleyPotentialLine(usedLabels, { forcedLabel: locked });
+}
+
+/** 主＋副共六排是否皆為指定物／魔攻 */
+function isCatValleySixAtkComplete(item, atkLabel) {
+  if (!item || !CAT_VALLEY_POTENTIAL_ATK_LABELS.has(atkLabel)) return false;
+  const main = item.potential?.lines;
+  const add = item.additionalPotential?.lines;
+  if (!Array.isArray(main) || main.length !== 3) return false;
+  if (!Array.isArray(add) || add.length !== 3) return false;
+  return [...main, ...add].every((line) => line?.label === atkLabel);
 }
 
 function ensureCatValleyPotentialState(item, which = 'main') {
@@ -328,6 +391,7 @@ function trackCatValleyMesoCost(amount) {
     CostTrackerModule.starStats = CostTrackerModule.createEmptyStarStats?.() || { mesoSpent: 0 };
   }
   CostTrackerModule.starStats.mesoSpent = (CostTrackerModule.starStats.mesoSpent || 0) + n;
+  if (typeof CatValleyEnhanceModule !== 'undefined' && CatValleyEnhanceModule.autoRunning) return;
   CostTrackerModule.refreshCostDisplay?.();
   if (CostTrackerModule.isOpen) CostTrackerModule.render?.();
   if (typeof SessionPersistenceModule !== 'undefined') {
@@ -356,8 +420,10 @@ function applyCatValleyPotentialAction(item, action) {
       return { ok: false, message: '主要潛能已滿三排' };
     }
     const used = new Set(pot.lines.map((line) => line.label));
-    pot.lines.push(rollCatValleyPotentialLine(used));
+    const line = rollCatValleyPotentialAddLine(item, 'main', used);
+    pot.lines.push(line);
     syncCatValleyPotentialRank(pot);
+    if (pot.lines.length >= 3) clearCatValleyPotentialJackpot(item, 'main');
     trackCatValleyTaichuCost(CAT_VALLEY_POTENTIAL_COST.addMainTaichu);
     return {
       ok: true,
@@ -372,6 +438,7 @@ function applyCatValleyPotentialAction(item, action) {
     }
     pot.lines = [];
     syncCatValleyPotentialRank(pot);
+    rollCatValleyPotentialJackpotOnClear(item, 'main');
     return { ok: true, message: '已清空主要潛能' };
   }
 
@@ -382,8 +449,11 @@ function applyCatValleyPotentialAction(item, action) {
     }
     const nextIndex = pot.lines.length; // 0,1,2
     const used = new Set(pot.lines.map((line) => line.label));
-    pot.lines.push(rollCatValleyPotentialLine(used));
+    const line = rollCatValleyPotentialAddLine(item, 'add', used);
+    pot.lines.push(line);
     syncCatValleyPotentialRank(pot);
+    if (pot.lines.length >= 3) clearCatValleyPotentialJackpot(item, 'add');
+
     if (nextIndex === 0) {
       trackCatValleyMesoCost(CAT_VALLEY_POTENTIAL_COST.addAddLine1Meso);
       return { ok: true, message: '增加附加潛能第 1 排（消耗 100億楓幣）' };
@@ -402,6 +472,7 @@ function applyCatValleyPotentialAction(item, action) {
     }
     pot.lines = pot.lines.slice(0, 1);
     syncCatValleyPotentialRank(pot);
+    rollCatValleyPotentialJackpotOnClear(item, 'add');
     return { ok: true, message: '已清空附加潛能第 2、3 排' };
   }
 

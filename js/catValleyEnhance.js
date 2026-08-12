@@ -8,14 +8,26 @@ const CatValleyEnhanceModule = {
   SUBMENU_ID: 'invCatValleySubmenu',
   MASK_ID: 'invCatValleyMask',
   submenuOpen: false,
+  autoRunning: false,
+  autoTarget: null,
+  autoTimer: null,
+/**
+   * 與貓谷自動相同節奏：delay + 每輪步數。
+   */
+  autoLoopDelayMs: 10,
+  autoBatchSize: 3,
 
   SUB_ACTIONS: [
     { id: 'addMain', label: '增加潛能(主)', title: '增加一排主要潛能（傳說），消耗太初 100' },
+    { id: 'autoSixPhys', label: '自動六排物', title: '自動骰到主＋副六排皆為物理攻擊力；再按一次可停止' },
     { id: 'clearMain', label: '清空潛能(主)', title: '清除全部主要潛能（免費）' },
+    { id: 'autoSixMag', label: '自動六排魔', title: '自動骰到主＋副六排皆為魔法攻擊力；再按一次可停止' },
     { id: 'addAdd', label: '增加潛能(副)', title: '增加一排附加潛能：第1排 100億，第2～3排太初 150' },
     { id: 'clearAdd', label: '清空潛能(副)', title: '清除附加潛能第2、3排（免費）' },
     { id: 'rerollAdd1', label: '重隨潛能(副)', title: '重骰附加潛能第1排，消耗 40億' },
   ],
+
+  AUTO_ACTIONS: new Set(['autoSixPhys', 'autoSixMag']),
 
   init() {
     this.ensureButton();
@@ -47,25 +59,35 @@ const CatValleyEnhanceModule = {
     if (!panel) return null;
 
     let menu = document.getElementById(this.SUBMENU_ID);
-    if (menu) return menu;
+    if (!menu) {
+      menu = document.createElement('div');
+      menu.id = this.SUBMENU_ID;
+      menu.className = 'inv-cat-valley-submenu hidden';
+      menu.setAttribute('role', 'group');
+      menu.setAttribute('aria-label', '貓谷潛能操作');
+      panel.appendChild(menu);
+    }
 
-    menu = document.createElement('div');
-    menu.id = this.SUBMENU_ID;
-    menu.className = 'inv-cat-valley-submenu hidden';
-    menu.setAttribute('role', 'group');
-    menu.setAttribute('aria-label', '貓谷潛能操作');
+    if (menu.dataset.layout !== 'autoSix') {
+      menu.innerHTML = '';
+      this.SUB_ACTIONS.forEach((action) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'inv-cat-valley-btn inv-cat-valley-sub-btn';
+        if (this.AUTO_ACTIONS.has(action.id)) {
+          btn.classList.add('inv-cat-valley-auto-btn');
+        }
+        if (action.id === 'addAdd' || action.id === 'clearAdd' || action.id === 'rerollAdd1') {
+          btn.classList.add('inv-cat-valley-sub-wide');
+        }
+        btn.dataset.action = action.id;
+        btn.title = action.title;
+        btn.innerHTML = `<span class="inv-cat-valley-btn-label">${action.label}</span>`;
+        menu.appendChild(btn);
+      });
+      menu.dataset.layout = 'autoSix';
+    }
 
-    this.SUB_ACTIONS.forEach((action) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'inv-cat-valley-btn inv-cat-valley-sub-btn';
-      btn.dataset.action = action.id;
-      btn.title = action.title;
-      btn.innerHTML = `<span class="inv-cat-valley-btn-label">${action.label}</span>`;
-      menu.appendChild(btn);
-    });
-
-    panel.appendChild(menu);
     return menu;
   },
 
@@ -106,6 +128,7 @@ const CatValleyEnhanceModule = {
       this._outsideCloseBound = true;
       document.addEventListener('click', (event) => {
         if (!this.submenuOpen) return;
+        if (this.autoRunning) return;
         const target = event.target;
         if (!(target instanceof Node)) return;
         if (target.closest?.(`#${this.BUTTON_ID}`)) return;
@@ -125,6 +148,7 @@ const CatValleyEnhanceModule = {
   },
 
   closeSubmenu() {
+    if (this.autoRunning) this.stopAuto({ silent: true });
     this.submenuOpen = false;
     const menu = document.getElementById(this.SUBMENU_ID);
     if (menu) menu.classList.add('hidden');
@@ -175,17 +199,37 @@ const CatValleyEnhanceModule = {
     const state = typeof getCatValleyPotentialActionState === 'function' && item
       ? getCatValleyPotentialActionState(item)
       : null;
+    const canAuto = !!(item
+      && typeof canUseCatValleyPotentialMenu === 'function'
+      && canUseCatValleyPotentialMenu(item));
 
     menu.querySelectorAll('[data-action]').forEach((btn) => {
       const action = btn.dataset.action;
       let enabled = false;
-      if (state) {
+
+      if (this.AUTO_ACTIONS.has(action)) {
+        enabled = canAuto;
+        const target = action === 'autoSixPhys' ? '物理攻擊力' : '魔法攻擊力';
+        const runningHere = this.autoRunning && this.autoTarget === target;
+        btn.classList.toggle('is-running', runningHere);
+        const base = this.SUB_ACTIONS.find((row) => row.id === action);
+        const labelEl = btn.querySelector('.inv-cat-valley-btn-label');
+        if (labelEl && base) {
+          labelEl.textContent = runningHere ? '停止自動' : base.label;
+        }
+        btn.title = runningHere
+          ? '再按一次停止自動'
+          : (base?.title || '');
+      } else if (this.autoRunning) {
+        enabled = false;
+      } else if (state) {
         if (action === 'addMain') enabled = state.canAddMain;
         else if (action === 'clearMain') enabled = state.canClearMain;
         else if (action === 'addAdd') enabled = state.canAddAdd;
         else if (action === 'clearAdd') enabled = state.canClearAdd;
         else if (action === 'rerollAdd1') enabled = state.canRerollAdd1;
       }
+
       btn.disabled = !enabled;
       btn.classList.toggle('is-disabled', !enabled);
       btn.classList.toggle('is-normal', enabled);
@@ -209,7 +253,7 @@ const CatValleyEnhanceModule = {
     if (!isPotentialItem || !usable) {
       this.closeSubmenu();
     } else if (!canUseCatValleyPotentialMenu?.(item)) {
-      this.closeSubmenu();
+      if (!this.autoRunning) this.closeSubmenu();
     } else if (this.submenuOpen) {
       this.updateSubmenuState();
     }
@@ -270,9 +314,172 @@ const CatValleyEnhanceModule = {
     if (typeof SessionPersistenceModule !== 'undefined') {
       SessionPersistenceModule.scheduleSave?.();
     }
+    if (typeof CostTrackerModule !== 'undefined') {
+      CostTrackerModule.refreshCostDisplay?.();
+      if (CostTrackerModule.isOpen) CostTrackerModule.render?.();
+    }
+  },
+
+  applySilent(item, action) {
+    if (typeof applyCatValleyPotentialAction !== 'function') {
+      return { ok: false };
+    }
+    return applyCatValleyPotentialAction(item, action);
+  },
+
+  /**
+   * 逐排推進：已有排皆為目標則繼續增加；任一排不是目標則清除（主清全部／副清 2～3 排）。
+   * @returns {boolean} 是否有執行操作
+   */
+  autoStep(item, target) {
+    if (typeof isCatValleySixAtkComplete === 'function' && isCatValleySixAtkComplete(item, target)) {
+      return false;
+    }
+
+    const main = ensureCatValleyPotentialState(item, 'main');
+    const add = ensureCatValleyPotentialState(item, 'add');
+    const mainOk = main.lines.length === 3 && main.lines.every((line) => line.label === target);
+    const addOk = add.lines.length === 3 && add.lines.every((line) => line.label === target);
+
+    if (!mainOk) {
+      // 任一排不是目標 → 清空重來；前排都對才往下加
+      if (main.lines.some((line) => line.label !== target)) {
+        return this.applySilent(item, 'clearMain').ok;
+      }
+      if (main.lines.length < 3) {
+        return this.applySilent(item, 'addMain').ok;
+      }
+    }
+
+    if (!addOk) {
+      if (add.lines.length === 0) {
+        return this.applySilent(item, 'addAdd').ok;
+      }
+      // 第 1 排不對 → 重骰第 1 排
+      if (add.lines[0].label !== target) {
+        return this.applySilent(item, 'rerollAdd1').ok;
+      }
+      // 第 2／3 排不對 → 清掉 2～3，保留第 1 排
+      if (add.lines.slice(1).some((line) => line.label !== target)) {
+        return this.applySilent(item, 'clearAdd').ok;
+      }
+      if (add.lines.length < 3) {
+        return this.applySilent(item, 'addAdd').ok;
+      }
+    }
+
+    return false;
+  },
+
+  stopAuto({ silent = false } = {}) {
+    if (this.autoTimer != null) {
+      clearTimeout(this.autoTimer);
+      this.autoTimer = null;
+    }
+    const wasRunning = this.autoRunning;
+    this.autoRunning = false;
+    this.autoTarget = null;
+    if (wasRunning && !silent && typeof addLog === 'function') {
+      addLog('⏹ 已停止自動貓谷潛能', 'log-info');
+    }
+    const item = this.getActiveItem();
+    if (item) this.persistItem(item);
+    this.updateSubmenuState();
+  },
+
+  startAuto(targetLabel) {
+    const item = this.getActiveItem();
+    if (!item || typeof canUseCatValleyPotentialMenu !== 'function' || !canUseCatValleyPotentialMenu(item)) {
+      if (typeof addLog === 'function') {
+        addLog('⚠️ 目前無法使用自動貓谷潛能。', 'log-fail');
+      }
+      return;
+    }
+
+    if (this.autoRunning) {
+      if (this.autoTarget === targetLabel) {
+        this.stopAuto();
+        return;
+      }
+      this.stopAuto({ silent: true });
+    }
+
+    if (typeof isCatValleySixAtkComplete === 'function' && isCatValleySixAtkComplete(item, targetLabel)) {
+      if (typeof addLog === 'function') {
+        addLog(`✨ 【${item.name}】已是六排${targetLabel === '物理攻擊力' ? '物' : '魔'}`, 'log-success');
+      }
+      return;
+    }
+
+    this.autoRunning = true;
+    this.autoTarget = targetLabel;
+    this.updateSubmenuState();
+
+    const finishSuccess = (current) => {
+      this.autoRunning = false;
+      this.autoTarget = null;
+      this.persistItem(current);
+      this.updateSubmenuState();
+      if (typeof addLog === 'function') {
+        addLog(
+          `✨ 【${current.name}】自動六排${targetLabel === '物理攻擊力' ? '物' : '魔'}完成`,
+          'log-success'
+        );
+      }
+    };
+
+    const tick = () => {
+      if (!this.autoRunning) return;
+      const current = this.getActiveItem();
+      if (!current || current !== item) {
+        this.stopAuto();
+        return;
+      }
+      if (typeof isCatValleySixAtkComplete === 'function' && isCatValleySixAtkComplete(current, targetLabel)) {
+        finishSuccess(current);
+        return;
+      }
+
+      let progressed = false;
+      for (let i = 0; i < this.autoBatchSize && this.autoRunning; i += 1) {
+        if (isCatValleySixAtkComplete(current, targetLabel)) break;
+        if (!this.autoStep(current, targetLabel)) break;
+        progressed = true;
+      }
+
+      if (!this.autoRunning) return;
+
+      if (typeof isCatValleySixAtkComplete === 'function' && isCatValleySixAtkComplete(current, targetLabel)) {
+        finishSuccess(current);
+        return;
+      }
+
+      if (progressed) {
+        if (typeof saveInventoryItemState === 'function' && current.slotIndex != null) {
+          saveInventoryItemState(current.slotIndex, current);
+        }
+        this.pinEquipTooltip();
+        this.updateSubmenuState();
+      }
+
+      this.autoTimer = window.setTimeout(tick, this.autoLoopDelayMs);
+    };
+
+    this.autoTimer = window.setTimeout(tick, 0);
   },
 
   handleSubAction(action) {
+    if (action === 'autoSixPhys') {
+      this.startAuto('物理攻擊力');
+      return;
+    }
+    if (action === 'autoSixMag') {
+      this.startAuto('魔法攻擊力');
+      return;
+    }
+
+    if (this.autoRunning) return;
+
     const item = this.getActiveItem();
     if (!item || typeof applyCatValleyPotentialAction !== 'function') return;
 
@@ -334,6 +541,7 @@ const CatValleyEnhanceModule = {
       }
 
       if (typeof canUseCatValleyPotentialMenu === 'function' && canUseCatValleyPotentialMenu(item)) {
+        if (this.autoRunning) return;
         this.toggleSubmenu();
         this.updateButton();
         return;

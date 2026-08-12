@@ -785,6 +785,19 @@ function bsGetStatPool(item) {
     : BONUS_STAT_STAT_POOL.armor;
 }
 
+/** 目前裝備實際可洗出的星火屬性 id（供自動目標選單過濾） */
+function bsGetAvailableBonusStatIds(item) {
+  const ids = new Set();
+  if (!item) return ids;
+  const pool = bsGetStatPool(item);
+  pool.forEach((name) => {
+    if (!bsCanRollStat(name, item)) return;
+    const key = BONUS_STAT_NAME_TO_KEY[name]?.key;
+    if (key) ids.add(key);
+  });
+  return ids;
+}
+
 function bsItemHasBaseWatk(item) {
   return (item?.baseStats?.atk || 0) > 0;
 }

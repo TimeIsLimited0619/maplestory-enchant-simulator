@@ -320,10 +320,12 @@ const CostTrackerModule = {
     } else if (Object.prototype.hasOwnProperty.call(this.usage, type)) {
       this.usage[type] = (this.usage[type] || 0) + n;
     }
-    this.refreshCostDisplay();
-    if (this.isOpen) this.render();
-    if (typeof SessionPersistenceModule !== 'undefined') {
-      SessionPersistenceModule.scheduleSave();
+    if (!(typeof CatValleyEnhanceModule !== 'undefined' && CatValleyEnhanceModule.autoRunning)) {
+      this.refreshCostDisplay();
+      if (this.isOpen) this.render();
+      if (typeof SessionPersistenceModule !== 'undefined') {
+        SessionPersistenceModule.scheduleSave();
+      }
     }
   },
 
@@ -366,27 +368,71 @@ const CostTrackerModule = {
     return changed;
   },
 
+  /** 只更新單一輸入框對應的單價／小計／總計（輸入時用，避免整表重算卡頓） */
+  applyPriceInputLive(input) {
+    if (!input?.dataset?.priceId) return;
+    const id = input.dataset.priceId;
+    const next = this.fromDisplayPrice(input.value);
+    this.prices[id] = next;
+
+    const row = input.closest('tr');
+    const subEl = row?.querySelector('.cost-tracker-sub');
+    if (subEl) {
+      const count = this.getUsageCount(id);
+      subEl.textContent = this.formatSubtotal(this.getLineSubtotal(id, count, next));
+    }
+
+    const totalEl = document.getElementById('costTrackerTotal');
+    if (totalEl) {
+      totalEl.textContent = this.formatTotalCost(this.getTotalCost());
+    }
+  },
+
+  schedulePricePersist() {
+    if (this._pricePersistTimer) clearTimeout(this._pricePersistTimer);
+    this._pricePersistTimer = setTimeout(() => {
+      this._pricePersistTimer = null;
+      this.syncLegacyPriceInputs();
+      this.savePrices();
+      this.refreshCostDisplay();
+    }, 350);
+  },
+
+  flushPricePersist() {
+    if (this._pricePersistTimer) {
+      clearTimeout(this._pricePersistTimer);
+      this._pricePersistTimer = null;
+    }
+    this.syncLegacyPriceInputs();
+    this.savePrices();
+    this.refreshCostDisplay();
+  },
+
   bindPriceInputHotSave(body = document.getElementById('costTrackerBody')) {
     if (!body || body.dataset.priceHotSaveBound === '1') return;
     body.dataset.priceHotSaveBound = '1';
 
-    const persist = () => {
-      this.hotSavePricesFromForm({ refreshDisplay: true });
-      const totalEl = document.getElementById('costTrackerTotal');
-      if (totalEl) {
-        totalEl.textContent = this.formatTotalCost(this.getTotalCost());
-      }
-    };
-
     body.addEventListener('input', (event) => {
       const input = event.target?.closest?.('[data-price-id]');
       if (!input) return;
-      persist();
+      this.applyPriceInputLive(input);
+      this.schedulePricePersist();
     });
     body.addEventListener('change', (event) => {
       const input = event.target?.closest?.('[data-price-id]');
       if (!input) return;
-      persist();
+      this.applyPriceInputLive(input);
+      this.flushPricePersist();
+    });
+    body.addEventListener('focusin', (event) => {
+      const input = event.target?.closest?.('[data-price-id]');
+      if (!input || input.tagName !== 'INPUT') return;
+      // 點進單價框時全選，方便直接覆蓋輸入
+      requestAnimationFrame(() => {
+        try {
+          input.select();
+        } catch (_) { /* ignore */ }
+      });
     });
   },
 

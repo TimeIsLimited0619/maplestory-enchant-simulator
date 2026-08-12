@@ -1070,7 +1070,8 @@ body.enchant-boot-loading #pageEnhance {
   pointer-events: none;
 }
 
-.ms-inventory.inv-mode-full .inv-cat-valley-btn {
+/* 僅主按鈕；子選單按鈕另有 .inv-cat-valley-sub-btn，勿套用 absolute 座標 */
+.ms-inventory.inv-mode-full > .inv-cat-valley-btn {
   /* 對齊展開背包底部左側白色長圓形 */
   left: 19px;
   width: 176px;
@@ -1082,10 +1083,10 @@ body.enchant-boot-loading #pageEnhance {
 .inv-cat-valley-submenu {
   position: absolute;
   left: 28px;
-  width: 186px;
+  width: 376px;
   top: calc(100% - 36px);
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 186px 186px;
   gap: 4px;
   z-index: 20;
   pointer-events: auto;
@@ -1110,17 +1111,36 @@ body.enchant-boot-loading #pageEnhance {
   display: none;
 }
 
-.inv-cat-valley-sub-btn {
+.inv-cat-valley-sub-btn,
+.ms-inventory.inv-mode-full .inv-cat-valley-sub-btn {
   position: relative;
   left: auto;
+  top: auto;
   bottom: auto;
   width: 100%;
+  height: 24px;
+  line-height: 24px;
   z-index: 21;
+}
+
+.ms-inventory.inv-mode-full .inv-cat-valley-sub-btn {
+  height: 22px;
+  line-height: 22px;
+}
+
+.inv-cat-valley-sub-wide {
+  grid-column: 1 / -1;
+}
+
+.inv-cat-valley-auto-btn.is-running {
+  color: #5a1f1f;
+  background: linear-gradient(180deg, #ffe8e0 0%, #f0c8bc 100%);
 }
 
 .ms-inventory.inv-mode-full .inv-cat-valley-submenu {
   left: 19px;
-  width: 176px;
+  width: 356px;
+  grid-template-columns: 176px 176px;
   top: auto;
   bottom: 71px;
 }

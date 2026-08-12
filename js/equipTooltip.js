@@ -1029,12 +1029,15 @@ const EquipTooltipModule = {
       root.appendChild(bonusWrap);
     }
 
-    if (item.potential?.lines?.length) {
+    const hasMainPotential = !!(item.potential?.lines?.length);
+    const hasAddPotential = !!(item.additionalPotential?.lines?.length);
+    if (hasMainPotential || hasAddPotential) {
       root.appendChild(this.createDotline());
+    }
+    if (hasMainPotential) {
       this.renderPotentialBlock(root, '潛在能力', item.potential);
     }
-
-    if (item.additionalPotential?.lines?.length) {
+    if (hasAddPotential) {
       this.renderPotentialBlock(root, '附加潛在能力', item.additionalPotential);
     }
 

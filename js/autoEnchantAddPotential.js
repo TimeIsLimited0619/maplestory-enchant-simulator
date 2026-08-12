@@ -23,6 +23,10 @@ const AutoEnchantAddPotentialModule = {
     return aePotGetAutoEnchantLoopDelayMs(this.overspeedMode);
   },
 
+  getBatchSize() {
+    return aePotGetAutoEnchantBatchSize(this.overspeedMode);
+  },
+
   isMemoriaSelected() {
     return aePotIsMemoriaCube?.(AddPotentialModule.getSelectedCube?.());
   },
@@ -469,22 +473,27 @@ const AutoEnchantAddPotentialModule = {
       this.isRollableCube(cube) &&
       this.canKeepAddPotAuto(cube)
     ) {
-      consumePlayerAddPotCube(cube.id);
-      const rolled = rerollAddPotential(
-        cube,
-        AddPotentialModule.itemData.additionalPotential,
-        AddPotentialModule.itemData
-      );
-      this.applyRollSilent(rolled);
-      attempts += 1;
-      this.render();
-
-      if (this.shouldStopSuccess(AddPotentialModule.itemData.additionalPotential)) {
-        break;
+      let hit = false;
+      const batch = this.getBatchSize();
+      for (let i = 0; i < batch && this.isRunning && !this.cancelled; i += 1) {
+        if (!AddPotentialModule.itemData || !this.isRollableCube(cube) || !this.canKeepAddPotAuto(cube)) break;
+        consumePlayerAddPotCube(cube.id);
+        const rolled = rerollAddPotential(
+          cube,
+          AddPotentialModule.itemData.additionalPotential,
+          AddPotentialModule.itemData
+        );
+        this.applyRollSilent(rolled);
+        attempts += 1;
+        this.render();
+        if (this.shouldStopSuccess(AddPotentialModule.itemData.additionalPotential)) {
+          hit = true;
+          break;
+        }
+        if (attempts > 50000) break;
       }
-
+      if (hit || attempts > 50000) break;
       await this.delayLoop();
-      if (attempts > 50000) break;
     }
     return attempts;
   },
@@ -514,6 +523,7 @@ const AutoEnchantAddPotentialModule = {
       isRunning: () => this.isRunning && this.canKeepAddPotAuto(cube),
       isCancelled: () => this.cancelled,
       loopDelayMs: this.getLoopDelayMs(),
+      batchSize: this.getBatchSize(),
       onProgress: () => {
         AddPotentialModule.updateUI?.();
         this.render();
@@ -541,6 +551,7 @@ const AutoEnchantAddPotentialModule = {
       isRunning: () => this.isRunning && this.canKeepAddPotAuto(cube),
       isCancelled: () => this.cancelled,
       loopDelayMs: this.getLoopDelayMs(),
+      batchSize: this.getBatchSize(),
       onProgress: () => this.render(),
     });
     this.lastUniReselectUses = result.reselectUses;
@@ -562,38 +573,51 @@ const AutoEnchantAddPotentialModule = {
     let attempts = 0;
     const maxRolls = 50000;
     const delay = () => new Promise((resolve) => setTimeout(resolve, this.getLoopDelayMs()));
+    const batch = this.getBatchSize();
 
     while (!this.cancelled && attempts < maxRolls) {
-      consumePlayerAddPotCube(cube.id);
-      attempts += 1;
+      let hit = false;
+      let stoppedRankUp = false;
+      for (let i = 0; i < batch && !this.cancelled && attempts < maxRolls; i += 1) {
+        consumePlayerAddPotCube(cube.id);
+        attempts += 1;
 
-      const rolled = rerollAddPotential(cube, snapshot, AddPotentialModule.itemData);
-      const after = AddPotentialModule.cloneMemoriaPotential(rolled);
+        const rolled = rerollAddPotential(cube, snapshot, AddPotentialModule.itemData);
+        const after = AddPotentialModule.cloneMemoriaPotential(rolled);
 
-      if (!overlayOpened) {
-        AddPotentialModule.openMemoriaAutoSession(snapshot, after, cube, { fadeIn: true });
-        overlayOpened = true;
-      } else {
-        AddPotentialModule.updateMemoriaAutoSession(snapshot, after);
+        if (!overlayOpened) {
+          AddPotentialModule.openMemoriaAutoSession(snapshot, after, cube, { fadeIn: true });
+          overlayOpened = true;
+        } else {
+          AddPotentialModule.updateMemoriaAutoSession(snapshot, after);
+        }
+        aePotSyncMemoriaAutoEnchantLayout?.();
+
+        const rankUp = AddPotentialModule.isMemoriaRankUp(snapshot, after);
+        if (rankUp) {
+          this.lastRankUpStoppedForPick = true;
+          this.lastChoiceStoppedForPick = true;
+          this.choiceAutoSessionActive = true;
+          AddPotentialModule.renderMemoriaOverlay?.();
+          stoppedRankUp = true;
+          break;
+        }
+
+        if (this.matchesTargets(after)) {
+          this.lastChoiceStoppedForPick = true;
+          this.choiceAutoSessionActive = true;
+          AddPotentialModule.renderMemoriaOverlay?.();
+          hit = true;
+          break;
+        }
       }
-      aePotSyncMemoriaAutoEnchantLayout?.();
 
-      const rankUp = AddPotentialModule.isMemoriaRankUp(snapshot, after);
-      if (rankUp) {
-        this.lastRankUpStoppedForPick = true;
-        this.lastChoiceStoppedForPick = true;
-        this.choiceAutoSessionActive = true;
-        AddPotentialModule.renderMemoriaOverlay?.();
+      if (stoppedRankUp) {
         return { attempts, targetHit: false, stoppedForManualPick: true, stoppedForRankUp: true };
       }
-
-      if (this.matchesTargets(after)) {
-        this.lastChoiceStoppedForPick = true;
-        this.choiceAutoSessionActive = true;
-        AddPotentialModule.renderMemoriaOverlay?.();
+      if (hit) {
         return { attempts, targetHit: true, stoppedForManualPick: true };
       }
-
       if (this.cancelled) break;
       await delay();
     }

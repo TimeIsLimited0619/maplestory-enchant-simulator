@@ -275,10 +275,9 @@ function rerollPotential(cube, currentPotential, item) {
   }
 
   const rank = rollPotentialRank(lines);
-  const atkPow = Math.max(
-    0,
-    (currentPotential?.atkPow || 300000000) + Math.floor((Math.random() - 0.52) * 5000000)
-  );
+  const atkPow = typeof rollNextPotentialAtkPow === 'function'
+    ? rollNextPotentialAtkPow(currentPotential)
+    : Math.max(0, (currentPotential?.atkPow || 300000000) + rollPotentialAtkPowDelta());
 
   return { rank, lines, atkPow };
 }
@@ -331,6 +330,23 @@ function splitPotentialLineDisplay(line) {
 
 const ATK_POW_EASTER_EGG_TEXT = 'CYY是給';
 const ATK_POW_EASTER_EGG_CHANCE = 0.01;
+
+/** 戰力增減：隨機 +1000萬~1億 或 -1000萬~9999萬 */
+function rollPotentialAtkPowDelta() {
+  if (Math.random() < 0.5) {
+    const min = 10000000; // 1000萬
+    const max = 100000000; // 1億
+    return min + Math.floor(Math.random() * (max - min + 1));
+  }
+  const minAbs = 10000000; // 1000萬
+  const maxAbs = 99990000; // 9999萬
+  return -(minAbs + Math.floor(Math.random() * (maxAbs - minAbs + 1)));
+}
+
+function rollNextPotentialAtkPow(currentPotential) {
+  const base = Number(currentPotential?.atkPow) || 300000000;
+  return Math.max(0, base + rollPotentialAtkPowDelta());
+}
 
 /** 戰鬥力增減顯示彩蛋：約 1% 機率替換成指定文字 */
 function maybeAtkPowEasterEgg(formattedText, rawValue = null) {

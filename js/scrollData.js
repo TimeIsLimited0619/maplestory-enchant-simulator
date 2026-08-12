@@ -1181,6 +1181,8 @@ function resetScrollBonusFields(item) {
   });
   item.catValleyLevel = 0;
   item.medalEnhanceLevel = 0;
+  item.catValleyJackpotMain = null;
+  item.catValleyJackpotAdd = null;
 }
 
 function rollChaosDeltaValue() {

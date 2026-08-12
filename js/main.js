@@ -135,6 +135,8 @@ function createEnchantState(itemData, slotIndex) {
     scrollAllStatR: 0,
     catValleyLevel: itemData.catValleyLevel || 0,
     medalEnhanceLevel: itemData.medalEnhanceLevel || 0,
+    catValleyJackpotMain: itemData.catValleyJackpotMain || null,
+    catValleyJackpotAdd: itemData.catValleyJackpotAdd || null,
     goldenHammerUsed: 0,
     platinumHammerUsed: 0,
     upgradeSlots: itemData.upgradeSlots,

@@ -33,6 +33,10 @@ const AutoEnchantBonusStatModule = {
     return aePotGetAutoEnchantLoopDelayMs(this.overspeedMode);
   },
 
+  getBatchSize() {
+    return aePotGetAutoEnchantBatchSize(this.overspeedMode);
+  },
+
   getAutoBlockReason() {
     if (!BonusStatModule?.itemData) return '請先放置裝備。';
     if (BonusStatModule.costTab !== 'item') return '請切換至星火道具分頁並選擇星火。';
@@ -67,7 +71,25 @@ const AutoEnchantBonusStatModule = {
   },
 
   getUnavailableStatIds(equip = BonusStatModule.itemData) {
+    // 武器％詞條在 UI 併入物／魔攻選項，不另開
     const hidden = new Set(['watkPct', 'matkPct']);
+    const available = typeof bsGetAvailableBonusStatIds === 'function'
+      ? bsGetAvailableBonusStatIds(equip)
+      : null;
+
+    if (available) {
+      if (typeof BONUS_STAT_TYPES !== 'undefined') {
+        BONUS_STAT_TYPES.forEach((type) => {
+          if (hidden.has(type.id)) return;
+          if (!available.has(type.id)) hidden.add(type.id);
+        });
+      }
+      return hidden;
+    }
+
+    // 無裝備時保守隱藏武器專屬％傷
+    hidden.add('bossDmg');
+    hidden.add('dmg');
     if (!equip || !bsItemHasBaseWatk(equip)) hidden.add('watk');
     if (!equip || !bsItemHasBaseMatk(equip)) hidden.add('matk');
     return hidden;
@@ -470,17 +492,22 @@ const AutoEnchantBonusStatModule = {
     let attempts = 0;
 
     while (!this.cancelled) {
-      BonusStatModule.payResetCost(1);
-      attempts += 1;
-      BonusStatModule.lastAtkPow = BonusStatModule.itemData.bonusStat.atkPow;
-      const { after } = BonusStatModule.performRoll();
+      let hit = false;
+      const batch = this.getBatchSize();
+      for (let i = 0; i < batch && !this.cancelled; i += 1) {
+        BonusStatModule.payResetCost(1);
+        attempts += 1;
+        BonusStatModule.lastAtkPow = BonusStatModule.itemData.bonusStat.atkPow;
+        const { after } = BonusStatModule.performRoll();
 
-      BonusStatModule.applyChoiceResult(after);
+        BonusStatModule.applyChoiceResult(after);
 
-      if (this.matchesTargets(after)) {
-        return { attempts, targetHit: true };
+        if (this.matchesTargets(after)) {
+          hit = true;
+          break;
+        }
       }
-
+      if (hit) return { attempts, targetHit: true };
       if (this.cancelled) break;
       await new Promise((resolve) => setTimeout(resolve, this.getLoopDelayMs()));
     }
@@ -504,28 +531,36 @@ const AutoEnchantBonusStatModule = {
     let attempts = 0;
     const maxRolls = 50000;
     const delay = () => new Promise((resolve) => setTimeout(resolve, this.getLoopDelayMs()));
+    const batch = this.getBatchSize();
 
     while (!this.cancelled && attempts < maxRolls) {
-      BonusStatModule.payResetCost(1);
-      attempts += 1;
+      let hit = false;
+      for (let i = 0; i < batch && !this.cancelled && attempts < maxRolls; i += 1) {
+        BonusStatModule.payResetCost(1);
+        attempts += 1;
 
-      const { before, after } = BonusStatModule.performRoll(snapshot);
+        const { before, after } = BonusStatModule.performRoll(snapshot);
 
-      if (!overlayOpened) {
-        BonusStatChoiceModule.openAutoSession(before, after, 1, { fadeIn: true });
-        overlayOpened = true;
-      } else {
-        BonusStatChoiceModule.updateAutoSession(before, after, 1);
+        if (!overlayOpened) {
+          BonusStatChoiceModule.openAutoSession(before, after, 1, { fadeIn: true });
+          overlayOpened = true;
+        } else {
+          BonusStatChoiceModule.updateAutoSession(before, after, 1);
+        }
+        aeBsSyncChoiceAutoEnchantLayout?.();
+
+        if (this.matchesTargets(after)) {
+          this.lastChoiceStoppedForPick = true;
+          this.choiceAutoSessionActive = true;
+          BonusStatChoiceModule.render?.();
+          hit = true;
+          break;
+        }
       }
-      aeBsSyncChoiceAutoEnchantLayout?.();
 
-      if (this.matchesTargets(after)) {
-        this.lastChoiceStoppedForPick = true;
-        this.choiceAutoSessionActive = true;
-        BonusStatChoiceModule.render?.();
+      if (hit) {
         return { attempts, targetHit: true, stoppedForManualPick: true };
       }
-
       if (this.cancelled) break;
       await delay();
     }

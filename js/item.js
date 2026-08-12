@@ -1091,6 +1091,30 @@ const ITEM_DATABASE = {
     tradeAvailable: 2
   }),
 
+  '01113360': buildEquipFromWzInfo('01113360', '恍惚的噩夢', {
+    wzPart: 'Ring',
+    islot: 'Ri',
+    vslot: 'Ri',
+    reqJob: 0,
+    reqLevel: 250,
+    incSTR: 10,
+    incDEX: 10,
+    incINT: 10,
+    incLUK: 10,
+    incPAD: 5,
+    incMAD: 5,
+    incMHP: 500,
+    incMMP: 500,
+    tuc: 4,
+    setItemID: 1055,
+    notSale: 1,
+    bossReward: 1,
+    equipTradeBlock: 1,
+    onlyEquip: 1,
+    price: 1,
+    tradeAvailable: 2
+  }),
+
 '01122430': buildEquipFromWzInfo('01122430', '苦痛的根源', {
     wzPart: 'Accessory',
     islot: 'Pe',
@@ -1165,7 +1189,7 @@ const ITEM_DATABASE = {
     tradeAvailable: 2
   }),
 
-  '01143286': buildEquipFromWzInfo('01143286', '喵喵天使', {
+'01143286': buildEquipFromWzInfo('01143286', '喵喵天使', {
     wzPart: 'Accessory',
     islot: 'Md',
     vslot: 'Md',
@@ -1748,6 +1772,7 @@ playerInventory[57] = '01152215';
 playerInventory[58] = '01152216';
 playerInventory[59] = '01113341';
 playerInventory[60] = '01143286';
+playerInventory[61] = '01113360';
 
 let currentEnchantItem = null;
 

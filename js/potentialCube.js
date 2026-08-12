@@ -583,21 +583,16 @@ function normalizeStatLabel(statName) {
   return label;
 }
 
-function rollStatEntry(group, cubeRateKey, usedStats) {
+function rollStatEntry(group, cubeRateKey, _usedStats) {
   if (!group?.entries?.length) return null;
 
-  const candidates = group.entries
+  // 允許同條詞重複出現（不再以 usedStats 去重）
+  const source = group.entries
     .map((entry, index) => ({ entry, index }))
-    .filter(({ entry, index }) => {
+    .filter(({ entry }) => {
       const weight = entry.rates?.[cubeRateKey];
-      return weight != null && weight > 0 && !usedStats.has(getStatEntryKey(group, index));
+      return weight != null && weight > 0;
     });
-
-  const source = candidates.length
-    ? candidates
-    : group.entries
-      .map((entry, index) => ({ entry, index }))
-      .filter(({ entry }) => entry.rates?.[cubeRateKey] > 0);
 
   if (!source.length) return null;
 
@@ -627,7 +622,6 @@ function buildPotentialLine(item, lineOfficialRank, cubeRateKey, cubeRates, used
   const entry = rolled?.entry || null;
   const entryIndex = rolled?.index;
   const parsed = parsePotentialStat(entry?.stat || 'STR', internalRank, { group, entryIndex, item, eventId, rateKey: cubeRateKey });
-  if (entry != null && entryIndex != null) usedStats.add(getStatEntryKey(group, entryIndex));
 
   return {
     rank: internalRank,
@@ -714,10 +708,9 @@ function rerollPotentialWithCube(cube, item, currentPotential, eventId = POTENTI
   delete lines._mirrorCopied;
 
   const rank = rollPotentialRankFromLines(lines);
-  const atkPow = Math.max(
-    0,
-    (currentPotential?.atkPow || 300000000) + Math.floor((Math.random() - 0.52) * 5000000)
-  );
+  const atkPow = typeof rollNextPotentialAtkPow === 'function'
+    ? rollNextPotentialAtkPow(currentPotential)
+    : Math.max(0, (currentPotential?.atkPow || 300000000));
 
   return { rank, lines, atkPow, mirrorCopied };
 }
@@ -767,10 +760,9 @@ function rollDazzlingHexaChoices(item, currentPotential, rateKey = 'dazzling', e
     });
   }
 
-  const previewAtkPow = Math.max(
-    0,
-    (currentPotential?.atkPow || 300000000) + Math.floor((Math.random() - 0.52) * 5000000)
-  );
+  const previewAtkPow = typeof rollNextPotentialAtkPow === 'function'
+    ? rollNextPotentialAtkPow(currentPotential)
+    : Math.max(0, currentPotential?.atkPow || 300000000);
 
   return {
     headerRank: headerInternalRank,
@@ -820,11 +812,7 @@ function rollUnionLine(item, currentPotential, lineIndex, rateKey = 'union', eve
     : lowerOfficialRank(headerOfficialRank);
 
   const usedStats = new Set();
-  (currentPotential?.lines || []).forEach((line, i) => {
-    if (i !== lineIndex && line?.label) {
-      usedStats.add(line.label);
-    }
-  });
+  // 結合方塊亦允許與其他排相同詞條
 
   return buildPotentialLine(
     item,
@@ -852,10 +840,9 @@ function syncUnionCubeOverallRank(potential, lineIndex, rankBeforeRoll) {
 }
 
 function rollUnionPreviewAtkPow(currentPotential) {
-  return Math.max(
-    0,
-    (currentPotential?.atkPow || 300000000) + Math.floor((Math.random() - 0.52) * 5000000)
-  );
+  return typeof rollNextPotentialAtkPow === 'function'
+    ? rollNextPotentialAtkPow(currentPotential)
+    : Math.max(0, currentPotential?.atkPow || 300000000);
 }
 
 /** ── 附加潛能（event 8422）── */
@@ -886,10 +873,9 @@ function rerollAbsoluteAddPotWithCube(cube, item, currentPotential) {
   }
 
   const rank = rollPotentialRankFromLines(lines);
-  const atkPow = Math.max(
-    0,
-    (currentPotential?.atkPow || 300000000) + Math.floor((Math.random() - 0.52) * 5000000)
-  );
+  const atkPow = typeof rollNextPotentialAtkPow === 'function'
+    ? rollNextPotentialAtkPow(currentPotential)
+    : Math.max(0, currentPotential?.atkPow || 300000000);
 
   return { rank, lines, atkPow, mirrorCopied: false };
 }
