@@ -39,18 +39,18 @@ const BONUS_STAT_STAR_LEVEL_PROB = {
  * finalTier = baseTier + bonus
  */
 const BONUS_STAT_AWAKENED_BASE_TIER_PROB = {
-  1: 37,
+  1: 30,
   2: 25,
-  3: 18,
-  4: 12,
-  5: 8,
+  3: 20,
+  4: 13,
+  5: 12,
 };
 
 /** 覺醒／暗黑覺醒共用：基礎階加值 */
 const BONUS_STAT_AWAKENED_TIER_BONUS_PROB = {
-  2: 50,
-  3: 35,
-  4: 15,
+  2: 40,
+  3: 30,
+  4: 25,
 };
 
 const BONUS_STAT_LINE_COUNT_PROB = {
@@ -162,7 +162,7 @@ const BONUS_STAT_VALUE_TABLES = {
     },
     {
       "minLevel": 220,
-      "maxLevel": 239,
+      "maxLevel": 250,
       "values": [
         12,
         24,
@@ -176,8 +176,8 @@ const BONUS_STAT_VALUE_TABLES = {
       ]
     },
     {
-      "minLevel": 240,
-      "maxLevel": 250,
+      "minLevel": 251,
+      "maxLevel": 260,
       "values": [
         13,
         26,
@@ -472,30 +472,30 @@ const BONUS_STAT_VALUE_TABLES = {
       "minLevel": 200,
       "maxLevel": 249,
       "values": [
-        "7.9%",
-        "16.7875%",
-        "25.675%",
-        "34.5625%",
-        "43.45%",
-        "52.3375%",
-        "61.225%",
-        "70.1125%",
-        "79%"
+        "4.9587%",
+        "10.9091%",
+        "18%",
+        "26.4%",
+        "36.3%",
+        "47.916%",
+        "61.4922%",
+        "70.5%",
+        "79.2%"
       ]
     },
     {
       "minLevel": 250,
       "maxLevel": 250,
       "values": [
-        "9.3%",
-        "19.7625%",
-        "30.225%",
-        "40.6875%",
-        "51.15%",
-        "61.6125%",
-        "72.075%",
-        "82.5375%",
-        "93%"
+        "5.7851%",
+        "12.7273%",
+        "21%",
+        "30.8%",
+        "42.35%",
+        "55.902%",
+        "71.7409%",
+        "82.25%",
+        "92.4%"
       ]
     }
   ],
@@ -504,30 +504,30 @@ const BONUS_STAT_VALUE_TABLES = {
       "minLevel": 200,
       "maxLevel": 249,
       "values": [
-        "7.9%",
-        "16.7875%",
-        "25.675%",
-        "34.5625%",
-        "43.45%",
-        "52.3375%",
-        "61.225%",
-        "70.1125%",
-        "79%"
+        "7.4%",
+        "15.725%",
+        "24.05%",
+        "32.375%",
+        "40.7%",
+        "49.025%",
+        "57.35%",
+        "65.675%",
+        "74%"
       ]
     },
     {
       "minLevel": 250,
       "maxLevel": 250,
       "values": [
-        "9.3%",
-        "19.7625%",
-        "30.225%",
-        "40.6875%",
-        "51.15%",
-        "61.6125%",
-        "72.075%",
-        "82.5375%",
-        "93%"
+        "9.25%",
+        "19.701%",
+        "30.152%",
+        "40.604%",
+        "51.055%",
+        "61.506%",
+        "71.959%",
+        "82.419%",
+        "92.5%"
       ]
     }
   ],
@@ -536,30 +536,30 @@ const BONUS_STAT_VALUE_TABLES = {
       "minLevel": 200,
       "maxLevel": 249,
       "values": [
-        "7.9%",
-        "16.7875%",
-        "25.675%",
-        "34.5625%",
-        "43.45%",
-        "52.3375%",
-        "61.225%",
-        "70.1125%",
-        "79%"
+        "7.4%",
+        "15.725%",
+        "24.05%",
+        "32.375%",
+        "40.7%",
+        "49.025%",
+        "57.35%",
+        "65.675%",
+        "74%"
       ]
     },
     {
       "minLevel": 250,
       "maxLevel": 250,
       "values": [
-        "9.3%",
-        "19.7625%",
-        "30.225%",
-        "40.6875%",
-        "51.15%",
-        "61.6125%",
-        "72.075%",
-        "82.5375%",
-        "93%"
+        "9.25%",
+        "19.701%",
+        "30.152%",
+        "40.604%",
+        "51.055%",
+        "61.506%",
+        "71.959%",
+        "82.419%",
+        "92.5%"
       ]
     }
   ],
@@ -870,7 +870,12 @@ function bsItemHasBaseMatk(item) {
 
 function bsCanRollAtkStat(statName, item) {
   if (statName === '攻擊力' || statName === '物理攻擊力' || statName === '物理攻擊力%') {
-    return bsItemHasBaseWatk(item);
+    if (!bsItemHasBaseWatk(item)) return false;
+    // 有基礎魔攻的武器不出現物攻星火
+    if (typeof bsIsWeaponItem === 'function' && bsIsWeaponItem(item) && bsItemHasBaseMatk(item)) {
+      return false;
+    }
+    return true;
   }
   if (statName === '魔力' || statName === '魔法攻擊力' || statName === '魔法攻擊力%') {
     return bsItemHasBaseMatk(item);

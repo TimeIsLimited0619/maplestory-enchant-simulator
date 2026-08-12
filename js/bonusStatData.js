@@ -330,6 +330,19 @@ function getBonusStatEquipBaseAtk(equip) {
   return Math.max(0, Math.floor(Number(equip?.baseStats?.atk) || 0));
 }
 
+function getBonusStatEquipBaseMatk(equip) {
+  return Math.max(0, Math.floor(Number(equip?.baseStats?.matk) || 0));
+}
+
+/** 武器％詞條換算用的基礎攻：物攻%→atk，魔攻%→matk */
+function getBonusStatEquipBaseForPercentLine(line, equip) {
+  const statId = line?.statId;
+  if (statId === 'matk' || statId === 'matkPct') {
+    return getBonusStatEquipBaseMatk(equip);
+  }
+  return getBonusStatEquipBaseAtk(equip);
+}
+
 function isBonusStatWeaponAtkPercentLine(line, equip) {
   if (!line || !equip || typeof bsIsWeaponItem !== 'function' || !bsIsWeaponItem(equip)) {
     return false;
@@ -349,7 +362,7 @@ function bonusStatLineEffectiveValue(line, equip = null) {
   const eq = equip ?? (typeof BonusStatModule !== 'undefined' ? BonusStatModule.itemData : null);
   const v = Number(line.value) || 0;
   if (eq && isBonusStatWeaponAtkPercentLine(line, eq)) {
-    return Math.round(getBonusStatEquipBaseAtk(eq) * v / 100);
+    return Math.round(getBonusStatEquipBaseForPercentLine(line, eq) * v / 100);
   }
   return v;
 }

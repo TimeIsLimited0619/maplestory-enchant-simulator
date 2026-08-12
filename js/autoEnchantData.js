@@ -1481,9 +1481,9 @@ const AUTO_ENCHANT_ALLOW_CUBE_SWITCH_WHILE_OPEN = true;
 /** 一般自動重設每輪間隔（毫秒） */
 const AUTO_ENCHANT_LOOP_DELAY_MS = 100;
 
-/** 超速模式：與貓谷自動相同（每輪間隔 + 每輪步數） */
-const AUTO_ENCHANT_OVERSPEED_LOOP_DELAY_MS = 5;
-const AUTO_ENCHANT_OVERSPEED_BATCH_SIZE = 40;
+/** 超速模式 : 調整速度（每輪間隔 + 每輪步數） */
+const AUTO_ENCHANT_OVERSPEED_LOOP_DELAY_MS = 4;
+const AUTO_ENCHANT_OVERSPEED_BATCH_SIZE = 125;
 
 function aePotGetAutoEnchantLoopDelayMs(overspeedMode) {
   if (overspeedMode) {
