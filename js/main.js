@@ -951,6 +951,150 @@ async function finishBootAndShowInfoCard() {
   }, 280);
 }
 
+/** 依強化分頁預載對應特效（切頁優先；不阻擋 UI） */
+let _categoryEffectWarmGen = 0;
+let _idleAllEffectsWarmStarted = false;
+
+function collectDeepImageUrls(value, out = []) {
+  if (!value) return out;
+  if (typeof value === 'string') {
+    if (/images\//i.test(value) && /\.(png|jpe?g|gif|webp)(?:$|\?)/i.test(value)) {
+      out.push(value);
+    }
+    return out;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectDeepImageUrls(item, out));
+    return out;
+  }
+  if (typeof value === 'object') {
+    Object.values(value).forEach((item) => collectDeepImageUrls(item, out));
+  }
+  return out;
+}
+
+async function warmAutoEnchantConfig(cfg) {
+  if (!cfg) return;
+  const urls = collectDeepImageUrls(cfg);
+  if (!urls.length) return;
+  await preloadUrlBatch(urls, { concurrency: 10 });
+}
+
+async function warmEffectsForCategory(category) {
+  if (!category || category === 'none') return;
+
+  const tasks = [];
+
+  if (category === 'star') {
+    if (typeof StarForceEffectModule !== 'undefined') {
+      tasks.push(StarForceEffectModule.preloadAssets?.());
+    }
+    if (typeof AUTO_ENCHANT_STAR_FORCE !== 'undefined') {
+      tasks.push(warmAutoEnchantConfig(AUTO_ENCHANT_STAR_FORCE));
+    }
+  } else if (category === 'hammer') {
+    if (typeof HammerEffectModule !== 'undefined') {
+      tasks.push(HammerEffectModule.preloadAssets?.());
+    }
+  } else if (category === 'soulWeapon') {
+    if (typeof SoulWeaponEffectModule !== 'undefined') {
+      tasks.push(SoulWeaponEffectModule.preloadAssets?.());
+    }
+  } else if (category === 'scroll') {
+    if (typeof ScrollEffectModule !== 'undefined') {
+      tasks.push(ScrollEffectModule.preloadAssets?.());
+    }
+  } else if (category === 'potential') {
+    if (typeof PotentialEffectModule !== 'undefined' && typeof POTENTIAL_EFFECT_BY_RANK !== 'undefined') {
+      const ranks = Object.keys(POTENTIAL_EFFECT_BY_RANK);
+      ranks.forEach((rankId) => {
+        tasks.push(PotentialEffectModule.preloadRankAssets?.(rankId));
+      });
+    }
+    if (typeof PotentialMemoriaChoiceEffectModule !== 'undefined') {
+      tasks.push(PotentialMemoriaChoiceEffectModule.preloadAll?.());
+    }
+    if (typeof AUTO_ENCHANT_POTENTIAL !== 'undefined') {
+      tasks.push(warmAutoEnchantConfig(AUTO_ENCHANT_POTENTIAL));
+    }
+  } else if (category === 'additionalPotential') {
+    // 附加潛能特效與主潛共用 PotentialEffectModule 資源時，仍暖翻牌／自動面板
+    if (typeof PotentialEffectModule !== 'undefined' && typeof POTENTIAL_EFFECT_BY_RANK !== 'undefined') {
+      const ranks = Object.keys(POTENTIAL_EFFECT_BY_RANK);
+      ranks.forEach((rankId) => {
+        tasks.push(PotentialEffectModule.preloadRankAssets?.(rankId));
+      });
+    }
+    if (typeof AddPotentialMemoriaChoiceEffectModule !== 'undefined') {
+      tasks.push(AddPotentialMemoriaChoiceEffectModule.preloadAll?.());
+    }
+    if (typeof AUTO_ENCHANT_ADD_POTENTIAL !== 'undefined') {
+      tasks.push(warmAutoEnchantConfig(AUTO_ENCHANT_ADD_POTENTIAL));
+    }
+  } else if (category === 'bonusStat') {
+    if (typeof BonusStatEffectModule !== 'undefined' && typeof BONUS_STAT_EFFECT !== 'undefined') {
+      const variants = Object.keys(BONUS_STAT_EFFECT.variants || {});
+      variants.forEach((variant) => {
+        tasks.push(BonusStatEffectModule.preloadVariantAssets?.(variant));
+      });
+    }
+    if (typeof BonusStatChoiceEffectModule !== 'undefined') {
+      tasks.push(BonusStatChoiceEffectModule.preloadAll?.());
+    }
+    if (typeof AUTO_ENCHANT_BONUS_STAT !== 'undefined') {
+      tasks.push(warmAutoEnchantConfig(AUTO_ENCHANT_BONUS_STAT));
+    }
+  } else if (category === 'exceptional') {
+    if (typeof ExceptionalEffectModule !== 'undefined') {
+      tasks.push(ExceptionalEffectModule.preloadAssets?.());
+    }
+  }
+
+  await Promise.all(tasks.filter((t) => t && typeof t.then === 'function'));
+}
+
+function scheduleIdleBackgroundEffectWarm() {
+  if (_idleAllEffectsWarmStarted) return;
+  scheduleIdleWork(() => {
+    if (_idleAllEffectsWarmStarted) return;
+    _idleAllEffectsWarmStarted = true;
+    const plan = collectAllEffectPreloadPlan();
+    if (!plan.jobs.length) {
+      refreshEffectTestBars();
+      return;
+    }
+    preloadEffectJobs(plan.jobs, { concurrency: 4 })
+      .then(() => {
+        plan.markDone();
+        refreshEffectTestBars();
+      })
+      .catch(() => {
+        try { plan.markDone(); } catch (_) { /* ignore */ }
+        refreshEffectTestBars();
+      });
+  }, 2500);
+}
+
+function scheduleCategoryEffectWarm(category) {
+  if (!category || category === 'none') {
+    scheduleEffectTestBarRefresh();
+    return;
+  }
+
+  const gen = (_categoryEffectWarmGen += 1);
+  warmEffectsForCategory(category)
+    .then(() => {
+      if (gen !== _categoryEffectWarmGen) return;
+      refreshEffectTestBars();
+      scheduleIdleBackgroundEffectWarm();
+    })
+    .catch(() => {
+      if (gen !== _categoryEffectWarmGen) return;
+      refreshEffectTestBars();
+      scheduleIdleBackgroundEffectWarm();
+    });
+}
+
 async function runEnchantBootPreload() {
   updateEnchantBootProgress(0, 1, '正在收集介面素材…');
 
@@ -969,14 +1113,12 @@ async function runEnchantBootPreload() {
     if (typeof updateNonePageControls === 'function') updateNonePageControls();
   }
 
-  const effectPlan = collectAllEffectPreloadPlan();
   const chromeUniqueCount = new Set(chromeUrls.map(normalizePreloadUrl).filter(Boolean)).size;
-  const effectCount = effectPlan.jobs.length;
   const chromeTotal = Math.max(1, chromeUniqueCount);
 
   updateEnchantBootProgress(0, chromeTotal, '正在載入介面素材…');
 
-  // 1) 先載介面素材 → 解除阻擋，可立即操作
+  // 開機只載介面素材 → 盡快可操作；特效改「切分頁再暖」
   await preloadUrlBatch(chromeUrls, {
     concurrency: 14,
     onProgress: (batchDone) => {
@@ -992,21 +1134,13 @@ async function runEnchantBootPreload() {
   updateEnchantBootProgress(chromeTotal, chromeTotal, '介面載入完成');
   await finishBootAndShowInfoCard();
 
-  // 2) 特效／翻牌幀背景載入（不阻擋操作；播放前模組仍可按需補載）
-  if (!effectCount) {
-    refreshEffectTestBars();
-    return;
-  }
+  refreshEffectTestBars();
 
-  preloadEffectJobs(effectPlan.jobs, { concurrency: 8 })
-    .then(() => {
-      effectPlan.markDone();
-      refreshEffectTestBars();
-    })
-    .catch(() => {
-      try { effectPlan.markDone(); } catch (_) { /* ignore */ }
-      refreshEffectTestBars();
-    });
+  // 若啟動後已在某強化分頁，立刻暖該分頁特效
+  const activeCat = typeof getActiveCategory === 'function' ? getActiveCategory() : null;
+  if (activeCat && activeCat !== 'none') {
+    scheduleCategoryEffectWarm(activeCat);
+  }
 }
 
 /**
@@ -1041,23 +1175,7 @@ function collectAllEffectPreloadPlan() {
     if (typeof onDone === 'function') markFns.push(onDone);
   };
 
-  const collectDeepImageUrls = (value, out = []) => {
-    if (!value) return out;
-    if (typeof value === 'string') {
-      if (/images\//i.test(value) && /\.(png|jpe?g|gif|webp)(?:$|\?)/i.test(value)) {
-        out.push(value);
-      }
-      return out;
-    }
-    if (Array.isArray(value)) {
-      value.forEach((item) => collectDeepImageUrls(item, out));
-      return out;
-    }
-    if (typeof value === 'object') {
-      Object.values(value).forEach((item) => collectDeepImageUrls(item, out));
-    }
-    return out;
-  };
+  const collectDeepImageUrlsLocal = (value, out = []) => collectDeepImageUrls(value, out);
 
   // 自動強化面板素材
   [
@@ -1066,7 +1184,7 @@ function collectAllEffectPreloadPlan() {
     typeof AUTO_ENCHANT_ADD_POTENTIAL !== 'undefined' ? AUTO_ENCHANT_ADD_POTENTIAL : null,
     typeof AUTO_ENCHANT_BONUS_STAT !== 'undefined' ? AUTO_ENCHANT_BONUS_STAT : null,
   ].forEach((cfg) => {
-    collectDeepImageUrls(cfg).forEach((url) => {
+    collectDeepImageUrlsLocal(cfg).forEach((url) => {
       addJob(url, (u) => preloadEnchantAsset(u));
     });
   });
@@ -1330,8 +1448,8 @@ function switchCategory() {
   updateNoneWaitEquipVisibility();
   updateCategoryTabStates();
   syncInspectModules();
-  // 特效預載改到 idle，避免與首次切頁底圖解碼搶主執行緒
-  scheduleEffectTestBarRefresh();
+  // 切分頁立刻暖當前特效；其餘特效改 idle 背景補載
+  scheduleCategoryEffectWarm(activeCat);
 }
 
 function updateActiveModuleEquip() {
