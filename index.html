@@ -196,6 +196,7 @@
 
       <!-- 2. 中間強化主面板 -->
       <div class="ms-main-content" id="mainContentPanel">
+        <div class="ms-main-bg-stack" id="mainPanelBgStack" aria-hidden="true"></div>
         <button type="button" class="panel-wb-close enchant-wb-close" id="enchantWorkbenchClose" aria-label="關閉強化台" title="關閉"><span aria-hidden="true">×</span></button>
 
         <!-- 中央裝備放置區 (與等待箭頭) -->
@@ -325,7 +326,7 @@
   <!-- ==========================================
        [1/7] 星力強化中控台 (Starforce Panel)
        ========================================== -->
-  <div id="panel-star" class="ms-control-subpanel ms-starforce-canvas hidden">
+  <div id="panel-star" class="ms-control-subpanel ms-starforce-canvas is-parked">
 
     <!-- 待機畫面（未放置裝備） -->
     <div id="sfIdlePanel" class="sf-idle-panel">
@@ -433,7 +434,7 @@
   <!-- ==========================================
        [2/7] 卷軸強化中控台 (Scroll Panel)
        ========================================== -->
-  <div id="panel-scroll" class="ms-control-subpanel ms-scroll-canvas hidden">
+  <div id="panel-scroll" class="ms-control-subpanel ms-scroll-canvas is-parked">
 
     <!-- 待機畫面（未放置裝備） -->
     <div id="scIdlePanel" class="sc-idle-panel">
@@ -560,7 +561,7 @@
   <!-- ==========================================
        [3/7] 強化次數增加中控台 (Hammer Panel)
        ========================================== -->
-  <div id="panel-hammer" class="ms-control-subpanel ms-hammer-canvas hidden">
+  <div id="panel-hammer" class="ms-control-subpanel ms-hammer-canvas is-parked">
 
     <!-- 待機畫面（未放置裝備） -->
     <div id="hmIdlePanel" class="hm-idle-panel">
@@ -631,7 +632,7 @@
   <!-- ==========================================
        靈魂武器中控台 (Soul Weapon Panel)
        ========================================== -->
-  <div id="panel-soulWeapon" class="ms-control-subpanel ms-soulWeapon-canvas hidden">
+  <div id="panel-soulWeapon" class="ms-control-subpanel ms-soulWeapon-canvas is-parked">
 
     <div id="swIdlePanel" class="sw-idle-panel">
       <div class="sw-idle-lower"></div>
@@ -715,7 +716,7 @@
   <!-- ==========================================
        卓越強化中控台 (Exceptional Panel)
        ========================================== -->
-  <div id="panel-exceptional" class="ms-control-subpanel ms-exceptional-canvas hidden">
+  <div id="panel-exceptional" class="ms-control-subpanel ms-exceptional-canvas is-parked">
 
     <div id="exIdlePanel" class="ex-idle-panel">
       <div class="ex-idle-lower"></div>
@@ -824,7 +825,7 @@
   <!-- ==========================================
        [5/7] 潛能中控台 (Potential Panel)
        ========================================== -->
-  <div id="panel-potential" class="ms-control-subpanel ms-potential-canvas hidden">
+  <div id="panel-potential" class="ms-control-subpanel ms-potential-canvas is-parked">
 
     <!-- 待機畫面（未放置裝備） -->
     <div id="ptIdlePanel" class="pt-idle-panel">
@@ -914,7 +915,7 @@
   <!-- ==========================================
        [6/7] 附加潛能中控台 (Additional Potential Panel)
        ========================================== -->
-  <div id="panel-additionalPotential" class="ms-control-subpanel ms-potential-canvas hidden">
+  <div id="panel-additionalPotential" class="ms-control-subpanel ms-potential-canvas is-parked">
 
     <div id="apIdlePanel" class="pt-idle-panel">
       <div class="pt-idle-lower"></div>
@@ -1001,7 +1002,7 @@
   <!-- ==========================================
        [6b] 附加能力中控台 (Bonus Stat Panel)
        ========================================== -->
-  <div id="panel-bonusStat" class="ms-control-subpanel ms-bonus-stat-canvas hidden">
+  <div id="panel-bonusStat" class="ms-control-subpanel ms-bonus-stat-canvas is-parked">
 
     <div id="bsIdlePanel" class="bs-idle-panel">
       <div class="bs-idle-lower"></div>

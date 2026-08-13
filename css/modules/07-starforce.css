@@ -847,16 +847,29 @@
   min-height: 0;
   position: relative;
   flex: 1;
+  overflow: hidden;
 }
 
 /* 獨立中控台子面板通用樣式 */
 .ms-control-subpanel {
   width: 100%;
-  animation: fadeInSubpanel 0.2s ease-out;
 }
 
-/* 切換時的小漸變動畫，讓切換更順暢 */
-@keyframes fadeInSubpanel {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+/*
+ * 停靠而非 display:none：維持渲染樹與 CSS 底圖解碼，
+ * 避免 GitHub Pages 切頁時底圖重解碼閃爍。
+ * （fadeIn 已移除：每次從 none→block 會重播 opacity:0，反而加重閃爍）
+ */
+.ms-control-subpanel.is-parked {
+  /* 移出畫面但維持 visibility:visible，讓 CSS 底圖解碼常駐 */
+  left: -10000px !important;
+  visibility: visible !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+
+.ms-control-subpanel:not(.is-parked) {
+  left: 0;
+  visibility: visible;
+  z-index: 2;
 }

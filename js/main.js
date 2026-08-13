@@ -906,6 +906,100 @@ function scheduleIdleWork(fn, timeoutMs = 1500) {
 }
 
 const _enchantAssetPreloadCache = new Map();
+/** 釘住介面素材解碼結果，避免特效幀預載把面板底圖擠出記憶體快取 */
+const _chromePinHolders = [];
+let _chromePinUrls = [];
+
+const MAIN_PANEL_BG_BY_CATEGORY = {
+  none: 'images/Enchant_none_0.png',
+  star: 'images/starforce/Enchant_starForce_0.png',
+  hammer: 'images/hammer/hammer.backgrnd.png',
+  soulWeapon: 'images/SoulWeapon/soulWeapon_backgrnd.png',
+  scroll: 'images/scroll/scroll.backgrnd.png',
+  potential: 'images/potential/potential.backgrnd.png',
+  additionalPotential: 'images/additionalPotentail/additionalPotential.backgrnd.png',
+  bonusStat: 'images/bonusStat/bonusStat_backgrnd.png',
+  exceptional: 'images/exceptional/exceptional_backgrnd.png',
+};
+
+function ensureMainPanelBgStack() {
+  const mainPanel = document.getElementById('mainContentPanel');
+  const stack = document.getElementById('mainPanelBgStack');
+  if (!mainPanel || !stack) return;
+
+  if (!stack.dataset.ready) {
+    Object.entries(MAIN_PANEL_BG_BY_CATEGORY).forEach(([cat, src]) => {
+      const layer = document.createElement('div');
+      layer.className = 'ms-main-bg-layer';
+      layer.dataset.cat = cat;
+      layer.style.backgroundImage = `url("${src}")`;
+      stack.appendChild(layer);
+    });
+    stack.dataset.ready = '1';
+  }
+
+  mainPanel.classList.add('has-bg-stack');
+  setMainPanelBgCategory(
+    typeof getActiveCategory === 'function' ? getActiveCategory() : 'none'
+  );
+}
+
+function setMainPanelBgCategory(category) {
+  const stack = document.getElementById('mainPanelBgStack');
+  if (!stack) return;
+  const cat = MAIN_PANEL_BG_BY_CATEGORY[category] ? category : 'none';
+  stack.querySelectorAll('.ms-main-bg-layer').forEach((layer) => {
+    layer.classList.toggle('is-active', layer.dataset.cat === cat);
+  });
+}
+
+function pinChromeImages(urls) {
+  const list = [...new Set((urls || []).map(normalizePreloadUrl).filter(Boolean))];
+  if (!list.length) return;
+  _chromePinUrls = [...new Set([..._chromePinUrls, ...list])];
+  list.forEach((absolute) => {
+    // 已有 holder 就不重複建，避免無限增長
+    if (_chromePinHolders.some((img) => img.src === absolute)) return;
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = absolute;
+    if (typeof img.decode === 'function') {
+      img.decode().catch(() => {});
+    }
+    _chromePinHolders.push(img);
+  });
+}
+
+function repinChromeImages() {
+  if (!_chromePinUrls.length) return;
+  _chromePinUrls.forEach((absolute) => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = absolute;
+    if (typeof img.decode === 'function') {
+      img.decode().catch(() => {});
+    }
+  });
+}
+
+function setControlSubpanelsParked(activeCategory) {
+  document.querySelectorAll('.ms-control-subpanel').forEach((panel) => {
+    panel.classList.remove('hidden');
+    const isActive = Boolean(
+      activeCategory
+      && activeCategory !== 'none'
+      && panel.id === `panel-${activeCategory}`
+    );
+    panel.classList.toggle('is-parked', !isActive);
+    if (isActive) {
+      panel.removeAttribute('inert');
+      panel.setAttribute('aria-hidden', 'false');
+    } else {
+      panel.setAttribute('inert', '');
+      panel.setAttribute('aria-hidden', 'true');
+    }
+  });
+}
 
 function normalizePreloadUrl(url) {
   if (!url || typeof url !== 'string') return null;
@@ -1050,15 +1144,12 @@ function warmEnchantPanelsForCssBackgrounds() {
   ];
 
   const prevMain = activeClasses.map((cls) => mainPanel?.classList.contains(cls));
-  const prevHidden = panels.map((panel) => panel.classList.contains('hidden'));
 
-  // 短暫顯示所有子面板，強制瀏覽器載入 display:none 時不會抓的 CSS 底圖
+  // 短暫解除停靠，強制瀏覽器把各分頁 CSS 底圖解碼進記憶體
   panels.forEach((panel) => {
-    panel.classList.remove('hidden');
-    panel.style.position = 'absolute';
+    panel.classList.remove('hidden', 'is-parked');
+    panel.removeAttribute('inert');
     panel.style.left = '-10000px';
-    panel.style.top = '0';
-    panel.style.visibility = 'hidden';
     panel.style.pointerEvents = 'none';
   });
 
@@ -1070,13 +1161,16 @@ function warmEnchantPanelsForCssBackgrounds() {
   void document.body.offsetHeight;
 
   return () => {
-    panels.forEach((panel, index) => {
-      panel.style.position = '';
+    panels.forEach((panel) => {
       panel.style.left = '';
-      panel.style.top = '';
-      panel.style.visibility = '';
       panel.style.pointerEvents = '';
-      panel.classList.toggle('hidden', prevHidden[index] !== false);
+    });
+    // 呼叫端會再 setControlSubpanelsParked；此處先全部停靠以免閃現
+    panels.forEach((panel) => {
+      panel.classList.add('is-parked');
+      panel.setAttribute('inert', '');
+      panel.setAttribute('aria-hidden', 'true');
+      panel.classList.remove('hidden');
     });
     if (mainPanel) {
       activeClasses.forEach((cls, index) => {
@@ -1292,10 +1386,12 @@ function scheduleIdleBackgroundEffectWarm() {
     preloadEffectJobs(plan.jobs, { concurrency: 4 })
       .then(() => {
         plan.markDone();
+        repinChromeImages();
         refreshEffectTestBars();
       })
       .catch(() => {
         try { plan.markDone(); } catch (_) { /* ignore */ }
+        repinChromeImages();
         refreshEffectTestBars();
       });
   }, 2500);
@@ -1308,14 +1404,23 @@ function scheduleCategoryEffectWarm(category) {
   }
 
   const gen = (_categoryEffectWarmGen += 1);
-  warmEffectsForCategory(category)
+  // 切頁時先重觸介面素材解碼，降低特效暖機搶快取造成的面板閃爍
+  const bg = MAIN_PANEL_BG_BY_CATEGORY[category];
+  const chromeWarm = bg
+    ? preloadEnchantAsset(bg).then(() => repinChromeImages())
+    : Promise.resolve();
+
+  chromeWarm
+    .then(() => warmEffectsForCategory(category))
     .then(() => {
       if (gen !== _categoryEffectWarmGen) return;
+      repinChromeImages();
       refreshEffectTestBars();
       scheduleIdleBackgroundEffectWarm();
     })
     .catch(() => {
       if (gen !== _categoryEffectWarmGen) return;
+      repinChromeImages();
       refreshEffectTestBars();
       scheduleIdleBackgroundEffectWarm();
     });
@@ -1324,17 +1429,26 @@ function scheduleCategoryEffectWarm(category) {
 async function runEnchantBootPreload() {
   updateEnchantBootProgress(0, 1, '正在收集介面素材…');
 
+  ensureMainPanelBgStack();
+
   const restorePanels = warmEnchantPanelsForCssBackgrounds();
   let chromeUrls = [];
   try {
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     chromeUrls = [
+      ...Object.values(MAIN_PANEL_BG_BY_CATEGORY),
       ...collectStylesheetImageUrls(),
       ...collectDomImageUrls(),
       ...collectDatabaseIconUrls(),
     ];
   } finally {
     restorePanels();
+    setControlSubpanelsParked(
+      typeof getActiveCategory === 'function' ? getActiveCategory() : 'none'
+    );
+    setMainPanelBgCategory(
+      typeof getActiveCategory === 'function' ? getActiveCategory() : 'none'
+    );
     if (typeof syncMainPanelIdleState === 'function') syncMainPanelIdleState();
     if (typeof updateNonePageControls === 'function') updateNonePageControls();
   }
@@ -1356,6 +1470,19 @@ async function runEnchantBootPreload() {
     },
     statusText: '正在載入介面素材…',
   });
+
+  // 釘住介面素材，避免後續特效幀預載把面板底圖解碼擠掉
+  pinChromeImages(chromeUrls);
+  // 暖機後再 paint 一次停靠面板，讓 CSS 底圖留在解碼快取
+  const touchRestore = warmEnchantPanelsForCssBackgrounds();
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  touchRestore();
+  setControlSubpanelsParked(
+    typeof getActiveCategory === 'function' ? getActiveCategory() : 'none'
+  );
+  setMainPanelBgCategory(
+    typeof getActiveCategory === 'function' ? getActiveCategory() : 'none'
+  );
 
   updateEnchantBootProgress(chromeTotal, chromeTotal, '介面載入完成');
   await finishBootAndShowInfoCard();
@@ -1648,14 +1775,8 @@ function switchCategory() {
 
   const mainPanel = document.getElementById('mainContentPanel');
 
-  document.querySelectorAll('.ms-control-subpanel').forEach(panel => {
-    panel.classList.add('hidden');
-  });
-
-  if (activeCat !== 'none') {
-    const activePanel = document.getElementById(`panel-${activeCat}`);
-    if (activePanel) activePanel.classList.remove('hidden');
-  }
+  setControlSubpanelsParked(activeCat);
+  setMainPanelBgCategory(activeCat);
 
   if (mainPanel) {
     mainPanel.classList.toggle('starforce-active', activeCat === 'star');
@@ -1987,9 +2108,12 @@ window.addEventListener('DOMContentLoaded', () => {
   if (typeof StarForceModule !== 'undefined') {
     StarForceModule.syncMethodSelectWidth();
   }
+  ensureMainPanelBgStack();
   switchCategoryTab('none', null);
   updateCategoryTabStates();
   updateNonePageControls();
+  setControlSubpanelsParked('none');
+  setMainPanelBgCategory('none');
   if (typeof PotentialInspectModule !== 'undefined') {
     PotentialInspectModule.init();
   }
