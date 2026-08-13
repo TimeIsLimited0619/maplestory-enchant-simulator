@@ -856,18 +856,9 @@
 }
 
 /*
- * 停靠而非 display:none：維持渲染樹與 CSS 底圖解碼，
- * 避免 GitHub Pages 切頁時底圖重解碼閃爍。
- * （fadeIn 已移除：每次從 none→block 會重播 opacity:0，反而加重閃爍）
+ * 停靠用 display:none：GitHub Pages 下不可一次請求全部分頁底圖。
+ * （visibility/離屏仍會下載 CSS background，容易 429）
  */
 .ms-control-subpanel.is-parked {
-  /* 隱藏但保留在文件中；勿用離屏可見（會一次請求全部分頁底圖） */
-  visibility: hidden !important;
-  pointer-events: none !important;
-  z-index: 0 !important;
-}
-
-.ms-control-subpanel:not(.is-parked) {
-  visibility: visible;
-  z-index: 2;
+  display: none !important;
 }

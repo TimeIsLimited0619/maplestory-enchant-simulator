@@ -927,11 +927,11 @@ function ensureMainPanelBgStack() {
   if (!mainPanel || !stack) return;
 
   if (!stack.dataset.ready) {
-    Object.entries(MAIN_PANEL_BG_BY_CATEGORY).forEach(([cat, src]) => {
+    // 只建立層，背景圖延到切頁再掛，避免開機一次打 9 張
+    Object.keys(MAIN_PANEL_BG_BY_CATEGORY).forEach((cat) => {
       const layer = document.createElement('div');
       layer.className = 'ms-main-bg-layer';
       layer.dataset.cat = cat;
-      layer.style.backgroundImage = `url("${src}")`;
       stack.appendChild(layer);
     });
     stack.dataset.ready = '1';
@@ -947,8 +947,13 @@ function setMainPanelBgCategory(category) {
   const stack = document.getElementById('mainPanelBgStack');
   if (!stack) return;
   const cat = MAIN_PANEL_BG_BY_CATEGORY[category] ? category : 'none';
+  const src = MAIN_PANEL_BG_BY_CATEGORY[cat];
   stack.querySelectorAll('.ms-main-bg-layer').forEach((layer) => {
-    layer.classList.toggle('is-active', layer.dataset.cat === cat);
+    const active = layer.dataset.cat === cat;
+    if (active && src && !layer.style.backgroundImage) {
+      layer.style.backgroundImage = `url("${src}")`;
+    }
+    layer.classList.toggle('is-active', active);
   });
 }
 
@@ -999,12 +1004,19 @@ function normalizePreloadUrl(url) {
 }
 
 function preloadEnchantAsset(url) {
-  // 特效模組多用相對路徑當快取鍵；同步暖機，避免開頁用絕對 URL、播放用相對 URL 各載一次
-  if (typeof EnchantImagePreload !== 'undefined' && url && !/^https?:\/\//i.test(url) && !url.startsWith('data:')) {
-    EnchantImagePreload.preload(url);
-  }
   const absolute = normalizePreloadUrl(url);
   if (!absolute) return Promise.resolve(null);
+
+  // 相對路徑同步進特效共用快取，但共用同一個 Promise／請求，避免同一檔打兩次
+  const relativeKey = (url && !/^https?:\/\//i.test(url) && !url.startsWith('data:'))
+    ? String(url)
+    : null;
+  if (relativeKey && typeof EnchantImagePreload !== 'undefined') {
+    const shared = EnchantImagePreload.preload(relativeKey);
+    _enchantAssetPreloadCache.set(absolute, shared);
+    return shared;
+  }
+
   if (_enchantAssetPreloadCache.has(absolute)) {
     return _enchantAssetPreloadCache.get(absolute);
   }
@@ -1367,83 +1379,38 @@ async function warmEffectsForCategory(category) {
 }
 
 function scheduleIdleBackgroundEffectWarm() {
-  if (_idleAllEffectsWarmStarted) return;
-  // GitHub Pages 有 rate limit：延後且低並行補載特效
-  scheduleIdleWork(() => {
-    if (_idleAllEffectsWarmStarted) return;
-    _idleAllEffectsWarmStarted = true;
-    const plan = collectAllEffectPreloadPlan();
-    if (!plan.jobs.length) {
-      refreshEffectTestBars();
-      return;
-    }
-    preloadEffectJobs(plan.jobs, { concurrency: 2 })
-      .then(() => {
-        plan.markDone();
-        refreshEffectTestBars();
-      })
-      .catch(() => {
-        try { plan.markDone(); } catch (_) { /* ignore */ }
-        refreshEffectTestBars();
-      });
-  }, 8000);
+  // GitHub Pages rate limit：禁止開機後自動掃全特效幀
+  return;
 }
 
 function scheduleCategoryEffectWarm(category) {
-  if (!category || category === 'none') {
-    scheduleEffectTestBarRefresh();
-    return;
-  }
-
-  const gen = (_categoryEffectWarmGen += 1);
-  warmEffectsForCategory(category)
-    .then(() => {
-      if (gen !== _categoryEffectWarmGen) return;
-      refreshEffectTestBars();
-      scheduleIdleBackgroundEffectWarm();
-    })
-    .catch(() => {
-      if (gen !== _categoryEffectWarmGen) return;
-      refreshEffectTestBars();
-      scheduleIdleBackgroundEffectWarm();
-    });
+  // 不在切頁時預載特效幀（潛能等分頁幀數極多，GitHub Pages 易 429）。
+  // 各 EffectModule 播放前仍會自行 preload 該段幀。
+  scheduleEffectTestBarRefresh();
 }
 
 async function runEnchantBootPreload() {
-  updateEnchantBootProgress(0, 1, '正在收集介面素材…');
+  updateEnchantBootProgress(0, 1, '正在載入介面素材…');
 
   ensureMainPanelBgStack();
+  setControlSubpanelsParked(
+    typeof getActiveCategory === 'function' ? getActiveCategory() : 'none'
+  );
+  setMainPanelBgCategory(
+    typeof getActiveCategory === 'function' ? getActiveCategory() : 'none'
+  );
 
-  const restorePanels = warmEnchantPanelsForCssBackgrounds();
-  let chromeUrls = [];
-  try {
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    // 不在開機掃 ITEM_DATABASE 全圖示（量太大，GitHub Pages 易 429）
-    chromeUrls = [
-      ...Object.values(MAIN_PANEL_BG_BY_CATEGORY),
-      ...collectStylesheetImageUrls(),
-      ...collectDomImageUrls(),
-    ];
-  } finally {
-    restorePanels();
-    setControlSubpanelsParked(
-      typeof getActiveCategory === 'function' ? getActiveCategory() : 'none'
-    );
-    setMainPanelBgCategory(
-      typeof getActiveCategory === 'function' ? getActiveCategory() : 'none'
-    );
-    if (typeof syncMainPanelIdleState === 'function') syncMainPanelIdleState();
-    if (typeof updateNonePageControls === 'function') updateNonePageControls();
-  }
-
-  const chromeUniqueCount = new Set(chromeUrls.map(normalizePreloadUrl).filter(Boolean)).size;
+  // 開機只載當前主面板底圖 1 張。其餘切頁再載，避免 GitHub Pages 429。
+  const activeCat = typeof getActiveCategory === 'function' ? getActiveCategory() : 'none';
+  const bg = MAIN_PANEL_BG_BY_CATEGORY[activeCat] || MAIN_PANEL_BG_BY_CATEGORY.none;
+  const chromeUrls = bg ? [bg] : [];
+  const chromeUniqueCount = chromeUrls.length;
   const chromeTotal = Math.max(1, chromeUniqueCount);
 
   updateEnchantBootProgress(0, chromeTotal, '正在載入介面素材…');
 
-  // 低並行，避免 GitHub Pages rate limit
   await preloadUrlBatch(chromeUrls, {
-    concurrency: 4,
+    concurrency: 1,
     onProgress: (batchDone) => {
       updateEnchantBootProgress(
         batchDone,
@@ -1454,18 +1421,12 @@ async function runEnchantBootPreload() {
     statusText: '正在載入介面素材…',
   });
 
-  // 只釘住既有快取參照，不再額外發請求
   pinChromeImagesFromCache();
 
   updateEnchantBootProgress(chromeTotal, chromeTotal, '介面載入完成');
   await finishBootAndShowInfoCard();
 
   refreshEffectTestBars();
-
-  const activeCat = typeof getActiveCategory === 'function' ? getActiveCategory() : null;
-  if (activeCat && activeCat !== 'none') {
-    scheduleCategoryEffectWarm(activeCat);
-  }
 }
 
 /**
