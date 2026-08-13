@@ -1482,8 +1482,8 @@ const AUTO_ENCHANT_ALLOW_CUBE_SWITCH_WHILE_OPEN = true;
 const AUTO_ENCHANT_LOOP_DELAY_MS = 100;
 
 /** 超速模式 : 調整速度（每輪間隔 + 每輪步數） */
-const AUTO_ENCHANT_OVERSPEED_LOOP_DELAY_MS = 4;
-const AUTO_ENCHANT_OVERSPEED_BATCH_SIZE = 125;
+const AUTO_ENCHANT_OVERSPEED_LOOP_DELAY_MS = 5;
+const AUTO_ENCHANT_OVERSPEED_BATCH_SIZE = 50;
 
 function aePotGetAutoEnchantLoopDelayMs(overspeedMode) {
   if (overspeedMode) {
