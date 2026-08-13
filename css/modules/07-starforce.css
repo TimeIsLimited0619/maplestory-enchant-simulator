@@ -847,7 +847,7 @@
   min-height: 0;
   position: relative;
   flex: 1;
-  overflow: hidden;
+  /* 不可 overflow:hidden：bonusStat 等待機圖 top 為負值，會裁掉上半段 */
 }
 
 /* 獨立中控台子面板通用樣式 */

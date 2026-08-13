@@ -59,8 +59,7 @@
   display: none;
 }
 
-.pt-idle-slot,
-.ap-idle-slot {
+.pt-idle-slot {
   display: none;
   position: absolute;
   top: 90px;
@@ -75,13 +74,27 @@
   z-index: 2;
 }
 
+/* 附加潛能待機：單張 layer_waitEquip（含原上下兩段） */
+.ap-idle-slot {
+  display: none;
+  position: absolute;
+  top: 90px;
+  left: 10px;
+  width: 398px;
+  height: 365px;
+  background: url('../../images/additionalPotentail/layer_waitEquip.png') no-repeat left top;
+  background-size: 398px 365px;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 2;
+}
+
 .ms-main-content.potential-active.potential-idle .pt-idle-slot {
   display: block;
 }
 
-/* 附加潛能待機僅用 waitEquip1；勿再顯示 potential.waitEquip（會與 waitEquip1 重疊） */
 .ms-main-content.additionalPotential-active.additionalPotential-idle .ap-idle-slot {
-  display: none;
+  display: block;
 }
 
 .ms-main-content.potential-active.potential-idle .ms-drop-zone,
@@ -688,12 +701,9 @@
   top: 172px; /* 150 + 22：戰鬥力增加量下移 */
 }
 
+/* 待機改由主面板 .ap-idle-slot 單張 layer_waitEquip 顯示 */
 #panel-additionalPotential .pt-idle-panel {
-  top: 15px; 
-}
-
-#panel-additionalPotential .pt-idle-lower {
-  background-image: url('../../images/additionalPotentail/additionalPotential.layer_waitEquip1.png');
+  display: none !important;
 }
 
 #panel-additionalPotential .pt-bottom-area {

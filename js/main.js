@@ -921,17 +921,69 @@ const MAIN_PANEL_BG_BY_CATEGORY = {
   exceptional: 'images/exceptional/exceptional_backgrnd.png',
 };
 
+/** 側邊功能列：normal / mouseOver / pressed / checked / disabled */
+const ENCHANT_TAB_BUTTON_PREFIXES = [
+  'star',
+  'scroll',
+  'hammer',
+  'soulWeapon',
+  'bonusStat',
+  'potential',
+  'additionalPotential',
+  'exceptional',
+];
+
+const ENCHANT_TAB_BUTTON_STATES = [
+  'normal',
+  'mouseOver',
+  'pressed',
+  'checked',
+  'disabled',
+];
+
+/** 各分頁待機／共用介面底圖（不含特效幀） */
+const ENCHANT_UI_CHROME_EXTRAS = [
+  'images/common_backgrnd.png',
+  'images/none_waitEquip.png',
+  'images/starforce/Enchant.img.starForce.layer_waitEquip.png',
+  'images/hammer/hammer.layer_waitEquip.png',
+  'images/SoulWeapon/soulWeapon_layer_waitEquip.png',
+  'images/scroll/scroll.layer_waitEquip0.png',
+  'images/scroll/scroll.layer_waitEquip1.png',
+  'images/potential/potential.layer_waitEquip.png',
+  'images/potential/potential.layer_waitEquip1.png',
+  'images/additionalPotentail/layer_waitEquip.png',
+  'images/bonusStat/bonusStat_layer_waitEquip.png',
+  'images/exceptional/exceptional_layer_waitEquip.png',
+];
+
+function collectEssentialEnchantChromeUrls() {
+  const urls = [];
+
+  Object.values(MAIN_PANEL_BG_BY_CATEGORY).forEach((src) => urls.push(src));
+  ENCHANT_UI_CHROME_EXTRAS.forEach((src) => urls.push(src));
+
+  ENCHANT_TAB_BUTTON_PREFIXES.forEach((prefix) => {
+    ENCHANT_TAB_BUTTON_STATES.forEach((state) => {
+      urls.push(`images/tabbutton/${prefix}_tab_${state}.png`);
+    });
+  });
+
+  return [...new Set(urls.filter(Boolean))];
+}
+
 function ensureMainPanelBgStack() {
   const mainPanel = document.getElementById('mainContentPanel');
   const stack = document.getElementById('mainPanelBgStack');
   if (!mainPanel || !stack) return;
 
   if (!stack.dataset.ready) {
-    // 只建立層，背景圖延到切頁再掛，避免開機一次打 9 張
-    Object.keys(MAIN_PANEL_BG_BY_CATEGORY).forEach((cat) => {
+    Object.entries(MAIN_PANEL_BG_BY_CATEGORY).forEach(([cat, src]) => {
       const layer = document.createElement('div');
       layer.className = 'ms-main-bg-layer';
       layer.dataset.cat = cat;
+      // 先掛好各分頁 backgrnd，切頁只切 is-active，不再臨時換圖
+      if (src) layer.style.backgroundImage = `url("${src}")`;
       stack.appendChild(layer);
     });
     stack.dataset.ready = '1';
@@ -947,13 +999,12 @@ function setMainPanelBgCategory(category) {
   const stack = document.getElementById('mainPanelBgStack');
   if (!stack) return;
   const cat = MAIN_PANEL_BG_BY_CATEGORY[category] ? category : 'none';
-  const src = MAIN_PANEL_BG_BY_CATEGORY[cat];
   stack.querySelectorAll('.ms-main-bg-layer').forEach((layer) => {
-    const active = layer.dataset.cat === cat;
-    if (active && src && !layer.style.backgroundImage) {
+    const src = MAIN_PANEL_BG_BY_CATEGORY[layer.dataset.cat];
+    if (src && !layer.style.backgroundImage) {
       layer.style.backgroundImage = `url("${src}")`;
     }
-    layer.classList.toggle('is-active', active);
+    layer.classList.toggle('is-active', layer.dataset.cat === cat);
   });
 }
 
@@ -1400,17 +1451,15 @@ async function runEnchantBootPreload() {
     typeof getActiveCategory === 'function' ? getActiveCategory() : 'none'
   );
 
-  // 開機只載當前主面板底圖 1 張。其餘切頁再載，避免 GitHub Pages 429。
-  const activeCat = typeof getActiveCategory === 'function' ? getActiveCategory() : 'none';
-  const bg = MAIN_PANEL_BG_BY_CATEGORY[activeCat] || MAIN_PANEL_BG_BY_CATEGORY.none;
-  const chromeUrls = bg ? [bg] : [];
-  const chromeUniqueCount = chromeUrls.length;
+  // 精準預載：各分頁 backgrnd + 側邊功能列五態 + 待機圖（不掃全 CSS，避免 429）
+  const chromeUrls = collectEssentialEnchantChromeUrls();
+  const chromeUniqueCount = new Set(chromeUrls.map(normalizePreloadUrl).filter(Boolean)).size;
   const chromeTotal = Math.max(1, chromeUniqueCount);
 
   updateEnchantBootProgress(0, chromeTotal, '正在載入介面素材…');
 
   await preloadUrlBatch(chromeUrls, {
-    concurrency: 1,
+    concurrency: 3,
     onProgress: (batchDone) => {
       updateEnchantBootProgress(
         batchDone,
