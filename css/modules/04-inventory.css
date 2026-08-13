@@ -24,6 +24,27 @@
   background-repeat: no-repeat;
 }
 
+#inventoryDragHandle {
+  width: calc(100% - 72px);
+  height: 30px;
+}
+
+#inventoryClose {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.ms-inventory.inv-mode-full #inventoryDragHandle {
+  width: calc(100% - 72px);
+}
+
+.ms-inventory.inv-mode-full #inventoryClose {
+  right: 6px;
+}
+
 .ms-inventory.inv-mode-full {
   width: 800px;
   height: 546px;
@@ -32,7 +53,7 @@
   background-repeat: no-repeat;
 }
 
-/* min / full 切換按鈕（右上角） */
+/* min / full 切換按鈕（右上角，× 左側） */
 .inv-size-btn {
   position: absolute;
   top: 8px;
@@ -49,7 +70,7 @@
 }
 
 .inv-size-full {
-  right: 32px;
+  right: 28px;
   background-image: url('../../images/iventory/AutoBuild.button_full.normal.0.png');
 }
 
@@ -62,7 +83,7 @@
 }
 
 .inv-size-min {
-  right: 32px;
+  right: 28px;
   background-image: url('../../images/iventory/AutoBuild.button_min.normal.0.png');
 }
 

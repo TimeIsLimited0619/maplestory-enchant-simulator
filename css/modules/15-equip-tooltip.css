@@ -3,7 +3,7 @@
    ========================================== */
 .eq-tooltip {
   position: fixed;
-  z-index: 120;
+  z-index: 500000;
   pointer-events: none;
   filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.65));
   image-rendering: pixelated;

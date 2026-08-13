@@ -337,7 +337,9 @@ function rerollPotential(cube, currentPotential, item) {
 
 const PT_MAIN_STAT_LABELS = new Set(['STR', 'DEX', 'INT', 'LUK']);
 const PT_HPMP_STAT_LABELS = new Set(['MaxHP', 'MaxMP']);
-const POTENTIAL_BOSS_DAMAGE_LABEL = 'BOSS怪物傷害';
+/** 潛能 UI 顯示名稱（與火焰／捲軸的「BOSS怪物傷害」分開） */
+const POTENTIAL_BOSS_DAMAGE_LABEL = '攻擊Boss怪物時傷害';
+const POTENTIAL_BOSS_DAMAGE_OLD_DISPLAY_LABEL = 'BOSS怪物傷害';
 const POTENTIAL_BOSS_DAMAGE_LEGACY_LABEL = 'BOSS怪物攻擊時傷害';
 const POTENTIAL_BOSS_DAMAGE_SOURCE_LABEL = '攻擊BOSS怪物時傷害增加';
 
@@ -345,6 +347,7 @@ function formatPotentialBossDamageLabel(label) {
   if (!label || typeof label !== 'string') return label;
   if (label === POTENTIAL_BOSS_DAMAGE_SOURCE_LABEL) return POTENTIAL_BOSS_DAMAGE_LABEL;
   if (label === POTENTIAL_BOSS_DAMAGE_LEGACY_LABEL) return POTENTIAL_BOSS_DAMAGE_LABEL;
+  if (label === POTENTIAL_BOSS_DAMAGE_OLD_DISPLAY_LABEL) return POTENTIAL_BOSS_DAMAGE_LABEL;
   if (label.startsWith(`${POTENTIAL_BOSS_DAMAGE_SOURCE_LABEL}+`)) return POTENTIAL_BOSS_DAMAGE_LABEL;
   return label;
 }

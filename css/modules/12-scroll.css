@@ -963,11 +963,11 @@
   background-size: auto;
 }
 
-/* 恢復卡：卷軸成功確認彈窗 */
+/* 恢復卡：卷軸成功確認彈窗（fixed 覆蓋拖曳後的強化台） */
 .sc-recovery-modal {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 25000;
   display: flex;
   align-items: center;
   justify-content: center;

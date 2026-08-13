@@ -10,6 +10,8 @@ const InventoryModule = {
   dragStartScroll: 0,
   /** 潛能卷使用中：等待點選裝備 */
   pendingPotentialScrollId: null,
+  /** 物品欄開關（頂部選單） */
+  panelOpen: true,
 
   SLOT_COUNT: INVENTORY_SLOT_COUNT,
   /** 小背包：4 欄 × 32 列 */
@@ -38,6 +40,7 @@ const InventoryModule = {
 
   init() {
     this.bindEvents();
+    this.bindPanelControls();
     this.bindPotentialScrollUseGuards();
     this.ensureConsumeTooltip();
     if (typeof ensurePotentialScrollConsumeInventory === 'function') {
@@ -50,6 +53,7 @@ const InventoryModule = {
     this.render();
     this.updateSlotCount();
     this.updateScroll();
+    this.setOpen(this.panelOpen);
   },
 
   bindEvents() {
@@ -461,7 +465,12 @@ const InventoryModule = {
         e.stopPropagation();
         return;
       }
-      if (typeof UiEquipModule !== 'undefined' && UiEquipModule.isEquipView()) {
+      // 強化台開啟時優先放入強化槽；否則裝備欄開著就穿上
+      if (typeof UiEquipModule !== 'undefined' && UiEquipModule.isEnchantOpen?.()) {
+        loadEquipToSlot(itemId, slotIndex);
+        return;
+      }
+      if (typeof UiEquipModule !== 'undefined' && UiEquipModule.isEquipOpen?.()) {
         UiEquipModule.wearFromBag(itemId, slotIndex);
         return;
       }
@@ -996,10 +1005,53 @@ const InventoryModule = {
 
     thumb.style.height = `${thumbH}px`;
     thumb.style.top = `${thumbTop}px`;
-  }
+  },
+
+  isOpen() {
+    return !!this.panelOpen;
+  },
+
+  syncMenuButton() {
+    document.getElementById('btnViewInventory')?.classList.toggle('is-active', !!this.panelOpen);
+  },
+
+  setOpen(next) {
+    this.panelOpen = !!next;
+    const panel = document.getElementById('inventoryPanel');
+    const col = document.querySelector('.ms-inventory-column');
+    // 關：整欄隱藏；開：欄與面板都顯示
+    if (col) col.classList.toggle('hidden', !this.panelOpen);
+    if (panel) panel.classList.toggle('hidden', !this.panelOpen);
+    if (this.panelOpen && typeof PanelDrag !== 'undefined') {
+      PanelDrag.bringFront(panel);
+    }
+    this.syncMenuButton();
+  },
+
+  toggle() {
+    this.setOpen(!this.panelOpen);
+  },
+
+  bindPanelControls() {
+    if (this._panelControlsBound) return;
+    this._panelControlsBound = true;
+    document.getElementById('btnViewInventory')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.toggle();
+    });
+    document.getElementById('inventoryClose')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.setOpen(false);
+    });
+  },
 };
 
 function initInventory() {
+  InventoryModule.bindPanelControls();
+  // 刷新背包時維持開關狀態，不要強制打開
+  InventoryModule.setOpen(InventoryModule.panelOpen);
   InventoryModule.syncTabUi();
   InventoryModule.render();
   InventoryModule.updateSlotCount();

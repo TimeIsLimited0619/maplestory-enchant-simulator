@@ -4,35 +4,6 @@
    left/top = -origin（負 origin → 正座標）
    ========================================== */
 
-.view-mode-bar {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-start;
-  margin: 0 0 8px 0;
-}
-
-.view-mode-btn {
-  min-width: 72px;
-  padding: 4px 10px;
-  border: 1px solid #5a6a7a;
-  background: #1a2430;
-  color: #d8dde3;
-  font-size: 13px;
-  line-height: 1.2;
-  cursor: pointer;
-}
-
-.view-mode-btn:hover {
-  background: #243040;
-  color: #fff;
-}
-
-.view-mode-btn.is-active {
-  border-color: #8aa0b8;
-  background: #2c3c50;
-  color: #fff;
-}
-
 .uiequip-panel {
   position: relative;
   width: 366px;
@@ -42,6 +13,16 @@
   background: url('../../images/UIEquip/main/main_backgrnd.png') no-repeat 0 0;
   image-rendering: pixelated;
   overflow: visible;
+}
+
+#uiEquipClose {
+  top: 6px;
+  right: 6px;
+}
+
+#uiEquipDragHandle {
+  width: calc(100% - 28px);
+  height: 30px;
 }
 
 .uiequip-tab {

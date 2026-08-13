@@ -215,7 +215,7 @@ function applyCatValleyMedalEnhanceOnce(item) {
   add('scrollMatk', 10, '魔法攻擊力');
   if (bonus.bdR) add('scrollBdR', bonus.bdR, 'BOSS怪物傷害');
   if (bonus.imdR) add('scrollImdR', bonus.imdR, '無視怪物防禦率');
-  if (bonus.damR) add('scrollDamR', bonus.damR, '總傷害');
+  if (bonus.damR) add('scrollDamR', bonus.damR, '傷害');
   if (bonus.allStatR) add('scrollAllStatR', bonus.allStatR, '全屬性');
 
   item.medalEnhanceLevel = nextLevel;
@@ -552,25 +552,31 @@ function applyCatValleyEnhanceOnce(item) {
   if (meta.id === CAT_VALLEY_ENHANCE_TYPE.OLD_ETERNAL) {
     add('scrollStat', 12, '四屬');
     add('scrollHp', 210, '最大HP');
-    if (isFinal) add('scrollDamR', 5, '總傷害');
+    if (nextLevel === 5 || nextLevel === 15) add('scrollImdR', 5, '無視怪物防禦率');
+    if (nextLevel === 10) add('scrollAllStatR', 5, '全屬性');
+    if (isFinal) add('scrollDamR', 5, '傷害');
   } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.NEW_ETERNAL) {
     getCatValleyNewEternalPrimaryKeys(item).forEach((key) => {
       const field = CAT_VALLEY_PRIMARY_SCROLL_FIELDS[key];
       add(field, 16, key.toUpperCase());
     });
     add('scrollHp', 210, '最大HP');
-    if (isFinal) add('scrollDamR', 5, '總傷害');
+    if (nextLevel === 5 || nextLevel === 15) add('scrollImdR', 5, '無視怪物防禦率');
+    if (nextLevel === 10) add('scrollAllStatR', 5, '全屬性');
+    if (isFinal) add('scrollDamR', 5, '傷害');
   } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.MITRA) {
     add('scrollStat', 8, '四屬');
     add('scrollHp', 140, '最大HP');
     add('scrollAtk', 2, '攻擊力');
     add('scrollMatk', 2, '魔法攻擊力');
-    if (isFinal) add('scrollDamR', 10, '總傷害');
+    if (nextLevel === 10) add('scrollBdR', 10, 'BOSS怪物傷害');
+    if (isFinal) add('scrollDamR', 10, '傷害');
   } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.OFFHAND) {
     add('scrollStat', 3, '四屬');
     add('scrollHp', 54, '最大HP');
     add('scrollAtk', 5, '攻擊力');
     add('scrollMatk', 5, '魔法攻擊力');
+    if (nextLevel === 5) add('scrollImdR', 5, '無視怪物防禦率');
     if (isFinal) add('scrollBdR', 10, 'BOSS怪物傷害');
   }
 
@@ -613,7 +619,7 @@ function formatCatValleyChangeSummary(changes) {
   return [...merged.entries()]
     .map(([label, val]) => {
       const isPct = label.includes('傷害')
-        || label === '總傷害'
+        || label === '傷害'
         || label === '全屬性'
         || label.includes('無視');
       return `${label} +${val}${isPct ? '%' : ''}`;

@@ -30,9 +30,120 @@ body {
   overflow: visible;
 }
 
+/* 頂部中央介面開關選單 */
+.ms-top-menu {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 13000;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 10px;
+  border: 1px solid #5a6a7a;
+  background: rgba(26, 36, 48, 0.94);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.ms-top-menu .view-mode-btn {
+  min-width: 64px;
+  padding: 4px 10px;
+  border: 1px solid #5a6a7a;
+  background: #1a2430;
+  color: #d8dde3;
+  font-size: 13px;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.ms-top-menu .view-mode-btn:hover {
+  background: #243040;
+  color: #fff;
+}
+
+.ms-top-menu .view-mode-btn.is-active {
+  border-color: #8aa0b8;
+  background: #2c3c50;
+  color: #fff;
+}
+
+/* 強化工具列 + 中控台：一體拖曳（含右側 autoEnchant 面板） */
+.enchant-workbench {
+  display: flex;
+  gap: 1px;
+  align-items: flex-start;
+  position: relative;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+#enchantWorkbenchDragHandle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(100% - 28px);
+  height: 32px;
+  z-index: 50;
+}
+
+/* 各面板共用：純文字 ×，無外框 */
+.panel-btn-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 60;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #d8dde3;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.panel-btn-close:hover {
+  color: #fff;
+  background: transparent;
+}
+
+#pageEnhance {
+  padding-top: 48px;
+  box-sizing: border-box;
+}
+
 .hidden { 
   display: none !important; 
 }
+
+/* 共用視窗拖曳把手（強化／裝備／背包／角色資訊） */
+.panel-drag-handle-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 28px;
+  z-index: 40;
+  cursor: move;
+  pointer-events: auto;
+}
+
+.panel-drag-handle {
+  cursor: move;
+}
+
+.is-panel-drag-pinned {
+  /* fixed 座標由 JS 寫入；避免 flex 拉伸干擾 */
+  flex-shrink: 0;
+}
+
 
 /* 開頁預載：僅在介面素材就緒前阻擋互動（特效改背景載入） */
 body.enchant-boot-loading #pageEnhance {
@@ -125,8 +236,8 @@ body.enchant-boot-loading #pageEnhance {
   width: min(520px, calc(100vw - 32px));
   max-height: calc(100vh - 48px);
   overflow: auto;
-  background: #1e222d;
-  border: 2px solid #545c75;
+  background: #2B323A;
+  border: 2px solid #50626C;
   border-radius: 8px;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 0 1px #11141c;
   color: #e1e4ed;
@@ -147,7 +258,7 @@ body.enchant-boot-loading #pageEnhance {
 .ms-info-card-title {
   font-size: 16px;
   font-weight: bold;
-  color: #ffd966;
+  color: #DDFE01;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -273,7 +384,7 @@ body.enchant-boot-loading #pageEnhance {
   border: 1px solid #4f5b7a;
   border-radius: 6px;
   background: linear-gradient(180deg, #3a4256 0%, #2a3142 100%);
-  color: #ffd966;
+  color: #fff;
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;

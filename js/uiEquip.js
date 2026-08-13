@@ -52,7 +52,6 @@ const UiEquipModule = (() => {
 
   let pendingPreset = 1;
   let activePreset = 1;
-  let viewMode = 'enchant';
   let inited = false;
 
   /** 三組 preset 各自保留完整穿著 { itemId, state }；切換只換顯示，不拆回背包 */
@@ -510,9 +509,17 @@ const UiEquipModule = (() => {
           e.stopPropagation();
           return;
         }
-        if (e.target?.closest?.('img')) {
-          unequipSlot(el.getAttribute('data-slot'));
+        if (!e.target?.closest?.('img')) return;
+        const slotId = el.getAttribute('data-slot');
+        const entry = activeWear[String(slotId)];
+        if (!entry?.itemId) return;
+        // 強化台開啟時優先放入強化槽；否則卸回背包
+        if (enchantOpen && typeof loadEquipToSlot === 'function') {
+          loadEquipToSlot(entry.itemId, -1);
+          refresh();
+          return;
         }
+        unequipSlot(slotId);
       };
     });
   }
@@ -584,28 +591,87 @@ const UiEquipModule = (() => {
     });
   }
 
-  function setViewMode(mode) {
-    viewMode = mode === 'equip' ? 'equip' : 'enchant';
-    const enchant = viewMode !== 'equip';
+  let enchantOpen = true;
+  let equipOpen = false;
+
+  function syncMenuButtons() {
+    $('btnViewEnchant')?.classList.toggle('is-active', enchantOpen);
+    $('btnViewEquip')?.classList.toggle('is-active', equipOpen);
+  }
+
+  function setEnchantOpen(next) {
+    enchantOpen = !!next;
+    const wb = $('enchantWorkbench');
+    if (wb) wb.classList.toggle('hidden', !enchantOpen);
+    // 相容尚未包工作台時的舊 DOM
     const main = $('mainContentPanel');
     const sidebar = document.querySelector('#pageEnhance .ms-sidebar');
+    if (!wb) {
+      if (main) main.classList.toggle('hidden', !enchantOpen);
+      if (sidebar) sidebar.classList.toggle('hidden', !enchantOpen);
+    }
+    if (enchantOpen && typeof PanelDrag !== 'undefined') {
+      PanelDrag.bringFront(wb || main);
+    }
+    syncMenuButtons();
+  }
+
+  function setEquipOpen(next) {
+    equipOpen = !!next;
     const equip = $('uiEquipPanel');
-
-    if (main) main.classList.toggle('hidden', !enchant);
-    if (sidebar) sidebar.classList.toggle('hidden', !enchant);
-    if (equip) equip.classList.toggle('hidden', enchant);
-
-    $('btnViewEnchant')?.classList.toggle('is-active', enchant);
-    $('btnViewEquip')?.classList.toggle('is-active', !enchant);
-
-    if (!enchant) refreshSlotContents();
+    if (equip) equip.classList.toggle('hidden', !equipOpen);
+    if (equipOpen && typeof PanelDrag !== 'undefined') {
+      PanelDrag.bringFront(equip);
+    }
+    syncMenuButtons();
+    if (equipOpen) refreshSlotContents();
     if (typeof InventoryModule !== 'undefined' && typeof InventoryModule.render === 'function') {
       InventoryModule.render();
     }
   }
 
+  function toggleEnchant() {
+    setEnchantOpen(!enchantOpen);
+  }
+
+  function toggleEquip() {
+    setEquipOpen(!equipOpen);
+  }
+
+  /** @deprecated 改為獨立開關；保留相容：mode=equip 開裝備，否則開強化 */
+  function setViewMode(mode) {
+    if (mode === 'equip') {
+      setEquipOpen(true);
+      return;
+    }
+    setEnchantOpen(true);
+  }
+
+  function isEquipOpen() {
+    return equipOpen;
+  }
+
+  function isEnchantOpen() {
+    return enchantOpen;
+  }
+
+  /** 雙擊背包優先：裝備欄開啟時穿上 */
   function isEquipView() {
-    return viewMode === 'equip';
+    return isEquipOpen();
+  }
+
+  /** 目前預設已穿裝備（唯讀列表，供屬性統計面板） */
+  function getActiveWearEntries() {
+    return SLOT_IDS.map((id) => {
+      const entry = activeWear[id];
+      if (!entry?.itemId) return null;
+      return {
+        slotId: id,
+        label: SLOT_LABELS[id] || `槽位 ${id}`,
+        itemId: entry.itemId,
+        state: entry.state || null,
+      };
+    }).filter(Boolean);
   }
 
   function refresh() {
@@ -613,6 +679,12 @@ const UiEquipModule = (() => {
     if (typeof InventoryModule !== 'undefined') {
       if (typeof InventoryModule.render === 'function') InventoryModule.render();
       if (typeof InventoryModule.updateSlotCount === 'function') InventoryModule.updateSlotCount();
+    }
+    if (typeof EquipStatPanel !== 'undefined' && typeof EquipStatPanel.refresh === 'function') {
+      EquipStatPanel.refresh();
+    }
+    if (typeof UiCharacterInfo !== 'undefined' && typeof UiCharacterInfo.refresh === 'function') {
+      UiCharacterInfo.refresh();
     }
   }
 
@@ -624,8 +696,18 @@ const UiEquipModule = (() => {
       e.preventDefault();
       applyPendingPreset();
     });
-    $('btnViewEnchant')?.addEventListener('click', () => setViewMode('enchant'));
-    $('btnViewEquip')?.addEventListener('click', () => setViewMode('equip'));
+    $('btnViewEnchant')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleEnchant();
+    });
+    $('btnViewEquip')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleEquip();
+    });
+    $('uiEquipClose')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      setEquipOpen(false);
+    });
   }
 
   function init() {
@@ -635,7 +717,8 @@ const UiEquipModule = (() => {
     syncPresetSelected();
     bind();
     refreshSlotContents();
-    setViewMode('enchant');
+    setEnchantOpen(true);
+    setEquipOpen(false);
   }
 
   function serializeWearMap(map) {
@@ -762,6 +845,12 @@ const UiEquipModule = (() => {
   return {
     init,
     setViewMode,
+    setEnchantOpen,
+    setEquipOpen,
+    toggleEnchant,
+    toggleEquip,
+    isEnchantOpen,
+    isEquipOpen,
     setPreset,
     selectPendingPreset,
     applyPendingPreset,
@@ -781,6 +870,7 @@ const UiEquipModule = (() => {
     exportState,
     importState,
     getWornEntry,
+    getActiveWearEntries,
     refresh,
   };
 })();

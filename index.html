@@ -10,10 +10,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <!-- 自訂 CSS（modules；file:// 勿用 @import） -->
-  <link rel="stylesheet" href="css/modules/01-base.css?v=20260813wear3">
+  <link rel="stylesheet" href="css/modules/01-base.css?v=20260813info1">
   <link rel="stylesheet" href="css/modules/02-sidebar.css?v=20260813wear3">
-  <link rel="stylesheet" href="css/modules/03-main-panel.css?v=20260813iconNative1">
-  <link rel="stylesheet" href="css/modules/04-inventory.css?v=20260813iconNative1">
+  <link rel="stylesheet" href="css/modules/03-main-panel.css?v=20260813menu1">
+  <link rel="stylesheet" href="css/modules/04-inventory.css?v=20260813esc3">
   <link rel="stylesheet" href="css/modules/05-forms-modal.css?v=20260813wear3">
   <link rel="stylesheet" href="css/modules/06-starforce-extras.css?v=20260813wear3">
   <link rel="stylesheet" href="css/modules/07-starforce.css?v=20260813wear3">
@@ -21,12 +21,15 @@
   <link rel="stylesheet" href="css/modules/09-hammer.css?v=20260813wear3">
   <link rel="stylesheet" href="css/modules/10-soul-weapon.css?v=20260813wear3">
   <link rel="stylesheet" href="css/modules/11-exceptional.css?v=20260813wear3">
-  <link rel="stylesheet" href="css/modules/12-scroll.css?v=20260813chaos1">
-  <link rel="stylesheet" href="css/modules/13-potential.css?v=20260813wear3">
+  <link rel="stylesheet" href="css/modules/12-scroll.css?v=20260813blur1">
+  <link rel="stylesheet" href="css/modules/13-potential.css?v=20260813blur1">
   <link rel="stylesheet" href="css/modules/14-potential-inspect.css?v=20260813wear3">
-  <link rel="stylesheet" href="css/modules/15-equip-tooltip.css?v=20260813wear3">
-  <link rel="stylesheet" href="css/modules/16-bonus-stat.css?v=20260813wear3">
-  <link rel="stylesheet" href="css/modules/17-uiequip.css?v=20260813slotNameKeep1">
+  <link rel="stylesheet" href="css/modules/15-equip-tooltip.css?v=20260813tipZ1">
+  <link rel="stylesheet" href="css/modules/16-bonus-stat.css?v=20260813blur1">
+  <link rel="stylesheet" href="css/modules/17-uiequip.css?v=20260813esc1">
+  <link rel="stylesheet" href="css/modules/18-equip-stat-panel.css?v=20260813drag2">
+  <link rel="stylesheet" href="css/modules/19-ui-character-info.css?v=20260813esc1">
+  <link rel="stylesheet" href="css/modules/20-character-combat-panel.css?v=20260813drag2">
 </head>
 <body class="enchant-boot-loading">
 
@@ -46,7 +49,7 @@
     <div class="ms-info-card-modal">
       <div class="ms-info-card-header">
         <div class="ms-info-card-title" id="msInfoCardTitle">
-          <span>🍁</span> 楓之谷做裝模擬器
+          <span></span> 楓之谷做裝模擬器
         </div>
         <span class="ms-info-card-tag">使用說明 &amp; 規範</span>
       </div>
@@ -60,23 +63,23 @@
           <div class="ms-info-card-section-title">快捷操作與指南</div>
           <ul class="ms-info-card-list">
             <li>
-              <span>📊</span>
+              <span></span>
               <span><strong>成本統計：</strong>點擊左下角 Log 可開啟成本統計頁面。</span>
             </li>
             <li>
-              <span>💰</span>
+              <span></span>
               <span><strong>花費重置：</strong>點擊左下角花費金額，即可重置當前花費。</span>
             </li>
             <li>
-              <span>🔙</span>
-              <span><strong>快速返回：</strong>任意頁面按下 <span class="ms-info-card-key">ESC</span> 即可返回初始強化介面。</span>
+              <span></span>
+              <span><strong>快速返回：</strong>按 <span class="ms-info-card-key">ESC</span> 關閉目前置頂的視窗；強化台若在其他分頁會先回到待機，再按一次才關閉。</span>
             </li>
             <li>
-              <span>🔄</span>
+              <span></span>
               <span><strong>裝備重置：</strong>初始頁面可重置當前裝備；強化槽為空時可一次重置全背包。</span>
             </li>
             <li>
-              <span>✨</span>
+              <span></span>
               <span><strong>原版動畫：</strong>用心復刻逐格強化特效，歡迎大家不要跳過、多看幾次！</span>
             </li>
           </ul>
@@ -125,10 +128,13 @@
 
   <!-- 楓之谷 UI 強化模擬器 (三欄式主架構) -->
   <div id="pageEnhance">
-    <!-- 陽春視圖切換（之後改正式 menu） -->
-    <div class="view-mode-bar" role="tablist" aria-label="介面切換">
-      <button type="button" class="view-mode-btn is-active" id="btnViewEnchant">強化</button>
-      <button type="button" class="view-mode-btn" id="btnViewEquip">裝備欄</button>
+    <div class="ms-top-menu" role="toolbar" aria-label="介面開關">
+      <button type="button" class="view-mode-btn is-active" id="btnViewEnchant" title="開關強化台">強化</button>
+      <button type="button" class="view-mode-btn" id="btnViewEquip" title="開關裝備欄">裝備欄</button>
+      <button type="button" class="view-mode-btn is-active" id="btnViewInventory" title="開關物品欄">物品欄</button>
+      <button type="button" class="view-mode-btn is-active" id="btnViewCharacter" title="開關角色資訊">角色</button>
+      <button type="button" class="view-mode-btn" id="btnViewCombat" title="開關戰鬥力數值">戰力</button>
+      <button type="button" class="view-mode-btn" id="btnViewDetail" title="開關身上屬性明細">明細</button>
     </div>
 
     <div class="ms-container-3col">
@@ -173,8 +179,10 @@
         <button type="button" class="ms-sidebar-inspect-btn hidden" id="bsInspectBtn">機率表</button>
       </div> 
 
-      <!-- 2a. 裝備欄（UIEquip 殼；與強化主面板互斥顯示） -->
+      <!-- 2a. 裝備欄（可與強化台並存） -->
       <div id="uiEquipPanel" class="uiequip-panel hidden" aria-label="裝備欄">
+        <div class="panel-drag-handle-bar" id="uiEquipDragHandle" title="拖曳裝備欄"></div>
+        <button type="button" class="panel-btn-close" id="uiEquipClose" title="關閉">×</button>
         <button type="button" class="uiequip-tab uiequip-tab-equip" tabindex="-1" aria-hidden="true" title="裝備"></button>
         <button type="button" class="uiequip-tab uiequip-tab-cash" tabindex="-1" aria-hidden="true" title="裝扮"></button>
         <div class="uiequip-canvas" aria-hidden="true"></div>
@@ -1111,6 +1119,8 @@
       <!-- 3. 右側背包欄 -->
       <div class="ms-inventory-column">
       <div class="ms-inventory inv-mode-min" id="inventoryPanel">
+        <div class="panel-drag-handle-bar" id="inventoryDragHandle" title="拖曳背包"></div>
+        <button type="button" class="panel-btn-close" id="inventoryClose" title="關閉">×</button>
         <button type="button" class="inv-size-btn inv-size-full" id="invBtnFull" aria-label="大背包"></button>
         <button type="button" class="inv-size-btn inv-size-min hidden" id="invBtnMin" aria-label="小背包"></button>
 
@@ -1919,8 +1929,8 @@
   <script src="js/item.js?v=20260813pocket1"></script>
   <script src="js/sessionPersistence.js?v=20260813wear3"></script>
   <script src="js/equipTooltipData.js?v=20260813pocket1"></script>
-  <script src="js/inventory.js?v=20260813rename1"></script>
-  <script src="js/uiEquip.js?v=20260813pocket1"></script>
+  <script src="js/inventory.js?v=20260813front2"></script>
+  <script src="js/uiEquip.js?v=20260813front2"></script>
   <script src="js/data.js"></script>
   <script src="js/modalAnimation.js"></script>
   <script src="js/imagePreload.js?v=20260812pre1"></script>
@@ -1932,7 +1942,7 @@
   <script src="js/starforceScrollData.js"></script>
   <script src="js/potentialScrollData.js?v=20260813ba1"></script>
   <script src="js/starforce.js"></script>
-  <script src="js/autoEnchantData.js?v=20260812aeSpeed1"></script>
+  <script src="js/autoEnchantData.js?v=20260813blur1"></script>
   <script src="js/autoEnchantStarForce.js"></script>
   <script src="js/scroll.js?v=20260813batch10"></script>
   <script src="js/hammerEffectData.js"></script>
@@ -1952,7 +1962,7 @@
   <script src="js/cubeRates/event8630.js"></script>
   <script src="js/cubeRates/event8420.js"></script>
   <script src="js/cubeRates/index.js"></script>
-  <script src="js/potentialData.js?v=20260812nopot1"></script>
+  <script src="js/potentialData.js?v=20260813bossLabel1"></script>
   <script src="js/addPotentialStatValues.js"></script>
   <script src="js/destinyWeaponRestorationCubeValues.js"></script>
   <script src="js/destinyWeaponAddPotentialValues.js"></script>
@@ -2059,10 +2069,25 @@
     </div>
   </div>
 
+  <div id="equipStatPanel" class="equip-stat-panel is-hidden" aria-label="身上屬性驗證面板">
+    <div class="equip-stat-panel-header">
+      <span>身上屬性（驗證明細）</span>
+      <button type="button" id="equipStatPanelClose" class="equip-stat-panel-close panel-btn-close" title="關閉">×</button>
+    </div>
+    <div id="equipStatPanelBody" class="equip-stat-panel-body"></div>
+  </div>
+
   <script src="js/bonusStatInspect.js"></script>
   <script src="js/potentialInspect.js"></script>
-  <script src="js/equipTooltip.js?v=20260813ba2"></script>
+  <script src="js/equipTooltip.js?v=20260813bossMerge1"></script>
+  <script src="js/equipStatPanel.js?v=20260813front2"></script>
+  <script src="js/panelDrag.js?v=20260813front1"></script>
+  <script src="js/formatPower.js?v=20260813uci3"></script>
+  <script src="js/combatJobs.js?v=20260813uci5"></script>
+  <script src="js/combatPower.js?v=20260813uci10"></script>
+  <script src="js/characterCombatPanel.js?v=20260813front2"></script>
+  <script src="js/uiCharacterInfo.js?v=20260813front2"></script>
   <script src="js/costTracker.js?v=20260812priceSel1"></script>
-  <script src="js/main.js?v=20260813wear3"></script>
+  <script src="js/main.js?v=20260813escZ1"></script>
 </body>
 </html>

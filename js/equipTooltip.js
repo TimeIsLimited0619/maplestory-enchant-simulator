@@ -302,6 +302,34 @@ const EquipTooltipModule = {
     const bonusLines = item?.bonusStat?.lines || [];
 
     const lines = [];
+    const canBonus = typeof canUseBonusStat !== 'function' || canUseBonusStat(item);
+    const flameAllStat = (!canBonus || typeof getBonusStatStatTotal !== 'function')
+      ? 0
+      : (getBonusStatStatTotal(bonusLines, 'allStat', item) || 0);
+    const flameBoss = (!canBonus || typeof getBonusStatStatTotal !== 'function')
+      ? 0
+      : (getBonusStatStatTotal(bonusLines, 'bossDmg', item) || 0);
+    const flameDmg = (!canBonus || typeof getBonusStatStatTotal !== 'function')
+      ? 0
+      : (getBonusStatStatTotal(bonusLines, 'dmg', item) || 0);
+
+    const pushWzLine = (label, value, isPercent = false, scrollVal = 0, bonusVal = 0) => {
+      const baseVal = Number(value) || 0;
+      const scroll = Number(scrollVal) || 0;
+      const bonus = Number(bonusVal) || 0;
+      const total = baseVal + scroll + bonus;
+      if (!(total > 0) && scroll === 0 && bonus === 0) return;
+      lines.push({
+        label,
+        base: baseVal,
+        star: 0,
+        scroll,
+        bonus,
+        total,
+        isPercent,
+      });
+    };
+
     for (const { key, label } of EQUIP_STAT_LABELS) {
       const baseVal = base[key] || 0;
       let scrollVal = 0;
@@ -329,42 +357,36 @@ const EquipTooltipModule = {
       }
 
       const total = baseVal + starVal + scrollVal + bonusVal;
-      if (total <= 0 && baseVal <= 0 && scrollVal === 0) continue;
+      if (!(total <= 0 && baseVal <= 0 && scrollVal === 0)) {
+        lines.push({
+          label,
+          base: baseVal,
+          star: starVal,
+          scroll: scrollVal,
+          bonus: bonusVal,
+          total,
+        });
+      }
 
-      lines.push({
-        label,
-        base: baseVal,
-        star: starVal,
-        scroll: scrollVal,
-        bonus: bonusVal,
-        total,
-      });
+      // 全屬性緊接 LUK 下方（捲軸／永恆 + 星火合併）
+      if (key === 'luk') {
+        pushWzLine('全屬性', 0, true, item.scrollAllStatR || 0, flameAllStat);
+      }
     }
 
     const wz = item.wz || {};
-    const pushWzLine = (label, value, isPercent = false, scrollVal = 0) => {
-      const total = (Number(value) || 0) + (Number(scrollVal) || 0);
-      if (!(total > 0) && !(scrollVal !== 0)) return;
-      lines.push({
-        label,
-        base: Number(value) || 0,
-        star: 0,
-        scroll: Number(scrollVal) || 0,
-        bonus: 0,
-        total,
-        isPercent,
-      });
-    };
-
+    // 傷害 → BOSS怪物傷害 → 無視怪物防禦率
+    pushWzLine('傷害', wz.damR, true, item.scrollDamR || 0, flameDmg);
+    pushWzLine('BOSS怪物傷害', wz.bdR, true, item.scrollBdR || 0, flameBoss);
     pushWzLine('無視怪物防禦率', wz.imdR, true, item.scrollImdR || 0);
-    pushWzLine('總傷害', wz.damR, true, item.scrollDamR || 0);
-    pushWzLine('BOSS怪物傷害', wz.bdR, true, item.scrollBdR || 0);
-    pushWzLine('全屬性', 0, true, item.scrollAllStatR || 0);
     pushWzLine('跳躍力', wz.incJump, false, item.scrollJump || 0);
     pushWzLine('移動速度', wz.incSpeed, false, item.scrollSpeed || 0);
 
     if (bonusLines.length && typeof aggregateBonusStatLines === 'function') {
       const covered = new Set(Object.values(EQUIP_BONUS_STAT_KEY_MAP));
+      covered.add('bossDmg');
+      covered.add('allStat');
+      covered.add('dmg');
       aggregateBonusStatLines(bonusLines, item).forEach((row) => {
         if (!row || covered.has(row.statId)) return;
         const value = Number(row.value) || 0;

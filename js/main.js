@@ -265,6 +265,13 @@ function refreshEquippedItemUI() {
     EquipTooltipModule.refreshIfShowing();
   }
 
+  if (typeof EquipStatPanel !== 'undefined' && typeof EquipStatPanel.refresh === 'function') {
+    EquipStatPanel.refresh();
+  }
+  if (typeof UiCharacterInfo !== 'undefined' && typeof UiCharacterInfo.refresh === 'function') {
+    UiCharacterInfo.refresh();
+  }
+
   syncInspectModules();
 }
 
@@ -509,7 +516,7 @@ function handleGlobalEscapeKey() {
   if (typeof InventoryModule !== 'undefined' && InventoryModule.pendingPotentialScrollId) {
     InventoryModule.cancelPotentialScrollUse();
     if (typeof addLog === 'function') {
-      addLog('[消耗] 已取消使用潛在能力卷軸。', 'log-info');
+      addLog('[消耗] 已取消使用潛能卷軸。', 'log-info');
     }
     return;
   }
@@ -518,8 +525,75 @@ function handleGlobalEscapeKey() {
     return;
   }
   if (isBlockingOverlayOpen()) return;
-  if (getActiveCategory() === 'none') return;
-  switchCategoryTab('none', null);
+
+  // 可 ESC 關閉的視窗：依目前 z-index 關閉置頂者
+  const escTargets = [
+    {
+      id: 'equipStatPanel',
+      isOpen: () => typeof EquipStatPanel !== 'undefined' && EquipStatPanel.isOpen?.(),
+      close: () => EquipStatPanel.setOpen(false),
+    },
+    {
+      id: 'ccpRoot',
+      isOpen: () => typeof CharacterCombatPanel !== 'undefined' && CharacterCombatPanel.isOpen?.(),
+      close: () => CharacterCombatPanel.setOpen(false),
+    },
+    {
+      id: 'uciRoot',
+      isOpen: () => typeof UiCharacterInfo !== 'undefined' && UiCharacterInfo.isOpen?.(),
+      close: () => UiCharacterInfo.setOpen(false),
+    },
+    {
+      id: 'inventoryPanel',
+      isOpen: () => typeof InventoryModule !== 'undefined' && InventoryModule.isOpen?.(),
+      close: () => InventoryModule.setOpen(false),
+    },
+    {
+      id: 'uiEquipPanel',
+      isOpen: () => typeof UiEquipModule !== 'undefined' && UiEquipModule.isEquipOpen?.(),
+      close: () => UiEquipModule.setEquipOpen(false),
+    },
+    {
+      id: 'enchantWorkbench',
+      isOpen: () => typeof UiEquipModule !== 'undefined' && UiEquipModule.isEnchantOpen?.(),
+      close: () => {
+        // 強化台：非待機先回 none，再按一次才關閉
+        if (getActiveCategory() !== 'none') {
+          switchCategoryTab('none', null);
+          return;
+        }
+        UiEquipModule.setEnchantOpen(false);
+      },
+    },
+  ];
+
+  function panelZ(el) {
+    if (!el) return -Infinity;
+    const inline = parseInt(el.style.zIndex, 10);
+    if (Number.isFinite(inline)) return inline;
+    const computed = parseInt(window.getComputedStyle(el).zIndex, 10);
+    return Number.isFinite(computed) ? computed : 0;
+  }
+
+  let top = null;
+  let topZ = -Infinity;
+  let topEl = null;
+  escTargets.forEach((t) => {
+    if (!t.isOpen()) return;
+    const el = document.getElementById(t.id)
+      || (t.id === 'enchantWorkbench' ? document.getElementById('mainContentPanel') : null);
+    if (!el) return;
+    const z = panelZ(el);
+    const laterInDom = !topEl
+      || (el.compareDocumentPosition(topEl) & Node.DOCUMENT_POSITION_PRECEDING);
+    if (!top || z > topZ || (z === topZ && laterInDom)) {
+      top = t;
+      topZ = z;
+      topEl = el;
+    }
+  });
+
+  top?.close();
 }
 
 function updateNonePageControls() {
@@ -1804,6 +1878,89 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   if (typeof EquipTooltipModule !== 'undefined') {
     EquipTooltipModule.init();
+  }
+  if (typeof PanelDrag !== 'undefined') {
+    // 工具列 + 中控台包成一體再拖曳
+    (function ensureEnchantWorkbench() {
+      if (document.getElementById('enchantWorkbench')) return;
+      const sidebar = document.querySelector('#pageEnhance .ms-sidebar');
+      const main = document.getElementById('mainContentPanel');
+      if (!sidebar || !main || !sidebar.parentNode) return;
+      const wrap = document.createElement('div');
+      wrap.id = 'enchantWorkbench';
+      wrap.className = 'enchant-workbench';
+      const handle = document.createElement('div');
+      handle.id = 'enchantWorkbenchDragHandle';
+      handle.className = 'panel-drag-handle-bar';
+      handle.title = '拖曳強化台';
+      const closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.id = 'enchantWorkbenchClose';
+      closeBtn.className = 'panel-btn-close';
+      closeBtn.title = '關閉';
+      closeBtn.textContent = '×';
+      wrap.appendChild(handle);
+      wrap.appendChild(closeBtn);
+      sidebar.parentNode.insertBefore(wrap, sidebar);
+      wrap.appendChild(sidebar);
+      wrap.appendChild(main);
+      // autoEnchant 面板定位相對 sidebar+中控台，跟著強化台一體拖曳／隱藏
+      ['aeApOverlay', 'aeBsOverlay', 'aePotOverlay', 'aeSfOverlay'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) wrap.appendChild(el);
+      });
+      document.getElementById('mainPanelDragHandle')?.remove();
+      closeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (typeof UiEquipModule !== 'undefined') UiEquipModule.setEnchantOpen(false);
+      });
+    })();
+
+    PanelDrag.enable(document.getElementById('enchantWorkbench'), {
+      handle: '#enchantWorkbenchDragHandle',
+      storageKey: 'ui.drag.enchantWorkbench',
+      title: '拖曳強化台',
+      ignoreSelector: '.ms-tab-btn, .ms-sidebar-log, .ms-sidebar-reset-btn, .ms-sidebar-inspect-btn, #totalCostDisplay, .panel-btn-close',
+    });
+    PanelDrag.enable(document.getElementById('uiEquipPanel'), {
+      handle: '#uiEquipDragHandle',
+      storageKey: 'ui.drag.equipPanel',
+      title: '拖曳裝備欄',
+      ignoreSelector: '.panel-btn-close',
+    });
+    PanelDrag.enable(document.getElementById('inventoryPanel'), {
+      handle: '#inventoryDragHandle',
+      ignoreSelector: '.inv-size-btn, .inv-tab, .inv-sort-btn, .panel-btn-close',
+      storageKey: 'ui.drag.inventoryPanel',
+      title: '拖曳背包',
+    });
+
+    if (typeof UiEquipModule !== 'undefined' && typeof UiEquipModule.setEnchantOpen === 'function') {
+      UiEquipModule.setEnchantOpen(UiEquipModule.isEnchantOpen());
+    }
+  }
+  if (typeof EquipStatPanel !== 'undefined') {
+    EquipStatPanel.init();
+  }
+  if (typeof CharacterCombatPanel !== 'undefined') {
+    CharacterCombatPanel.init();
+  }
+  if (typeof PanelDrag !== 'undefined') {
+    PanelDrag.enable(document.getElementById('ccpRoot'), {
+      handle: '.ccp-header',
+      ignoreSelector: '.panel-btn-close, #ccpClose',
+      storageKey: 'ui.drag.combatPanel',
+      title: '拖曳戰鬥力數值',
+    });
+    PanelDrag.enable(document.getElementById('equipStatPanel'), {
+      handle: '.equip-stat-panel-header',
+      ignoreSelector: '.panel-btn-close, #equipStatPanelClose',
+      storageKey: 'ui.drag.detailPanel',
+      title: '拖曳屬性明細',
+    });
+  }
+  if (typeof UiCharacterInfo !== 'undefined') {
+    UiCharacterInfo.init();
   }
   if (typeof StarForceModule !== 'undefined') {
     StarForceModule.syncMethodSelectWidth();

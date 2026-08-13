@@ -1109,10 +1109,11 @@
   background-size: auto;
 }
 
-/* 閃炫方塊：六選三彈窗（backdrop / panel 分層，自動重設面板可疊在虛化之上） */
+/* 閃炫方塊：六選三彈窗（fixed 覆蓋拖曳後的強化台；自動重設面板可疊在虛化之上） */
 .pt-hexa-modal {
-  position: absolute;
+  position: fixed;
   inset: 0;
+  z-index: 25000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1558,9 +1559,9 @@
 
 /* 結合方塊：選排重骰彈窗 */
 .pt-uni-modal {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 25000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1982,9 +1983,9 @@
 
 /* ── 恢復方塊 BEFORE / AFTER ── */
 .pt-memoria-modal {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 25000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2354,7 +2355,7 @@
 }
 
 .pt-memoria-modal--auto-enchant:not(.hidden) {
-  z-index: 13100;
+  z-index: 25100;
 }
 
 .pt-memoria-modal--auto-enchant .pt-memoria-confirm-box {

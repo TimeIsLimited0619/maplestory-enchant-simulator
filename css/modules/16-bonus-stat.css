@@ -622,11 +622,11 @@
   cursor: not-allowed;
 }
 
-/* fullScreen_bonusStat choice */
+/* fullScreen_bonusStat choice（高於拖曳面板 z-index） */
 .bs-choice-modal {
   position: fixed;
   inset: 0;
-  z-index: 12000;
+  z-index: 25000;
   display: flex;
   align-items: center;
   justify-content: center;

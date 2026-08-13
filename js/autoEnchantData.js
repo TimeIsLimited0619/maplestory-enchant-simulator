@@ -1086,6 +1086,8 @@ function aePotTargetExpectsPercent(statRaw) {
 function aePotCanonicalStatBase(statRawOrLineStat) {
   let stat = String(statRawOrLineStat || '');
   if (stat === POTENTIAL_BOSS_DAMAGE_LABEL
+    || (typeof POTENTIAL_BOSS_DAMAGE_OLD_DISPLAY_LABEL !== 'undefined'
+      && stat === POTENTIAL_BOSS_DAMAGE_OLD_DISPLAY_LABEL)
     || stat === POTENTIAL_BOSS_DAMAGE_LEGACY_LABEL
     || stat === POTENTIAL_BOSS_DAMAGE_SOURCE_LABEL) {
     return POTENTIAL_BOSS_DAMAGE_SOURCE_LABEL;
@@ -1122,9 +1124,12 @@ function aePotStatDisplayMatchesTarget(line, targetStatRaw) {
   }
   if (targetStatRaw.startsWith('攻擊BOSS怪物時傷害增加')
     && (label === POTENTIAL_BOSS_DAMAGE_LABEL
+      || (typeof POTENTIAL_BOSS_DAMAGE_OLD_DISPLAY_LABEL !== 'undefined'
+        && label === POTENTIAL_BOSS_DAMAGE_OLD_DISPLAY_LABEL)
       || label === POTENTIAL_BOSS_DAMAGE_LEGACY_LABEL
       || label === POTENTIAL_BOSS_DAMAGE_SOURCE_LABEL
-      || label.includes('BOSS'))) {
+      || label.includes('BOSS')
+      || label.includes('Boss'))) {
     return true;
   }
   const atkProcMatch = targetStatRaw.match(/^攻擊時有一定的機率(.+)$/);
@@ -1143,6 +1148,8 @@ function aePotLineStatRaw(line) {
 
   const label = line?.label || '';
   if (label === POTENTIAL_BOSS_DAMAGE_LABEL
+    || (typeof POTENTIAL_BOSS_DAMAGE_OLD_DISPLAY_LABEL !== 'undefined'
+      && label === POTENTIAL_BOSS_DAMAGE_OLD_DISPLAY_LABEL)
     || label === POTENTIAL_BOSS_DAMAGE_LEGACY_LABEL
     || label === POTENTIAL_BOSS_DAMAGE_SOURCE_LABEL) {
     return POTENTIAL_BOSS_DAMAGE_SOURCE_LABEL;
@@ -1654,7 +1661,30 @@ async function aePotRunUnionAutoEnchant(ctx) {
   return { attempts: cubeUses, reselectUses, resetUses };
 }
 
-/** 閃炫 + 自動重設同時開啟時：虛化留右側給自動強化面板，並調整層級 */
+/** 閃炫 + 自動重設同時開啟時：虛化挖洞露出右側自動強化面板，並調整層級 */
+function aeClipOverlayBackdropForPanel(overlayEl, panelEl, enable) {
+  const backdrop = overlayEl?.querySelector(
+    '.pt-hexa-modal-backdrop, .pt-memoria-modal-backdrop, .bs-choice-modal-backdrop, .sc-recovery-modal-backdrop'
+  );
+  if (!backdrop) return;
+  if (!enable || !panelEl) {
+    backdrop.style.clipPath = '';
+    return;
+  }
+  const r = panelEl.getBoundingClientRect();
+  if (r.width < 1 || r.height < 1) {
+    backdrop.style.clipPath = '';
+    return;
+  }
+  const x = Math.round(r.left);
+  const y = Math.round(r.top);
+  const x2 = Math.round(r.right);
+  const y2 = Math.round(r.bottom);
+  // evenodd：全螢幕矩形挖掉自動強化面板區域，虛化不蓋住右側面板
+  backdrop.style.clipPath =
+    `polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, ${x}px ${y}px, ${x2}px ${y}px, ${x2}px ${y2}px, ${x}px ${y2}px, ${x}px ${y}px)`;
+}
+
 function aePotSyncHexaAutoEnchantLayout() {
   const potHexaEl = document.getElementById('ptHexaOverlay');
   const apHexaEl = document.getElementById('apHexaOverlay');
@@ -1670,6 +1700,17 @@ function aePotSyncHexaAutoEnchantLayout() {
   apHexaEl?.classList.toggle('pt-hexa-modal--with-auto-enchant', apHexaOpen && apAeOpen);
   potAeEl?.classList.toggle('ae-pot-modal--hexa-active', potHexaOpen && potAeOpen);
   apAeEl?.classList.toggle('ae-pot-modal--hexa-active', apHexaOpen && apAeOpen);
+
+  aeClipOverlayBackdropForPanel(
+    potHexaEl,
+    potAeEl?.querySelector('.ae-pot-modal-panel'),
+    potHexaOpen && potAeOpen
+  );
+  aeClipOverlayBackdropForPanel(
+    apHexaEl,
+    apAeEl?.querySelector('.ae-pot-modal-panel'),
+    apHexaOpen && apAeOpen
+  );
 
   const allowCubeSwitch = typeof AUTO_ENCHANT_ALLOW_CUBE_SWITCH_WHILE_OPEN !== 'undefined'
     && AUTO_ENCHANT_ALLOW_CUBE_SWITCH_WHILE_OPEN;

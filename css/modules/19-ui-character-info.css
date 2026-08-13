@@ -1,0 +1,298 @@
+/* ==========================================
+   19. UICharacterInfo
+   座標基準：UI.UICharacterInfo.img.xml
+   common/main + local/detail + local/detailStat
+   outlink 圖：images/BattleSimulation/characterInfo/*
+   left/top = -origin
+   ========================================== */
+
+.uci-root {
+  position: fixed;
+  left: 24px;
+  top: 48px;
+  z-index: 12005;
+  width: 472px;
+  height: 709px; /* main 230 + detail 479 */
+  image-rendering: pixelated;
+  user-select: none;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.45));
+}
+
+.uci-root.is-hidden {
+  display: none;
+}
+
+/* ---- common/main/backgrnd @ (0,0) ---- */
+.uci-main {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 472px;
+  height: 230px;
+  background: url('../../images/UICharacterInfo/common/main/backgrnd.png') no-repeat 0 0;
+  z-index: 2;
+}
+
+.uci-drag-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 440px;
+  height: 28px;
+  cursor: move;
+  z-index: 6;
+}
+
+.uci-btn-close {
+  position: absolute;
+  left: 449px;
+  top: 10px;
+  right: auto;
+  width: 18px;
+  height: 18px;
+  z-index: 8;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #d8dde3;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 18px;
+  cursor: pointer;
+}
+
+.uci-btn-close:hover {
+  background: transparent;
+  color: #fff;
+}
+
+/* ---- local/detail：接在 main 下方 top=230 ---- */
+.uci-detail {
+  position: absolute;
+  left: 0;
+  top: 230px;
+  width: 472px;
+  height: 479px;
+  background: url('../../images/BattleSimulation/characterInfo/detail/backgrnd.png') no-repeat 0 0;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* local/detail/layer:stat origin -11,-11 → (11,11) */
+.uci-layer-stat {
+  position: absolute;
+  left: 11px;
+  top: 11px;
+  width: 450px;
+  height: 20px;
+  background: url('../../images/UICharacterInfo/local/detail/layer/stat.png') no-repeat 0 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/*
+  detailStat 座標原點 = local/detail vector:windowLT (12, 38)
+*/
+.uci-detail-stat {
+  position: absolute;
+  left: 12px;
+  top: 38px;
+  width: 449px;
+  height: 441px;
+  z-index: 2;
+}
+
+/* common/detailStat outlink → BattleSimulation
+   canvas:attackBack origin 0,0 */
+.uci-attack-back {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 448px;
+  height: 312px;
+  background: url('../../images/BattleSimulation/characterInfo/detailStat/canvas/attackBack.png') no-repeat 0 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* local/detailStat/canvas:mainStatBack origin 0,-38 → (0,38) */
+.uci-main-stat-back {
+  position: absolute;
+  left: 0;
+  top: 38px;
+  width: 435px;
+  height: 81px;
+  background: url('../../images/UICharacterInfo/local/detailStat/canvas/mainStatBack.png') no-repeat 0 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* canvas:mainStatFont origin -12,-52 → (12,52) */
+.uci-main-stat-font {
+  position: absolute;
+  left: 12px;
+  top: 52px;
+  width: 242px;
+  height: 53px;
+  background: url('../../images/BattleSimulation/characterInfo/detailStat/canvas/mainStatFont.png') no-repeat 0 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Stat/1/titleImage（MP）— BattleSimulation outlink；對齊右欄與 HP 同列 */
+.uci-mp-title {
+  position: absolute;
+  left: 219px;
+  top: 52px;
+  width: 18px;
+  height: 9px;
+  background: url('../../images/BattleSimulation/characterInfo/detailStat/Stat/1/titleImage.png') no-repeat 0 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* canvas:attackFont origin -11,-133 → (11,133) */
+.uci-attack-font {
+  position: absolute;
+  left: 11px;
+  top: 133px;
+  width: 328px;
+  height: 167px;
+  background: url('../../images/BattleSimulation/characterInfo/detailStat/canvas/attackFont.png') no-repeat 0 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* canvas:utilityBack origin 0,-314 → (0,314) */
+.uci-utility-back {
+  position: absolute;
+  left: 0;
+  top: 314px;
+  width: 448px;
+  height: 92px;
+  background: url('../../images/BattleSimulation/characterInfo/detailStat/canvas/utilityBack.png') no-repeat 0 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* canvas:utilityFont origin -12,-326 → (12,326) */
+.uci-utility-font {
+  position: absolute;
+  left: 12px;
+  top: 326px;
+  width: 268px;
+  height: 74px;
+  background: url('../../images/BattleSimulation/characterInfo/detailStat/canvas/utilityFont.png') no-repeat 0 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* local lvUp*（全部 outlink 到 lvUpHp 圖） */
+.uci-lvup {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: transparent url('../../images/UICharacterInfo/local/detailStat/button/lvUpHp/disabled/0.png') no-repeat center;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.uci-lvup-hp { left: 38px; top: 48px; }
+.uci-lvup-str { left: 38px; top: 70px; }
+.uci-lvup-int { left: 38px; top: 92px; }
+.uci-lvup-mp { left: 260px; top: 48px; }
+.uci-lvup-dex { left: 260px; top: 70px; }
+.uci-lvup-luk { left: 260px; top: 92px; }
+
+/* button:apDistribution origin -438,-38 → (438,38) */
+.uci-ap-btn {
+  position: absolute;
+  left: 438px;
+  top: 38px;
+  width: 10px;
+  height: 81px;
+  padding: 0;
+  border: none;
+  background: transparent url('../../images/UICharacterInfo/local/detailStat/button/apDistribution/disabled/0.png') no-repeat 0 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* button:hyper origin 1,-410 → (-1,410) */
+.uci-btn-hyper {
+  position: absolute;
+  left: -1px;
+  top: 410px;
+  width: 106px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent url('../../images/BattleSimulation/characterInfo/detailStat/button/hyper/disabled/0.png') no-repeat 0 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* button:ability origin -343,-410 → (343,410) */
+.uci-btn-ability {
+  position: absolute;
+  left: 343px;
+  top: 410px;
+  width: 106px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent url('../../images/BattleSimulation/characterInfo/detailStat/button/ability/normal/0.png') no-repeat 0 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+/* 數值層：numPos 為右緣對齊點 */
+.uci-nums {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.uci-num {
+  position: absolute;
+  transform: translateX(-100%);
+  font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.75);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.uci-num.is-empty {
+  color: #9aa3ab;
+  font-weight: 600;
+}
+
+/* vector:attackPower = 223,10（戰鬥力；數值以 formatPower 億/萬顯示） */
+.uci-attack-power {
+  position: absolute;
+  left: 223px;
+  top: 10px;
+  transform: translateX(-50%);
+  z-index: 6;
+  font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #f0e6c8;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  white-space: nowrap;
+}
