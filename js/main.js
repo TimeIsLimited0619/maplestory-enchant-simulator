@@ -906,9 +906,8 @@ function scheduleIdleWork(fn, timeoutMs = 1500) {
 }
 
 const _enchantAssetPreloadCache = new Map();
-/** 釘住介面素材解碼結果，避免特效幀預載把面板底圖擠出記憶體快取 */
+/** 僅保留已載入 Image 參照，禁止再發新請求 */
 const _chromePinHolders = [];
-let _chromePinUrls = [];
 
 const MAIN_PANEL_BG_BY_CATEGORY = {
   none: 'images/Enchant_none_0.png',
@@ -953,32 +952,15 @@ function setMainPanelBgCategory(category) {
   });
 }
 
-function pinChromeImages(urls) {
-  const list = [...new Set((urls || []).map(normalizePreloadUrl).filter(Boolean))];
-  if (!list.length) return;
-  _chromePinUrls = [...new Set([..._chromePinUrls, ...list])];
-  list.forEach((absolute) => {
-    // 已有 holder 就不重複建，避免無限增長
-    if (_chromePinHolders.some((img) => img.src === absolute)) return;
-    const img = new Image();
-    img.decoding = 'async';
-    img.src = absolute;
-    if (typeof img.decode === 'function') {
-      img.decode().catch(() => {});
-    }
-    _chromePinHolders.push(img);
-  });
-}
-
-function repinChromeImages() {
-  if (!_chromePinUrls.length) return;
-  _chromePinUrls.forEach((absolute) => {
-    const img = new Image();
-    img.decoding = 'async';
-    img.src = absolute;
-    if (typeof img.decode === 'function') {
-      img.decode().catch(() => {});
-    }
+/** 只釘住 preload 已完成的 Image，不另外 new Image / 不發網路請求 */
+function pinChromeImagesFromCache() {
+  _enchantAssetPreloadCache.forEach((promise) => {
+    if (!promise || typeof promise.then !== 'function') return;
+    promise.then((img) => {
+      if (img && !_chromePinHolders.includes(img)) {
+        _chromePinHolders.push(img);
+      }
+    }).catch(() => {});
   });
 }
 
@@ -1191,7 +1173,7 @@ function updateEnchantBootProgress(done, total, statusText) {
 }
 
 async function preloadUrlBatch(urls, {
-  concurrency = 12,
+  concurrency = 4,
   onProgress = null,
   statusText = '正在載入介面素材…',
 } = {}) {
@@ -1297,7 +1279,7 @@ async function warmAutoEnchantConfig(cfg) {
   if (!cfg) return;
   const urls = collectDeepImageUrls(cfg);
   if (!urls.length) return;
-  await preloadUrlBatch(urls, { concurrency: 10 });
+  await preloadUrlBatch(urls, { concurrency: 3 });
 }
 
 async function warmEffectsForCategory(category) {
@@ -1370,11 +1352,23 @@ async function warmEffectsForCategory(category) {
     }
   }
 
-  await Promise.all(tasks.filter((t) => t && typeof t.then === 'function'));
+  const jobs = tasks.filter((t) => t && typeof t.then === 'function');
+  // 同時間最多 2 個暖機任務，避免分頁特效一次打爆 GitHub Pages
+  const limit = 2;
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(limit, jobs.length) }, async () => {
+    while (cursor < jobs.length) {
+      const index = cursor;
+      cursor += 1;
+      await jobs[index];
+    }
+  });
+  await Promise.all(workers);
 }
 
 function scheduleIdleBackgroundEffectWarm() {
   if (_idleAllEffectsWarmStarted) return;
+  // GitHub Pages 有 rate limit：延後且低並行補載特效
   scheduleIdleWork(() => {
     if (_idleAllEffectsWarmStarted) return;
     _idleAllEffectsWarmStarted = true;
@@ -1383,18 +1377,16 @@ function scheduleIdleBackgroundEffectWarm() {
       refreshEffectTestBars();
       return;
     }
-    preloadEffectJobs(plan.jobs, { concurrency: 4 })
+    preloadEffectJobs(plan.jobs, { concurrency: 2 })
       .then(() => {
         plan.markDone();
-        repinChromeImages();
         refreshEffectTestBars();
       })
       .catch(() => {
         try { plan.markDone(); } catch (_) { /* ignore */ }
-        repinChromeImages();
         refreshEffectTestBars();
       });
-  }, 2500);
+  }, 8000);
 }
 
 function scheduleCategoryEffectWarm(category) {
@@ -1404,23 +1396,14 @@ function scheduleCategoryEffectWarm(category) {
   }
 
   const gen = (_categoryEffectWarmGen += 1);
-  // 切頁時先重觸介面素材解碼，降低特效暖機搶快取造成的面板閃爍
-  const bg = MAIN_PANEL_BG_BY_CATEGORY[category];
-  const chromeWarm = bg
-    ? preloadEnchantAsset(bg).then(() => repinChromeImages())
-    : Promise.resolve();
-
-  chromeWarm
-    .then(() => warmEffectsForCategory(category))
+  warmEffectsForCategory(category)
     .then(() => {
       if (gen !== _categoryEffectWarmGen) return;
-      repinChromeImages();
       refreshEffectTestBars();
       scheduleIdleBackgroundEffectWarm();
     })
     .catch(() => {
       if (gen !== _categoryEffectWarmGen) return;
-      repinChromeImages();
       refreshEffectTestBars();
       scheduleIdleBackgroundEffectWarm();
     });
@@ -1435,11 +1418,11 @@ async function runEnchantBootPreload() {
   let chromeUrls = [];
   try {
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    // 不在開機掃 ITEM_DATABASE 全圖示（量太大，GitHub Pages 易 429）
     chromeUrls = [
       ...Object.values(MAIN_PANEL_BG_BY_CATEGORY),
       ...collectStylesheetImageUrls(),
       ...collectDomImageUrls(),
-      ...collectDatabaseIconUrls(),
     ];
   } finally {
     restorePanels();
@@ -1458,9 +1441,9 @@ async function runEnchantBootPreload() {
 
   updateEnchantBootProgress(0, chromeTotal, '正在載入介面素材…');
 
-  // 開機只載介面素材 → 盡快可操作；特效改「切分頁再暖」
+  // 低並行，避免 GitHub Pages rate limit
   await preloadUrlBatch(chromeUrls, {
-    concurrency: 14,
+    concurrency: 4,
     onProgress: (batchDone) => {
       updateEnchantBootProgress(
         batchDone,
@@ -1471,25 +1454,14 @@ async function runEnchantBootPreload() {
     statusText: '正在載入介面素材…',
   });
 
-  // 釘住介面素材，避免後續特效幀預載把面板底圖解碼擠掉
-  pinChromeImages(chromeUrls);
-  // 暖機後再 paint 一次停靠面板，讓 CSS 底圖留在解碼快取
-  const touchRestore = warmEnchantPanelsForCssBackgrounds();
-  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-  touchRestore();
-  setControlSubpanelsParked(
-    typeof getActiveCategory === 'function' ? getActiveCategory() : 'none'
-  );
-  setMainPanelBgCategory(
-    typeof getActiveCategory === 'function' ? getActiveCategory() : 'none'
-  );
+  // 只釘住既有快取參照，不再額外發請求
+  pinChromeImagesFromCache();
 
   updateEnchantBootProgress(chromeTotal, chromeTotal, '介面載入完成');
   await finishBootAndShowInfoCard();
 
   refreshEffectTestBars();
 
-  // 若啟動後已在某強化分頁，立刻暖該分頁特效
   const activeCat = typeof getActiveCategory === 'function' ? getActiveCategory() : null;
   if (activeCat && activeCat !== 'none') {
     scheduleCategoryEffectWarm(activeCat);
@@ -1697,7 +1669,7 @@ function collectAllEffectPreloadPlan() {
   };
 }
 
-async function preloadEffectJobs(jobs, { concurrency = 10, onProgress = null } = {}) {
+async function preloadEffectJobs(jobs, { concurrency = 2, onProgress = null } = {}) {
   const list = Array.isArray(jobs) ? jobs : [];
   let done = 0;
   const total = list.length;

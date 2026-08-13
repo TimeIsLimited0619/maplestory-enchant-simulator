@@ -29,20 +29,19 @@
 .ms-main-bg-layer {
   position: absolute;
   top: 0;
+  left: 0;
+  width: 418px;
+  height: 720px;
   background-repeat: no-repeat;
   background-size: 100% 100%;
   background-position: center;
   image-rendering: pixelated;
-  /* 非作用中層移出畫面但保持可見性，避免 opacity:0 被瀏覽器丟棄解碼 */
-  left: -10000px;
-  width: 418px;
-  height: 720px;
-  visibility: visible;
+  opacity: 0;
   pointer-events: none;
 }
 
 .ms-main-bg-layer.is-active {
-  left: 0;
+  opacity: 1;
 }
 
 .ms-main-content.none-active .ms-equip-area {
