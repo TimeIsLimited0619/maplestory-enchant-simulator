@@ -1,0 +1,679 @@
+/* ==========================================
+   卓越強化面板 (Exceptional UI)
+   ========================================== */
+.ms-main-content.exceptional-active {
+  background-image: url('../../images/exceptional/exceptional_backgrnd.png');
+}
+
+.ms-main-content.exceptional-active .ms-equip-area {
+  height: 118px;
+}
+
+.ms-main-content.exceptional-active .ms-drop-zone {
+  top: 88px;
+  width: 56px;
+  height: 48px;
+}
+
+.ms-main-content.exceptional-active .ms-drop-zone img {
+  transform: scale(2);
+  transform-origin: center center;
+}
+
+.ms-main-content.exceptional-active .ms-drop-zone img:hover {
+  transform: scale(2.15);
+}
+
+.ms-main-content.exceptional-active .sf-item-name {
+  display: block;
+  top: 183px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  max-width: 280px;
+  min-width: 0;
+  padding: 0 12px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 400;
+  color: #e8e8e8;
+  text-align: center;
+}
+
+.ms-main-content.exceptional-active.exceptional-idle .sf-item-name {
+  display: none;
+}
+
+.ms-main-content.exceptional-active.exceptional-idle .ms-drop-zone img {
+  display: none;
+}
+
+.ex-idle-slot {
+  display: none;
+  position: absolute;
+  top: 93px;
+  left: 10px;
+  width: 398px;
+  height: 573px;
+  background: url('../../images/exceptional/exceptional_layer_waitEquip.png') no-repeat left top;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ms-main-content.exceptional-active.exceptional-idle .ex-idle-slot {
+  display: block;
+}
+
+.ms-main-content.exceptional-active.exceptional-idle .ms-drop-zone {
+  z-index: 3;
+}
+
+.ms-exceptional-canvas {
+  position: absolute;
+  top: -7px; /* 118 - 125：對齊靈魂武器／WZ 座標 */
+  left: 0;
+  width: 418px;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.ms-exceptional-canvas > * {
+  pointer-events: auto;
+}
+
+.ex-idle-panel {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ex-idle-lower {
+  display: none;
+}
+
+.ex-blocked-message {
+  position: absolute;
+  top: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  margin: 0;
+  padding: 10px 12px;
+  text-align: center;
+  color: #ffb070;
+  font-size: 13px;
+  line-height: 1.4;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+
+.ex-active-panel {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ex-active-panel > * {
+  pointer-events: auto;
+}
+
+.ex-tab-btn {
+  position: absolute;
+  top: 124px; /* 242 - 118 */
+  width: 199px;
+  height: 36px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: left top;
+  image-rendering: pixelated;
+}
+
+.ex-tab-enchant {
+  left: 9px;
+  background-image: url('../../images/exceptional/exceptional_button_tabEnchant_normal_0.png');
+}
+
+.ex-tab-enchant.checked {
+  background-image: url('../../images/exceptional/exceptional_button_tabEnchant_checked_0.png');
+}
+
+.ex-tab-enchant:disabled {
+  background-image: url('../../images/exceptional/exceptional_button_tabEnchant_disabled_0.png');
+  cursor: not-allowed;
+}
+
+.ex-tab-extract {
+  left: 210px;
+  background-image: url('../../images/exceptional/exceptional_button_tabExtract_normal_0.png');
+}
+
+.ex-tab-extract.checked {
+  background-image: url('../../images/exceptional/exceptional_button_tabExtract_checked_0.png');
+}
+
+.ex-tab-extract:disabled {
+  background-image: url('../../images/exceptional/exceptional_button_tabExtract_disabled_0.png');
+  cursor: not-allowed;
+}
+
+.ex-summary-box {
+  position: absolute;
+  top: 170px; /* 288 - 118 */
+  left: 66px;
+  width: 286px;
+  height: 37px;
+  background: url('../../images/scroll/scroll.layer_summaryBox.png') no-repeat center;
+  image-rendering: pixelated;
+}
+
+.ex-summary-before,
+.ex-summary-after {
+  position: absolute;
+  top: 18px; /* 306 - 288 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-height: 33px;
+}
+
+.ex-summary-before {
+  left: 88px; /* 151 - 66 */
+  top: 2px;
+  transform: translateX(-50%);
+}
+
+.ex-summary-after {
+  left: 190px; /* 256 - 66 */
+  top: 2px;
+  transform: translateX(-50%);
+}
+
+.ex-summary-level {
+  display: block;
+  width: auto;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.ex-summary-empty {
+  color: #9fb5bd;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.ex-summary-arrow {
+  position: absolute;
+  left: 129px; /* 195 - 66 */
+  top: 9px; /* 297 - 288 */
+  width: 30px;
+  height: 18px;
+  background: transparent no-repeat left top;
+  image-rendering: pixelated;
+}
+
+.ex-summary-arrow.hidden {
+  display: none;
+}
+
+.ex-summary-single {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.ex-summary-single.hidden {
+  display: none;
+}
+
+.ex-summary-before.hidden,
+.ex-summary-after.hidden {
+  display: none;
+}
+
+.ex-arrow-red-to-white {
+  background-image: url('../../images/exceptional/exceptional_summaryBox_layer_redToWhite.png');
+}
+
+.ex-arrow-white-to-red {
+  background-image: url('../../images/exceptional/exceptional_summaryBox_layer_whiteToRed.png');
+}
+
+.ex-stat-box {
+  position: absolute;
+  top: 216px; /* 334 - 118 */
+  left: 10px;
+  width: 398px;
+  height: 102px;
+  background: url('../../images/exceptional/exceptional_tabEnchant_layer_statEnchantBox.png') no-repeat left top;
+  image-rendering: pixelated;
+}
+
+.ex-stat-box-extract {
+  background-image: url('../../images/exceptional/exceptional_tabExtract_layer_statExtractBox.png');
+}
+
+.ex-stat-row {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ex-stat-preview {
+  position: relative;
+  left: auto;
+  top: auto;
+  margin: 0;
+  width: 100%;
+  max-width: 280px;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: pre-line;
+  text-align: center;
+  color: #BED0D3;
+}
+
+.ex-stat-preview.hidden {
+  visibility: hidden;
+}
+
+.ex-stat-box-extract .ex-stat-preview {
+  color: #ff3366;
+}
+
+.ex-prob-box {
+  position: absolute;
+  top: 322px; /* 440 - 118 */
+  left: 10px;
+  width: 398px;
+  height: 33px;
+  background: url('../../images/exceptional/exceptional_tabEnchant_layer_probEnchantBox.png') no-repeat left top;
+  image-rendering: pixelated;
+}
+
+.ex-prob-label {
+  position: absolute;
+  right: 209px;
+  top: 9px;
+  color: #bed0d3;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.ex-prob-value {
+  position: absolute;
+  left: 209px;
+  top: 9px;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+}
+
+.ex-cost-box {
+  position: absolute;
+  top: 359px; /* 477 - 118 */
+  left: 10px;
+  width: 398px;
+  height: 118px;
+  background: url('../../images/exceptional/exceptional_tabEnchant_layer_costEnchantBox.png') no-repeat left top;
+  image-rendering: pixelated;
+}
+
+.ex-income-box {
+  position: absolute;
+  top: 359px; /* 與強化頁費用框同位置 */
+  left: 10px;
+  width: 398px;
+  height: 88px;
+  background: url('../../images/exceptional/exceptional_tabExtract_layer_incomeExtractItemBox.png') no-repeat left top;
+  image-rendering: pixelated;
+}
+
+.ex-hammer-icon {
+  position: absolute;
+  left: 185px;
+  top: 21px;
+  width: auto;
+  height: auto;
+  max-width: none;
+  image-rendering: pixelated;
+  cursor: help;
+}
+
+.ex-cost-text {
+  position: absolute;
+  left: 151px;
+  bottom: 24px;
+  top: auto;
+  color: #bed0d3;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.ex-income-box .ex-cost-text {
+  bottom: 10px; /* 下移 7px */
+}
+
+.ex-hammer-count {
+  display: inline-flex;
+  align-items: flex-end;
+  margin-left: 6px;
+  color: #ffffff;
+  font-weight: 700;
+  line-height: 1;
+  gap: 2px;
+}
+
+.ex-hammer-x {
+  font-size: 8px;
+  line-height: 1;
+}
+
+.ex-hammer-num {
+  display: inline-block;
+  position: relative;
+  font-size: 12px;
+  line-height: 0;
+  top: -4px;
+  left: 4px;
+}
+.ex-hammer-tooltip {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55));
+}
+
+.ex-hammer-tooltip.hidden {
+  display: none;
+}
+
+.ex-hammer-tooltip-img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none;
+  image-rendering: pixelated;
+}
+
+.ex-extract-confirm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 14000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.ex-extract-confirm-modal.hidden {
+  display: none;
+}
+
+.ex-extract-confirm-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  transition: opacity 0.35s ease;
+}
+
+.ex-extract-confirm-panel {
+  position: relative;
+  z-index: 1;
+  width: min(360px, 90vw);
+  padding: 22px 24px 18px;
+  box-sizing: border-box;
+  text-align: center;
+  color: #d8e2ea;
+  background: linear-gradient(180deg, #2a3340 0%, #1e2630 100%);
+  border: 1px solid rgba(140, 170, 190, 0.4);
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  transition: opacity 0.35s ease;
+}
+
+.ex-extract-confirm-title {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.ex-extract-confirm-detail {
+  margin: 0 0 18px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #aebcc8;
+  white-space: pre-line;
+}
+
+.ex-extract-confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.ex-extract-confirm-btn {
+  min-width: 88px;
+  height: 32px;
+  border: 1px solid rgba(160, 185, 205, 0.35);
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ex-extract-confirm-btn-ok {
+  background: #3a6ea5;
+  color: #ffffff;
+}
+
+.ex-extract-confirm-btn-ok:hover {
+  background: #4a82bd;
+}
+
+.ex-extract-confirm-btn-cancel {
+  background: #3a4450;
+  color: #d5dde5;
+}
+
+.ex-extract-confirm-btn-cancel:hover {
+  background: #4a5563;
+}
+
+.ex-extract-confirm-modal.is-opening:not(.is-opening-ready) .ex-extract-confirm-backdrop,
+.ex-extract-confirm-modal.is-opening:not(.is-opening-ready) .ex-extract-confirm-fade {
+  opacity: 0;
+}
+
+.ex-extract-confirm-modal.is-closing .ex-extract-confirm-backdrop,
+.ex-extract-confirm-modal.is-closing .ex-extract-confirm-fade {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ex-enchant-help {
+  position: absolute;
+  left: 115px;
+  top: 510px; /* 628 - 118 */
+  width: 189px;
+  height: 15px;
+  pointer-events: none;
+  background: url('../../images/exceptional/exceptional_tabEnchant_layer_enchantHelp.png') no-repeat left top;
+  image-rendering: pixelated;
+}
+
+.ex-extract-help {
+  position: absolute;
+  left: 122px;
+  top: 486px; /* 604 - 118 */
+  width: 175px;
+  height: 32px;
+  pointer-events: none;
+  background: url('../../images/exceptional/exceptional_tabExtract_layer_extractHelp.png') no-repeat left top;
+  image-rendering: pixelated;
+}
+
+.ex-bottom-options {
+  position: absolute;
+  bottom: 4px;
+  right: 14px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 12px;
+  color: #b8bec6;
+  pointer-events: auto;
+}
+
+.ex-auto-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ex-auto-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.ex-auto-toggle {
+  display: inline-block;
+  width: 25px;
+  height: 13px;
+  flex: 0 0 25px;
+  background: url('../../images/starforce/starForce.button_protectDestroy.unchecked.png') no-repeat center;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+.ex-auto-toggle-input:checked + .ex-auto-toggle {
+  background-image: url('../../images/starforce/starForce.button_protectDestroy.checkedAndDisabled.png');
+}
+
+.ex-btn-action {
+  position: absolute;
+  left: 147px;
+  bottom: 2px;
+  width: 129px;
+  height: 35px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: left top;
+  image-rendering: pixelated;
+}
+
+.ex-btn-enchant {
+  background-image: url('../../images/exceptional/exceptional_tabEnchant_button_enchant_normal_0.png');
+}
+
+.ex-btn-enchant:hover:not(:disabled) {
+  background-image: url('../../images/exceptional/exceptional_tabEnchant_button_enchant_mouseOver_0.png');
+}
+
+.ex-btn-enchant:active:not(:disabled) {
+  background-image: url('../../images/exceptional/exceptional_tabEnchant_button_enchant_pressed_0.png');
+}
+
+.ex-btn-enchant:disabled {
+  background-image: url('../../images/exceptional/exceptional_tabEnchant_button_enchant_disabled_0.png');
+  cursor: not-allowed;
+}
+
+.ex-btn-extract {
+  background-image: url('../../images/exceptional/exceptional_tabExtract_button_extract_normal_0.png');
+}
+
+.ex-btn-extract:hover:not(:disabled) {
+  background-image: url('../../images/exceptional/exceptional_tabExtract_button_extract_mouseOver_0.png');
+}
+
+.ex-btn-extract:active:not(:disabled) {
+  background-image: url('../../images/exceptional/exceptional_tabExtract_button_extract_pressed_0.png');
+}
+
+.ex-btn-extract:disabled {
+  background-image: url('../../images/exceptional/exceptional_tabExtract_button_extract_disabled_0.png');
+  cursor: not-allowed;
+}
+
+.ex-effect-host,
+.ex-effect-equip-host {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 418px;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.ex-effect-host-back { z-index: 20; }
+.ex-effect-host-front { z-index: 22; }
+.ex-effect-host-text { z-index: 23; }
+
+.ex-effect-sprite,
+.ex-effect-equip {
+  position: absolute;
+  display: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+  max-width: none;
+}
+
+.ex-effect-equip {
+  transform: scale(2);
+  transform-origin: center center;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.ms-main-content.exceptional-active .ms-drop-zone.ex-effect-active img:hover {
+  transform: scale(2);
+}
+
+.ms-main-content.ex-effect-playing {
+  overflow: visible;
+  z-index: 25;
+}
+
+.ms-main-content.ex-effect-playing .ex-effect-host {
+  inset: 0;
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+
+.ms-main-content.ex-effect-playing .ex-effect-host-back { z-index: 30; }
+.ms-main-content.ex-effect-playing .ms-equip-area { z-index: 31; }
+.ms-main-content.ex-effect-playing .ms-drop-zone img { visibility: visible; }
+.ms-main-content.ex-effect-playing .ex-effect-equip-host { display: none !important; }
+.ms-main-content.ex-effect-playing .ex-effect-host-front { z-index: 32; }
+.ms-main-content.ex-effect-playing .ex-effect-host-text { z-index: 33; }

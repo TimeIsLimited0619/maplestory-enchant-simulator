@@ -1,0 +1,442 @@
+/* ==========================================
+   強化次數增加面板 (Hammer UI)
+   ========================================== */
+.ms-main-content.hammer-active {
+  background-image: url('../../images/hammer/hammer.backgrnd.png');
+}
+
+.ms-main-content.hammer-active .ms-equip-area {
+  height: 118px;
+}
+
+.ms-main-content.hammer-active .ms-drop-zone {
+  top: 88px;
+  width: 56px;
+  height: 48px;
+}
+
+.ms-main-content.hammer-active .ms-drop-zone img {
+  transform: scale(2);
+  transform-origin: center center;
+}
+
+.ms-main-content.hammer-active .ms-drop-zone img:hover {
+  transform: scale(2.15);
+}
+
+.ms-main-content.hammer-active .sf-item-name {
+  display: block;
+  top: 183px;
+  width: 280px;
+  max-width: 280px;
+  min-width: 0;
+  padding: 0 12px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  font-size: 20px;
+  line-height: 24px;
+  color: #e8e8e8;
+}
+
+.ms-main-content.hammer-active.hammer-idle .sf-item-name {
+  display: none;
+}
+
+.ms-main-content.hammer-active.hammer-idle .ms-drop-zone img {
+  display: none;
+}
+
+.hm-idle-slot {
+  display: none;
+  position: absolute;
+  top: 91px;
+  left: 51%;
+  transform: translateX(-50%);
+  width: 134px;
+  height: 116px;
+  background: url('../../images/hammer/hammer.layer_waitEquip.png') no-repeat center 38%;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ms-main-content.hammer-active.hammer-idle .hm-idle-slot {
+  display: block;
+}
+
+.ms-main-content.hammer-active.hammer-idle .ms-drop-zone {
+  z-index: 3;
+}
+
+.ms-hammer-canvas {
+  position: absolute;
+  top: 118px;
+  left: 0;
+  width: 418px;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.ms-hammer-canvas > * {
+  pointer-events: auto;
+}
+
+.hm-idle-panel {
+  position: absolute;
+  top: 0;
+  left: 10px;
+  width: 398px;
+  height: 215px;
+  pointer-events: none;
+}
+
+.hm-idle-lower {
+  width: 100%;
+  height: 100%;
+  background: url('../../images/hammer/hammer.layer_waitEquipItem.png') no-repeat center top;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+
+.hm-active-panel {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hm-active-panel > * {
+  pointer-events: auto;
+}
+
+.hm-summary-area {
+  position: absolute;
+  top: 9px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 286px;
+  height: 37px;
+  padding: 4px 8px;
+  box-sizing: border-box;
+  background: url('../../images/hammer/hammer.layer_summaryBox.png') no-repeat center;
+  background-size: 100% 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+}
+
+.hm-scroll-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  min-height: 13px;
+}
+
+.hm-icon-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.hm-hammer-icons {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  flex-wrap: nowrap;
+  min-height: 13px;
+  overflow: visible;
+}
+
+.hm-hammer-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  min-height: 14px;
+  overflow: visible;
+}
+
+.hm-summary-icon {
+  width: 13px;
+  height: 12px;
+  flex: 0 0 13px;
+  image-rendering: pixelated;
+  display: block;
+}
+
+.hm-add-icon {
+  width: 13px;
+  height: 13px;
+  image-rendering: pixelated;
+}
+
+.hm-lock-slot {
+  position: relative;
+  display: block;
+  width: 13px;
+  height: 12px;
+  flex: 0 0 13px;
+  overflow: visible;
+}
+
+.hm-lock-icon.next {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(calc(-50% + 1px), -50%);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
+  animation: hm-lock-blink 0.35s steps(1) infinite;
+  pointer-events: none;
+}
+
+@keyframes hm-lock-blink {
+  0% {
+    background-image: url('../../images/hammer/hammer.try.summaryIcon/hammer.try.summaryIcon.0.0.png');
+  }
+  25% {
+    background-image: url('../../images/hammer/hammer.try.summaryIcon/hammer.try.summaryIcon.0.1.png');
+  }
+  50% {
+    background-image: url('../../images/hammer/hammer.try.summaryIcon/hammer.try.summaryIcon.0.2.png');
+  }
+  75% {
+    background-image: url('../../images/hammer/hammer.try.summaryIcon/hammer.try.summaryIcon.0.3.png');
+  }
+  100% {
+    background-image: url('../../images/hammer/hammer.try.summaryIcon/hammer.try.summaryIcon.0.0.png');
+  }
+}
+
+.hm-stat-box {
+  position: absolute;
+  top: 52px;
+  left: 10px;
+  width: 398px;
+  height: 112px;
+  background: url('../../images/hammer/hammer.layer_statBox.png') no-repeat center;
+  background-size: 100% 100%;
+}
+
+.hm-stat-values {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  bottom: 12px;
+  left: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  font-size: 12px;
+  color: #a6c4e9;
+  line-height: 1.35;
+}
+
+.hm-stat-line span {
+  color: #fff;
+  font-weight: bold;
+}
+
+.hm-stat-empty {
+  color: #8a9199;
+  font-size: 12px;
+  margin-top: 28px;
+}
+
+.hm-prob-box {
+  position: absolute;
+  top: 170px;
+  left: 10px;
+  width: 398px;
+  height: 54px;
+  background: url('../../images/hammer/hammer.layer_probBox.png') no-repeat center;
+  background-size: 100% 100%;
+}
+
+.hm-prob-values {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  bottom: 8px;
+  left: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  color: #a6c4e9;
+}
+
+.hm-prob-line span {
+  color: #fff;
+  font-weight: bold;
+}
+
+.hm-cost-box {
+  position: absolute;
+  top: 230px;
+  left: 11px;
+  width: 396px;
+  height: 115px;
+  background: url('../../images/hammer/hammer.layer_costInvenBox.png') no-repeat center;
+  background-size: 100% 100%;
+}
+
+.hm-selected-name {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 120px;
+  max-width: 280px;
+  padding: 1px 16px;
+  text-align: center;
+  font-size: 12px;
+  color: #e8e8e8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.hm-material-grid {
+  position: absolute;
+  top: 27px;
+  left: 10px;
+  display: grid;
+  grid-template-columns: repeat(8, 36px);
+  grid-template-rows: repeat(2, 36px);
+  gap: 4px;
+}
+
+.hm-mat-slot:nth-child(2) {
+  margin-left: 1px;
+}
+
+.hm-mat-slot {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  image-rendering: pixelated;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hm-mat-slot:not([data-hammer-id]) {
+  cursor: default;
+  pointer-events: none;
+}
+
+.hm-mat-slot.selected {
+  background: url('../../images/hammer/hammer.costInven.selected.png') no-repeat center;
+  background-size: 100% 100%;
+}
+
+.hm-golden-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 13px;
+  min-height: 13px;
+}
+
+.hm-mat-icon {
+  display: block;
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  image-rendering: pixelated;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+}
+
+.hm-btn-use {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 129px;
+  height: 35px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: transparent url('../../images/hammer/hammer.button_confirm.normal.0.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+
+.hm-btn-use:hover:not(:disabled) {
+  background-image: url('../../images/hammer/hammer.button_confirm.mouseOver.0.png');
+}
+
+.hm-btn-use:active:not(:disabled) {
+  background-image: url('../../images/hammer/hammer.button_confirm.pressed.0.png');
+}
+
+.hm-btn-use:disabled {
+  background-image: url('../../images/hammer/hammer.button_confirm.disabled.0.png');
+  cursor: not-allowed;
+}
+
+.hm-bottom-options {
+  position: absolute;
+  bottom: 4px;
+  right: 14px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 12px;
+  color: #b8bec6;
+  pointer-events: auto;
+}
+
+.hm-auto-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.hm-auto-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.hm-auto-toggle {
+  display: inline-block;
+  width: 25px;
+  height: 13px;
+  flex: 0 0 25px;
+  background: url('../../images/starforce/starForce.button_protectDestroy.unchecked.png') no-repeat center;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+.hm-auto-toggle-input:checked + .hm-auto-toggle {
+  background-image: url('../../images/starforce/starForce.button_protectDestroy.checkedAndDisabled.png');
+  background-size: auto;
+}

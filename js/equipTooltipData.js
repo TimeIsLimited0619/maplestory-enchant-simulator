@@ -130,11 +130,11 @@ const EQUIP_MAIN_TYPE_LABEL = {
   [EQUIP_TYPE.ARMOR]: '防具',
   [EQUIP_TYPE.ACCESSORY]: '飾品',
   [EQUIP_TYPE.offHandWeapon]: '輔助武器',
-  [EQUIP_TYPE.Energy]: '能源/徽章',
+  [EQUIP_TYPE.Emblem]: '能源/徽章',
 };
 
 /** 僅顯示子類型標籤，不顯示主分類（飾品／防具） */
-const EQUIP_SUBTYPE_HIDE_MAIN_CATEGORY = new Set(['medal', 'android', 'shoulder']);
+const EQUIP_SUBTYPE_HIDE_MAIN_CATEGORY = new Set(['medal', 'android', 'shoulder', 'badge', 'pocket']);
 
 const EQUIP_SUBTYPE_LABEL = {
   weapon: '單手',
@@ -155,13 +155,15 @@ const EQUIP_SUBTYPE_LABEL = {
   eye: '眼飾',
   earring: '耳環',
   belt: '腰帶',
-  badge: '徽章',
-  pocket: '口袋',
+  badge: '胸章',
+  emblem: '徽章',
+  pocket: '口袋道具',
   shoulder: '肩榜裝飾',
   android: '機器心臟',
   hair: '髮型',
   unknown: '裝備',
-  medal: '勳章'
+  medal: '勳章',
+  pin: '胸章', // 舊 subType 相容
 };
 
 const EQUIP_STAT_LABELS = [

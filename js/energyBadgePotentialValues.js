@@ -1,5 +1,5 @@
 /**
- * 能源／徽章（islot En / EQUIP_TYPE.Energy）獨立潛能表
+ * 能源／徽章（islot Em / EQUIP_TYPE.Emblem）獨立潛能表
  * 來源：能源附加與主要潛能機率權重數值表.csv
  * 主潛 / 附潛、各階級分開；僅權重 *100% 列進池
  */
@@ -201,8 +201,9 @@ const ENERGY_POTENTIAL_ADD_BY_RANK = {
 
 
 function isEnergyBadgeItem(item) {
-  return item?.mainType === EQUIP_TYPE.Energy
-    || item?.islot === 'En';
+  return item?.mainType === EQUIP_TYPE.Emblem
+    || item?.islot === 'Em'
+    || (typeof isEmblemItem === 'function' && isEmblemItem(item));
 }
 
 function isEnergyAddPotentialContext(context = {}) {

@@ -1,0 +1,2495 @@
+/* ==========================================
+   潛在能力面板 (Potential UI)
+   ========================================== */
+.ms-main-content.potential-active {
+  background-image: url('../../images/potential/potential.backgrnd.png');
+}
+
+.ms-main-content.additionalPotential-active {
+  background-image: url('../../images/additionalPotentail/additionalPotential.backgrnd.png');
+}
+
+.ms-main-content.potential-active .ms-equip-area,
+.ms-main-content.additionalPotential-active .ms-equip-area {
+  height: 118px;
+  overflow: visible;
+}
+
+.ms-main-content.potential-active .ms-drop-zone,
+.ms-main-content.additionalPotential-active .ms-drop-zone {
+  top: 88px;
+  width: 56px;
+  height: 48px;
+}
+
+.ms-main-content.potential-active .ms-drop-zone img,
+.ms-main-content.additionalPotential-active .ms-drop-zone img {
+  transform: scale(2);
+  transform-origin: center center;
+}
+
+.ms-main-content.potential-active .ms-drop-zone img:hover,
+.ms-main-content.additionalPotential-active .ms-drop-zone img:hover {
+  transform: scale(2.15);
+}
+
+.ms-main-content.potential-active .sf-item-name,
+.ms-main-content.additionalPotential-active .sf-item-name {
+  display: block;
+  top: 183px;
+  width: 280px;
+  max-width: 280px;
+  min-width: 0;
+  padding: 0 12px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  font-size: 20px;
+  line-height: 24px;
+  color: #e8e8e8;
+}
+
+.ms-main-content.potential-active.potential-idle .sf-item-name,
+.ms-main-content.additionalPotential-active.additionalPotential-idle .sf-item-name {
+  display: none;
+}
+
+.ms-main-content.potential-active.potential-idle .ms-drop-zone img,
+.ms-main-content.additionalPotential-active.additionalPotential-idle .ms-drop-zone img {
+  display: none;
+}
+
+.pt-idle-slot,
+.ap-idle-slot {
+  display: none;
+  position: absolute;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 398px;
+  height: 152px;
+  background: url('../../images/potential/potential.layer_waitEquip.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ms-main-content.potential-active.potential-idle .pt-idle-slot {
+  display: block;
+}
+
+/* 附加潛能待機僅用 waitEquip1；勿再顯示 potential.waitEquip（會與 waitEquip1 重疊） */
+.ms-main-content.additionalPotential-active.additionalPotential-idle .ap-idle-slot {
+  display: none;
+}
+
+.ms-main-content.potential-active.potential-idle .ms-drop-zone,
+.ms-main-content.additionalPotential-active.additionalPotential-idle .ms-drop-zone {
+  z-index: 3;
+}
+
+/* 潛能強化演出 overlay */
+.pt-effect-host {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 418px;
+  height: 720px;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.pt-effect-host.hidden {
+  display: none;
+}
+
+.pt-effect-host-back {
+  z-index: 1;
+}
+
+.pt-effect-host-front {
+  z-index: 3;
+}
+
+.pt-effect-equip-host {
+  position: absolute;
+  left: 209px;
+  top: 114px;
+  z-index: 2;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.pt-effect-equip-host.hidden {
+  display: none;
+}
+
+.pt-effect-equip {
+  display: block;
+  image-rendering: pixelated;
+  transform: scale(2);
+  transform-origin: center center;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+}
+
+.pt-effect-host-text {
+  z-index: 4;
+}
+
+.pt-effect-sprite {
+  position: absolute;
+  display: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+  max-width: none;
+}
+
+.ms-main-content.pt-effect-playing {
+  overflow: visible;
+  z-index: 25;
+}
+
+.ms-main-content.pt-effect-playing .pt-effect-host {
+  inset: 0;
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+
+/* 動畫期間直接用原本裝備圖（back < equip < front < text） */
+.ms-main-content.pt-effect-playing .pt-effect-host-back {
+  z-index: 30;
+}
+
+.ms-main-content.pt-effect-playing .ms-equip-area {
+  z-index: 31;
+}
+
+.ms-main-content.pt-effect-playing .ms-drop-zone img {
+  visibility: visible;
+}
+
+.ms-main-content.pt-effect-playing .pt-effect-equip-host {
+  display: none !important;
+}
+
+.ms-main-content.pt-effect-playing .pt-effect-host-front {
+  z-index: 32;
+}
+
+.ms-main-content.pt-effect-playing .pt-effect-host-text {
+  z-index: 33;
+}
+
+.ms-main-content.potential-active .ms-drop-zone.pt-effect-active img:hover,
+.ms-main-content.additionalPotential-active .ms-drop-zone.pt-effect-active img:hover {
+  transform: scale(2);
+}
+
+.pt-effect-test-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 10px 10px 0;
+  box-sizing: border-box;
+  pointer-events: auto;
+  min-height: 110px;
+}
+
+.pt-effect-test-bar.hidden {
+  display: none !important;
+}
+
+.pt-effect-test-btn {
+  display: block;
+  width: 100%;
+  border: 1px solid #6a8fa0 !important;
+  border-radius: 0 !important;
+  background: rgba(8, 20, 28, 0.92) !important;
+  color: #c8e8f0 !important;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 8px 10px !important;
+  cursor: pointer;
+  image-rendering: pixelated;
+  box-shadow: none !important;
+  text-align: center;
+}
+
+.pt-effect-test-btn:hover:not(:disabled) {
+  background: rgba(20, 48, 62, 0.96) !important;
+  border-color: #9fd0e0 !important;
+}
+
+.pt-effect-test-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 卷軸強化演出 overlay */
+.sc-effect-host {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 418px;
+  height: 720px;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.sc-effect-host.hidden {
+  display: none;
+}
+
+.sc-effect-host-back {
+  z-index: 1;
+}
+
+.sc-effect-host-summary {
+  z-index: 2;
+}
+
+.sc-effect-host-front {
+  z-index: 3;
+}
+
+.sc-effect-equip-host {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.sc-effect-equip-host.hidden {
+  display: none;
+}
+
+.sc-effect-equip {
+  display: block;
+  image-rendering: pixelated;
+  transform-origin: center center;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+}
+
+.sc-effect-host-text {
+  z-index: 4;
+}
+
+.sc-effect-sprite {
+  position: absolute;
+  display: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+  max-width: none;
+}
+
+.ms-main-content.sc-effect-playing {
+  overflow: visible;
+  z-index: 25;
+}
+
+.ms-main-content.sc-effect-playing .sc-effect-host {
+  inset: 0;
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+
+/* 動畫期間直接用原本裝備圖（back < equip < summary < front < text） */
+.ms-main-content.sc-effect-playing .sc-effect-host-back {
+  z-index: 30;
+}
+
+.ms-main-content.sc-effect-playing .ms-equip-area {
+  z-index: 31;
+}
+
+.ms-main-content.sc-effect-playing .ms-drop-zone img {
+  visibility: visible;
+}
+
+.ms-main-content.sc-effect-playing .sc-effect-equip-host {
+  display: none !important;
+}
+
+.ms-main-content.sc-effect-playing .sc-effect-host-summary {
+  z-index: 32;
+}
+
+.ms-main-content.sc-effect-playing .sc-effect-host-front {
+  z-index: 33;
+}
+
+.ms-main-content.sc-effect-playing .sc-effect-host-text {
+  z-index: 34;
+}
+
+.ms-main-content.scroll-active .ms-drop-zone.sc-effect-active img:hover {
+  transform: scale(2);
+}
+
+/* 鐵鎚強化演出 overlay */
+.hm-effect-host {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 418px;
+  height: 720px;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.hm-effect-host.hidden {
+  display: none;
+}
+
+.hm-effect-host-back {
+  z-index: 1;
+}
+
+.hm-effect-host-summary {
+  z-index: 2;
+}
+
+.hm-effect-host-front {
+  z-index: 3;
+}
+
+.hm-effect-equip-host {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.hm-effect-equip-host.hidden {
+  display: none;
+}
+
+.hm-effect-equip {
+  display: block;
+  image-rendering: pixelated;
+  transform-origin: center center;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+}
+
+.hm-effect-host-text {
+  z-index: 4;
+}
+
+.hm-effect-sprite {
+  position: absolute;
+  display: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+  max-width: none;
+}
+
+.ms-main-content.hm-effect-playing {
+  overflow: visible;
+  z-index: 25;
+}
+
+.ms-main-content.hm-effect-playing .hm-effect-host {
+  inset: 0;
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+
+/* 動畫期間直接用原本裝備圖（back < equip < summary < front < text） */
+.ms-main-content.hm-effect-playing .hm-effect-host-back {
+  z-index: 30;
+}
+
+.ms-main-content.hm-effect-playing .ms-equip-area {
+  z-index: 31;
+}
+
+.ms-main-content.hm-effect-playing .ms-drop-zone img {
+  visibility: visible;
+}
+
+.ms-main-content.hm-effect-playing .hm-effect-equip-host {
+  display: none !important;
+}
+
+.ms-main-content.hm-effect-playing .hm-effect-host-summary {
+  z-index: 32;
+}
+
+.ms-main-content.hm-effect-playing .hm-effect-host-front {
+  z-index: 33;
+}
+
+.ms-main-content.hm-effect-playing .hm-effect-host-text {
+  z-index: 34;
+}
+
+.ms-main-content.hammer-active .ms-drop-zone.hm-effect-active img:hover {
+  transform: scale(2);
+}
+
+.sf-effect-host {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 418px;
+  height: 720px;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.sf-effect-host.hidden {
+  display: none;
+}
+
+.sf-effect-host-back {
+  z-index: 11;
+}
+
+.sf-effect-host-summary {
+  z-index: 14;
+}
+
+.sf-effect-summary-multi-host {
+  position: absolute;
+  z-index: 14;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  overflow: visible;
+}
+
+.sf-effect-summary-multi {
+  position: absolute;
+  display: block;
+  image-rendering: pixelated;
+  pointer-events: none;
+  max-width: none;
+}
+
+.sf-effect-host-front {
+  z-index: 13;
+}
+
+.sf-effect-equip-host {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 12;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.sf-effect-equip-host.hidden {
+  display: none;
+}
+
+.sf-effect-equip {
+  display: block;
+  image-rendering: pixelated;
+  transform-origin: center center;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+}
+
+.sf-effect-host-text {
+  z-index: 15;
+}
+
+.sf-effect-sprite {
+  position: absolute;
+  display: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+  max-width: none;
+}
+
+.ms-main-content.sf-effect-playing {
+  overflow: visible;
+  z-index: 25;
+}
+
+.ms-main-content.sf-effect-playing .sf-effect-host {
+  inset: 0;
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+
+/* 動畫期間直接用原本裝備圖（back < equip < front < summary < text） */
+.ms-main-content.sf-effect-playing .sf-effect-host-back {
+  z-index: 30;
+}
+
+.ms-main-content.sf-effect-playing .ms-equip-area {
+  z-index: 31;
+}
+
+.ms-main-content.sf-effect-playing .ms-drop-zone img {
+  visibility: visible;
+}
+
+.ms-main-content.sf-effect-playing .sf-effect-equip-host {
+  display: none !important;
+}
+
+.ms-main-content.sf-effect-playing .sf-effect-host-front {
+  z-index: 32;
+}
+
+.ms-main-content.sf-effect-playing .sf-effect-host-summary,
+.ms-main-content.sf-effect-playing .sf-effect-summary-multi-host {
+  z-index: 33;
+}
+
+.ms-main-content.sf-effect-playing .sf-effect-host-text {
+  z-index: 34;
+}
+
+.ms-main-content.starforce-active .ms-drop-zone.sf-effect-active img:hover {
+  transform: scale(2);
+}
+
+.bs-effect-host {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 20;
+}
+
+.bs-effect-host.hidden {
+  display: none;
+}
+
+.bs-effect-host-back {
+  z-index: 1;
+}
+
+.bs-effect-host-front {
+  z-index: 3;
+}
+
+.bs-effect-host-text {
+  z-index: 4;
+}
+
+.bs-effect-equip-host {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.bs-effect-equip-host.hidden {
+  display: none;
+}
+
+.bs-effect-equip {
+  display: block;
+  image-rendering: pixelated;
+  max-width: none;
+}
+
+.bs-effect-sprite {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+  max-width: none;
+}
+
+.ms-main-content.bs-effect-playing {
+  overflow: visible;
+  z-index: 25;
+}
+
+.ms-main-content.bs-effect-playing .bs-effect-host {
+  inset: 0;
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+
+/* 動畫期間直接用原本裝備圖，避免 overlay 複製造成左偏 1px */
+.ms-main-content.bs-effect-playing .bs-effect-host-back {
+  z-index: 30;
+}
+
+.ms-main-content.bs-effect-playing .ms-equip-area {
+  z-index: 31;
+}
+
+.ms-main-content.bs-effect-playing .ms-drop-zone img {
+  visibility: visible;
+}
+
+.ms-main-content.bs-effect-playing .bs-effect-equip-host {
+  display: none !important;
+}
+
+.ms-main-content.bs-effect-playing .bs-effect-host-front {
+  z-index: 32;
+}
+
+.ms-main-content.bs-effect-playing .bs-effect-host-text {
+  z-index: 33;
+}
+
+.ms-main-content.bonusStat-active .ms-drop-zone.bs-effect-active img:hover {
+  transform: scale(2);
+}
+
+.ms-main-content.potential-active .pt-btn-reset:disabled,
+.ms-main-content.additionalPotential-active .pt-btn-reset:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ms-potential-canvas {
+  position: absolute;
+  top: 118px;
+  left: 0;
+  width: 418px;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.ms-potential-canvas > * {
+  pointer-events: auto;
+}
+
+/* 附加潛能專用素材 (images/additionalPotentail/) */
+#panel-additionalPotential .pt-stat-box {
+  background-image: url('../../images/additionalPotentail/additionalPotential.layer_statBox.png');
+  /* 素材原生 398×120，勿壓成主潛能的 100px */
+  height: 120px;
+  background-size: 398px 120px;
+  background-repeat: no-repeat;
+  background-position: center top;
+}
+
+#panel-additionalPotential .pt-atk-box {
+  top: 172px; /* 150 + 22：戰鬥力增加量下移 */
+}
+
+#panel-additionalPotential .pt-idle-panel {
+  top: 15px; 
+}
+
+#panel-additionalPotential .pt-idle-lower {
+  background-image: url('../../images/additionalPotentail/additionalPotential.layer_waitEquip1.png');
+}
+
+#panel-additionalPotential .pt-bottom-area {
+  bottom: 62px; 
+}
+
+.pt-idle-panel {
+  position: absolute;
+  top: 0;
+  left: 10px;
+  width: 398px;
+  height: 215px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.pt-idle-lower {
+  width: 100%;
+  height: 100%;
+  background: url('../../images/potential/potential.layer_waitEquip1.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+
+.pt-active-panel {
+  position: absolute;
+  inset: 0;
+  bottom: 200px;
+  pointer-events: none;
+}
+
+.pt-active-panel > * {
+  pointer-events: auto;
+}
+
+.pt-rank-box {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 396px;
+  height: 25px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+
+.pt-stat-box {
+  position: absolute;
+  top: 44px;
+  left: 10px;
+  width: 398px;
+  height: 100px;
+  background: url('../../images/potential/potential.layer_statBox.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  padding-top: 10px;
+  --pt-stat-content-left: 88px;
+  padding-left: var(--pt-stat-content-left);
+}
+
+.pt-stat-values {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  width: max-content;
+}
+
+.pt-stat-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #ffffff;
+  line-height: 1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.85);
+}
+
+.pt-stat-line--plain .pt-stat-text {
+  text-align: left;
+  white-space: nowrap;
+}
+
+.pt-stat-line--aligned .pt-stat-label {
+  display: inline-block;
+  text-align: left;
+  flex-shrink: 0;
+}
+
+.pt-stat-line--aligned-main .pt-stat-label {
+  width: 26px;
+}
+
+.pt-stat-line--aligned-hpmp .pt-stat-label {
+  width: 44px;
+}
+
+.pt-stat-value {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.pt-stat-rank-icon {
+  width: 10px;
+  height: 10px;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+  display: block;
+}
+
+.pt-stat-text {
+  white-space: nowrap;
+}
+
+.pt-atk-box {
+  position: absolute;
+  top: 150px;
+  left: 10px;
+  width: 398px;
+  height: 43px;
+  background: url('../../images/potential/potential.layer_atkPowBox.png') no-repeat center;
+  background-size: 100% 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pt-atk-value {
+  font-size: 12px;
+  color: #d8dde3;
+  font-weight: bold;
+}
+
+.pt-atk-value.pt-atk-up {
+  color: #7dff9a;
+}
+
+.pt-atk-value.pt-atk-down {
+  color: #ff8a8a;
+}
+
+.pt-help-area {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 116px;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.pt-help-area.hidden {
+  display: none;
+}
+
+.pt-help-image {
+  display: block;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.pt-bottom-area {
+  position: absolute;
+  left: 10px;
+  bottom: 76px;
+  width: 398px;
+  height: 170px;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.pt-cost-cubes {
+  position: relative;
+  width: 396px;
+  height: 116px;
+  background: url('../../images/potential/potential.costItem.layer_costItemBox.png') no-repeat center;
+  background-size: 100% 100%;
+}
+
+.pt-selected-name {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 320px;
+  font-size: 12px;
+  color: #ffffff;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.pt-cube-hint {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 320px;
+  text-align: center;
+  font-size: 12px;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.pt-cube-hint.hidden {
+  display: none;
+}
+
+.pt-cube-grid {
+  position: absolute;
+  top: 28px;
+  left: 10px;
+  display: grid;
+  grid-template-columns: repeat(8, 36px);
+  grid-template-rows: repeat(2, 36px);
+  gap: 5px;
+}
+
+.pt-cube-slot {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border: none;
+  padding: 0;
+  background: transparent;
+  border-radius: 4px;
+  cursor: default;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.pt-cube-slot.has-item {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.pt-cube-slot.has-item.selected {
+  background: url('../../images/scroll/scroll.costScroll.inven.selected.png') no-repeat center calc(50% - 1px);
+  background-size: 100% 100%;
+}
+
+.pt-cube-slot.has-item.is-blocked {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
+}
+
+.pt-cube-icon {
+  display: block;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.pt-cube-placeholder {
+  display: block;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: var(--pt-cube-color, #666);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+}
+
+.pt-cube-count {
+  position: absolute;
+  left: 2px;
+  bottom: 1px;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1;
+  color: #ffffff;
+  -webkit-text-stroke: 1px #000000;
+  paint-order: stroke fill;
+  text-shadow:
+    1px 0 0 #000000,
+    -1px 0 0 #000000,
+    0 1px 0 #000000,
+    0 -1px 0 #000000;
+  pointer-events: none;
+}
+
+/* 附加潛能：確認鈕上方 7px、置中 — 楓幣費用列 */
+.ap-meso-cost-row {
+  position: absolute;
+  left: 50%;
+  bottom: 45px; /* 確認鈕 bottom 3 + 高 35 + 間隔 7 */
+  transform: translateX(-50%);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.ap-meso-cost-row.hidden {
+  display: none;
+}
+
+.ap-meso-cost-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 119px;
+  height: 17px;
+  box-sizing: border-box;
+  background: url('../../images/additionalPotentail/additionalPotential.layer_costMeso100.png') no-repeat center;
+  background-size: 119px 17px;
+  image-rendering: pixelated;
+}
+
+.ap-meso-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+.ap-meso-cost {
+  font-size: 12px;
+  line-height: 1;
+  color: #ffffff;
+  font-weight: bold;
+  white-space: nowrap;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.85);
+}
+
+.pt-btn-reset {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 129px;
+  height: 35px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: transparent url('../../images/potential/potential.button_confirm.normal.0.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+
+.pt-btn-reset:hover:not(:disabled) {
+  background-image: url('../../images/potential/potential.button_confirm.mouseOver.0.png');
+}
+
+.pt-btn-reset:active:not(:disabled) {
+  background-image: url('../../images/potential/potential.button_confirm.pressed.0.png');
+}
+
+.pt-btn-reset:disabled {
+  background-image: url('../../images/potential/potential.button_confirm.disabled.0.png');
+  cursor: not-allowed;
+}
+
+.pt-bottom-options {
+  position: absolute;
+  bottom: 4px;
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  pointer-events: auto;
+  z-index: 4;
+}
+
+.pt-auto-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #ffffff;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.pt-auto-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.pt-auto-toggle {
+  display: inline-block;
+  width: 25px;
+  height: 13px;
+  flex: 0 0 25px;
+  background: url('../../images/starforce/starForce.button_protectDestroy.unchecked.png') no-repeat center;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+.pt-auto-toggle-input:checked + .pt-auto-toggle {
+  background-image: url('../../images/starforce/starForce.button_protectDestroy.checkedAndDisabled.png');
+  background-size: auto;
+}
+
+/* 閃炫方塊：六選三彈窗（backdrop / panel 分層，自動重設面板可疊在虛化之上） */
+.pt-hexa-modal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.pt-hexa-modal:not(.hidden) {
+  pointer-events: none;
+}
+
+.pt-hexa-modal:not(.hidden) .pt-hexa-modal-backdrop {
+  z-index: 12500;
+  pointer-events: auto;
+}
+
+.pt-hexa-modal:not(.hidden) .pt-hexa-modal-panel {
+  z-index: 13100;
+  pointer-events: auto;
+}
+
+.pt-hexa-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 10, 18, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: opacity 0.45s ease;
+}
+
+.pt-hexa-fade-target {
+  transition: opacity 0.35s ease;
+}
+
+.pt-hexa-modal.is-opening:not(.is-opening-ready) .pt-hexa-modal-backdrop,
+.pt-hexa-modal.is-opening:not(.is-opening-ready) .pt-hexa-fade-target {
+  opacity: 0;
+}
+
+.pt-hexa-modal.is-closing .pt-hexa-modal-backdrop,
+.pt-hexa-modal.is-closing .pt-hexa-fade-target {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pt-hexa-modal-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateY(-24px);
+}
+
+.pt-hexa-modal.hidden {
+  display: none;
+}
+
+.pt-hexa-info-top {
+  position: relative;
+  width: 540px;
+  height: 54px;
+  flex-shrink: 0;
+}
+
+.pt-hexa-info-top-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  image-rendering: pixelated;
+}
+
+.pt-hexa-pick-count {
+  position: absolute;
+  right: 180px;
+  bottom: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #DDFE01;
+  text-shadow: 0 1px 1px #000;
+  pointer-events: none;
+}
+
+.pt-hexa-choice-box {
+  position: relative;
+  width: 234px;
+  height: 328px;
+  margin-top: 4px;
+  background: url('../../images/potential/hexaUI/fullScreen_hexa.choiceBox.canvas_baseHexa.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.pt-hexa-title {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 208px;
+  height: 25px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+
+/* 確認後：純結果列（無選取圓角框/填色，位置與六選三前 3 行相同） */
+.pt-hexa-choice-box--preview .pt-hexa-option--result,
+.pt-hexa-choice-box--preview .pt-hexa-option--result.selected,
+.pt-hexa-choice-box--preview .pt-hexa-option--rare.pt-hexa-option--result,
+.pt-hexa-choice-box--preview .pt-hexa-option--epic.pt-hexa-option--result,
+.pt-hexa-choice-box--preview .pt-hexa-option--unique.pt-hexa-option--result,
+.pt-hexa-choice-box--preview .pt-hexa-option--legendary.pt-hexa-option--result {
+  width: calc(100% - 10px);
+  margin: 0px 6px;
+  padding: 2px 12px;
+  min-height: 20px;
+  border: 1px !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  transition: none;
+}
+
+.pt-hexa-choice-box--preview .pt-hexa-option--result:hover {
+  border: none !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+.pt-hexa-option-list {
+  position: absolute;
+  top: 86px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pt-hexa-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: calc(100% - 10px);
+  margin: 0 6px;
+  min-height: 20px;
+  padding: 2px 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.2;
+  text-align: left;
+  cursor: default;
+  box-sizing: border-box;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.pt-hexa-option--selectable {
+  cursor: pointer;
+}
+
+/* 懸浮：白框 + 1px 泛光 */
+.pt-hexa-option--selectable:not(.selected):hover {
+  border-color: #EAEBEC;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 1px #39646c;
+}
+
+/* 選取後：只留稀有度底色，無白框 */
+.pt-hexa-option--rare.selected {
+  border-color: transparent;
+  background: #36B8D0;
+  box-shadow: none;
+}
+
+.pt-hexa-option--epic.selected {
+  border-color: transparent;
+  background: #956CE9;
+  box-shadow: none;
+}
+
+.pt-hexa-option--unique.selected {
+  border-color: transparent;
+  background: #E89C09;
+  box-shadow: none;
+}
+
+.pt-hexa-option--legendary.selected {
+  border-color: transparent;
+  background: #A4C700;
+  box-shadow: none;
+}
+
+/* 已選取時懸浮：底色 + 白框 + 泛光 */
+.pt-hexa-option--selectable.selected:hover {
+  border-color: #EAEBEC;
+  box-shadow: 0 0 1px #39646c;
+}
+
+.pt-hexa-option--compact {
+  min-height: 22px;
+}
+
+.pt-hexa-option-icon {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+.pt-hexa-option-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.85);
+}
+
+.pt-hexa-atk-area {
+  position: absolute;
+  left: 50%;
+  bottom: 11px;
+  width: 210px;
+  height: 70px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pt-hexa-atk-outline {
+  position: absolute;
+  inset: 0;
+  background: url('../../images/potential/hexaUI/fullScreen_hexa.choiceBox.atkPow.highlight.layer_outline.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.pt-hexa-atk-outline.hidden {
+  display: none;
+}
+
+.pt-hexa-atk-value {
+  position: relative;
+  z-index: 1;
+  font-size: 14px;
+  color: #d8dde8;
+  text-shadow: 0 1px 2px #000;
+}
+
+.pt-hexa-atk-value.pt-atk-up {
+  color: #ffffff;
+}
+
+.pt-hexa-atk-value.pt-atk-down {
+  color: #ff8a8a;
+}
+
+.pt-hexa-confirm-box {
+  position: relative;
+  width: 350px;
+  height: 95px;
+  margin-top: 6px;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+/* 只調背景：改 left / top，不影響確認・使用・離開按鈕 */
+.pt-hexa-confirm-bg {
+  position: absolute;
+  width: 350px;
+  height: 95px;
+  right: 34px;
+  top: 5px;
+  background: url('../../images/potential/hexaUI/fullScreen_hexa.confirmBox.beforeConfirm.layer_bg.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pt-hexa-confirm-box--preview .pt-hexa-confirm-bg {
+  background-image: url('../../images/potential/hexaUI/fullScreen_hexa.confirmBox.afterConfirm.layer_bg.png');
+}
+
+/* 按鈕＋剩餘數量：整組偏移對齊上方選項框 */
+.pt-hexa-confirm-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform: translateX(-39px);
+  z-index: 1;
+}
+
+.pt-hexa-stock,
+.pt-hexa-actions--before,
+.pt-hexa-actions--after {
+  position: absolute;
+}
+
+.pt-hexa-stock {
+  left: 8px;
+  top: 8px;
+  width: 72px;
+  height: 78px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pt-hexa-stock-icon {
+  width: 32px;
+  height: 32px;
+  margin-top: 24px;
+  margin-left: -5px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+#apHexaOverlay .pt-hexa-stock-icon {
+  width: 33px;
+  height: 34px;
+}
+
+#apUniOverlay .pt-uni-stock-icon {
+  width: 35px;
+  height: 35px;
+}
+
+#apMemoriaOverlay .pt-memoria-stock-icon {
+  width: 32px;
+  height: 31px;
+}
+
+.pt-hexa-stock-count {
+  margin-top: auto;
+  margin-bottom: 2px;
+  margin-left: -2px;
+  font-size: 10px;
+  font-weight: bold;
+  color: #ffffff;
+  -webkit-text-stroke: 1px #000000;
+  paint-order: stroke fill;
+  text-shadow:
+    1px 0 0 #000000,
+    -1px 0 0 #000000,
+    0 1px 0 #000000,
+    0 -1px 0 #000000;
+}
+
+.pt-hexa-actions--before {
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+}
+
+.pt-hexa-actions--after {
+  right: 10px;
+  top: 18px;
+  width: 252px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pt-hexa-sub-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.pt-hexa-btn {
+  border: none;
+  padding: 0;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  cursor: pointer;
+}
+
+.pt-hexa-btn.hidden {
+  display: none;
+}
+
+.pt-hexa-btn:disabled {
+  cursor: default;
+}
+
+.pt-hexa-btn-ok {
+  width: 252px;
+  height: 34px;
+  background-image: url('../../images/potential/hexaUI/fullScreen_hexa.confirmBox.beforeConfirm.button_OK.disabled.0.png');
+}
+
+.pt-hexa-btn-ok:not(:disabled) {
+  background-image: url('../../images/potential/hexaUI/fullScreen_hexa.confirmBox.beforeConfirm.button_OK.normal.0.png');
+}
+
+.pt-hexa-btn-ok:not(:disabled):hover {
+  background-image: url('../../images/potential/hexaUI/fullScreen_hexa.confirmBox.beforeConfirm.button_OK.mouseOver.0.png');
+}
+
+.pt-hexa-btn-ok:not(:disabled):active {
+  background-image: url('../../images/potential/hexaUI/fullScreen_hexa.confirmBox.beforeConfirm.button_OK.pressed.0.png');
+}
+
+.pt-hexa-btn-use {
+  width: 252px;
+  height: 34px;
+  flex-shrink: 0;
+  background-image: url('../../images/potential/hexaUI/fullScreen_hexa.confirmBox.afterConfirm.button_Use.normal.0.png');
+}
+
+.pt-hexa-btn-use:hover {
+  background-image: url('../../images/potential/hexaUI/fullScreen_hexa.confirmBox.afterConfirm.button_Use.mouseOver.0.png');
+}
+
+.pt-hexa-btn-use:active {
+  background-image: url('../../images/potential/hexaUI/fullScreen_hexa.confirmBox.afterConfirm.button_Use.pressed.0.png');
+}
+
+.pt-hexa-btn-exit {
+  width: 82px;
+  height: 26px;
+  background-image: url('../../images/potential/hexaUI/fullScreen_hexa.confirmBox.afterConfirm.button_Exit.normal.0.png');
+}
+
+.pt-hexa-btn-exit:hover {
+  background-image: url('../../images/potential/hexaUI/fullScreen_hexa.confirmBox.afterConfirm.button_Exit.mouseOver.0.png');
+}
+
+.pt-hexa-btn-exit:active {
+  background-image: url('../../images/potential/hexaUI/fullScreen_hexa.confirmBox.afterConfirm.button_Exit.pressed.0.png');
+}
+
+/* 結合方塊：選排重骰彈窗 */
+.pt-uni-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.pt-uni-modal:not(.hidden) {
+  pointer-events: auto;
+}
+
+.pt-uni-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 10, 18, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: opacity 0.45s ease;
+}
+
+.pt-uni-fade-target {
+  transition: opacity 0.35s ease;
+}
+
+.pt-uni-modal.is-opening:not(.is-opening-ready) .pt-uni-modal-backdrop,
+.pt-uni-modal.is-opening:not(.is-opening-ready) .pt-uni-fade-target {
+  opacity: 0;
+}
+
+.pt-uni-modal.is-closing .pt-uni-modal-backdrop,
+.pt-uni-modal.is-closing .pt-uni-fade-target {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pt-uni-modal-panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateY(-24px);
+}
+
+.pt-uni-modal.hidden {
+  display: none;
+}
+
+.pt-uni-info-top,
+.pt-uni-info-btm {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.pt-uni-info-top {
+  width: 540px;
+  height: 54px;
+}
+
+.pt-uni-info-btm {
+  width: 480px;
+  height: 50px;
+  margin-top: 2px;
+}
+
+.pt-uni-info-top-img,
+.pt-uni-info-btm-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  image-rendering: pixelated;
+}
+
+.pt-uni-choice-box {
+  position: relative;
+  width: 234px;
+  height: 255px;
+  margin-top: 4px;
+  background: url('../../images/potential/uniUI/fullScreen_uni.choiceBox.canvas_baseUni.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.pt-uni-title {
+  position: absolute;
+  top: 35px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 208px;
+  height: 25px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+
+.pt-uni-line-list {
+  position: absolute;
+  top: 88px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pt-uni-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: calc(100% - 14px);
+  margin: 0 7px;
+  min-height: 20px;
+  padding: 1px 7px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.2;
+  box-sizing: border-box;
+}
+
+/* 選取／預覽：沿用閃炫稀有度底色，無白框 */
+.pt-uni-line--rare.selected,
+.pt-uni-line--rare.pt-uni-line--preview {
+  border-color: transparent;
+  background: #36B8D0;
+  box-shadow: none;
+}
+
+.pt-uni-line--epic.selected,
+.pt-uni-line--epic.pt-uni-line--preview {
+  border-color: transparent;
+  background: #956CE9;
+  box-shadow: none;
+}
+
+.pt-uni-line--unique.selected,
+.pt-uni-line--unique.pt-uni-line--preview {
+  border-color: transparent;
+  background: #E89C09;
+  box-shadow: none;
+}
+
+.pt-uni-line--legendary.selected,
+.pt-uni-line--legendary.pt-uni-line--preview {
+  border-color: transparent;
+  background: #A4C700;
+  box-shadow: none;
+}
+
+.pt-uni-line-icon {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+.pt-uni-line-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.85);
+}
+
+.pt-uni-atk-area {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  width: 210px;
+  height: 70px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pt-uni-atk-outline {
+  position: absolute;
+  inset: 0;
+  height: 102%;
+  background: url('../../images/potential/uniUI/fullScreen_uni.choiceBox.atkPow.highlight.layer_outline.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.pt-uni-atk-outline.hidden {
+  display: none;
+}
+
+.pt-uni-atk-value {
+  position: relative;
+  top:5px;
+  z-index: 1;
+  font-size: 14px;
+  color: #d8dde8;
+  text-shadow: 0 1px 2px #000;
+}
+
+.pt-uni-atk-value.pt-atk-up {
+  color: #ffffff;
+}
+
+.pt-uni-atk-value.pt-atk-down {
+  color: #ff8a8a;
+}
+
+.pt-uni-confirm-box {
+  position: relative;
+  width: 482px;
+  height: 95px;
+  margin-top: 6px;
+  overflow: visible;
+  flex-shrink: 0;
+  transform: translateX(-40px);
+}
+
+.pt-uni-confirm-bg {
+  position: absolute;
+  width: 482px;
+  height: 95px;
+  left: 0;
+  top: 0;
+  background: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.beforeConfirm.layer_bg.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pt-uni-confirm-box--preview {
+  width: 350px;
+  transform: translateX(-32px);
+}
+
+.pt-uni-confirm-box--preview .pt-uni-confirm-bg {
+  width: 350px;
+  background-image: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.afterConfirm.layer_bg.png');
+}
+
+.pt-uni-confirm-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.pt-uni-stock,
+.pt-uni-actions--before,
+.pt-uni-actions--after {
+  position: absolute;
+}
+
+.pt-uni-stock {
+  left: 0px;
+  top: 3px;
+  width: 72px;
+  height: 78px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pt-uni-stock-icon {
+  width: 39px;
+  height: 39px;
+  margin-top: 20px;
+  margin-left: -3px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.pt-uni-stock-count {
+  margin-top: auto;
+  margin-bottom: 2px;
+  margin-left: -2px;
+  font-size: 10px;
+  font-weight: bold;
+  color: #ffffff;
+  -webkit-text-stroke: 1px #000000;
+  paint-order: stroke fill;
+}
+
+.pt-uni-actions--before {
+  left: 88px;
+  right: 8px;
+  top: 8px;
+  bottom: 8px;
+  display: grid;
+  grid-template-columns: 188px 188px;
+  grid-template-rows: 34px 26px;
+  column-gap: 8px;
+  row-gap: 8px;
+  align-content: center;
+  justify-content: end;
+}
+
+.pt-uni-btn-reselect-before {
+  grid-column: 1;
+  grid-row: 1;
+  transform: translate(-8px, 2px);
+}
+
+.pt-uni-btn-reset {
+  grid-column: 2;
+  grid-row: 1;
+  transform: translate(-8px, 2px);
+}
+
+.pt-uni-btn-exit-before {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  transform: translate(-10px, -2px);
+}
+
+.pt-uni-actions--after {
+  left: 88px;
+  right: 8px;
+  top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.pt-uni-sub-actions {
+  display: flex;
+  justify-content: flex-end;
+  width: 252px;
+}
+
+.pt-uni-btn {
+  border: none;
+  padding: 0;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  cursor: pointer;
+}
+
+.pt-uni-btn-reselect-before {
+  width: 188px;
+  height: 34px;
+  flex-shrink: 0;
+  background-image: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.beforeConfirm.button_Reselct.normal.0.png');
+}
+
+.pt-uni-btn-reselect-before:hover {
+  background-image: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.beforeConfirm.button_Reselct.mouseOver.0.png');
+}
+
+.pt-uni-btn-reselect-before:active {
+  background-image: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.beforeConfirm.button_Reselct.pressed.0.png');
+}
+
+.pt-uni-btn-reset {
+  width: 188px;
+  height: 34px;
+  background-image: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.beforeConfirm.button_Reset.normal.0.png');
+}
+
+.pt-uni-btn-reset:hover {
+  background-image: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.beforeConfirm.button_Reset.mouseOver.0.png');
+}
+
+.pt-uni-btn-reset:active {
+  background-image: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.beforeConfirm.button_Reset.pressed.0.png');
+}
+
+.pt-uni-btn-exit-before {
+  width: 186px;
+  height: 26px;
+  background-image: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.beforeConfirm.button_Exit.normal.0.png');
+}
+
+.pt-uni-btn-exit-before:hover {
+  background-image: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.beforeConfirm.button_Exit.mouseOver.0.png');
+}
+
+.pt-uni-btn-exit-before:active {
+  background-image: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.beforeConfirm.button_Exit.pressed.0.png');
+}
+
+.pt-uni-btn-reselect-after {
+  width: 252px;
+  height: 34px;
+  transform: translate(-9px, 4px);
+  background-image: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.afterConfirm.button_Reselect.normal.0.png');
+}
+
+.pt-uni-btn-reselect-after:hover {
+  background-image: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.afterConfirm.button_Reselect.mouseOver.0.png');
+}
+
+.pt-uni-btn-reselect-after:active {
+  background-image: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.afterConfirm.button_Reselect.pressed.0.png');
+}
+
+.pt-uni-btn-exit-after {
+  width: 82px;
+  height: 26px;
+  transform: translate(-10px, -1px);
+  background-image: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.afterConfirm.button_Exit.normal.0.png');
+}
+
+.pt-uni-btn-exit-after:hover {
+  background-image: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.afterConfirm.button_Exit.mouseOver.0.png');
+}
+
+.pt-uni-btn-exit-after:active {
+  background-image: url('../../images/potential/uniUI/fullScreen_uni.confirmBox.afterConfirm.button_Exit.pressed.0.png');
+}
+
+/* ── 恢復方塊 BEFORE / AFTER ── */
+.pt-memoria-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.pt-memoria-modal:not(.hidden) {
+  pointer-events: auto;
+}
+
+.pt-memoria-modal.hidden {
+  display: none;
+}
+
+.pt-memoria-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 10, 18, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: opacity 0.45s ease;
+}
+
+.pt-memoria-modal-panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateY(-28px);
+}
+
+.pt-memoria-fade-target {
+  transition: opacity 0.35s ease;
+}
+
+.pt-memoria-modal.is-opening:not(.is-opening-ready) .pt-memoria-modal-backdrop,
+.pt-memoria-modal.is-opening:not(.is-opening-ready) .pt-memoria-fade-target,
+.pt-memoria-modal.is-opening:not(.is-opening-ready) .pt-memoria-choice-box {
+  opacity: 0;
+}
+
+.pt-memoria-modal.is-closing .pt-memoria-modal-backdrop,
+.pt-memoria-modal.is-closing .pt-memoria-fade-target {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pt-memoria-equip-slot {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  box-shadow: 0 0 12px rgba(120, 200, 255, 0.35);
+  overflow: visible;
+}
+
+.pt-memoria-equip-icon {
+  width: 44px;
+  height: 44px;
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+
+.pt-memoria-info-top {
+  width: 470px;
+  height: 25px;
+  margin-bottom: 4px;
+}
+
+.pt-memoria-info-top-img,
+.pt-memoria-info-btm-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  image-rendering: pixelated;
+}
+
+.pt-memoria-compare-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.pt-memoria-choice-box {
+  position: relative;
+  width: 234px;
+  height: 255px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.35s ease;
+}
+
+.pt-memoria-choice-box--before {
+  background-image: url('../../images/fullscreen_potential/fullScreen_potential_choiceBox_canvas_baseBefore.png');
+}
+
+.pt-memoria-choice-box--after {
+  background-image: url('../../images/fullscreen_potential/fullScreen_potential_choiceBox_canvas_baseAfter.png');
+}
+
+.pt-memoria-choice-hover {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 246px;
+  height: 268px;
+  transform: translate(-50%, -50%);
+  background: url('../../images/fullscreen_potential/fullScreen_potential_choiceBox_layer_mouseOver.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.pt-memoria-choice-box:hover .pt-memoria-choice-hover,
+.pt-memoria-choice-box.is-selected .pt-memoria-choice-hover {
+  opacity: 1;
+}
+
+.pt-memoria-modal.is-closing .pt-memoria-choice-box:not(.is-selected) {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.pt-memoria-modal.is-closing .pt-memoria-choice-box.is-selected {
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 1.5s ease;
+}
+
+.pt-memoria-title {
+  position: absolute;
+  top: 35px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 208px;
+  height: 25px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.pt-memoria-line-list {
+  position: absolute;
+  top: 88px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.pt-memoria-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: calc(100% - 14px);
+  margin: 0 7px;
+  min-height: 20px;
+  padding: 1px 7px;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.2;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.pt-memoria-line-icon {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+.pt-memoria-line-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.85);
+}
+
+.pt-memoria-atk-area {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  width: 210px;
+  height: 70px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.pt-memoria-atk-value {
+  position: relative;
+  top: 5px;
+  font-size: 14px;
+  color: #d8dde8;
+  text-shadow: 0 1px 2px #000;
+}
+
+.pt-memoria-atk-value.pt-atk-up {
+  color: #ffffff;
+}
+
+.pt-memoria-atk-value.pt-atk-down {
+  color: #ff8a8a;
+}
+
+.pt-memoria-info-btm {
+  width: 410px;
+  height: 25px;
+  margin-top: 4px;
+}
+
+.pt-memoria-confirm-box {
+  position: relative;
+  width: 414px;
+  height: 164px;
+  margin-top: 6px;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+.pt-memoria-confirm-bg {
+  position: absolute;
+  inset: 0;
+  background: url('../../images/fullscreen_potential/fullScreen_potential_confirmBox_mesoConfirm_layer_bg.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.pt-memoria-confirm-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.pt-memoria-stock {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 72px;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pt-memoria-stock-icon {
+  width: 32px;
+  height: 32px;
+  margin-top: 50px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.pt-memoria-stock-count {
+  margin-top: auto;
+  margin-bottom: 18px;
+  font-size: 10px;
+  font-weight: bold;
+  color: #ffffff;
+  -webkit-text-stroke: 1px #000000;
+  paint-order: stroke fill;
+}
+
+.pt-memoria-actions {
+  position: absolute;
+  left: 88px;
+  right: 12px;
+  top: 10px;
+  bottom: 10px;
+}
+
+.pt-memoria-btn {
+  border: none;
+  padding: 0;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  cursor: pointer;
+}
+
+.pt-memoria-btn-reset {
+  position: absolute;
+  top: 32px;
+  right: 68px;
+  width: 252px;
+  height: 34px;
+  background-image: url('../../images/fullscreen_potential/fullScreen_potential_confirmBox_mesoConfirm_button_Confirm_normal_0.png');
+}
+
+.pt-memoria-btn-reset:not(:disabled):hover {
+  background-image: url('../../images/fullscreen_potential/fullScreen_potential_confirmBox_mesoConfirm_button_Confirm_mouseOver_0.png');
+}
+
+.pt-memoria-btn-reset:not(:disabled):active {
+  background-image: url('../../images/fullscreen_potential/fullScreen_potential_confirmBox_mesoConfirm_button_Confirm_pressed_0.png');
+}
+
+.pt-memoria-btn-reset:disabled,
+.pt-memoria-btn-reset.is-disabled {
+  cursor: default;
+  background-image: url('../../images/fullscreen_potential/fullScreen_potential_confirmBox_mesoConfirm_button_Confirm_disabled_0.png');
+}
+
+.pt-memoria-cost-rows {
+  position: absolute;
+  top: 70px;
+  right: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  width: 252px;
+  padding-right: 8px;
+  box-sizing: border-box;
+  font-size: 12px;
+  color: #ffffff;
+  text-shadow: 0 1px 1px #000;
+}
+
+.pt-memoria-cost-cube {
+  padding-right: 118px;
+}
+
+.pt-memoria-cost-meso {
+  padding-top: 3px;
+  padding-right: 148px;
+}
+
+.pt-memoria-held-meso {
+  position: absolute;
+  right: 100px;
+  bottom: 8px;
+  font-size: 12px;
+  color: #ffffff;
+  text-shadow: 0 1px 1px #000;
+}
+
+.pt-memoria-modal--auto-enchant:not(.hidden) {
+  z-index: 13100;
+}
+
+.pt-memoria-modal--auto-enchant .pt-memoria-confirm-box {
+  width: 488px;
+  height: 163px;
+  transform: translateX(-37px);
+}
+
+.pt-memoria-modal--auto-enchant .pt-memoria-confirm-bg {
+  background-image: url('../../images/fullscreen_potential/fullScreen_potential_confirmBox_itemConfirmAutoEnchantBenefit_layer_bg.png');
+  background-size: 488px 163px;
+  background-position: 0 0;
+}
+
+.pt-memoria-modal--auto-enchant .pt-memoria-btn-reset {
+  top: 28px;
+  right: 5px;
+  width: 388px;
+  height: 34px;
+  background-image: url('../../images/fullscreen_potential/fullScreen_potential_confirmBox_itemConfirmAutoEnchantBenefit_button_ConfirmBenefit_normal_0.png');
+  background-size: 388px 34px;
+  background-position: 0 0;
+}
+
+.pt-memoria-modal--auto-enchant .pt-memoria-btn-reset:not(:disabled):hover {
+  background-image: url('../../images/fullscreen_potential/fullScreen_potential_confirmBox_itemConfirmAutoEnchantBenefit_button_ConfirmBenefit_mouseOver_0.png');
+}
+
+.pt-memoria-modal--auto-enchant .pt-memoria-btn-reset:not(:disabled):active {
+  background-image: url('../../images/fullscreen_potential/fullScreen_potential_confirmBox_itemConfirmAutoEnchantBenefit_button_ConfirmBenefit_pressed_0.png');
+}
+
+.pt-memoria-modal--auto-enchant .pt-memoria-btn-reset:disabled,
+.pt-memoria-modal--auto-enchant .pt-memoria-btn-reset.is-disabled {
+  background-image: url('../../images/fullscreen_potential/fullScreen_potential_confirmBox_itemConfirmAutoEnchantBenefit_button_ConfirmBenefit_disabled_0.png');
+}
+
+.pt-memoria-modal--auto-enchant.is-auto-rolling .pt-memoria-btn-reset,
+.pt-memoria-modal--auto-enchant.is-auto-restart-ready .pt-memoria-btn-reset {
+  background-size: 388px 34px;
+}
+
+.pt-memoria-progress-alert {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  top: auto;
+  transform: translate(-50%, -8px);
+  width: 353px;
+  height: 48px;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.pt-memoria-progress-alert.hidden {
+  display: none;
+}
+
+.pt-memoria-modal.is-auto-rolling .pt-memoria-choice-box {
+  pointer-events: none !important;
+  cursor: default;
+}
+
+.pt-memoria-modal.is-auto-rolling .pt-memoria-btn-reset {
+  pointer-events: none !important;
+  cursor: default;
+}
+
+/* 自動重設進行中：取消按鈕需可點 */
+.pt-memoria-modal--auto-enchant.is-auto-rolling .pt-memoria-btn-reset:not(:disabled) {
+  pointer-events: auto !important;
+  cursor: pointer;
+  opacity: 1;
+}
+
+.pt-memoria-modal.is-auto-pick-pending .pt-memoria-choice-box {
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+.pt-memoria-modal.is-pt-flip-waiting .pt-memoria-choice-box--after {
+  opacity: 0;
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+.pt-memoria-modal.is-pt-flip-waiting .pt-memoria-choice-box--after.is-flip-box-hidden {
+  background-image: none !important;
+}
+
+.pt-memoria-modal.is-pt-flip-waiting .pt-memoria-choice-box--before,
+.pt-memoria-modal.is-auto-rankup-pending .pt-memoria-choice-box--before,
+.pt-memoria-modal.is-rankup-revealed .pt-memoria-choice-box--before {
+  pointer-events: none !important;
+  cursor: default;
+}
+
+.pt-memoria-modal.is-pt-flip-waiting .pt-memoria-btn-reset {
+  pointer-events: none !important;
+  cursor: default;
+}
+
+.pt-memoria-modal.is-pt-flip-waiting .pt-memoria-btn-reset {
+  opacity: 0.45;
+}
+
+.pt-memoria-flip-stage,
+.pt-memoria-flip-eff {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none !important;
+  z-index: 4;
+}
+
+.pt-memoria-flip-stage.is-active,
+.pt-memoria-flip-eff.is-active {
+  opacity: 1;
+}
+
+.pt-memoria-flip-back,
+.pt-memoria-flip-front {
+  position: absolute;
+  display: none;
+  image-rendering: pixelated;
+  pointer-events: none !important;
+  will-change: left, top;
+}
+
+.pt-memoria-flip-back {
+  z-index: 1;
+}
+
+.pt-memoria-flip-front {
+  z-index: 2;
+}

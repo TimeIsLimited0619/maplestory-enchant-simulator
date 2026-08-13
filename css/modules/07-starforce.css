@@ -1,0 +1,862 @@
+/* ==========================================
+   星力強化面板 (像素對位遊戲 UI)
+   ========================================== */
+.ms-starforce-canvas {
+  position: absolute;
+  top: 118px;
+  left: 0;
+  width: 418px;
+  bottom: 0;
+  pointer-events: none;
+  --sf-stat-color: #BBDDDD;
+}
+
+.ms-starforce-canvas > * {
+  pointer-events: auto;
+}
+
+/* 待機畫面下方面板 */
+.sf-idle-panel {
+  position: absolute;
+  top: 0;
+  left: 10px;
+  width: 398px;
+  height: 424px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sf-idle-panel.sf-idle-scroll-mode {
+  z-index: 1;
+}
+
+.sf-idle-lower {
+  width: 100%;
+  height: 100%;
+  background: url('../../images/starforce/Enchant.img.starForce.layer_waitEquipMeso.png') no-repeat center top;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+
+.sf-blocked-message,
+.hm-blocked-message {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  margin: 0;
+  width: 88%;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #ffb347;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+}
+
+.sf-active-panel {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sf-active-panel > * {
+  pointer-events: auto;
+}
+
+.sf-stars-area {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 286px;
+  min-height: 37px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+  background: url('../../images/starforce/starForce.layer_summaryBox.png') no-repeat center;
+  background-size: 100% 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sf-stars-rows {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.sf-stars-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.sf-star-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  overflow: visible;
+}
+
+.ms-star-icon {
+  width: 11px;
+  height: 10px;
+  flex: 0 0 11px;
+  image-rendering: pixelated;
+  display: block;
+}
+
+.ms-star-slot {
+  position: relative;
+  display: block;
+  width: 10px;
+  height: 10px;
+  flex: 0 0 11px;
+  overflow: visible;
+}
+
+.ms-star-icon.next {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  transform: translate(calc(-50% + 1px), calc(-50% + 1px));
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
+  animation: sf-next-star-blink 0.35s steps(1) infinite;
+  pointer-events: none;
+}
+
+@keyframes sf-next-star-blink {
+  0% {
+    background-image: url('../../images/starforce/stareforcesummaryicon/starForce.0.try.summaryIcon.0.png');
+  }
+  25% {
+    background-image: url('../../images/starforce/stareforcesummaryicon/starForce.0.try.summaryIcon.1.png');
+  }
+  50% {
+    background-image: url('../../images/starforce/stareforcesummaryicon/starForce.0.try.summaryIcon.2.png');
+  }
+  75% {
+    background-image: url('../../images/starforce/stareforcesummaryicon/starForce.0.try.summaryIcon.3.png');
+  }
+  100% {
+    background-image: url('../../images/starforce/stareforcesummaryicon/starForce.0.try.summaryIcon.0.png');
+  }
+}
+
+.sf-transition {
+  position: absolute;
+  top: 37px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 286px;
+  height: 26px;
+  background: url('../../images/starforce/Enchant.img.starForce.layer_diffBox.png') no-repeat center;
+  background-size: 100% 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+#starBeforeImg,
+#starAfterImg {
+  position: relative;
+  left: -5px;
+  top: -3px;
+}
+
+.sf-diff-arrow {
+  width: 30px;
+  height: 18px;
+  display: block;
+  flex: 0 0 30px;
+  image-rendering: pixelated;
+  user-select: none;
+}
+
+.star-diff-num {
+  width: 41px;
+  height: 23px;
+  image-rendering: pixelated;
+}
+
+.sf-transition.sf-diff-max {
+  justify-content: center;
+}
+
+.sf-transition.sf-diff-max #starBeforeImg {
+  display: none;
+}
+
+.sf-transition.sf-diff-max #starAfterImg {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.star-diff-max {
+  width: 41px;
+  height: 23px;
+}
+
+.sf-stat-box {
+  position: absolute;
+  top: 66px;
+  left: 10px;
+  width: 398px;
+  height: 150px;
+  background: url('../../images/starforce/starForce.layer_statBox.png') no-repeat center;
+  background-size: 100% 100%;
+  --sf-stat-content-top: 16px;
+  --sf-stat-line-width: 286px;
+  --sf-stat-col-gap: 12px;
+  --sf-stat-font-size: 12px;
+}
+
+.sf-stat-values {
+  position: absolute;
+  top: var(--sf-stat-content-top);
+  right: 0;
+  bottom: 10px;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: var(--sf-stat-font-size);
+  color: var(--sf-stat-color);
+  line-height: 1.5;
+  letter-spacing: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.sf-stat-line {
+  display: grid;
+  grid-template-columns: 1fr var(--sf-stat-col-gap) 1fr;
+  width: var(--sf-stat-line-width);
+  align-items: baseline;
+}
+
+.sf-stat-label {
+  grid-column: 1;
+  text-align: right;
+  color: var(--sf-stat-color);
+  white-space: nowrap;
+}
+
+.sf-stat-val {
+  grid-column: 3;
+  text-align: left;
+  color: var(--sf-stat-color);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.sf-stat-line span {
+  color: inherit;
+  font-weight: inherit;
+}
+
+.sf-stat-empty {
+  color: var(--sf-stat-color);
+  font-size: 12px;
+  text-align: center;
+  margin-top: 0;
+}
+
+.sf-prob-box {
+  position: absolute;
+  top: 220px;
+  left: 10px;
+  width: 398px;
+  height: 70px;
+  background: url('../../images/starforce/starForce.layer_probBox.png') no-repeat center;
+  background-size: 100% 100%;
+}
+
+.sf-prob-values {
+  position: absolute;
+  top: 15px;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--sf-stat-color);
+}
+
+.sf-prob-line span {
+  color: var(--sf-stat-color);
+  font-weight: bold;
+}
+
+.sf-cost-area {
+  position: absolute;
+  top: 296px;
+  left: 10px;
+  width: 398px;
+  min-height: 33px;
+  z-index: 2;
+}
+
+.sf-cost-area.sf-cost-idle-scroll {
+  pointer-events: none;
+}
+
+.sf-cost-area.sf-cost-idle-scroll .sf-cost-item,
+.sf-cost-item:not(.hidden) {
+  pointer-events: auto;
+}
+
+.ms-main-content.starforce-active.starforce-scroll-idle .sf-idle-slot {
+  display: block;
+}
+
+.ms-main-content.starforce-active.starforce-scroll-idle .ms-drop-zone {
+  z-index: 3;
+}
+
+.ms-main-content.starforce-active.starforce-scroll-idle .ms-drop-zone img {
+  display: none;
+}
+
+.sf-cost-box {
+  position: relative;
+  width: 398px;
+  height: 33px;
+  background: url('../../images/starforce/starForce.layer_costMesoBox.png') no-repeat center;
+  background-size: 100% 100%;
+}
+
+.sf-cost-box.hidden {
+  display: none;
+}
+
+.sf-cost-item {
+  position: relative;
+  width: 398px;
+  height: 91px;
+  background: url('../../images/starforce/starForce.layer_costItemBox.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+
+.sf-cost-item.hidden {
+  display: none;
+}
+
+.sf-cost-item-icon {
+  position: absolute;
+  left: 50%;
+  top: 20px;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  transform: translateX(-50%);
+  image-rendering: pixelated;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.sf-cost-item-name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 63px;
+  margin: 0;
+  padding: 0 12px;
+  font-size: 12px;
+  line-height: 1.2;
+  color: #ffffff;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.sf-idle-lower.sf-idle-lower-item {
+  background-image: url('../../images/starforce/Enchant.img.starForce.layer_waitEquipItem.png');
+  background-size: 398px 270px;
+  background-repeat: no-repeat;
+  background-position: center bottom 148px;
+}
+
+.sf-cost-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.sf-cost-icon {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+  display: block;
+  flex-shrink: 0;
+}
+
+.sf-cost-value {
+  font-size: 12px;
+  color: #ffffff;
+  font-weight: bold;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.sf-btn-enhance {
+  position: absolute;
+  bottom: 1px;
+  left: calc(50% + 2px);
+  transform: translateX(-50%);
+  width: 129px;
+  height: 35px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: transparent url('../../images/starforce/Enchant_starForce _ button_confirm _ normal_0.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+
+.sf-btn-enhance:hover:not(:disabled) {
+  background-image: url('../../images/starforce/Enchant_starForce _ button_confirm _ mouseOver_0.png');
+}
+
+.sf-btn-enhance:active:not(:disabled) {
+  background-image: url('../../images/starforce/Enchant_starForce _ button_confirm _ pressed_0.png');
+}
+
+.sf-btn-enhance:disabled {
+  background-image: url('../../images/starforce/Enchant_starForce _ button_confirm _ disabled_0.png');
+  cursor: not-allowed;
+}
+
+.sf-bottom-options {
+  position: absolute;
+  top: 409px;
+  right: 13px;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: auto;
+  column-gap: 5px;
+  row-gap: 3px;
+  align-items: center;
+  font-size: 12px;
+  color: #b8bec6;
+  pointer-events: auto;
+}
+
+.sf-bottom-options .sf-auto-label[for="chkPreventDrop"] {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.sf-bottom-options .sf-auto-label[for="chkAutoEnhance"] {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.sf-bottom-options .sf-auto-label[for="chkStarAnim"] {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.sf-auto-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.sf-auto-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.sf-auto-toggle {
+  display: inline-block;
+  width: 25px;
+  height: 13px;
+  flex: 0 0 25px;
+  background: url('../../images/starforce/starForce.button_protectDestroy.unchecked.png') no-repeat center;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+.sf-auto-toggle-input:checked + .sf-auto-toggle {
+  background-image: url('../../images/starforce/starForce.button_protectDestroy.checkedAndDisabled.png');
+  background-size: auto;
+}
+
+.sf-advanced {
+  position: absolute;
+  bottom: 6px;
+  left: 12px;
+  font-size: 10px;
+  color: #888;
+}
+
+.sf-advanced summary {
+  cursor: pointer;
+}
+
+.sf-advanced select,
+.sf-advanced .form-select {
+  display: block;
+  width: auto;
+  max-width: 130px;
+  margin-top: 2px !important;
+  padding: 1px 2px 1px 2px;
+  font-size: 9px;
+  line-height: 1;
+  min-height: 14px;
+  height: 22px;
+  border-width: 1px;
+  border-radius: 2px;
+  background-color: #2c3e50;
+  color: #fff;
+  border-color: #5d6d7e;
+  background-size: 6px 5px;
+  background-position: right 3px center;
+}
+
+/* 舊版星力樣式（其他分頁不受影響） */
+
+@keyframes starPulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 1px #f1c40f); }
+  100% { transform: scale(1.1); filter: drop-shadow(0 0 3px #f1c40f); }
+}
+
+/* 7. 強化操作控制區 */
+.ms-controls-panel {
+  padding: 0 15px;
+}
+#btnMainAction {
+  background: linear-gradient(180deg, #f39c12, #d35400);
+  border: 1px solid #e67e22;
+  color: white;
+  text-shadow: 1px 1px 2px #000;
+  box-shadow: 0 3px 0 #a04000;
+}
+#btnMainAction:hover {
+  background: linear-gradient(180deg, #f1c40f, #e67e22);
+}
+#btnMainAction:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #a04000;
+}
+
+.ms-sidebar-log-clickable {
+  cursor: pointer;
+}
+
+.ms-sidebar-log-clickable:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.62);
+}
+
+/* 成本統計面板 */
+.cost-tracker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 15000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.cost-tracker-overlay.hidden {
+  display: none;
+}
+
+.cost-tracker-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.cost-tracker-panel {
+  position: relative;
+  z-index: 1;
+  width: min(820px, 96vw);
+  max-height: min(88vh, 820px);
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #2a3340 0%, #1e2630 100%);
+  border: 1px solid rgba(140, 170, 190, 0.35);
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  color: #d8e2ea;
+}
+
+.cost-tracker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cost-tracker-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #eef6fb;
+}
+
+.cost-tracker-close {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #c5d4de;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cost-tracker-close:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.cost-tracker-hint {
+  margin: 0;
+  padding: 8px 16px 0;
+  font-size: 12px;
+  color: #93a4b3;
+  line-height: 1.45;
+}
+
+.cost-tracker-body {
+  flex: 1;
+  overflow: auto;
+  padding: 10px 16px 12px;
+}
+
+.cost-tracker-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.cost-tracker-col-name {
+  width: 30%;
+}
+
+.cost-tracker-col-count {
+  width: 24%;
+}
+
+.cost-tracker-col-price {
+  width: 23%;
+}
+
+.cost-tracker-col-sub {
+  width: 23%;
+}
+
+.cost-tracker-table th,
+.cost-tracker-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: middle;
+}
+
+.cost-tracker-table th:nth-child(2),
+.cost-tracker-table th:nth-child(3),
+.cost-tracker-table th:nth-child(4),
+.cost-tracker-count,
+.cost-tracker-sub,
+.cost-tracker-price {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.cost-tracker-table th {
+  color: #8fa3b3;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.cost-tracker-table th:first-child {
+  text-align: left;
+}
+
+.cost-tracker-table th:nth-child(2),
+.cost-tracker-table th:nth-child(3),
+.cost-tracker-table th:nth-child(4),
+.cost-tracker-count,
+.cost-tracker-sub,
+.cost-tracker-price {
+  text-align: right;
+}
+
+.cost-tracker-name {
+  text-align: left;
+  color: #dce8f0;
+  word-break: break-word;
+}
+
+.cost-tracker-group-row td {
+  padding-top: 12px;
+  padding-bottom: 4px;
+  border-bottom: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  color: #9ec9dd;
+  letter-spacing: 0.02em;
+}
+
+.cost-tracker-group-row:first-child td {
+  padding-top: 4px;
+}
+
+.cost-tracker-count,
+.cost-tracker-sub {
+  white-space: nowrap;
+  color: #eef4f8;
+}
+
+.cost-tracker-price input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.28);
+  color: #fff;
+  font-size: 12px;
+  text-align: right;
+}
+
+.cost-tracker-na {
+  color: #667788;
+}
+
+.cost-tracker-footer {
+  padding: 12px 16px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cost-tracker-total-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.cost-tracker-total-row strong {
+  font-size: 18px;
+  color: #f5d76e;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.cost-tracker-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cost-tracker-actions-left,
+.cost-tracker-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cost-tracker-import-file {
+  display: none;
+}
+
+.cost-tracker-btn {
+  padding: 7px 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #dce8f0;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.cost-tracker-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.cost-tracker-btn-primary {
+  background: rgba(52, 120, 170, 0.55);
+  border-color: rgba(120, 180, 220, 0.45);
+}
+
+.cost-tracker-btn-primary:hover {
+  background: rgba(62, 140, 190, 0.72);
+}
+
+.cost-tracker-btn-toggle {
+  min-width: 88px;
+}
+
+.cost-tracker-btn-toggle.is-yi {
+  background: rgba(90, 70, 130, 0.55);
+  border-color: rgba(170, 150, 210, 0.45);
+}
+
+.cost-tracker-btn-toggle.is-yi:hover {
+  background: rgba(110, 85, 155, 0.72);
+}
+
+/* 8. Log 訊息色彩 */
+.log-success { color: #2ecc71 !important; }
+.log-fail { color: #e74c3c !important; }
+.log-info { color: #3498db !important; }
+
+/* 中控台總容器 */
+.ms-controls-container {
+  padding: 0;
+  min-height: 0;
+  position: relative;
+  flex: 1;
+}
+
+/* 獨立中控台子面板通用樣式 */
+.ms-control-subpanel {
+  width: 100%;
+  animation: fadeInSubpanel 0.2s ease-out;
+}
+
+/* 切換時的小漸變動畫，讓切換更順暢 */
+@keyframes fadeInSubpanel {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

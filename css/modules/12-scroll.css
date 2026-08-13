@@ -1,0 +1,1207 @@
+/* ==========================================
+   卷軸強化面板 (Scroll UI)
+   ========================================== */
+.ms-main-content.scroll-active {
+  background-image: url('../../images/scroll/scroll.backgrnd.png');
+}
+
+.ms-main-content.scroll-active .ms-equip-area {
+  height: 118px;
+}
+
+.ms-main-content.scroll-active .ms-drop-zone {
+  top: 88px;
+  width: 56px;
+  height: 48px;
+}
+
+.ms-main-content.scroll-active .ms-drop-zone img {
+  transform: scale(2);
+  transform-origin: center center;
+}
+
+.ms-main-content.scroll-active .ms-drop-zone img:hover {
+  transform: scale(2.15);
+}
+
+.ms-main-content.scroll-active .sf-item-name {
+  display: block;
+  top: 183px;
+  width: 280px;
+  max-width: 280px;
+  min-width: 0;
+  padding: 0 12px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  font-size: 20px;
+  line-height: 24px;
+  color: #e8e8e8;
+}
+
+.ms-main-content.scroll-active.scroll-idle .sf-item-name {
+  display: none;
+}
+
+.ms-main-content.scroll-active.scroll-idle .ms-drop-zone img {
+  display: none;
+}
+
+.sc-idle-slot {
+  display: none;
+  position: absolute;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 398px;
+  height: 152px;
+  background: url('../../images/scroll/scroll.layer_waitEquip0.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ms-main-content.scroll-active.scroll-idle .sc-idle-slot {
+  display: block;
+}
+
+.ms-main-content.scroll-active.scroll-idle .ms-drop-zone {
+  z-index: 3;
+}
+
+.ms-scroll-canvas {
+  position: absolute;
+  top: 118px;
+  left: 0;
+  width: 418px;
+  bottom: 0;
+  pointer-events: none;
+  /* 自動強化目標：面板右側外側（往左 8、下 225） */
+  --sc-auto-targets-top: 415px;
+  --sc-auto-targets-left: 100%;
+}
+
+.ms-main-content.scroll-auto-open {
+  overflow: visible;
+}
+
+.ms-scroll-canvas > * {
+  pointer-events: auto;
+}
+
+.sc-idle-panel {
+  position: absolute;
+  top: 0;
+  left: 10px;
+  width: 398px;
+  height: 215px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sc-idle-lower {
+  width: 100%;
+  height: 100%;
+  background: url('../../images/scroll/scroll.layer_waitEquip1.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+
+.sc-active-panel {
+  position: absolute;
+  inset: 0;
+  bottom: 200px;
+  pointer-events: none;
+}
+
+.sc-active-panel > * {
+  pointer-events: auto;
+}
+
+.sc-summary-area {
+  position: absolute;
+  top: 9px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 286px;
+  min-height: 37px;
+  padding: 4px 8px;
+  box-sizing: border-box;
+  background: url('../../images/scroll/scroll.layer_summaryBox.png') no-repeat center;
+  background-size: 100% 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  overflow: visible;
+}
+
+.sc-scroll-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  height: 12px;
+  min-height: 12px;
+  overflow: visible;
+}
+
+.sc-icon-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+  overflow: visible;
+}
+
+.sc-bonus-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  height: 12px;
+  min-height: 12px;
+  overflow: visible;
+}
+
+.sc-bonus-slots {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+  overflow: visible;
+}
+
+.sc-golden-slot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 13px;
+  height: 12px;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.sc-hammer-icon {
+  image-rendering: pixelated;
+}
+
+.sc-add-icon {
+  width: 13px;
+  height: 13px;
+  image-rendering: pixelated;
+}
+
+.sc-summary-icon {
+  width: 13px;
+  height: 12px;
+  flex: 0 0 13px;
+  image-rendering: pixelated;
+  display: block;
+}
+
+.sc-scroll-slot {
+  position: relative;
+  display: block;
+  width: 13px;
+  height: 12px;
+  flex: 0 0 13px;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.sc-scroll-icon.next {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 43px;
+  height: 44px;
+  transform: translate(calc(-50% + 0px), calc(-50% + 12px));
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
+  animation: sc-next-slot-blink 0.525s steps(1) infinite;
+  pointer-events: none;
+}
+
+@keyframes sc-next-slot-blink {
+  0% {
+    background-image: url('../../images/scroll/scrolltrysummaryIcon/scroll.try.summaryIcon.0.0.png');
+  }
+  16.666% {
+    background-image: url('../../images/scroll/scrolltrysummaryIcon/scroll.try.summaryIcon.0.1.png');
+  }
+  33.333% {
+    background-image: url('../../images/scroll/scrolltrysummaryIcon/scroll.try.summaryIcon.0.2.png');
+  }
+  50% {
+    background-image: url('../../images/scroll/scrolltrysummaryIcon/scroll.try.summaryIcon.0.3.png');
+  }
+  66.666% {
+    background-image: url('../../images/scroll/scrolltrysummaryIcon/scroll.try.summaryIcon.0.4.png');
+  }
+  83.333% {
+    background-image: url('../../images/scroll/scrolltrysummaryIcon/scroll.try.summaryIcon.0.5.png');
+  }
+  100% {
+    background-image: url('../../images/scroll/scrolltrysummaryIcon/scroll.try.summaryIcon.0.0.png');
+  }
+}
+
+.sc-stat-box {
+  position: absolute;
+  top: 52px;
+  left: 10px;
+  width: 398px;
+  height: 112px;
+  background: url('../../images/scroll/scroll.layer_statBox.png') no-repeat center;
+  background-size: 100% 100%;
+}
+
+.sc-stat-values {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  bottom: 12px;
+  left: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  font-size: 12px;
+  color: #a6c4e9;
+  line-height: 1.35;
+}
+
+.sc-stat-line span {
+  color: #fff;
+  font-weight: bold;
+}
+
+.sc-stat-empty {
+  color: #8a9199;
+  font-size: 12px;
+  margin-top: 28px;
+}
+
+.sc-prob-box {
+  position: absolute;
+  top: 170px;
+  left: 10px;
+  width: 398px;
+  height: 54px;
+  background: url('../../images/scroll/scroll.layer_probBox.png') no-repeat center;
+  background-size: 100% 100%;
+}
+
+.sc-prob-values {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  bottom: 8px;
+  left: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  color: #a6c4e9;
+}
+
+.sc-prob-line span {
+  color: #fff;
+  font-weight: bold;
+}
+
+.sc-bottom-area {
+  position: absolute;
+  left: 10px;
+  bottom: 76px;
+  width: 398px;
+  pointer-events: auto;
+  z-index: 2;
+  /* 以 scroll.tab 分頁列為基準，下方 cost 區共用同一 top */
+  --sc-tab-top: 37px;
+  --sc-tab-height: 23px;
+  --sc-tab-gap: 3px;
+  --sc-cost-top: calc(var(--sc-tab-top) + var(--sc-tab-height) + var(--sc-tab-gap));
+  --sc-cost-scroll-height: 116px;
+  --sc-cost-trace-height: 172px;
+  /* 以待機狀態為基準固定高度，裝備後內容可向下溢出，不往上位移 */
+  height: 204px;
+  overflow: visible;
+}
+
+/* 專用卷軸分頁 + 已放裝備：上方背包 + 下方咒文痕跡區 */
+.sc-bottom-area.has-recover-row {
+  height: calc(var(--sc-cost-top) + var(--sc-cost-scroll-height) + var(--sc-cost-trace-height));
+}
+
+.sc-cost-scroll {
+  --sc-slot-selected-x: -2px;
+  --sc-slot-selected-y: -1px;
+  --sc-slot-selected-w: 40px;
+  --sc-slot-selected-h: 40px;
+  position: absolute;
+  top: var(--sc-cost-top);
+  left: 0;
+  width: 398px;
+  height: var(--sc-cost-scroll-height);
+  background: url('../../images/scroll/scroll.costScroll.layer_costScrollBox.png') no-repeat center;
+  background-size: 100% 100%;
+  overflow: hidden;
+}
+
+.sc-tab-bar {
+  position: absolute;
+  top: var(--sc-tab-top);
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.sc-tab {
+  width: 199px;
+  height: 23px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+
+.sc-tab-trace {
+  background-image: url('../../images/scroll/scroll.tab_cost.normal.0.png');
+}
+
+.sc-tab-special {
+  background-image: url('../../images/scroll/scroll.tab_cost.normal.1.png');
+}
+
+.sc-tab-trace.selected {
+  background-image: url('../../images/scroll/scroll.tab_cost.selected.0.png');
+}
+
+.sc-tab-special.selected {
+  background-image: url('../../images/scroll/scroll.tab_cost.selected.1.png');
+}
+
+.sc-cost-trace {
+  position: absolute;
+  top: var(--sc-cost-top);
+  left: 0;
+  width: 398px;
+  height: var(--sc-cost-trace-height);
+  background: url('../../images/scroll/scroll.costTrace.layer_costTraceBox.png') no-repeat center;
+  background-size: 100% 100%;
+  overflow: hidden;
+  /* 咒文痕跡區：右欄回真卷軸位置（可自行調整） */
+  --sc-trace-grid-top: 8px;
+  --sc-trace-grid-left: 204px;
+  --sc-trace-grid-width: 183px;
+  --sc-trace-grid-bottom: 46px;
+  --sc-trace-grid-gap: 2px;
+}
+
+/* 待機 + 咒文痕跡分頁：waitEquip1（上方）+ waitEquipTrace（下方，見 .sc-idle-trace-art） */
+.sc-cost-trace.sc-idle-trace {
+  height: 126px;
+  background: none;
+  overflow: visible;
+}
+
+.sc-idle-trace-art {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 398px;
+  height: auto;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.sc-cost-trace.sc-idle-trace .sc-idle-trace-art {
+  display: block;
+}
+
+.sc-cost-trace.sc-idle-trace .sc-trace-hint,
+.sc-cost-trace.sc-idle-trace .sc-trace-grid {
+  display: none;
+}
+
+.sc-trace-hint {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  right: 12px;
+  bottom: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 12px;
+  color: #e8e8e8;
+  line-height: 1.45;
+  pointer-events: none;
+}
+
+.sc-trace-grid {
+  position: absolute;
+  top: var(--sc-trace-grid-top);
+  left: var(--sc-trace-grid-left);
+  width: var(--sc-trace-grid-width);
+  bottom: var(--sc-trace-grid-bottom);
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(3, 1fr);
+  gap: var(--sc-trace-grid-gap);
+}
+
+.sc-trace-cell-empty {
+  border: none;
+  border-radius: 4px;
+  background: url('../../images/scroll/scroll.costTrace.scrollTypeBox.canvas_boxNormal.png') no-repeat center;
+  background-size: 100% 100%;
+  pointer-events: none;
+}
+
+.sc-trace-restore {
+  border: none;
+  border-radius: 4px;
+  background: url('../../images/scroll/scroll.costTrace.scrollTypeBox.canvas_boxNormal.png') no-repeat center;
+  background-size: 100% 100%;
+  color: #ffffff;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 0 8px;
+  min-width: 0;
+}
+
+.sc-trace-restore.selected {
+  background-image: url('../../images/scroll/scroll.costTrace.scrollTypeBox.canvas_boxSelected.png');
+}
+
+.sc-trace-restore-icon {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  image-rendering: pixelated;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.sc-trace-restore-label {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.sc-trace-types {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  right: 12px;
+  bottom: 46px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.sc-trace-type {
+  border: none;
+  border-radius: 4px;
+  background: url('../../images/scroll/scroll.costTrace.scrollTypeBox.canvas_boxNormal.png') no-repeat center;
+  background-size: 100% 100%;
+  color: #ffffff;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.sc-trace-type.selected {
+  background-image: url('../../images/scroll/scroll.costTrace.scrollTypeBox.canvas_boxSelected.png');
+}
+
+.sc-trace-label {
+  font-weight: bold;
+}
+
+.sc-trace-cost {
+  font-size: 12px;
+  color: #a6c4e9;
+}
+
+.sc-selected-name {
+  position: absolute;
+  top: 3px;
+  left: 110px;
+  right: 16px;
+  height: 18px;
+  line-height: 18px;
+  padding: 0 8px;
+  text-align: left;
+  font-size: 12px;
+  color: #e8e8e8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.sc-scroll-hint {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 95px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #f4f4f4;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.sc-scroll-viewport {
+  --sc-slot-size: 38px;
+  --sc-slot-gap: 3px;
+  /* padding 留給 selected 框外溢（x:-2 / y:-1），避免最左/最上被裁切 */
+  --sc-slot-pad-x: 2px;
+  --sc-slot-pad-y: 1px;
+  position: absolute;
+  top: calc(26px - var(--sc-slot-pad-y));
+  left: calc(11px - var(--sc-slot-pad-x));
+  box-sizing: content-box;
+  padding: var(--sc-slot-pad-y) 0 0 var(--sc-slot-pad-x);
+  width: calc(9 * var(--sc-slot-size) + 8 * var(--sc-slot-gap));
+  height: calc(2 * var(--sc-slot-size) + 1 * var(--sc-slot-gap));
+  overflow: hidden;
+}
+
+.sc-scroll-grid {
+  display: grid;
+  grid-template-columns: repeat(9, var(--sc-slot-size, 38px));
+  grid-template-rows: repeat(5, var(--sc-slot-size, 38px));
+  gap: var(--sc-slot-gap, 3px);
+  will-change: transform;
+  overflow: visible;
+}
+
+.sc-scroll-scrollbar {
+  position: absolute;
+  top: 26px;
+  right: 8px;
+  width: 5px;
+  height: calc(2 * 38px + 1 * 3px);
+  z-index: 3;
+}
+
+.sc-scroll-scrollbar.is-disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.sc-scroll-track {
+  position: absolute;
+  inset: 0;
+  background: url('../../images/iventory/scroll_slot.enabled.base.png') repeat-y center top;
+  background-size: 5px auto;
+  cursor: pointer;
+}
+
+.sc-scroll-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 28px;
+  background: url('../../images/iventory/scroll_slot.enabled.thumb0.png') no-repeat center;
+  background-size: 5px 100%;
+  cursor: grab;
+}
+
+.sc-scroll-thumb:active {
+  cursor: grabbing;
+  background-image: url('../../images/iventory/scroll_slot.enabled.thumb1.png');
+}
+
+.sc-scroll-slot {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border: none;
+  padding: 0;
+  background: transparent;
+  border-radius: 4px;
+  cursor: default;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.sc-scroll-slot.has-item {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.sc-scroll-slot.has-item.selected {
+  background: none;
+}
+
+.sc-scroll-slot.has-item.selected::before {
+  content: '';
+  position: absolute;
+  left: var(--sc-slot-selected-x);
+  top: var(--sc-slot-selected-y);
+  width: var(--sc-slot-selected-w);
+  height: var(--sc-slot-selected-h);
+  background: url('../../images/scroll/scroll.costScroll.inven.selected.png') no-repeat 0 0;
+  background-size: 100% 100%;
+  z-index: 0;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.sc-scroll-slot.has-item.uses-exhausted,
+.sc-scroll-slot.has-item.equip-unusable {
+  cursor: default;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.sc-scroll-slot.has-item.uses-exhausted::after,
+.sc-scroll-slot.has-item.equip-unusable::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: rgba(43, 50, 58, 0.45);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.sc-scroll-icon {
+  position: relative;
+  z-index: 1;
+  display: block;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.sc-scroll-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 3px;
+  background: var(--sc-color, #555);
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+.sc-scroll-tooltip {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55));
+}
+
+.sc-scroll-tooltip.hidden {
+  display: none;
+}
+
+.sc-scroll-tooltip-img {
+  display: block;
+  width: 290px;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.sc-btn-use {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 129px;
+  height: 35px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: transparent url('../../images/scroll/scroll.button_confirm.normal.0.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+
+.sc-recovery-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 72px;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  z-index: 3;
+}
+
+.sc-recovery-toggle {
+  display: inline-flex;
+  cursor: pointer;
+  margin: 0;
+  line-height: 0;
+}
+
+.sc-recovery-check-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.sc-recovery-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 78px;
+  height: 22px;
+  padding: 0 24px 0 7px;
+  box-sizing: border-box;
+  gap: 2px;
+  background: url('../../images/scroll/scroll.costScroll.switchSpecialScroll.pressed.0.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+
+.sc-recovery-icon {
+  width: 17px;
+  height: 16px;
+  image-rendering: pixelated;
+  flex: 0 0 17px;
+  pointer-events: none;
+}
+
+.sc-recovery-count {
+  font-size: 10px;
+  color: #eef4fc;
+  white-space: nowrap;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.sc-recovery-check-input:checked + .sc-recovery-pill {
+  background-image: url('../../images/scroll/scroll.costScroll.switchSpecialScroll.checked.0.png');
+}
+
+.sc-recovery-check-input:checked:active + .sc-recovery-pill {
+  background-image: url('../../images/scroll/scroll.costScroll.switchSpecialScroll.pressed.0.png');
+}
+
+.sc-recovery-check-input:disabled + .sc-recovery-pill {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sc-recovery-bar.is-disabled .sc-recovery-toggle {
+  cursor: not-allowed;
+}
+
+.sc-btn-use:hover:not(:disabled) {
+  background-image: url('../../images/scroll/scroll.button_confirm.mouseOver.0.png');
+}
+
+.sc-btn-use:active:not(:disabled) {
+  background-image: url('../../images/scroll/scroll.button_confirm.pressed.0.png');
+}
+
+.sc-btn-use:disabled {
+  background-image: url('../../images/scroll/scroll.button_confirm.disabled.0.png');
+  cursor: not-allowed;
+}
+
+.sc-bottom-options {
+  position: absolute;
+  bottom: 4px;
+  right: 14px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 12px;
+  color: #ffffff;
+  pointer-events: auto;
+}
+
+.sc-bottom-options-left {
+  right: auto;
+  left: 14px;
+}
+
+.sc-auto-targets {
+  position: absolute;
+  top: var(--sc-auto-targets-top, 225px);
+  left: var(--sc-auto-targets-left, calc(100% - 8px));
+  z-index: 12;
+  min-width: 92px;
+  padding: 6px 7px;
+  background: #2B323A;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+.sc-auto-target-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sc-auto-target-row {
+  display: grid;
+  grid-template-columns: 42px 40px;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: 12px;
+  color: #ffffff;
+  cursor: text;
+}
+
+.sc-auto-target-label {
+  text-align: right;
+  white-space: nowrap;
+  opacity: 0.92;
+}
+
+.sc-auto-target-input {
+  width: 40px;
+  height: 20px;
+  padding: 0 3px;
+  box-sizing: border-box;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+  color: #fff;
+  background: #1b2838;
+  border: 1px solid #5d6d7e;
+  border-radius: 3px;
+  outline: none;
+}
+
+.sc-auto-target-input:focus {
+  border-color: #9bb4cc;
+}
+
+.sc-auto-target-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.sc-auto-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.sc-auto-text {
+  white-space: nowrap;
+}
+
+.sc-auto-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.sc-auto-toggle {
+  display: inline-block;
+  width: 25px;
+  height: 13px;
+  flex: 0 0 25px;
+  background: url('../../images/starforce/starForce.button_protectDestroy.unchecked.png') no-repeat center;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+.sc-auto-toggle-input:checked + .sc-auto-toggle {
+  background-image: url('../../images/starforce/starForce.button_protectDestroy.checkedAndDisabled.png');
+  background-size: auto;
+}
+
+/* 恢復卡：卷軸成功確認彈窗 */
+.sc-recovery-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.sc-recovery-modal:not(.hidden) {
+  pointer-events: auto;
+}
+
+.sc-recovery-modal.hidden {
+  display: none;
+}
+
+.sc-recovery-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 10, 18, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: opacity 0.45s ease;
+}
+
+.sc-recovery-modal-panel {
+  position: relative;
+  z-index: 1;
+  width: 484px;
+  height: 420px;
+  overflow: visible;
+  image-rendering: pixelated;
+}
+
+.sc-recovery-panel-bg {
+  position: absolute;
+  inset: 0;
+  background: url('../../images/scroll/fullScreen_returnScroll.layer_backgrnd.png') no-repeat center / 100% 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.sc-recovery-fade-target {
+  transition: opacity 0.35s ease;
+}
+
+.sc-recovery-modal.is-opening:not(.is-opening-ready) .sc-recovery-modal-backdrop,
+.sc-recovery-modal.is-opening:not(.is-opening-ready) .sc-recovery-fade-target,
+.sc-recovery-modal.is-opening:not(.is-opening-ready) .sc-recovery-btn,
+.sc-recovery-modal.is-opening:not(.is-opening-ready) .sc-recovery-apply-wrap {
+  opacity: 0;
+}
+
+.sc-recovery-modal.is-closing .sc-recovery-modal-backdrop,
+.sc-recovery-modal.is-closing .sc-recovery-fade-target {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sc-recovery-equip-slot {
+  position: absolute;
+  top: -144px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  width: 134px;
+  height: 134px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: url('../../images/scroll/fullScreen_returnScroll.canvas_itemIcon.png') no-repeat center / 100% 100%;
+  image-rendering: pixelated;
+}
+
+.sc-recovery-equip-icon {
+  width: 72px;
+  height: 72px;
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+
+.sc-recovery-choices {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 40px;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16px;
+  overflow: visible;
+}
+
+.sc-recovery-btn,
+.sc-recovery-apply-wrap {
+  transition: opacity 0.35s ease;
+}
+
+.sc-recovery-modal.is-closing .sc-recovery-btn:not(.is-selected),
+.sc-recovery-modal.is-closing .sc-recovery-apply-wrap:not(.is-selected) {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.sc-recovery-modal.is-closing .sc-recovery-btn.is-selected,
+.sc-recovery-modal.is-closing .sc-recovery-apply-wrap.is-selected {
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 1.5s ease;
+}
+
+.sc-recovery-modal.is-closing .sc-recovery-apply-wrap.is-selected .sc-recovery-btn {
+  opacity: 1;
+  transition: none;
+}
+
+.sc-recovery-apply-wrap {
+  position: relative;
+  width: 234px;
+  height: 328px;
+  flex: 0 0 234px;
+  overflow: visible;
+}
+
+.sc-recovery-btn {
+  position: relative;
+  width: 234px;
+  height: 328px;
+  flex: 0 0 234px;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  overflow: visible;
+}
+
+.sc-recovery-btn::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 246px;
+  height: 341px;
+  transform: translate(-50%, -50%);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1;
+}
+
+.sc-recovery-btn:hover:not(:disabled)::after,
+.sc-recovery-btn:active:not(:disabled)::after {
+  opacity: 1;
+}
+
+.sc-recovery-btn-cancel:hover:not(:disabled)::after {
+  background-image: url('../../images/scroll/fullScreen_returnScroll.button_cancel.mouseOver.0.png');
+}
+
+.sc-recovery-btn-cancel:active:not(:disabled)::after {
+  background-image: url('../../images/scroll/fullScreen_returnScroll.button_cancel.pressed.0.png');
+}
+
+.sc-recovery-btn-cancel {
+  background-image: url('../../images/scroll/fullScreen_returnScroll.button_cancel.normal.0.png');
+}
+
+.sc-recovery-btn-cancel:disabled {
+  background-image: url('../../images/scroll/fullScreen_returnScroll.button_cancel.disabled.0.png');
+  cursor: not-allowed;
+}
+
+.sc-recovery-btn-apply {
+  position: relative;
+  z-index: 1;
+  background-image: url('../../images/scroll/fullScreen_returnScroll.button_apply.normal.0.png');
+}
+
+.sc-recovery-btn-apply:hover:not(:disabled)::after {
+  background-image: url('../../images/scroll/fullScreen_returnScroll.button_apply.mouseOver.0.png');
+}
+
+.sc-recovery-btn-apply:active:not(:disabled)::after {
+  background-image: url('../../images/scroll/fullScreen_returnScroll.button_apply.pressed.0.png');
+}
+
+.sc-recovery-btn-apply:disabled {
+  background-image: url('../../images/scroll/fullScreen_returnScroll.button_apply.disabled.0.png');
+  cursor: not-allowed;
+}
+
+.sc-recovery-apply-highlight {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  image-rendering: pixelated;
+  z-index: 3;
+}
+
+.sc-recovery-apply-stats {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  padding: 0 14px;
+  box-sizing: border-box;
+  text-align: center;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.sc-recovery-stat-line {
+  color: #d8c8ff;
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(140, 100, 255, 0.85);
+}
+
+.sc-recovery-stat-empty {
+  color: rgba(210, 210, 220, 0.75);
+  font-size: 14px;
+  line-height: 1.35;
+}

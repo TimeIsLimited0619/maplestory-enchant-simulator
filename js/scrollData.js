@@ -102,7 +102,8 @@ const RECOVERY_CARD = {
   switchPressed: 'images/scroll/scroll.costScroll.switchSpecialScroll.pressed.0.png'
 };
 
-let playerRecoveryCardCount = 99;
+const DEFAULT_RECOVERY_CARD_COUNT = 99;
+let playerRecoveryCardCount = DEFAULT_RECOVERY_CARD_COUNT;
 
 // ==========================================
 // 3. 隨機骰值卷軸機率表
@@ -216,17 +217,13 @@ function applyScrollRateTierShift(rates, shift = SCROLL_CAT_VALLEY_TIER_SHIFT) {
 
 /** 驚訝的混沌卷軸：各屬性獨立骰值（%） */
 const CHAOS_RATE_TABLE = [
-  { val: 6, rate: 0.99 },
-  { val: 4, rate: 1.98 },
-  { val: 3, rate: 10.21 },
-  { val: 2, rate: 15.87 },
-  { val: 1, rate: 19.31 },
-  { val: 0, rate: 18.38 },
-  { val: -1, rate: 13.7 },
-  { val: -2, rate: 8.0 },
-  { val: -3, rate: 3.65 },
-  { val: -4, rate: 2.97 },
-  { val: -6, rate: 4.94 }
+  { val: 7, rate: 4 },
+  { val: 6, rate: 5 },
+  { val: 4, rate: 4 },
+  { val: 3, rate: 13 },
+  { val: 2, rate: 23 },
+  { val: 1, rate: 33 },
+  { val: 0, rate: 18 }
 ];
 
 /** 混沌卷軸影響屬性；HP/MP 以骰值 ×10 改變 */
@@ -266,6 +263,9 @@ const WEAPON_MULTI_STAT_MATK = [
   { label: 'LUK', field: 'scrollLuk' },
   { label: '魔力', field: 'scrollMatk' }
 ];
+
+/** 混沌卷自動強化目標：與武器攻擊卷相同（四屬＋攻擊） */
+const CHAOS_AUTO_TARGET_DEFS = WEAPON_MULTI_STAT_ATK;
 
 const gloryRatesArmor = GLORY_RATE_TABLE.armor;
 const gloryRatesWeapon = GLORY_RATE_TABLE.weapon;
@@ -1079,6 +1079,18 @@ function isAndroidItem(item) {
 
 function getScrollEquipError(scroll, item) {
   if (!scroll || !item) return null;
+
+  // 胸章（Ba）：僅能使用混沌卷
+  if (typeof isPinItem === 'function' && isPinItem(item)) {
+    if (scroll.scrollType !== SCROLL_TYPE.CHAOS) {
+      return '胸章僅能使用混沌卷軸。';
+    }
+    if (scroll.maxEquipLevel && (item.reqLevel || 0) > scroll.maxEquipLevel) {
+      return `此卷軸僅限 ${scroll.maxEquipLevel} 等以下（含）裝備使用。`;
+    }
+    return null;
+  }
+
   if (!scroll.equipTarget) return null;
 
   // 機器心臟（android）可使用任何部位卷軸
@@ -1310,6 +1322,11 @@ function formatChaosChangeLog(changes) {
   return parts.length ? parts.join('、') : '無屬性變化';
 }
 
+function getChaosStatRange() {
+  const vals = CHAOS_RATE_TABLE.map((entry) => entry.val);
+  return { min: Math.min(...vals), max: Math.max(...vals) };
+}
+
 function getGloryRates(scroll) {
   return getRandomRollRates(scroll);
 }
@@ -1327,8 +1344,15 @@ function applyGloryScrollBonus(item, scroll, val) {
 }
 
 function consumeRecoveryCard() {
+  if (playerRecoveryCardCount <= 0) {
+    playerRecoveryCardCount = DEFAULT_RECOVERY_CARD_COUNT;
+  }
   if (playerRecoveryCardCount <= 0) return false;
+  playerRecoveryCardCount -= 1;
   trackCostUsage('recoveryCard');
+  if (playerRecoveryCardCount <= 0) {
+    playerRecoveryCardCount = DEFAULT_RECOVERY_CARD_COUNT;
+  }
   return true;
 }
 

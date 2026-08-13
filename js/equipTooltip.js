@@ -9,12 +9,24 @@ const EquipTooltipModule = {
   /** 貓谷潛能操作期間強制持續顯示 */
   pinned: false,
   pinAnchor: null,
+  /** 拖曳裝備期間隱藏 tooltip */
+  dragging: false,
+
+  beginDrag() {
+    this.dragging = true;
+    this.hide(true);
+  },
+
+  endDrag() {
+    this.dragging = false;
+  },
 
   init() {
     if (this._ready) return;
     this.ensureElement();
     this.bindInventoryHover();
     this.bindDropZoneHover();
+    this.bindUiEquipHover();
     this._ready = true;
   },
 
@@ -33,7 +45,7 @@ const EquipTooltipModule = {
     if (!grid || grid.dataset.eqTooltipReady) return;
 
     grid.addEventListener('mouseover', (event) => {
-      if (this.pinned) return;
+      if (this.pinned || this.dragging) return;
       if (InventoryModule.tab !== 'equip') return;
       const slot = event.target.closest('.ms-inv-slot');
       if (!slot || grid._eqTooltipSlot === slot) return;
@@ -68,13 +80,14 @@ const EquipTooltipModule = {
     if (!dropZone || dropZone.dataset.eqTooltipReady) return;
 
     dropZone.addEventListener('mouseover', (event) => {
+      if (this.dragging) return;
       if (!currentEnchantItem) return;
       const target = event.target.closest('#equipDropZone, #enchantedEquipImg');
       if (!target || dropZone._eqTooltipActive) return;
 
       dropZone._eqTooltipActive = true;
       const itemId = currentEnchantItem.itemId || currentEnchantItem.id;
-      this.show(dropZone, itemId, currentEnchantItem.slotIndex);
+      this.show(dropZone, itemId, -1, currentEnchantItem);
     });
 
     dropZone.addEventListener('mouseout', (event) => {
@@ -91,15 +104,94 @@ const EquipTooltipModule = {
     dropZone.dataset.eqTooltipReady = '1';
   },
 
-  resolveItemState(itemId, slotIndex) {
-    if (typeof loadEnchantStateForSlot === 'function') {
+  bindUiEquipHover() {
+    const host = document.getElementById('uiEquipSlots');
+    if (!host || host.dataset.eqTooltipReady) return;
+
+    host.addEventListener('mouseover', (event) => {
+      if (this.pinned || this.dragging) return;
+      const slot = event.target.closest('.uiequip-slot');
+      if (!slot || !slot.classList.contains('is-filled')) return;
+      if (host._eqTooltipSlot === slot) return;
+
+      const uiSlot = slot.getAttribute('data-slot');
+      const entry = typeof UiEquipModule !== 'undefined'
+        ? UiEquipModule.getWornEntry?.(uiSlot)
+        : null;
+      if (!entry?.itemId || !ITEM_DATABASE[entry.itemId]) return;
+
+      host._eqTooltipSlot = slot;
+      this.show(slot, entry.itemId, `body:${uiSlot}`, entry.state);
+    });
+
+    host.addEventListener('mouseout', (event) => {
+      if (this.pinned) return;
+      const slot = event.target.closest('.uiequip-slot');
+      if (!slot) return;
+      const related = event.relatedTarget;
+      if (related instanceof Node && slot.contains(related)) return;
+
+      if (host._eqTooltipSlot === slot) {
+        host._eqTooltipSlot = null;
+        this.hide();
+      }
+    });
+
+    host.dataset.eqTooltipReady = '1';
+  },
+
+  resolveItemState(itemId, slotIndex, stateOverride = null) {
+    if (stateOverride && typeof stateOverride === 'object') {
+      const template = ITEM_DATABASE[itemId];
+      if (!template) return null;
+      const base = typeof createEnchantState === 'function'
+        ? createEnchantState(template, -1)
+        : { ...template, slotIndex: -1 };
+      const saved = typeof cloneEnchantState === 'function'
+        ? cloneEnchantState(stateOverride)
+        : { ...stateOverride };
+      delete saved.slotIndex;
+      return {
+        ...base,
+        ...saved,
+        slotIndex: typeof slotIndex === 'number' ? slotIndex : -1,
+        itemId,
+        id: itemId,
+        name: template.name,
+        icon: template.icon,
+        mainType: template.mainType,
+        subType: template.subType,
+        islot: template.islot,
+        vslot: template.vslot,
+        baseStats: template.baseStats,
+      };
+    }
+
+    if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
+      const curId = currentEnchantItem.itemId || currentEnchantItem.id;
+      if (curId === itemId && (slotIndex === -1 || slotIndex === currentEnchantItem.slotIndex)) {
+        return typeof cloneEnchantState === 'function'
+          ? { ...cloneEnchantState(currentEnchantItem), slotIndex: -1 }
+          : { ...currentEnchantItem, slotIndex: -1 };
+      }
+    }
+
+    if (typeof slotIndex === 'string' && slotIndex.startsWith('body:')
+      && typeof UiEquipModule !== 'undefined') {
+      const entry = UiEquipModule.getWornEntry?.(slotIndex.slice(5));
+      if (entry?.itemId === itemId) {
+        return this.resolveItemState(itemId, -1, entry.state);
+      }
+    }
+
+    if (typeof loadEnchantStateForSlot === 'function' && Number.isInteger(slotIndex) && slotIndex >= 0) {
       return loadEnchantStateForSlot(itemId, slotIndex);
     }
 
     const template = ITEM_DATABASE[itemId];
     if (!template) return null;
     return typeof createEnchantState === 'function'
-      ? createEnchantState(template, slotIndex)
+      ? createEnchantState(template, typeof slotIndex === 'number' ? slotIndex : -1)
       : { ...template, slotIndex };
   },
 
@@ -686,10 +778,15 @@ const EquipTooltipModule = {
     const enhanceBlock = document.createElement('section');
     enhanceBlock.className = 'eq-tip-block eq-tip-enhance-block';
 
-    enhanceBlock.appendChild(this.createEnhanceLine(
-      EQUIP_TOOLTIP_ASSETS.textIcon.starForce,
-      `星力：${starCount}星 (最多${maxStar}星)`,
-    ));
+    const showStarForce = typeof canUseStarForce === 'function'
+      ? canUseStarForce(item)
+      : true;
+    if (showStarForce) {
+      enhanceBlock.appendChild(this.createEnhanceLine(
+        EQUIP_TOOLTIP_ASSETS.textIcon.starForce,
+        `星力：${starCount}星 (最多${maxStar}星)`,
+      ));
+    }
 
     const totalSlots = this.getTotalSlotCount(item);
     if (totalSlots > 0) {
@@ -856,7 +953,10 @@ const EquipTooltipModule = {
     const showEnhancement = this.canShowEnhancementUi(item);
 
     let starEffectImg = null;
-    if (showEnhancement) {
+    const showStarGrid = typeof canUseStarForce === 'function'
+      ? canUseStarForce(item)
+      : showEnhancement;
+    if (showStarGrid) {
       const starsHost = document.createElement('div');
       starsHost.className = 'eq-tip-stars-host';
       starEffectImg = this.renderStars(starsHost, starCount, maxStar);
@@ -1093,11 +1193,13 @@ const EquipTooltipModule = {
     return frame;
   },
 
-  show(anchorEl, itemId, slotIndex) {
+  show(anchorEl, itemId, slotIndex, stateOverride = null) {
+    if (this.dragging) return;
+
     const tooltip = document.getElementById('equipTooltip');
     if (!tooltip) return;
 
-    const item = this.resolveItemState(itemId, slotIndex);
+    const item = this.resolveItemState(itemId, slotIndex, stateOverride);
     if (!item) return;
 
     if (
@@ -1154,11 +1256,22 @@ const EquipTooltipModule = {
       return;
     }
 
-    if (!currentEnchantItem || currentEnchantItem.slotIndex !== slotIndex) return;
-
     const dropZone = document.getElementById('equipDropZone');
-    if (dropZone?._eqTooltipActive) {
-      this.show(dropZone, itemId, slotIndex);
+    if (dropZone?._eqTooltipActive && currentEnchantItem) {
+      const curId = currentEnchantItem.itemId || currentEnchantItem.id;
+      if (curId === itemId) {
+        this.show(dropZone, itemId, -1, currentEnchantItem);
+        return;
+      }
+    }
+
+    if (typeof slotIndex === 'string' && slotIndex.startsWith('body:')) {
+      const host = document.getElementById('uiEquipSlots');
+      const uiSlot = slotIndex.slice(5);
+      const slot = host?.querySelector(`.uiequip-slot[data-slot="${uiSlot}"]`);
+      if (slot && host?._eqTooltipSlot === slot) {
+        this.show(slot, itemId, slotIndex);
+      }
       return;
     }
 
@@ -1196,8 +1309,10 @@ const EquipTooltipModule = {
     const tooltip = document.getElementById('equipTooltip');
     const grid = document.getElementById('inventoryGrid');
     const dropZone = document.getElementById('equipDropZone');
+    const bodyHost = document.getElementById('uiEquipSlots');
     if (grid) grid._eqTooltipSlot = null;
     if (dropZone) dropZone._eqTooltipActive = false;
+    if (bodyHost) bodyHost._eqTooltipSlot = null;
 
     this.pinned = false;
     this.pinAnchor = null;

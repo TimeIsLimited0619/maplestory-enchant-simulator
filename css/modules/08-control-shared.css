@@ -1,0 +1,30 @@
+/* ==========================================
+   使用你的素材：更換各中控台的底圖 (範例)
+   ========================================== */
+.panel-star {
+  /* 如果你的星力中控台有獨立底圖，可以在此綁定 */
+  /* background-image: url('../../images/star_control_bg.png'); */
+  background-image: url('../../images/starforce/Enchant_starForce_0.png');
+}
+
+#panel-scroll {
+  /* background-image: url('../../images/scroll_control_bg.png'); */
+}
+
+/* ==========================================
+   使用你的素材：各中控台專屬的主要強化按鈕樣式
+   ========================================== */
+.ms-action-btn {
+  width: 100%;
+  height: 44px;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  cursor: pointer;
+  outline: none;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 1px 1px 1px #000;
+}

@@ -1,0 +1,293 @@
+/* ==========================================
+   17. 裝備欄 (UIEquip · Equip/main + EquipTab shell)
+   座標基準：UI.UIEquip.img.xml Equip/*
+   left/top = -origin（負 origin → 正座標）
+   ========================================== */
+
+.view-mode-bar {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+  margin: 0 0 8px 0;
+}
+
+.view-mode-btn {
+  min-width: 72px;
+  padding: 4px 10px;
+  border: 1px solid #5a6a7a;
+  background: #1a2430;
+  color: #d8dde3;
+  font-size: 13px;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.view-mode-btn:hover {
+  background: #243040;
+  color: #fff;
+}
+
+.view-mode-btn.is-active {
+  border-color: #8aa0b8;
+  background: #2c3c50;
+  color: #fff;
+}
+
+.uiequip-panel {
+  position: relative;
+  width: 366px;
+  height: 472px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  background: url('../../images/UIEquip/main/main_backgrnd.png') no-repeat 0 0;
+  image-rendering: pixelated;
+  overflow: visible;
+}
+
+.uiequip-tab {
+  position: absolute;
+  top: 31px;
+  width: 171px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 100% 100%;
+  cursor: default;
+  pointer-events: none;
+  image-rendering: pixelated;
+  z-index: 4;
+}
+
+.uiequip-tab-equip {
+  left: 11px;
+  background-image: url('../../images/UIEquip/main/tab_detailTab/main_tab_detailTab_selected_0.png');
+}
+
+.uiequip-tab-cash {
+  left: 184px;
+  background-image: url('../../images/UIEquip/main/tab_detailTab/main_tab_detailTab_normal_1.png');
+}
+
+.uiequip-canvas {
+  position: absolute;
+  left: 12px;
+  top: 61px;
+  width: 342px;
+  height: 377px;
+  background: url('../../images/UIEquip/EquipTab/EquipTab.canvas_equip.png') no-repeat 0 0;
+  image-rendering: pixelated;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.uiequip-slots {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: visible;
+}
+
+.uiequip-slot {
+  position: absolute;
+  width: 42px;
+  height: 42px;
+  box-sizing: border-box;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 42px 42px;
+  image-rendering: pixelated;
+  overflow: visible;
+}
+
+.uiequip-preset-selected {
+  position: absolute;
+  width: 23px;
+  height: 37px;
+  background: url('../../images/UIEquip/EquipTab/presetSelected/presetSelected.0.png') no-repeat 0 0;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.uiequip-preset-btn {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  cursor: pointer;
+  image-rendering: pixelated;
+  z-index: 6;
+}
+
+.uiequip-preset-1 { left: 184px; top: 407px; }
+.uiequip-preset-2 { left: 214px; top: 407px; }
+.uiequip-preset-3 { left: 244px; top: 407px; }
+
+.uiequip-preset-1 {
+  background-image: url('../../images/UIEquip/EquipTab/button_preset1/button_preset1_normal_0.png');
+}
+.uiequip-preset-1:hover {
+  background-image: url('../../images/UIEquip/EquipTab/button_preset1/button_preset1_mouseOver_0.png');
+}
+.uiequip-preset-1:active {
+  background-image: url('../../images/UIEquip/EquipTab/button_preset1/button_preset1_pressed_0.png');
+}
+.uiequip-preset-1.is-checked,
+.uiequip-preset-1.is-checked:hover {
+  background-image: url('../../images/UIEquip/EquipTab/button_preset1/button_preset1_checked_0.png');
+}
+
+.uiequip-preset-2 {
+  background-image: url('../../images/UIEquip/EquipTab/button_preset2/button_preset2_normal_0.png');
+}
+.uiequip-preset-2:hover {
+  background-image: url('../../images/UIEquip/EquipTab/button_preset2/button_preset2_mouseOver_0.png');
+}
+.uiequip-preset-2:active {
+  background-image: url('../../images/UIEquip/EquipTab/button_preset2/button_preset2_pressed_0.png');
+}
+.uiequip-preset-2.is-checked,
+.uiequip-preset-2.is-checked:hover {
+  background-image: url('../../images/UIEquip/EquipTab/button_preset2/button_preset2_checked_0.png');
+}
+
+.uiequip-preset-3 {
+  background-image: url('../../images/UIEquip/EquipTab/button_preset3/button_preset3_normal_0.png');
+}
+.uiequip-preset-3:hover {
+  background-image: url('../../images/UIEquip/EquipTab/button_preset3/button_preset3_mouseOver_0.png');
+}
+.uiequip-preset-3:active {
+  background-image: url('../../images/UIEquip/EquipTab/button_preset3/button_preset3_pressed_0.png');
+}
+.uiequip-preset-3.is-checked,
+.uiequip-preset-3.is-checked:hover {
+  background-image: url('../../images/UIEquip/EquipTab/button_preset3/button_preset3_checked_0.png');
+}
+
+.uiequip-preset-apply {
+  position: absolute;
+  left: 282px;
+  top: 404px;
+  width: 58px;
+  height: 25px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: contain;
+  background-image: url('../../images/UIEquip/EquipTab/button_presetApplication/button_presetApplication_normal_0.png');
+  cursor: pointer;
+  image-rendering: pixelated;
+  z-index: 6;
+}
+
+.uiequip-preset-apply:hover {
+  background-image: url('../../images/UIEquip/EquipTab/button_presetApplication/button_presetApplication_mouseOver_0.png');
+}
+
+.uiequip-preset-apply:active {
+  background-image: url('../../images/UIEquip/EquipTab/button_presetApplication/button_presetApplication_pressed_0.png');
+}
+
+/* SlotName 座標（XML EquipTab/SlotName） */
+.uiequip-slot[data-slot="1"]  { left: 252px; top: 100px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_1.png'); }
+.uiequip-slot[data-slot="2"]  { left: 72px;  top: 100px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_2.png'); }
+.uiequip-slot[data-slot="3"]  { left: 72px;  top: 145px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_3.png'); }
+.uiequip-slot[data-slot="4"]  { left: 72px;  top: 190px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_4.png'); }
+.uiequip-slot[data-slot="5"]  { left: 252px; top: 145px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_5.png'); }
+.uiequip-slot[data-slot="6"]  { left: 252px; top: 190px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_6.png'); }
+.uiequip-slot[data-slot="7"]  { left: 297px; top: 190px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_7.png'); }
+.uiequip-slot[data-slot="8"]  { left: 297px; top: 145px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_8.png'); }
+.uiequip-slot[data-slot="9"]  { left: 297px; top: 100px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_9.png'); }
+.uiequip-slot[data-slot="10"] { left: 162px; top: 280px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_10.png'); }
+.uiequip-slot[data-slot="11"] { left: 117px; top: 280px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_11.png'); }
+.uiequip-slot[data-slot="12"] { left: 27px;  top: 235px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_12.png'); }
+.uiequip-slot[data-slot="13"] { left: 27px;  top: 190px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_12.png'); }
+.uiequip-slot[data-slot="15"] { left: 27px;  top: 145px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_12.png'); }
+.uiequip-slot[data-slot="16"] { left: 27px;  top: 100px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_12.png'); }
+.uiequip-slot[data-slot="17"] { left: 72px;  top: 280px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_17.png'); }
+.uiequip-slot[data-slot="21"] { left: 297px; top: 235px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_21.png'); }
+.uiequip-slot[data-slot="22"] { left: 27px;  top: 280px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_22.png'); }
+.uiequip-slot[data-slot="28"] { left: 252px; top: 235px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_28.png'); }
+.uiequip-slot[data-slot="31"] { left: 27px;  top: 325px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_31.png'); }
+.uiequip-slot[data-slot="32"] { left: 252px; top: 280px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_32.png'); }
+.uiequip-slot[data-slot="33"] { left: 297px; top: 280px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_33.png'); }
+.uiequip-slot[data-slot="34"] { left: 297px; top: 325px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_34.png'); }
+.uiequip-slot[data-slot="35"] { left: 207px; top: 280px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_35.png'); }
+.uiequip-slot[data-slot="36"] { left: 72px;  top: 235px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_17.png'); }
+.uiequip-slot[data-slot="37"] { left: 162px; top: 325px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_10.png'); }
+
+.uiequip-slot.is-filled {
+  z-index: 3;
+  overflow: visible;
+}
+
+/* 與背包同款：主潛能稀有度外框 */
+.uiequip-slot.uiequip-potential-rare {
+  outline: 1px solid #66B4FF;
+  outline-offset: -1px;
+}
+
+.uiequip-slot.uiequip-potential-epic {
+  outline: 1px solid #C261FF;
+  outline-offset: -1px;
+}
+
+.uiequip-slot.uiequip-potential-unique {
+  outline: 1px solid #FFCC00;
+  outline-offset: -1px;
+}
+
+.uiequip-slot.uiequip-potential-legendary {
+  outline: 1px solid #00FF00;
+  outline-offset: -1px;
+}
+
+.uiequip-slot.is-locked {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.uiequip-slot.is-drag-over {
+  outline: 1px solid rgba(120, 200, 255, 0.85);
+  outline-offset: -1px;
+}
+
+.uiequip-slot-icon {
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  object-fit: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  image-rendering: pixelated;
+  pointer-events: auto;
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+  filter: none;
+  box-shadow: none;
+}
+
+.uiequip-slot.is-filled:hover {
+  z-index: 7;
+}
+
+/* 機器心臟靠近右緣，避免被裁切 */
+.uiequip-slot[data-slot="33"] {
+  z-index: 3;
+  overflow: visible;
+}

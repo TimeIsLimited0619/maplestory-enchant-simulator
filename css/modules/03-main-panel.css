@@ -1,0 +1,198 @@
+/* ==========================================
+   3. 中間主面板 (Main Content)
+   ========================================== */
+.ms-main-content {
+  width: 418px;
+  height: 720px;
+  background-image: url('../../images/Enchant_none_0.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.ms-main-content.none-active .ms-equip-area {
+  height: 118px;
+}
+
+.ms-main-content.none-active .ms-drop-zone {
+  top: 88px;
+  width: 56px;
+  height: 48px;
+  z-index: 3;
+}
+
+.ms-main-content.none-active .ms-drop-zone img {
+  transform: scale(2);
+  transform-origin: center center;
+}
+
+.ms-main-content.none-active .ms-drop-zone img:hover {
+  transform: scale(2.15);
+}
+
+/* none 待機：裝備槽提示（對位 starforce waitEquip） */
+#none_waitEquip {
+  display: none;
+  position: absolute;
+  top: 93px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 130px;
+  height: 111px;
+  background: url('../../images/none_waitEquip.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ms-main-content.none-active.none-idle #none_waitEquip {
+  display: block;
+}
+
+.ms-main-content.none-active.none-idle .ms-drop-zone img {
+  display: none;
+}
+
+.ms-main-content.none-active .sf-item-name {
+  display: block;
+  top: 183px;
+  width: 280px;
+  max-width: 280px;
+  min-width: 0;
+  padding: 0 12px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  font-size: 20px;
+  line-height: 24px;
+  color: #e8e8e8;
+}
+
+.ms-main-content.none-active.none-idle .sf-item-name {
+  display: none;
+}
+
+.ms-main-content.starforce-active {
+  background-image: url('../../images/starforce/Enchant_starForce_0.png');
+}
+
+.ms-main-content.starforce-active .ms-equip-area {
+  height: 118px;
+}
+
+.ms-main-content.starforce-active .ms-drop-zone {
+  top: 88px;
+  width: 56px;
+  height: 48px;
+}
+
+.ms-main-content.starforce-active .ms-drop-zone img {
+  transform: scale(2);
+  transform-origin: center center;
+}
+
+.ms-main-content.starforce-active .ms-drop-zone img:hover {
+  transform: scale(2.15);
+}
+
+.sf-item-name {
+  display: none;
+  position: absolute;
+  top: 84px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 160px;
+  max-width: 340px;
+  padding: 2px 14px;
+  text-align: center;
+  font-size: 12px;
+  color: #ececec;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  background: rgba(8, 12, 18, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  line-height: 1.4;
+}
+
+.ms-main-content.starforce-active .sf-item-name {
+  display: block;
+  top: 183px;
+  width: 280px;
+  max-width: 280px;
+  min-width: 0;
+  padding: 0 12px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  font-size: 20px;
+  line-height: 24px;
+  color: #e8e8e8;
+}
+
+.ms-main-content.starforce-active.starforce-idle .sf-item-name {
+  display: none;
+}
+
+/* 待機：裝備槽提示圖 */
+.sf-idle-slot {
+  display: none;
+  position: absolute;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 134px;
+  height: 116px;
+  background: url('../../images/starforce/Enchant.img.starForce.layer_waitEquip.png') no-repeat center;
+  background-size: 100% 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ms-main-content.starforce-active.starforce-idle .sf-idle-slot {
+  display: block;
+}
+
+.ms-main-content.starforce-active.starforce-idle .ms-drop-zone {
+  z-index: 3;
+}
+
+.ms-main-content.starforce-active.starforce-idle .ms-drop-zone img {
+  display: none;
+}
+
+/* 裝備投放熱區 (對準中間虛線框) */
+.ms-drop-zone {
+  position: absolute;
+  top: 88px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* 放置槽內部的等比例放大圖片 */
+.ms-drop-zone img {
+  /* 與靈魂武器頁一致：WZ itemIconScale = 2 */
+  transform: scale(2);
+  transform-origin: center center;
+  image-rendering: pixelated;
+  cursor: pointer;
+  filter: none;
+  transition: transform 0.15s ease;
+}
+
+.ms-drop-zone img:hover {
+  transform: scale(2.15);
+}

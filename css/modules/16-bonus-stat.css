@@ -1,0 +1,1493 @@
+/* ==========================================
+   附加能力 (bonusStat)
+   座標基準：Enchant.img bonusStat，畫布起點 = 主面板 top 118px
+   canvasTop ≈ xmlY - 118
+   ========================================== */
+
+.ms-main-content.bonusStat-active {
+  background-image: url('../../images/bonusStat/bonusStat_backgrnd.png');
+  background-size: auto;
+  overflow: visible;
+}
+
+/* --- 裝備區（主面板上段，xml itemIcon 166,112 / itemName 200,155） --- */
+.ms-main-content.bonusStat-active .ms-equip-area {
+  height: 118px;
+  overflow: visible;
+}
+
+.ms-main-content.bonusStat-active .ms-drop-zone {
+  top: 88px;
+  width: 56px;
+  height: 48px;
+}
+
+.ms-main-content.bonusStat-active .ms-drop-zone img {
+  transform: scale(2);
+  transform-origin: center center;
+}
+
+.ms-main-content.bonusStat-active .ms-drop-zone img:hover {
+  transform: scale(2.15);
+}
+
+.ms-main-content.bonusStat-active .sf-item-name {
+  display: block;
+  top: 183px;
+  width: 280px;
+  max-width: 280px;
+  min-width: 0;
+  padding: 0 12px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  font-size: 20px;
+  line-height: 24px;
+  color: #e8e8e8;
+  text-align: center;
+}
+
+.ms-main-content.bonusStat-active.bonusStat-idle .sf-item-name {
+  display: none;
+}
+
+.ms-main-content.bonusStat-active.bonusStat-idle .ms-drop-zone img {
+  display: none;
+}
+
+/* --- 星火控制台畫布（#panel-bonusStat，整體上移 126px） --- */
+.ms-bonus-stat-canvas {
+  position: absolute;
+  top: -8px;
+  left: 0;
+  width: 418px;
+  height: 602px;
+  pointer-events: none;
+}
+
+.ms-bonus-stat-canvas > * {
+  pointer-events: auto;
+}
+
+/* 待機圖 layer:waitEquip（xml origin -10,-90 → 面板 y≈90，canvas top≈-28） */
+.bs-idle-panel {
+  position: absolute;
+  top: -28px;
+  left: 10px;
+  width: 398px;
+  height: 379px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bs-idle-lower {
+  width: 398px;
+  height: 379px;
+  background: url('../../images/bonusStat/bonusStat_layer_waitEquip.png') no-repeat 0 0;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+/* 已放裝備：等級條 + 詞條 + 戰鬥力（#bsActivePanel） */
+.bs-active-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 418px;
+  height: 340px;
+  pointer-events: none;
+}
+
+.bs-active-panel > * {
+  pointer-events: auto;
+}
+
+/* #bsSummaryBox — layer:summaryBox + summaryBox/N（原始像素尺寸） */
+.bs-summary-box {
+  position: absolute;
+  top: 124px;
+  left: 0;
+  transform: none;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  line-height: 0;
+}
+
+.bs-summary-box--pending .bs-summary-level {
+  visibility: hidden;
+}
+
+.bs-pixel-image,
+.bs-summary-frame,
+.bs-summary-level,
+.bs-stat-icon {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none;
+  object-fit: none;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+.bs-summary-level {
+  position: absolute;
+}
+
+/* .bs-stat-box — layer:statBox（xml y≈271，canvas top≈153） */
+.bs-stat-box {
+  position: absolute;
+  top: 153px;
+  left: 10px;
+  width: 398px;
+  height: 140px;
+  background: url('../../images/bonusStat/bonusStat_layer_statBox.png') no-repeat 0 0;
+  background-size: auto;
+  image-rendering: pixelated;
+  box-sizing: border-box;
+  padding: 14px 0 0 88px;
+}
+
+/* #bsStatDetailToggle — button_statDetail */
+.bs-stat-detail-wrap {
+  position: absolute;
+  right: 10px;
+  top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bs-stat-detail-label {
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.bs-stat-detail-toggle {
+  position: relative;
+  flex-shrink: 0;
+  width: 25px;
+  height: 13px;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+}
+
+.bs-stat-detail-indicator {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* #bsStatList — 詞條文字區 */
+.bs-stat-values {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.bs-stat-values--detail {
+  gap: 4px;
+  width: 168px;
+}
+
+.bs-stat-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #bed0d3;
+  line-height: 1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.85);
+}
+
+.bs-stat-line--detail {
+  gap: 10px;
+  color: #ffffff;
+  justify-content: flex-start;
+}
+
+.bs-stat-line--detail .bs-stat-label {
+  min-width: 0;
+  flex-shrink: 0;
+  text-align: left;
+}
+
+.bs-stat-line--detail-main .bs-stat-label {
+  width: 26px;
+}
+
+.bs-stat-line--detail .bs-stat-value {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.bs-stat-line--empty {
+  color: #85919f;
+}
+
+.bs-stat-icon {
+  flex-shrink: 0;
+}
+
+.bs-stat-label {
+  min-width: 72px;
+}
+
+.bs-stat-value {
+  color: #ffffff;
+}
+
+/* .bs-atk-box — layer:atkPowBox（xml y≈415，canvas top≈297） */
+.bs-atk-box {
+  position: absolute;
+  top: 297px;
+  left: 10px;
+  width: 398px;
+  height: 43px;
+  background: url('../../images/bonusStat/bonusStat_layer_atkPowBox.png') no-repeat 0 0;
+  background-size: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* #bsAtkPowChange */
+.bs-atk-value {
+  font-size: 12px;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.bs-atk-value.bs-atk-up { color: #7dff9a; }
+.bs-atk-value.bs-atk-down { color: #ff8a8a; }
+
+/* #bsBottomArea — 費用分頁 + 楓幣/道具格（xml tab y≈463，cost y≈490） */
+.bs-bottom-area {
+  position: absolute;
+  left: 10px;
+  top: 345px;
+  width: 398px;
+  height: 142px;
+  z-index: 2;
+  overflow: visible;
+}
+
+/* #bsCostTabMeso / #bsCostTabItem — tab:cost */
+.bs-cost-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.bs-cost-tab {
+  width: 198px;
+  height: 23px;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: auto;
+  image-rendering: pixelated;
+  outline: none;
+  box-shadow: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.bs-cost-tab:focus,
+.bs-cost-tab:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.bs-cost-tab::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+/* #bsCostMesoPanel / #bsCostItemPanel */
+.bs-cost-meso-panel,
+.bs-cost-item-panel {
+  position: relative;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: auto;
+  image-rendering: pixelated;
+  overflow: visible;
+}
+
+.bs-cost-meso-panel {
+  width: 398px;
+  height: 116px;
+  background-image: url('../../images/bonusStat/bonusStat_costMeso_layer_costMesoBox.png');
+}
+
+.bs-cost-item-panel {
+  width: 396px;
+  height: 115px;
+  background-image: url('../../images/bonusStat/bonusStat_costItem_layer_costItemBox.png');
+}
+
+#panel-bonusStat .bs-selected-item-name {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 320px;
+  font-size: 12px;
+  color: #ffffff;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+#panel-bonusStat .bs-meso-row {
+  position: absolute;
+  inset: auto;
+  left: 197px;
+  top: 50px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: auto;
+  width: auto;
+  padding: 0;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+.bs-meso-icon {
+  width: 14px;
+  height: 14px;
+  image-rendering: pixelated;
+}
+
+/* #bsMesoCost */
+.bs-meso-cost {
+  font-size: 12px;
+  color: #fff;
+  font-weight: bold;
+}
+
+#panel-bonusStat .bs-item-grid {
+  position: absolute;
+  top: 26px;
+  left: 11px;
+  display: grid;
+  grid-template-columns: repeat(9, 38px);
+  grid-template-rows: repeat(2, 38px);
+  gap: 3px;
+  padding: 0;
+  overflow: visible;
+}
+
+#panel-bonusStat .bs-item-slot {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border: none;
+  padding: 0;
+  cursor: default;
+  pointer-events: none;
+  background: transparent;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+#panel-bonusStat .bs-item-slot.has-item {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+#panel-bonusStat .bs-item-slot.has-item.is-blocked {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+#panel-bonusStat .bs-item-slot.has-item.selected {
+  background: none;
+}
+
+#panel-bonusStat .bs-item-slot.has-item.selected::before {
+  content: '';
+  position: absolute;
+  left: var(--bs-slot-selected-x, 0);
+  top: var(--bs-slot-selected-y, 0);
+  width: var(--bs-slot-selected-w, 36px);
+  height: var(--bs-slot-selected-h, 36px);
+  background: url('../../images/bonusStat/bonusStat_costItem_inven_selected.png') no-repeat 0 0;
+  background-size: 100% 100%;
+  z-index: 0;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+#panel-bonusStat .bs-item-icon {
+  position: relative;
+  z-index: 1;
+  display: block;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+#panel-bonusStat .bs-item-count {
+  position: absolute;
+  z-index: 2;
+  right: 2px;
+  bottom: 0;
+  font-size: 10px;
+  color: #fff;
+  text-shadow: 0 1px 2px #000;
+  pointer-events: none;
+}
+
+.bs-item-tooltip {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55));
+}
+
+.bs-item-tooltip.hidden {
+  display: none;
+}
+
+.bs-item-tooltip-img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none;
+  image-rendering: pixelated;
+}
+
+#panel-bonusStat #bsHelpArea.bs-help-area {
+  position: absolute;
+  left: 115px;
+  top: 491px;
+  right: auto;
+  bottom: auto;
+  display: block;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.bs-help-area.hidden { display: none; }
+
+.bs-help-image {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+/* #btnBonusStatReset — button:confirm（xml y≈675，canvas top≈557） */
+.bs-btn-reset {
+  position: absolute;
+  top: 557px;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: auto;
+  image-rendering: pixelated;
+  outline: none;
+  box-shadow: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.bs-btn-reset:focus,
+.bs-btn-reset:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.bs-btn-reset::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+.bs-btn-reset:disabled {
+  cursor: not-allowed;
+}
+
+.bs-btn-reset-main {
+  left: 211px;
+  transform: translateX(-50%);
+  width: 129px;
+  height: 35px;
+  background-image: url('../../images/bonusStat/bonusStat_button_confirm_normal_0.png');
+}
+
+.bs-btn-reset-main:hover:not(:disabled) {
+  background-image: url('../../images/bonusStat/bonusStat_button_confirm_mouseOver_0.png');
+}
+
+.bs-btn-reset-main:active:not(:disabled) {
+  background-image: url('../../images/bonusStat/bonusStat_button_confirm_pressed_0.png');
+}
+
+.bs-btn-reset-main:disabled {
+  background-image: url('../../images/bonusStat/bonusStat_button_confirm_disabled_0.png');
+}
+
+.bs-btn-reset-vip1,
+.bs-btn-reset-vip3 {
+  display: none;
+}
+
+.bs-btn-reset-vip1 {
+  left: 86px;
+  width: 119px;
+  height: 35px;
+  background-image: url('../../images/bonusStat/bonusStat_button_confirm1_normal_0.png');
+}
+
+.bs-btn-reset-vip3 {
+  left: 212px;
+  width: 121px;
+  height: 38px;
+  background-image: url('../../images/bonusStat/bonusStat_button_confirm3_normal_0.png');
+}
+
+/* #bsBottomOptions — 自動強化 / 強化動畫 */
+.bs-bottom-options {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  pointer-events: auto;
+}
+
+.bs-auto-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: 12px;
+  color: #ffffff;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.bs-auto-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.bs-auto-toggle {
+  display: inline-block;
+  width: 25px;
+  height: 13px;
+  flex: 0 0 25px;
+  box-sizing: border-box;
+  background: url('../../images/starforce/starForce.button_protectDestroy.unchecked.png') no-repeat 0 0;
+  background-size: 25px 13px;
+  image-rendering: pixelated;
+}
+
+.bs-auto-toggle-input:checked + .bs-auto-toggle {
+  background-image: url('../../images/starforce/starForce.button_protectDestroy.checkedAndDisabled.png');
+  background-size: 23px 11px;
+  background-position: 2px 1px;
+}
+
+.bs-auto-label:has(.bs-auto-toggle-input:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* fullScreen_bonusStat choice */
+.bs-choice-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.bs-choice-modal:not(.hidden) {
+  pointer-events: none;
+}
+
+.bs-choice-modal:not(.hidden) .bs-choice-modal-backdrop {
+  z-index: 12500;
+  pointer-events: auto;
+}
+
+.bs-choice-modal:not(.hidden) .bs-choice-modal-panel {
+  z-index: 13100;
+  pointer-events: auto;
+}
+
+.bs-choice-modal.hidden { display: none; }
+
+.bs-choice-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 10, 18, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: opacity 0.45s ease;
+}
+
+.bs-choice-modal-panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 490px;
+  overflow: visible;
+  transform: translateY(-28px);
+}
+
+.bs-choice-fade-target {
+  transition: opacity 0.35s ease;
+}
+
+.bs-choice-modal.is-opening:not(.is-opening-ready) .bs-choice-modal-backdrop,
+.bs-choice-modal.is-opening:not(.is-opening-ready) .bs-choice-fade-target {
+  opacity: 0;
+}
+
+.bs-choice-modal.is-closing .bs-choice-modal-backdrop,
+.bs-choice-modal.is-closing .bs-choice-fade-target {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bs-choice-modal.is-auto-rolling .bs-choice-box,
+.bs-choice-modal.is-auto-rolling .bs-choice-confirm-btn {
+  pointer-events: none;
+  cursor: default;
+}
+
+.bs-choice-modal.is-auto-enchant-mode.is-auto-rolling .bs-choice-confirm-btn:not(:disabled) {
+  pointer-events: auto;
+  cursor: pointer;
+  opacity: 1;
+}
+
+.bs-choice-modal.is-auto-rolling .bs-choice-confirm-btn {
+  opacity: 0.45;
+}
+
+.bs-choice-modal.is-auto-pick-pending .bs-choice-box {
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+.bs-choice-modal.is-auto-pick-pending.is-auto-rolling .bs-choice-box {
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+/* 洗到目標 → 翻牌完成前：AFTER 框隱藏、僅 AFTER 可點，BEFORE / 自動重設鎖定 */
+.bs-choice-modal.is-bs-flip-waiting .bs-choice-box--after {
+  opacity: 0;
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+.bs-choice-modal.is-bs-flip-waiting .bs-choice-box--after.is-flip-box-hidden {
+  background-image: none !important;
+}
+
+.bs-choice-modal.is-bs-flip-waiting .bs-choice-box--before,
+.bs-choice-modal.is-bs-flip-waiting .bs-choice-confirm-btn {
+  pointer-events: none !important;
+  cursor: default;
+}
+
+.bs-choice-modal.is-bs-flip-waiting.is-auto-pick-pending .bs-choice-box--before {
+  pointer-events: none !important;
+  cursor: default;
+}
+
+.bs-choice-modal.is-bs-flip-waiting .bs-choice-confirm-btn {
+  opacity: 0.45;
+}
+
+.bs-choice-info-top,
+.bs-choice-info-btm {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.bs-choice-info-top {
+  width: auto;
+  max-width: 470px;
+  height: auto;
+  min-height: 25px;
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.bs-choice-progress-alert {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  top: auto;
+  transform: translateX(-50%);
+  width: 353px;
+  height: 48px;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.bs-choice-progress-alert.hidden {
+  display: none;
+}
+
+.bs-choice-info-btm {
+  width: 410px;
+  height: 25px;
+  margin-top: 4px;
+}
+
+.bs-choice-info-top-img,
+.bs-choice-info-btm-img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none;
+  object-fit: none;
+  image-rendering: pixelated;
+}
+
+.bs-choice-compare-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.bs-choice-box {
+  position: relative;
+  width: 234px;
+  height: 410px;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  color: transparent;
+  background-color: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 234px 410px;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+  transition: opacity 0.35s ease;
+  overflow: visible;
+}
+
+.bs-choice-box--before {
+  background-image: url('../../images/fullScreenbonusStat/fullScreen_bonusStat_choiceBox_canvas_baseBefore.png');
+}
+
+.bs-choice-box--after {
+  background-image: url('../../images/fullScreenbonusStat/fullScreen_bonusStat_choiceBox_canvas_baseAfter.png');
+}
+
+.bs-choice-flip-stage,
+.bs-choice-flip-eff {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none !important;
+  z-index: 4;
+}
+
+.bs-choice-flip-stage.is-active,
+.bs-choice-flip-eff.is-active {
+  opacity: 1;
+}
+
+.bs-choice-flip-back,
+.bs-choice-flip-front {
+  position: absolute;
+  display: none;
+  image-rendering: pixelated;
+  pointer-events: none !important;
+  will-change: left, top;
+}
+
+.bs-choice-flip-back {
+  z-index: 1;
+}
+
+.bs-choice-flip-front {
+  z-index: 2;
+}
+
+.bs-choice-box--after.is-flip-content-hidden .bs-choice-level,
+.bs-choice-box--after.is-flip-content-hidden .bs-choice-line-list,
+.bs-choice-box--after.is-flip-content-hidden .bs-choice-sum-list,
+.bs-choice-box--after.is-flip-content-hidden .bs-choice-atk-area {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.bs-choice-hover,
+.bs-choice-level,
+.bs-choice-line-list,
+.bs-choice-sum-list,
+.bs-choice-atk-area {
+  z-index: 2;
+}
+
+.bs-choice-hover {
+  position: absolute;
+  left: -6px;
+  top: -6px;
+  width: 246px;
+  height: 423px;
+  background: url('../../images/fullScreenbonusStat/fullScreen_bonusStat_choiceBox_layer_mouseOver.png') no-repeat 0 0;
+  background-size: 246px 423px;
+  opacity: 0;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.bs-choice-box:hover .bs-choice-hover,
+.bs-choice-box.is-selected .bs-choice-hover {
+  opacity: 1;
+}
+
+.bs-choice-modal.is-closing .bs-choice-box:not(.is-selected) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bs-choice-level {
+  position: absolute;
+  top: 49px;
+  left: 49px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #88ffce;
+  line-height: 1;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.bs-choice-line-list {
+  position: absolute;
+  top: 70px;
+  left: 72px;
+  right: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.bs-choice-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 18px;
+  font-size: 12px;
+  color: #abb5bb;
+  text-align: left;
+  line-height: 1;
+}
+
+.bs-choice-icon {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+}
+
+.bs-choice-sum-list {
+  position: absolute;
+  top: 205px;
+  left: 43px;
+  width: 146px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.bs-choice-sum-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 20px;
+  font-size: 12px;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.bs-choice-sum-line--main .bs-choice-sum-label {
+  width: 26px;
+  flex-shrink: 0;
+}
+
+.bs-choice-sum-label {
+  flex-shrink: 0;
+  text-align: left;
+}
+
+.bs-choice-sum-value {
+  flex-shrink: 0;
+  white-space: nowrap;
+  color: #88ffce;
+}
+
+.bs-choice-sum-line--empty {
+  color: #85919f;
+}
+
+.bs-choice-atk-area {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 36px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.bs-choice-atk-value {
+  font-size: 12px;
+  font-weight: bold;
+  color: #88ffce;
+}
+
+.bs-choice-roll-hint {
+  margin-left: 8px;
+  font-size: 12px;
+  color: #88ffce;
+}
+
+.bs-choice-confirm-box {
+  position: relative;
+  width: 490px;
+  height: 94px;
+  margin-top: 6px;
+  overflow: visible;
+  flex-shrink: 0;
+  transform: translate(-42px, 5px);
+}
+
+.bs-choice-confirm-box.hidden {
+  display: none;
+}
+
+.bs-choice-confirm-bg {
+  position: absolute;
+  inset: 0;
+  background: url('../../images/fullScreenbonusStat/BS_itemConfirm_rework/BS_itemConfirm_layer_bg.png') no-repeat 0 0;
+  background-size: 490px 94px;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.bs-choice-confirm-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.bs-choice-confirm-stock {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 98px;
+  height: 94px;
+  pointer-events: none;
+}
+
+.bs-choice-confirm-stock-icon {
+  position: absolute;
+  left: 33px;
+  top: 22px;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  transform: translate(-14px, 5px);
+}
+
+.bs-choice-confirm-stock-count {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 10px;
+  text-align: center;
+  font-family: SimSun, "宋体", serif;
+  font-size: 12px;
+  font-weight: normal;
+  color: #ffffff;
+  text-shadow: 0 1px 1px #000;
+  transform: translate(-16px, -4px);
+}
+
+.bs-choice-confirm-actions {
+  position: absolute;
+  left: 98px;
+  right: 0;
+  top: 0;
+  height: 94px;
+}
+
+.bs-choice-confirm-btn {
+  position: absolute;
+  top: 12px;
+  right: 0;
+  transform: translate(-18px, -1px);
+  width: 388px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 388px 34px;
+  background-image: url('../../images/fullScreenbonusStat/BS_itemConfirm_rework/bonusStat_confirmBox_button_Confirm_normal_0.png');
+  image-rendering: pixelated;
+}
+
+.bs-choice-confirm-btn:not(:disabled):hover {
+  background-image: url('../../images/fullScreenbonusStat/BS_itemConfirm_rework/bonusStat_confirmBox_button_Confirm_mouseOver_0.png');
+}
+
+.bs-choice-confirm-btn:not(:disabled):active {
+  background-image: url('../../images/fullScreenbonusStat/BS_itemConfirm_rework/bonusStat_confirmBox_button_Confirm_pressed_0.png');
+}
+
+.bs-choice-confirm-btn:disabled {
+  cursor: default;
+  background-image: url('../../images/fullScreenbonusStat/BS_itemConfirm_rework/bonusStat_confirmBox_button_Confirm_disabled_0.png');
+}
+
+.bs-choice-modal.is-auto-enchant-mode.is-auto-rolling .bs-choice-confirm-btn:not(:disabled) {
+  background-image: url('../../images/fullScreenbonusStat/BS_itemConfirm_rework/bonusStat_confirmBox_AutoEnchantbutton_Cancel_confirm_normal_0.png');
+}
+
+.bs-choice-modal.is-auto-enchant-mode.is-auto-rolling .bs-choice-confirm-btn:not(:disabled):hover {
+  background-image: url('../../images/fullScreenbonusStat/BS_itemConfirm_rework/bonusStat_confirmBox_AutoEnchantbutton_Cancel_confirm_mouseOver_0.png');
+}
+
+.bs-choice-modal.is-auto-enchant-mode.is-auto-rolling .bs-choice-confirm-btn:not(:disabled):active {
+  background-image: url('../../images/fullScreenbonusStat/BS_itemConfirm_rework/bonusStat_confirmBox_AutoEnchantbutton_Cancel_confirm_pressed_0.png');
+}
+
+.bs-choice-modal.is-auto-enchant-mode.is-auto-restart-ready .bs-choice-confirm-btn:not(:disabled) {
+  background-image: url('../../images/fullScreenbonusStat/BS_itemConfirm_rework/bonusStat_confirmBox_AutoEnchantbutton_Confirm_normal_0.png');
+}
+
+.bs-choice-modal.is-auto-enchant-mode.is-auto-restart-ready .bs-choice-confirm-btn:not(:disabled):hover {
+  background-image: url('../../images/fullScreenbonusStat/BS_itemConfirm_rework/bonusStat_confirmBox_AutoEnchantbutton_Confirm_mouseOver_0.png');
+}
+
+.bs-choice-modal.is-auto-enchant-mode.is-auto-restart-ready .bs-choice-confirm-btn:not(:disabled):active {
+  background-image: url('../../images/fullScreenbonusStat/BS_itemConfirm_rework/bonusStat_confirmBox_AutoEnchantbutton_Confirm_pressed_0.png');
+}
+
+.bs-choice-modal.is-auto-enchant-mode.is-auto-restart-ready .bs-choice-confirm-btn:disabled {
+  background-image: url('../../images/fullScreenbonusStat/BS_itemConfirm_rework/bonusStat_confirmBox_AutoEnchantbutton_Confirm_disabled_0.png');
+}
+
+.bs-choice-confirm-cost {
+  position: absolute;
+  left: 88px;
+  right: 52px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.bs-choice-confirm-cost-count {
+  font-family: SimSun, "宋体", serif;
+  font-size: 12px;
+  font-weight: normal;
+  color: #b0c7cf;
+  transform: translate(-19px, -7px);
+}
+
+/* autoEnchant bonusStat */
+.ae-bs-modal {
+  position: absolute;
+  left: calc(146px + 1px + 418px);
+  bottom: 0;
+  z-index: 1;
+}
+
+.ae-bs-modal.hidden { display: none; }
+
+.ae-bs-modal:not(.hidden) {
+  pointer-events: none;
+  z-index: 12000;
+}
+
+.ae-bs-modal:not(.hidden) .ae-bs-modal-panel {
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.ae-bs-modal.ae-bs-modal--choice-active:not(.hidden) {
+  z-index: auto;
+}
+
+.ae-bs-modal.ae-bs-modal--choice-active .ae-bs-modal-panel {
+  z-index: 13000;
+}
+
+.ae-bs-modal.ae-bs-modal--choice-active .ae-bs-modal-backdrop {
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ae-bs-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.ae-bs-panel {
+  position: relative;
+  width: 290px;
+  height: 242px;
+  overflow: visible;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+.ae-bs-modal-panel {
+  overflow: visible;
+}
+
+.ae-bs-rows {
+  position: absolute;
+  left: 10px;
+  top: 32px;
+  width: 270px;
+  height: 144px;
+  overflow: visible;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+.ae-bs-row {
+  position: absolute;
+  left: 0;
+  width: 270px;
+  height: 32px;
+  overflow: visible;
+  background: none;
+  image-rendering: pixelated;
+}
+
+.ae-bs-row-0 { top: 0; }
+.ae-bs-row-1 { top: 31px; }
+.ae-bs-row-2 { top: 62px; }
+.ae-bs-row-3 { top: 93px; }
+
+.ae-bs-stat-combo-wrap {
+  position: absolute;
+  left: 8px;
+  top: 10px;
+  width: 190px;
+  height: 32px;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 190px 32px;
+  image-rendering: pixelated;
+}
+
+.ae-bs-stat-combo-wrap.is-open {
+  z-index: 30;
+}
+
+.ae-bs-stat-combo-trigger {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100%;
+  margin: 0;
+  padding: 0 28px 0 11px !important;
+  text-align: left;
+  font-family: SimSun, "宋体", serif;
+  font-size: 12px;
+  line-height: 32px;
+  color: #d4e1e5 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-sizing: border-box;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ae-bs-stat-combo-trigger:disabled {
+  cursor: not-allowed;
+}
+
+.ae-bs-stat-combo-label {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ae-bs-stat-combo-list {
+  position: absolute;
+  left: 0;
+  top: calc(100% - 1px);
+  width: 190px;
+  box-sizing: border-box;
+  background: #282d32;
+  border: 1px solid #999999;
+  z-index: 40;
+}
+
+.ae-bs-stat-combo-list.hidden {
+  display: none;
+}
+
+.ae-bs-stat-combo-option {
+  display: block;
+  width: 100%;
+  height: 26px;
+  margin: 0;
+  padding: 0 8px;
+  box-sizing: border-box;
+  text-align: left;
+  font-family: SimSun, "宋体", serif;
+  font-size: 12px;
+  line-height: 26px;
+  color: #d4e1e5;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.ae-bs-stat-combo-option:hover,
+.ae-bs-stat-combo-option:focus-visible {
+  background: #3db5c0;
+  color: #d4e1e5;
+  outline: none;
+}
+
+.ae-bs-stat-combo-option.is-taken {
+  color: #bb77ff;
+  cursor: not-allowed;
+}
+
+.ae-bs-stat-combo-option.is-taken:hover,
+.ae-bs-stat-combo-option.is-taken:focus-visible {
+  background: transparent;
+  color: #bb77ff;
+}
+
+.ae-bs-stat-combo-sep {
+  height: 1px;
+  background: rgba(212, 225, 229, 0.35);
+}
+
+.ae-bs-stat-combo-scroll {
+  max-height: 78px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.ae-bs-stat-combo-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.ae-bs-stat-combo-scroll::-webkit-scrollbar-track {
+  background: #1e2226;
+}
+
+.ae-bs-stat-combo-scroll::-webkit-scrollbar-thumb {
+  background: #4a5560;
+}
+
+.ae-bs-value-input {
+  position: absolute;
+  right: 4px;
+  top: 0;
+  width: 48px;
+  height: 27px;
+  padding: 0;
+  text-align: center;
+  font-family: SimSun, "宋体", serif;
+  font-size: 12px;
+  line-height: 27px;
+  color: #1a1a1a;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-sizing: border-box;
+  transform: translate(-11px, 13px);
+  outline: none;
+  box-shadow: none;
+}
+
+.ae-bs-value-input:focus,
+.ae-bs-value-input:focus-visible {
+  outline: none;
+  box-shadow: none;
+  border: none;
+  background: transparent;
+}
+
+.ae-bs-value-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ae-bs-stop-overspeed {
+  position: absolute;
+  left: 10px;
+  top: 182px;
+  width: 270px;
+  height: 22px;
+  border: none;
+  padding: 0;
+  font-size: 0;
+  color: transparent;
+  cursor: pointer;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+.ae-bs-stop-overspeed:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ae-bs-stop-check {
+  position: absolute;
+  right: 8px;
+  top: 4px;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+
+.ae-bs-progress-alert {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  top: auto;
+  transform: translateX(-50%);
+  width: 353px;
+  height: 48px;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.ae-bs-progress-alert.hidden { display: none; }
+
+.ae-bs-actions {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+}
+
+.ae-bs-btn-reset {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  width: 56px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+.ae-bs-btn-reset:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ae-bs-tier-mode-label {
+  position: absolute;
+  right: 10px;
+  left: auto;
+  bottom: 10px;
+  height: 24px;
+  z-index: 2;
+}
+
+.ae-bs-btn-action {
+  width: 86px;
+  height: 24px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+.ae-bs-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

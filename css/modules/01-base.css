@@ -1,0 +1,383 @@
+/* ==========================================
+   1. 全局與基礎佈局
+   ========================================== */
+body,
+button,
+input,
+select,
+textarea {
+  font-family: SimSun, "宋体", serif;
+}
+
+body {
+  background-color: #121921;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  user-select: none;
+}
+
+/* 三欄式整體容器 */
+.ms-container-3col {
+  display: flex;
+  gap: 1px;
+  align-items: flex-start;
+  justify-content: center;
+  position: relative;
+  overflow: visible;
+}
+
+.hidden { 
+  display: none !important; 
+}
+
+/* 開頁預載：僅在介面素材就緒前阻擋互動（特效改背景載入） */
+body.enchant-boot-loading #pageEnhance {
+  pointer-events: none;
+  user-select: none;
+}
+
+.enchant-boot-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 10, 14, 0.92);
+  color: #f2efe6;
+  font-family: 'Microsoft JhengHei', 'PingFang TC', 'Noto Sans TC', sans-serif;
+}
+
+.enchant-boot-overlay.is-done {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s ease;
+}
+
+.enchant-boot-panel {
+  width: min(420px, calc(100vw - 40px));
+  padding: 28px 24px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #2a3038 0%, #1a1e24 100%);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
+
+.enchant-boot-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.enchant-boot-status {
+  font-size: 13px;
+  opacity: 0.9;
+  margin-bottom: 16px;
+  min-height: 1.4em;
+}
+
+.enchant-boot-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.enchant-boot-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6ec8ff 0%, #9af0c8 100%);
+  transition: width 0.12s linear;
+}
+
+.enchant-boot-progress {
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: 0.75;
+  letter-spacing: 0.04em;
+}
+
+/* 開頁說明卡 */
+.ms-info-card-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100001;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background: rgba(8, 10, 14, 0.72);
+  cursor: default;
+}
+
+.ms-info-card-overlay.hidden {
+  display: none !important;
+}
+
+.ms-info-card-modal {
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  background: #1e222d;
+  border: 2px solid #545c75;
+  border-radius: 8px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 0 1px #11141c;
+  color: #e1e4ed;
+  cursor: default;
+  font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+}
+
+.ms-info-card-header {
+  background: linear-gradient(180deg, #32384a 0%, #252a38 100%);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #434a61;
+  gap: 12px;
+}
+
+.ms-info-card-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #ffd966;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-shadow: 0 1px 2px #000;
+}
+
+.ms-info-card-tag {
+  font-size: 11px;
+  background: #394256;
+  color: #a6c8ff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #4d5b78;
+  white-space: nowrap;
+}
+
+.ms-info-card-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.ms-info-card-intro {
+  background: rgba(0, 0, 0, 0.25);
+  border-left: 3px solid #ffd966;
+  padding: 8px 12px;
+  border-radius: 0 4px 4px 0;
+  color: #ccd2e3;
+}
+
+.ms-info-card-section-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: #8ec5fc;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ms-info-card-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 4px;
+  margin: 0;
+}
+
+.ms-info-card-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.ms-info-card-list li strong {
+  color: #fff;
+  white-space: nowrap;
+}
+
+.ms-info-card-key {
+  display: inline-block;
+  padding: 1px 5px;
+  background: #333a4d;
+  border: 1px solid #4f5b7a;
+  border-radius: 3px;
+  color: #ffd966;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.ms-info-card-note {
+  font-size: 12px;
+  color: #a9b3cc;
+  padding-left: 4px;
+  margin: 0;
+}
+
+.ms-info-card-author {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: #171a22;
+  border: 1px solid #2f3647;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 12px;
+}
+
+.ms-info-card-author span {
+  color: #9aa4bf;
+}
+
+.ms-info-card-author strong {
+  color: #e1e4ed;
+}
+
+.ms-info-card-disclaimer {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px dashed #444c60;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 11px;
+  color: #8b95ad;
+  line-height: 1.5;
+}
+
+.ms-info-card-disclaimer-title {
+  color: #b0bacd;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.ms-info-card-close-btn {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #4f5b7a;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #3a4256 0%, #2a3142 100%);
+  color: #ffd966;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  text-align: center;
+}
+
+.ms-info-card-close-btn:hover {
+  background: linear-gradient(180deg, #465270 0%, #343c52 100%);
+  border-color: #6a789a;
+}
+
+.ms-info-card-close-btn:active {
+  background: linear-gradient(180deg, #2a3142 0%, #232936 100%);
+}
+
+/* 介面內確認彈窗 */
+.ms-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100002;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background: rgba(8, 10, 14, 0.72);
+}
+
+.ms-confirm-overlay.hidden {
+  display: none !important;
+}
+
+.ms-confirm-modal {
+  width: min(420px, calc(100vw - 32px));
+  background: #1e222d;
+  border: 2px solid #545c75;
+  border-radius: 8px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 0 1px #11141c;
+  color: #e1e4ed;
+  font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+  overflow: hidden;
+}
+
+.ms-confirm-header {
+  background: linear-gradient(180deg, #32384a 0%, #252a38 100%);
+  padding: 12px 18px;
+  border-bottom: 2px solid #434a61;
+}
+
+.ms-confirm-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: #ffd966;
+  text-shadow: 0 1px 2px #000;
+}
+
+.ms-confirm-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ms-confirm-message {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #ccd2e3;
+  white-space: pre-line;
+}
+
+.ms-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.ms-confirm-btn {
+  min-width: 88px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid #4f5b7a;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ms-confirm-btn-cancel {
+  background: linear-gradient(180deg, #3a4256 0%, #2a3142 100%);
+  color: #d7deef;
+}
+
+.ms-confirm-btn-cancel:hover {
+  background: linear-gradient(180deg, #465270 0%, #343c52 100%);
+}
+
+.ms-confirm-btn-ok {
+  background: linear-gradient(180deg, #5a4a28 0%, #3f341c 100%);
+  border-color: #8a7340;
+  color: #ffd966;
+}
+
+.ms-confirm-btn-ok:hover {
+  background: linear-gradient(180deg, #6b5832 0%, #4a3d22 100%);
+}

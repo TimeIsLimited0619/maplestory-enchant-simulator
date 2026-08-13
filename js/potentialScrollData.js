@@ -166,6 +166,9 @@ function getPotentialScrollBlockReason(item, scroll) {
   if (typeof isMedalItem === 'function' && isMedalItem(item)) {
     return `勳章無法使用${scrollName}`;
   }
+  if (typeof isPinItem === 'function' && isPinItem(item) && target === 'additional') {
+    return '胸章無法使用附加潛能賦予卷軸';
+  }
 
   const hasMain = typeof hasEquipPotentialLines === 'function'
     ? hasEquipPotentialLines(item, 'main')

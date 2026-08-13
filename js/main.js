@@ -269,6 +269,17 @@ function refreshEquippedItemUI() {
 }
 
 function saveInventoryItemState(slotIndex, state) {
+  // 強化槽持有中（已移出背包）：只同步記憶體並排程存檔
+  if (!Number.isInteger(slotIndex) || slotIndex < 0) {
+    if (state && typeof syncEnchantStateFromModules === 'function') {
+      syncEnchantStateFromModules(state);
+    }
+    if (typeof SessionPersistenceModule !== 'undefined') {
+      SessionPersistenceModule.scheduleSave();
+    }
+    return;
+  }
+
   if (!state) {
     playerInventoryState[slotIndex] = null;
     if (typeof SessionPersistenceModule !== 'undefined') {
@@ -546,15 +557,54 @@ function updateNoneWaitEquipVisibility() {
   updateNonePageControls();
 }
 
+function findEmptyEquipBagSlot() {
+  if (typeof playerInventoryEquip === 'undefined') return -1;
+  for (let i = 0; i < playerInventoryEquip.length; i++) {
+    if (!playerInventoryEquip[i]) return i;
+  }
+  return -1;
+}
+
+function syncPlayerInventoryAlias() {
+  if (typeof playerInventory !== 'undefined' && Array.isArray(playerInventory)
+    && typeof playerInventoryEquip !== 'undefined') {
+    // playerInventory 與 Equip 為同一陣列參照時無需複製；保險同步長度內容
+    if (playerInventory !== playerInventoryEquip) {
+      playerInventory.splice(0, playerInventory.length, ...playerInventoryEquip);
+    }
+  }
+}
+
 function loadEquipToSlot(itemId, slotIndex) {
+  if (typeof EquipTooltipModule !== 'undefined') {
+    EquipTooltipModule.hide(true);
+  }
   if (currentEnchantItem) {
     unloadEquipFromSlot();
   }
 
+  // 與裝備欄互斥：身上有同一件則先卸回背包
+  if (typeof UiEquipModule !== 'undefined' && UiEquipModule.isItemWorn?.(itemId)) {
+    UiEquipModule.unequipItemId(itemId, { refreshUi: false });
+    slotIndex = playerInventoryEquip.indexOf(itemId);
+    if (slotIndex < 0) return;
+  }
+
   const itemData = ITEM_DATABASE[itemId];
   if (!itemData) return;
+  if (!Number.isInteger(slotIndex) || slotIndex < 0 || !playerInventoryEquip[slotIndex]) {
+    // 允許已不在背包的還原路徑改走 loadEnchantItemHeld
+    return;
+  }
 
+  // 先讀取背包進度，再真正移出背包
   currentEnchantItem = loadEnchantStateForSlot(itemId, slotIndex);
+  if (!currentEnchantItem) return;
+
+  playerInventoryEquip[slotIndex] = null;
+  playerInventoryState[slotIndex] = null;
+  syncPlayerInventoryAlias();
+  currentEnchantItem.slotIndex = -1;
 
   const dropZone = document.getElementById('equipDropZone');
   if (dropZone) {
@@ -569,12 +619,6 @@ function loadEquipToSlot(itemId, slotIndex) {
     if (equipImg) {
       equipImg.ondblclick = () => unloadEquipFromSlot();
     }
-  }
-
-  const invItemImg = document.getElementById(`inv_item_equip_${slotIndex}`);
-  const invFrame = invItemImg?.parentElement;
-  if (invFrame?.classList.contains('inv-item-frame')) {
-    invFrame.classList.add('equipped-hidden');
   }
 
   const sfItemName = document.getElementById('sfItemName');
@@ -592,21 +636,110 @@ function loadEquipToSlot(itemId, slotIndex) {
   }
   scheduleEffectTestBarRefresh();
   syncInspectModules();
+  if (typeof SessionPersistenceModule !== 'undefined') {
+    SessionPersistenceModule.scheduleSave();
+  }
+}
+
+/** 從存檔還原強化槽（物品已不在背包，或需先從背包取出） */
+function loadEnchantItemHeld(itemId, savedState = null) {
+  if (currentEnchantItem) {
+    unloadEquipFromSlot();
+  }
+  const itemData = ITEM_DATABASE[itemId];
+  if (!itemData) return false;
+
+  // 若仍在背包（舊存檔），先取出
+  const bagIdx = playerInventoryEquip.indexOf(itemId);
+  if (bagIdx >= 0) {
+    loadEquipToSlot(itemId, bagIdx);
+    if (savedState && currentEnchantItem) {
+      const merged = {
+        ...currentEnchantItem,
+        ...cloneEnchantState(savedState),
+        slotIndex: -1,
+        itemId,
+        id: itemId,
+        name: itemData.name,
+        icon: itemData.icon,
+        mainType: itemData.mainType,
+        subType: itemData.subType,
+        islot: itemData.islot,
+        vslot: itemData.vslot,
+        baseStats: itemData.baseStats,
+      };
+      currentEnchantItem = merged;
+      updateActiveModuleEquip();
+      updateStatusPanel();
+    }
+    return true;
+  }
+
+  const fresh = createEnchantState(itemData, -1);
+  currentEnchantItem = savedState
+    ? {
+      ...fresh,
+      ...cloneEnchantState(savedState),
+      slotIndex: -1,
+      itemId,
+      id: itemId,
+      name: itemData.name,
+      icon: itemData.icon,
+      mainType: itemData.mainType,
+      subType: itemData.subType,
+      islot: itemData.islot,
+      vslot: itemData.vslot,
+      baseStats: itemData.baseStats,
+    }
+    : fresh;
+
+  const dropZone = document.getElementById('equipDropZone');
+  if (dropZone) {
+    dropZone.innerHTML = `
+      <img src="${itemData.icon}"
+           alt="${itemData.name}"
+           id="enchantedEquipImg"
+           title="雙擊卸下裝備">
+    `;
+    const equipImg = document.getElementById('enchantedEquipImg');
+    if (equipImg) {
+      equipImg.ondblclick = () => unloadEquipFromSlot();
+    }
+  }
+
+  const sfItemName = document.getElementById('sfItemName');
+  if (sfItemName) sfItemName.innerText = itemData.name;
+
+  updateStatusPanel();
+  updateActiveModuleEquip();
+  updateNoneWaitEquipVisibility();
+  updateCategoryTabStates();
+  syncMainPanelIdleState();
+  initInventory();
+  scheduleEffectTestBarRefresh();
+  syncInspectModules();
+  return true;
 }
 
 function unloadEquipFromSlot() {
   if (!currentEnchantItem) return;
 
-  const slotIndex = currentEnchantItem.slotIndex;
   const itemName = currentEnchantItem.name;
+  const itemId = currentEnchantItem.itemId || currentEnchantItem.id;
 
-  saveInventoryItemState(slotIndex, currentEnchantItem);
+  syncEnchantStateFromModules(currentEnchantItem);
+  const snapshot = cloneEnchantState(currentEnchantItem);
+  delete snapshot.slotIndex;
 
-  const invItemImg = document.getElementById(`inv_item_equip_${slotIndex}`);
-  const invFrame = invItemImg?.parentElement;
-  if (invFrame?.classList.contains('inv-item-frame')) {
-    invFrame.classList.remove('equipped-hidden');
+  const bagIndex = findEmptyEquipBagSlot();
+  if (bagIndex < 0) {
+    addLog('[系統] 背包已滿，無法卸下強化中的裝備。', 'log-fail');
+    return;
   }
+
+  playerInventoryEquip[bagIndex] = itemId;
+  playerInventoryState[bagIndex] = snapshot;
+  syncPlayerInventoryAlias();
 
   const dropZone = document.getElementById('equipDropZone');
   if (dropZone) dropZone.innerHTML = '';
@@ -652,6 +785,9 @@ function unloadEquipFromSlot() {
   }
   scheduleEffectTestBarRefresh();
   syncInspectModules();
+  if (typeof SessionPersistenceModule !== 'undefined') {
+    SessionPersistenceModule.scheduleSave();
+  }
 }
 
 // ==========================================
@@ -1659,6 +1795,13 @@ window.addEventListener('DOMContentLoaded', () => {
     StarForceModule.bindCostItemEvents();
   }
   InventoryModule.init();
+  if (typeof UiEquipModule !== 'undefined') {
+    UiEquipModule.init();
+  }
+  if (typeof SessionPersistenceModule !== 'undefined'
+    && typeof SessionPersistenceModule.restoreUiEquipState === 'function') {
+    SessionPersistenceModule.restoreUiEquipState();
+  }
   if (typeof EquipTooltipModule !== 'undefined') {
     EquipTooltipModule.init();
   }

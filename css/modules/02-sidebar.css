@@ -1,0 +1,195 @@
+/* ==========================================
+   2. 左側邊欄 (Sidebar & Tab Buttons)
+   ========================================== */
+.ms-sidebar {
+  width: 146px;                  /* 依據圖片比例調整寬度 */
+  height: 720px;                 /* 依據右側面板高度調整 */
+  background-image: url('../../images/common_backgrnd.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  border: none !important;
+  background-color: transparent !important;
+  padding: 38px 10px 10px 10px;  /* 避開頂部 ENCHANT 字樣 */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* 按鈕放置容器 */
+.ms-sidebar-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 4px;
+  position: relative;
+  z-index: 2;
+}
+
+/* 左側 Log（卓越強化分頁下方，避免擋住切換） */
+.ms-sidebar-log {
+  position: absolute;
+  top: 552px;
+  left: 12px;
+  width: 122px;
+  height: 64px;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 6px 5px;
+  overflow-y: auto;
+  font-family: inherit;
+  font-size: 10px;
+  line-height: 1.35;
+  color: #bbb;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.ms-sidebar-log::-webkit-scrollbar {
+  width: 4px;
+}
+
+.ms-sidebar-log::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 2px;
+}
+
+.ms-sidebar-inspect-btn {
+  position: absolute;
+  top: 624px;
+  left: 12px;
+  width: 122px;
+  height: 26px;
+  border: 1px solid rgba(255, 210, 80, 0.45);
+  border-radius: 4px;
+  background: rgba(35, 28, 12, 0.92);
+  color: #ffd86b;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.ms-sidebar-inspect-btn:hover {
+  background: rgba(55, 42, 16, 0.96);
+}
+
+.ms-sidebar-inspect-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ms-sidebar-reset-btn {
+  position: absolute;
+  top: 622px;
+  left: 12px;
+  width: 122px;
+  height: 26px;
+  border: 1px solid rgba(255, 120, 80, 0.45);
+  border-radius: 4px;
+  background: rgba(40, 18, 12, 0.92);
+  color: #ffb08a;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.ms-sidebar-reset-btn:hover {
+  background: rgba(62, 28, 18, 0.96);
+}
+
+.ms-sidebar-reset-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 底部總花費數字 */
+.ms-sidebar-cost-val {
+  position: absolute;
+  bottom: 10px;
+  right: 20px;
+  font-weight: bold;
+  font-size: 12px;
+  color: #ffffff;
+  text-align: right;
+}
+
+/* 頁籤通用邏輯 */
+.ms-tab-btn {
+  width: 120px;
+  height: 59px;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  cursor: pointer;
+  outline: none;
+  background-image: var(--img-normal);
+  transition: all 0.15s ease;
+}
+
+.ms-tab-btn:hover:not(:disabled):not(.checked) { background-image: var(--img-hover); }
+.ms-tab-btn:active:not(:disabled):not(.checked) { background-image: var(--img-pressed); }
+.ms-tab-btn.checked                             { background-image: var(--img-checked); cursor: default; }
+.ms-tab-btn:disabled                            { background-image: var(--img-disabled); cursor: not-allowed; }
+
+/* 頁籤圖片綁定 */
+.tab-star {
+  --img-normal:   url('../../images/tabbutton/star_tab_normal.png');
+  --img-hover:    url('../../images/tabbutton/star_tab_mouseOver.png');
+  --img-pressed:  url('../../images/tabbutton/star_tab_pressed.png');
+  --img-checked:  url('../../images/tabbutton/star_tab_checked.png');
+  --img-disabled: url('../../images/tabbutton/star_tab_disabled.png');
+}
+.tab-scroll {
+  --img-normal:   url('../../images/tabbutton/scroll_tab_normal.png');
+  --img-hover:    url('../../images/tabbutton/scroll_tab_mouseOver.png');
+  --img-pressed:  url('../../images/tabbutton/scroll_tab_pressed.png');
+  --img-checked:  url('../../images/tabbutton/scroll_tab_checked.png');
+  --img-disabled: url('../../images/tabbutton/scroll_tab_disabled.png');
+}
+.tab-hammer {
+  --img-normal:   url('../../images/tabbutton/hammer_tab_normal.png');
+  --img-hover:    url('../../images/tabbutton/hammer_tab_mouseOver.png');
+  --img-pressed:  url('../../images/tabbutton/hammer_tab_pressed.png');
+  --img-checked:  url('../../images/tabbutton/hammer_tab_checked.png');
+  --img-disabled: url('../../images/tabbutton/hammer_tab_disabled.png');
+}
+.tab-soulWeapon {
+  --img-normal:   url('../../images/tabbutton/soulWeapon_tab_normal.png');
+  --img-hover:    url('../../images/tabbutton/soulWeapon_tab_mouseOver.png');
+  --img-pressed:  url('../../images/tabbutton/soulWeapon_tab_pressed.png');
+  --img-checked:  url('../../images/tabbutton/soulWeapon_tab_checked.png');
+  --img-disabled: url('../../images/tabbutton/soulWeapon_tab_disabled.png');
+}
+.tab-bonusStat {
+  --img-normal:   url('../../images/tabbutton/bonusStat_tab_normal.png');
+  --img-hover:    url('../../images/tabbutton/bonusStat_tab_mouseOver.png');
+  --img-pressed:  url('../../images/tabbutton/bonusStat_tab_pressed.png');
+  --img-checked:  url('../../images/tabbutton/bonusStat_tab_checked.png');
+  --img-disabled: url('../../images/tabbutton/bonusStat_tab_disabled.png');
+}
+.tab-potential {
+  --img-normal:   url('../../images/tabbutton/potential_tab_normal.png');
+  --img-hover:    url('../../images/tabbutton/potential_tab_mouseOver.png');
+  --img-pressed:  url('../../images/tabbutton/potential_tab_pressed.png');
+  --img-checked:  url('../../images/tabbutton/potential_tab_checked.png');
+  --img-disabled: url('../../images/tabbutton/potential_tab_disabled.png');
+}
+.tab-additionalPotential {
+  --img-normal:   url('../../images/tabbutton/additionalPotential_tab_normal.png');
+  --img-hover:    url('../../images/tabbutton/additionalPotential_tab_mouseOver.png');
+  --img-pressed:  url('../../images/tabbutton/additionalPotential_tab_pressed.png');
+  --img-checked:  url('../../images/tabbutton/additionalPotential_tab_checked.png');
+  --img-disabled: url('../../images/tabbutton/additionalPotential_tab_disabled.png');
+}
+.tab-exceptional {
+  --img-normal:   url('../../images/tabbutton/exceptional_tab_normal.png');
+  --img-hover:    url('../../images/tabbutton/exceptional_tab_mouseOver.png');
+  --img-pressed:  url('../../images/tabbutton/exceptional_tab_pressed.png');
+  --img-checked:  url('../../images/tabbutton/exceptional_tab_checked.png');
+  --img-disabled: url('../../images/tabbutton/exceptional_tab_disabled.png');
+}

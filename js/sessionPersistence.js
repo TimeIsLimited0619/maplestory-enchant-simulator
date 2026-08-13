@@ -33,6 +33,11 @@ const SessionPersistenceModule = {
       syncEnchantStateFromModules(currentEnchantItem);
     }
 
+    // 已移出背包時，進度只存在 currentEnchantItem → equippedItem 快照
+    if (!Number.isInteger(currentEnchantItem.slotIndex) || currentEnchantItem.slotIndex < 0) {
+      return;
+    }
+
     const snapshot = typeof cloneEnchantState === 'function'
       ? cloneEnchantState(currentEnchantItem)
       : JSON.parse(JSON.stringify(currentEnchantItem));
@@ -43,15 +48,31 @@ const SessionPersistenceModule = {
   collectSnapshot() {
     this.syncCurrentEnchantToInventory();
 
-    return {
+    let equippedItem = null;
+    if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
+      const itemId = currentEnchantItem.itemId || currentEnchantItem.id;
+      const state = typeof cloneEnchantState === 'function'
+        ? cloneEnchantState(currentEnchantItem)
+        : JSON.parse(JSON.stringify(currentEnchantItem));
+      delete state.slotIndex;
+      equippedItem = { itemId, state };
+    }
+
+    const snap = {
       version: SESSION_PERSISTENCE_VERSION,
       inventoryEquip: playerInventoryEquip.slice(),
       inventoryConsume: playerInventoryConsume.slice(),
       inventoryState: playerInventoryState.slice(),
-      equippedSlotIndex: typeof currentEnchantItem !== 'undefined' && currentEnchantItem
-        ? currentEnchantItem.slotIndex
-        : null
+      // 新格式：強化槽實體；舊 equippedSlotIndex 保留相容（通常為 -1 / null）
+      equippedItem,
+      equippedSlotIndex: null,
     };
+
+    if (typeof UiEquipModule !== 'undefined' && typeof UiEquipModule.exportState === 'function') {
+      Object.assign(snap, UiEquipModule.exportState());
+    }
+
+    return snap;
   },
 
   buildExportPayload() {
@@ -229,6 +250,7 @@ const SessionPersistenceModule = {
     if (typeof syncInspectModules === 'function') syncInspectModules();
     if (typeof calculateCost === 'function') calculateCost();
 
+    this.restoreUiEquipState();
     this.restoreEquippedItem();
 
     if (typeof CostTrackerModule !== 'undefined') {
@@ -242,13 +264,6 @@ const SessionPersistenceModule = {
 
   clearEquipSlotSilent() {
     if (typeof currentEnchantItem === 'undefined' || !currentEnchantItem) return;
-
-    const slotIndex = currentEnchantItem.slotIndex;
-    const invItemImg = document.getElementById(`inv_item_equip_${slotIndex}`);
-    const invFrame = invItemImg?.parentElement;
-    if (invFrame?.classList.contains('inv-item-frame')) {
-      invFrame.classList.remove('equipped-hidden');
-    }
 
     const dropZone = document.getElementById('equipDropZone');
     if (dropZone) dropZone.innerHTML = '';
@@ -322,6 +337,16 @@ const SessionPersistenceModule = {
       ? slot
       : null;
 
+    // 新格式強化槽實體（物品已不在背包）
+    this._pendingEquippedItem = null;
+    if (data.equippedItem?.itemId && this.isValidItemId(data.equippedItem.itemId)) {
+      this._pendingEquippedItem = {
+        itemId: data.equippedItem.itemId,
+        state: data.equippedItem.state || null,
+      };
+      this.equippedSlotIndex = null;
+    }
+
     this.mergeDefaultEquipInventory();
     if (typeof ensurePotentialScrollConsumeInventory === 'function') {
       ensurePotentialScrollConsumeInventory();
@@ -329,6 +354,25 @@ const SessionPersistenceModule = {
     if (typeof stripLegacyStarterPotentialsFromInventory === 'function') {
       stripLegacyStarterPotentialsFromInventory();
     }
+
+    // UiEquip 模組可能尚未載入：延後到 restoreUiEquipState
+    this._pendingUiEquipState = {
+      bodyWearActive: data.bodyWearActive || null,
+      bodyWearByPreset: data.bodyWearByPreset || null,
+      activeEquipPreset: data.activeEquipPreset,
+      pendingEquipPreset: data.pendingEquipPreset,
+    };
+  },
+
+  restoreUiEquipState() {
+    const pending = this._pendingUiEquipState;
+    this._pendingUiEquipState = null;
+    if (!pending || typeof UiEquipModule === 'undefined') return;
+    if (typeof UiEquipModule.importState !== 'function') return;
+    if (!pending.bodyWearActive && !pending.bodyWearByPreset && pending.activeEquipPreset == null) {
+      return;
+    }
+    UiEquipModule.importState(pending);
   },
 
   /**
@@ -374,6 +418,19 @@ const SessionPersistenceModule = {
       ? playerInventoryEquip[this.equippedSlotIndex]
       : null;
 
+    const wornIds = (typeof UiEquipModule !== 'undefined' && typeof UiEquipModule.getWornItemIds === 'function')
+      ? UiEquipModule.getWornItemIds()
+      : new Set();
+
+    // 強化槽持有中的裝備也不應被 merge 塞回背包
+    if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
+      const eid = currentEnchantItem.itemId || currentEnchantItem.id;
+      if (eid) wornIds.add(eid);
+    }
+    if (this._pendingEquippedItem?.itemId) {
+      wornIds.add(this._pendingEquippedItem.itemId);
+    }
+
     const stateById = new Map();
     for (let i = 0; i < count; i++) {
       const itemId = playerInventoryEquip[i];
@@ -390,6 +447,7 @@ const SessionPersistenceModule = {
       if (!itemId || !this.isValidItemId(itemId)) continue;
       if (defaultSet.has(itemId)) continue;
       if (extras.includes(itemId)) continue;
+      if (wornIds.has(itemId)) continue;
       extras.push(itemId);
     }
 
@@ -399,6 +457,7 @@ const SessionPersistenceModule = {
 
     const place = (itemId) => {
       if (write >= count || !itemId) return;
+      if (wornIds.has(itemId)) return; // 已穿在身上／強化中，不重複放回背包
       nextEquip[write] = itemId;
       const prev = stateById.get(itemId);
       nextState[write] = prev && prev.itemId === itemId ? prev : null;
@@ -411,7 +470,8 @@ const SessionPersistenceModule = {
     playerInventoryEquip.splice(0, playerInventoryEquip.length, ...nextEquip);
     playerInventoryState.splice(0, playerInventoryState.length, ...nextState);
 
-    if (equippedId) {
+    // 舊版以 bag index 記強化槽；新版改 equippedItem，此處僅相容 remap
+    if (equippedId && !wornIds.has(equippedId)) {
       const idx = nextEquip.indexOf(equippedId);
       this.equippedSlotIndex = idx >= 0 ? idx : null;
     } else {
@@ -420,6 +480,15 @@ const SessionPersistenceModule = {
   },
 
   restoreEquippedItem() {
+    if (this._pendingEquippedItem?.itemId) {
+      const held = this._pendingEquippedItem;
+      this._pendingEquippedItem = null;
+      if (typeof loadEnchantItemHeld === 'function') {
+        loadEnchantItemHeld(held.itemId, held.state);
+      }
+      return;
+    }
+
     if (this.equippedSlotIndex == null) return;
     const itemId = playerInventoryEquip[this.equippedSlotIndex];
     if (!this.isValidItemId(itemId)) {
@@ -429,6 +498,7 @@ const SessionPersistenceModule = {
     if (typeof loadEquipToSlot === 'function') {
       loadEquipToSlot(itemId, this.equippedSlotIndex);
     }
+    this.equippedSlotIndex = null;
   },
 
   bindAutoSave() {

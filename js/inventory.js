@@ -96,7 +96,7 @@ const InventoryModule = {
       event.preventDefault();
       event.stopPropagation();
       const itemId = currentEnchantItem.itemId || currentEnchantItem.id;
-      this.applyPendingPotentialScrollToEquip(itemId, currentEnchantItem.slotIndex);
+      this.applyPendingPotentialScrollToEquip(itemId, -1);
     });
   },
 
@@ -230,7 +230,7 @@ const InventoryModule = {
     if (item.mainType === EQUIP_TYPE.ACCESSORY) return 1;
     if (item.mainType === EQUIP_TYPE.WEAPON) return 2;
     if (item.mainType === EQUIP_TYPE.offHandWeapon) return 3;
-    if (item.mainType === EQUIP_TYPE.Energy) return 4;
+    if (item.mainType === EQUIP_TYPE.Emblem) return 4;
     return 5;
   },
 
@@ -243,7 +243,8 @@ const InventoryModule = {
       EquipTooltipModule.hide();
     }
 
-    if (currentEnchantItem && typeof saveInventoryItemState === 'function') {
+    if (currentEnchantItem && typeof saveInventoryItemState === 'function'
+      && Number.isInteger(currentEnchantItem.slotIndex) && currentEnchantItem.slotIndex >= 0) {
       saveInventoryItemState(currentEnchantItem.slotIndex, currentEnchantItem);
     }
 
@@ -271,24 +272,16 @@ const InventoryModule = {
 
     const nextEquip = new Array(playerInventoryEquip.length).fill(null);
     const nextState = new Array(playerInventoryState.length).fill(null);
-    let equippedNewIndex = currentEnchantItem ? null : undefined;
 
     entries.forEach((entry, index) => {
       nextEquip[index] = entry.itemId;
       nextState[index] = entry.state;
-      if (currentEnchantItem && entry.oldIndex === currentEnchantItem.slotIndex) {
-        equippedNewIndex = index;
-      }
     });
 
     playerInventoryEquip.splice(0, playerInventoryEquip.length, ...nextEquip);
     playerInventoryState.splice(0, playerInventoryState.length, ...nextState);
     if (typeof playerInventory !== 'undefined') {
       playerInventory.splice(0, playerInventory.length, ...nextEquip);
-    }
-
-    if (currentEnchantItem && Number.isInteger(equippedNewIndex)) {
-      currentEnchantItem.slotIndex = equippedNewIndex;
     }
 
     if (typeof SessionPersistenceModule !== 'undefined') {
@@ -409,14 +402,7 @@ const InventoryModule = {
     }
 
     if (currentEnchantItem && this.tab === 'equip') {
-      const slotIndex = currentEnchantItem.slotIndex;
-      const invItemImg = document.getElementById(`inv_item_equip_${slotIndex}`);
-      const invFrame = invItemImg?.parentElement;
-      const invSlot = invFrame?.parentElement;
-      if (invFrame?.classList.contains('inv-item-frame')) {
-        invFrame.classList.add('equipped-hidden');
-      }
-      if (invSlot) invSlot.classList.add('inv-slot-equipped');
+      // 強化槽已移出背包：無需再 hidden 背包格
     }
   },
 
@@ -441,6 +427,9 @@ const InventoryModule = {
         e.preventDefault();
         return;
       }
+      if (typeof EquipTooltipModule !== 'undefined') {
+        EquipTooltipModule.beginDrag?.();
+      }
       e.dataTransfer.setData('text/plain', JSON.stringify({
         slotIndex,
         itemId,
@@ -454,6 +443,9 @@ const InventoryModule = {
       document.querySelectorAll('.ms-inv-slot.inv-drag-over').forEach((el) => {
         el.classList.remove('inv-drag-over');
       });
+      if (typeof EquipTooltipModule !== 'undefined') {
+        EquipTooltipModule.endDrag?.();
+      }
     };
 
     equipImg.addEventListener('click', (e) => {
@@ -467,6 +459,10 @@ const InventoryModule = {
       if (this.pendingPotentialScrollId) {
         e.preventDefault();
         e.stopPropagation();
+        return;
+      }
+      if (typeof UiEquipModule !== 'undefined' && UiEquipModule.isEquipView()) {
+        UiEquipModule.wearFromBag(itemId, slotIndex);
         return;
       }
       loadEquipToSlot(itemId, slotIndex);
@@ -551,6 +547,7 @@ const InventoryModule = {
     if (typeof EquipTooltipModule !== 'undefined') {
       EquipTooltipModule.hide();
     }
+    // 只切到背包裝備列，方便點選背包內裝備
     if (this.tab !== 'equip') {
       this.setTab('equip');
     } else {
@@ -584,14 +581,39 @@ const InventoryModule = {
       : null;
     this.beginPotentialScrollUse(scrollId);
     if (scroll && typeof addLog === 'function') {
-      addLog(`[消耗] 已選擇【${scroll.name}】，請點選裝備套用。`, 'log-info');
+      addLog(`[消耗] 已選擇【${scroll.name}】，請點選背包或裝備欄中的裝備套用。`, 'log-info');
     }
   },
 
   getOrCreateEquipStateForScroll(itemId, slotIndex) {
-    if (currentEnchantItem && currentEnchantItem.slotIndex === slotIndex) {
-      return currentEnchantItem;
+    // 裝備欄身體槽：'body:11'
+    if (typeof slotIndex === 'string' && slotIndex.startsWith('body:')) {
+      if (typeof UiEquipModule === 'undefined' || typeof UiEquipModule.getWornEntry !== 'function') {
+        return null;
+      }
+      const uiSlot = slotIndex.slice(5);
+      const entry = UiEquipModule.getWornEntry(uiSlot);
+      if (!entry?.itemId || entry.itemId !== itemId) return null;
+      if (!entry.state) {
+        const template = typeof ITEM_DATABASE !== 'undefined' ? ITEM_DATABASE[itemId] : null;
+        if (!template || typeof createEnchantState !== 'function') return null;
+        entry.state = createEnchantState(template, -1);
+      }
+      return entry.state;
     }
+
+    if (currentEnchantItem) {
+      const curId = currentEnchantItem.itemId || currentEnchantItem.id;
+      if (curId === itemId && (
+        slotIndex === -1
+        || slotIndex === currentEnchantItem.slotIndex
+        || !Number.isInteger(slotIndex)
+      )) {
+        return currentEnchantItem;
+      }
+    }
+
+    if (!Number.isInteger(slotIndex) || slotIndex < 0) return null;
 
     let state = playerInventoryState[slotIndex];
     if (state) return state;
@@ -648,17 +670,25 @@ const InventoryModule = {
       consumePotentialScroll(scrollId, 1);
     }
 
-    if (currentEnchantItem && currentEnchantItem.slotIndex === slotIndex) {
+    if (currentEnchantItem && (
+      currentEnchantItem.slotIndex === slotIndex
+      || slotIndex === -1
+      || (currentEnchantItem.itemId || currentEnchantItem.id) === itemId
+    ) && !(typeof slotIndex === 'string' && slotIndex.startsWith('body:'))) {
       if (typeof refreshEquippedItemUI === 'function') {
         refreshEquippedItemUI();
       } else {
         if (typeof saveInventoryItemState === 'function') {
-          saveInventoryItemState(slotIndex, currentEnchantItem);
+          saveInventoryItemState(currentEnchantItem.slotIndex, currentEnchantItem);
         }
         if (typeof updateStatusPanel === 'function') updateStatusPanel();
         if (typeof refreshActiveModuleUI === 'function') refreshActiveModuleUI();
         if (typeof updateActiveModuleEquip === 'function') updateActiveModuleEquip();
         if (typeof syncInspectModules === 'function') syncInspectModules();
+      }
+    } else if (typeof slotIndex === 'string' && slotIndex.startsWith('body:')) {
+      if (typeof UiEquipModule !== 'undefined' && typeof UiEquipModule.refresh === 'function') {
+        UiEquipModule.refresh();
       }
     } else if (typeof saveInventoryItemState === 'function') {
       saveInventoryItemState(slotIndex, item);
@@ -775,7 +805,8 @@ const InventoryModule = {
     const toId = inventory[toIndex] ?? null;
 
     if (this.tab === 'equip') {
-      if (currentEnchantItem?.slotIndex === fromIndex || currentEnchantItem?.slotIndex === toIndex) {
+      if (Number.isInteger(currentEnchantItem?.slotIndex) && currentEnchantItem.slotIndex >= 0
+        && (currentEnchantItem.slotIndex === fromIndex || currentEnchantItem.slotIndex === toIndex)) {
         saveInventoryItemState(currentEnchantItem.slotIndex, currentEnchantItem);
       }
 
@@ -784,7 +815,7 @@ const InventoryModule = {
       playerInventoryState[fromIndex] = toState;
       playerInventoryState[toIndex] = fromState;
 
-      if (currentEnchantItem) {
+      if (currentEnchantItem && Number.isInteger(currentEnchantItem.slotIndex) && currentEnchantItem.slotIndex >= 0) {
         if (currentEnchantItem.slotIndex === fromIndex) {
           currentEnchantItem.slotIndex = toIndex;
         } else if (currentEnchantItem.slotIndex === toIndex) {
@@ -815,7 +846,19 @@ const InventoryModule = {
     if (!data) return;
 
     try {
-      const { slotIndex: fromIndex, tab: fromTab } = JSON.parse(data);
+      const parsed = JSON.parse(data);
+
+      // 從裝備欄拖回背包 = 脫下
+      if (parsed.source === 'body' && typeof UiEquipModule !== 'undefined') {
+        if (parsed.uiSlot != null) {
+          UiEquipModule.unequipSlot(parsed.uiSlot);
+        } else if (Number.isInteger(parsed.bagIndex)) {
+          UiEquipModule.unequipBagIndex(parsed.bagIndex, { allPresets: false });
+        }
+        return;
+      }
+
+      const { slotIndex: fromIndex, tab: fromTab } = parsed;
       if (fromIndex === undefined || fromIndex === targetIndex) return;
       if (fromTab && fromTab !== this.tab) return;
       this.swapSlots(fromIndex, targetIndex);

@@ -5,10 +5,13 @@
 const EQUIP_TYPE = {
   WEAPON: 'WEAPON',
   offHandWeapon: 'offHandWeapon',
-  Energy: 'Energy',
+  Emblem: 'Emblem',
   ARMOR: 'ARMOR',
   ACCESSORY: 'ACCESSORY'
 };
+
+/** @deprecated 相容舊名 */
+EQUIP_TYPE.Energy = EQUIP_TYPE.Emblem;
 
 /** 主潛／附潛數值表是否走武器池（武器 + 輔助武器） */
 function isWeaponPotentialEquip(item) {
@@ -69,13 +72,16 @@ const WZ_CHARACTER_PART = {
   Eye: { islot: 'Ay', mainType: EQUIP_TYPE.ACCESSORY, subType: 'eye' },
   Earrings: { islot: 'Ae', mainType: EQUIP_TYPE.ACCESSORY, subType: 'earring' },
   Belt: { islot: 'Be', mainType: EQUIP_TYPE.ARMOR, subType: 'belt' },
-  Badge: { islot: 'Bt', mainType: EQUIP_TYPE.ACCESSORY, subType: 'badge' },
-  Pocket: { islot: 'Ex', mainType: EQUIP_TYPE.ACCESSORY, subType: 'pocket' },
+  /** 胸章（WZ islot Ba）；原 Bt Badge 已無裝備使用而移除 */
+  Badge: { islot: 'Ba', mainType: EQUIP_TYPE.ACCESSORY, subType: 'badge' },
+  Pocket: { islot: 'Po', mainType: EQUIP_TYPE.ACCESSORY, subType: 'pocket' },
   Shoulder: { islot: 'Sh', mainType: EQUIP_TYPE.ARMOR, subType: 'shoulder' },
   Android: { islot: 'Tm', mainType: EQUIP_TYPE.ACCESSORY, subType: 'android' },
   OffHandWeapon: { islot: 'ohp', mainType: EQUIP_TYPE.offHandWeapon, subType: 'offHandWeapon' },
-  Medal: { islot: 'Md', mainType: EQUIP_TYPE.ACCESSORY, subType: 'medal' },
-  Energy: { islot: 'En', mainType: EQUIP_TYPE.Energy, subType: 'badge' },
+  /** 勳章（WZ islot Me；舊碼 Md 仍相容） */
+  Medal: { islot: 'Me', mainType: EQUIP_TYPE.ACCESSORY, subType: 'medal' },
+  /** 徽章／紋章（WZ islot Em；舊碼 En 已移除） */
+  Emblem: { islot: 'Em', mainType: EQUIP_TYPE.Emblem, subType: 'emblem' },
   // Accessory 資料夾內含多種 islot，以 XML info.islot 為準
 };
 
@@ -102,20 +108,38 @@ const ISLOT_TO_MAIN_TYPE = {
   Er: EQUIP_TYPE.ACCESSORY,
   Ay: EQUIP_TYPE.ACCESSORY,
   Am: EQUIP_TYPE.ACCESSORY,
-  Bt: EQUIP_TYPE.ACCESSORY,
-  Ex: EQUIP_TYPE.ACCESSORY,
+  Po: EQUIP_TYPE.ACCESSORY,
+  Ex: EQUIP_TYPE.ACCESSORY, // 舊碼相容 → pocket
   Cp: EQUIP_TYPE.ARMOR,
   Tm: EQUIP_TYPE.ARMOR,
   Hr: EQUIP_TYPE.ACCESSORY,
   Face: EQUIP_TYPE.ACCESSORY,
-  Md: EQUIP_TYPE.ACCESSORY,
-  En: EQUIP_TYPE.Energy,
+  Md: EQUIP_TYPE.ACCESSORY, // 舊碼相容 → medal
+  Em: EQUIP_TYPE.Emblem,
+  Ba: EQUIP_TYPE.ACCESSORY
 };
 
-/** 是否為勳章（islot Md） */
+/** 是否為勳章（islot Me；舊 Md 相容） */
 function isMedalItem(item) {
   if (!item) return false;
-  return item.islot === 'Md' || item.subType === 'medal';
+  return item.islot === 'Me' || item.islot === 'Md' || item.subType === 'medal';
+}
+
+/** 是否為胸章（islot Ba / subType badge） */
+function isPinItem(item) {
+  if (!item) return false;
+  return item.islot === 'Ba' || item.subType === 'badge';
+}
+
+/** 是否為徽章／紋章（islot Em） */
+function isEmblemItem(item) {
+  if (!item) return false;
+  return item.mainType === EQUIP_TYPE.Emblem || item.islot === 'Em' || item.subType === 'emblem';
+}
+
+/** @deprecated 相容舊名 */
+function isEnergyBadgeItem(item) {
+  return isEmblemItem(item);
 }
 
 /** 裝備是否已具備可用潛能詞條（空 lines = 尚未賦予潛能） */
@@ -132,10 +156,11 @@ function canUsePotentialEnhancement(item) {
   return hasEquipPotentialLines(item, 'main');
 }
 
-/** 可使用附加潛能強化；勳章／尚未賦予附加潛能者不可 */
+/** 可使用附加潛能強化；勳章／胸章／尚未賦予附加潛能者不可 */
 function canUseAdditionalPotentialEnhancement(item) {
   if (!item) return false;
   if (isMedalItem(item)) return false;
+  if (isPinItem(item)) return false;
   return hasEquipPotentialLines(item, 'additional');
 }
 
@@ -144,13 +169,13 @@ function shouldStartWithoutPotential(item) {
   return Boolean(item);
 }
 
-/** 披風／腰帶／肩膀：主／附加潛能共用披風組機率與數值（即使 mainType 為飾品） */
+/** 披風／腰帶／肩膀／胸章：主／附加潛能共用披風組機率與數值（即使 mainType 為飾品） */
 function isCapeGroupPotentialEquip(item) {
   if (!item) return false;
   const islot = item.islot;
   const subType = item.subType;
-  return islot === 'Sr' || islot === 'Be' || islot === 'Sh'
-    || subType === 'cape' || subType === 'belt' || subType === 'shoulder';
+  return islot === 'Sr' || islot === 'Be' || islot === 'Sh' || islot === 'Ba'
+    || subType === 'cape' || subType === 'belt' || subType === 'shoulder' || subType === 'badge';
 }
 
 /** WZ info.islot → 模擬器子分類（卷軸／潛能判定用） */
@@ -167,22 +192,23 @@ const ISLOT_TO_SUB_TYPE = {
   Af: 'faceAccessory',
   Sh: 'shoulder',
   Be: 'belt',
-  Me: 'pendant',
-  Pe: 'pendant2',
+  Pe: 'pendant',
   Ae: 'earring',
   Ri: 'ring',
   Er: 'earring',
   Ay: 'eye',
   Am: 'faceAccessory',
-  Bt: 'badge',
-  Ex: 'pocket',
+  Po: 'pocket',
+  Ex: 'pocket', // 舊碼相容
   Cp: 'cap',
   Tm: 'android',
   Hr: 'hair',
   Op: 'weapon',
   ohp: 'offHandWeapon',
-  Md: 'medal',
-  En: 'badge'
+  Me: 'medal',
+  Md: 'medal', // 舊碼相容
+  Em: 'emblem',
+  Ba: 'badge', // 胸章
 };
 
 /**
@@ -200,6 +226,7 @@ function buildEquipFromWzInfo(itemId, name, info) {
   const subType = ISLOT_TO_SUB_TYPE[islot] || partHint?.subType || 'unknown';
   const tuc = Number(info.tuc) || 0;
   const isDestinyWeapon = mainType === EQUIP_TYPE.WEAPON && Boolean(info.exceptUpgrade);
+  const isPin = islot === 'Ba';
 
   return {
     id: itemId,
@@ -217,7 +244,8 @@ function buildEquipFromWzInfo(itemId, name, info) {
     weaponTier: isDestinyWeapon ? WEAPON_TIER.DESTINY : WEAPON_TIER.NORMAL,
     atlas: Number(info.atlas) ? 1 : 0,
     star: 0,
-    maxStar: 30,
+    // 胸章不可星力
+    maxStar: isPin ? 0 : 30,
     upgradeSlots: tuc,
     maxUpgradeSlots: tuc,
     hammerSlots: 0,
@@ -272,8 +300,9 @@ function hasBaseUpgradeSlots(item) {
   return base > 0;
 }
 
-/** 是否可進行星力強化（有 tuc，或為阿特拉斯副武器） */
+/** 是否可進行星力強化（有 tuc，或為阿特拉斯副武器；胸章除外） */
 function canUseStarForce(item) {
+  if (isPinItem(item)) return false;
   return hasBaseUpgradeSlots(item) || isAtlasOffHandWeapon(item);
 }
 
@@ -282,16 +311,19 @@ const BONUS_STAT_BLOCKED_SUBTYPES = new Set([
   'ring',
   'android',
   'offHandWeapon',
-  'shield'
+  'shield',
+  'pin', // 舊 subType 相容
+  'badge', // 胸章 Ba
 ]);
 
-const BONUS_STAT_BLOCKED_ISLOTS = new Set(['Ri', 'Tm', 'ohp', 'Si', 'En']);
+const BONUS_STAT_BLOCKED_ISLOTS = new Set(['Ri', 'Tm', 'ohp', 'Si', 'Em', 'Ba']);
 
 /** 是否可使用附加能力（bonusStat） */
 function canUseBonusStat(item) {
   if (!item) return false;
+  if (isPinItem(item)) return false;
   if (item.mainType === EQUIP_TYPE.offHandWeapon) return false;
-  if (item.mainType === EQUIP_TYPE.Energy) return false;
+  if (item.mainType === EQUIP_TYPE.Emblem) return false;
   if (BONUS_STAT_BLOCKED_SUBTYPES.has(item.subType)) return false;
   if (BONUS_STAT_BLOCKED_ISLOTS.has(item.islot)) return false;
   return true;
@@ -1062,6 +1094,36 @@ const ITEM_DATABASE = {
     tradeAvailable: 2
   }),
 
+'01113075': buildEquipFromWzInfo('01113075', '頂級培羅德戒指', {
+    wzPart: 'Ring',
+    islot: 'Ri',
+    vslot: 'Ri',
+    reqJob: 0,
+    reqLevel: 150,
+    incSTR: 10,
+    incDEX: 10,
+    incINT: 10,
+    incLUK: 10,
+    incPAD: 8,
+    incMAD: 8,
+    incPDD: 150,
+    incMDD: 150,
+    incMHP: 250,
+    incMMP: 250,
+    incSpeed: 10,
+    incJump: 0,
+    tuc: 7,
+    attackSpeed: 0,
+    setItemID: 318,
+    notSale: 0,
+    cash: 0,
+    equipTradeBlock: 1,
+    exItem: 1,
+    onlyEquip: 1,
+    price: 1,
+    tradeAvailable: 2
+  }),
+
 '01113306': buildEquipFromWzInfo('01113306', '巨大的恐怖', {
     wzPart: 'Ring',
     islot: 'Ri',
@@ -1109,7 +1171,7 @@ const ITEM_DATABASE = {
     tradeAvailable: 2
   }),
 
-  '01113360': buildEquipFromWzInfo('01113360', '恍惚的噩夢', {
+'01113360': buildEquipFromWzInfo('01113360', '恍惚的噩夢', {
     wzPart: 'Ring',
     islot: 'Ri',
     vslot: 'Ri',
@@ -1209,8 +1271,8 @@ const ITEM_DATABASE = {
 
 '01143286': buildEquipFromWzInfo('01143286', '喵喵天使', {
     wzPart: 'Accessory',
-    islot: 'Md',
-    vslot: 'Md',
+    islot: 'Me',
+    vslot: 'Me',
     reqJob: 0,
     reqLevel: 0,
     incSTR: 12,
@@ -1233,8 +1295,8 @@ const ITEM_DATABASE = {
 
 '01143471': buildEquipFromWzInfo('01143471', '不朽的遺產', {
     wzPart: 'Accessory',
-    islot: 'Md',
-    vslot: 'Md',
+    islot: 'Me',
+    vslot: 'Me',
     reqJob: 0,
     reqLevel: 250,
     incSTR: 10,
@@ -1367,10 +1429,129 @@ const ITEM_DATABASE = {
     tradeAvailable: 2
   }),
 
+'01162080': buildEquipFromWzInfo('01162080', '受詛咒的赤魔導書', {
+    wzPart: 'Accessory',
+    islot: 'Po',
+    vslot: 'Po',
+    reqJob: 0,
+    reqLevel: 160,
+    incSTR: 20,
+    incDEX: 10,
+    incINT: 10,
+    incLUK: 10,
+    incPAD: 10,
+    incMAD: 10,
+    incMHP: 100,
+    incMMP: 100,
+    tuc: 0,
+    setItemID: 677,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    equipTradeBlock: 1,
+    exItem: 1,
+    price: 1
+  }),
+
+'01162081': buildEquipFromWzInfo('01162081', '受詛咒的青魔導書', {
+    wzPart: 'Accessory',
+    islot: 'Po',
+    vslot: 'Po',
+    reqJob: 0,
+    reqLevel: 160,
+    incSTR: 10,
+    incDEX: 10,
+    incINT: 20,
+    incLUK: 10,
+    incPAD: 10,
+    incMAD: 10,
+    incMHP: 100,
+    incMMP: 100,
+    tuc: 0,
+    setItemID: 677,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    equipTradeBlock: 1,
+    exItem: 1,
+    price: 1
+  }),
+
+'01162082': buildEquipFromWzInfo('01162082', '受詛咒的綠魔導書', {
+    wzPart: 'Accessory',
+    islot: 'Po',
+    vslot: 'Po',
+    reqJob: 0,
+    reqLevel: 160,
+    incSTR: 10,
+    incDEX: 20,
+    incINT: 10,
+    incLUK: 10,
+    incPAD: 10,
+    incMAD: 10,
+    incMHP: 100,
+    incMMP: 100,
+    tuc: 0,
+    setItemID: 677,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    equipTradeBlock: 1,
+    exItem: 1,
+    price: 1
+  }),
+
+  '01162083': buildEquipFromWzInfo('01162083', '受詛咒的黃魔導書', {
+    wzPart: 'Accessory',
+    islot: 'Po',
+    vslot: 'Po',
+    reqJob: 0,
+    reqLevel: 160,
+    incSTR: 10,
+    incDEX: 10,
+    incINT: 10,
+    incLUK: 20,
+    incPAD: 10,
+    incMAD: 10,
+    incMHP: 100,
+    incMMP: 100,
+    tuc: 0,
+    setItemID: 677,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    equipTradeBlock: 1,
+    exItem: 1,
+    price: 1
+  }),
+
+'01182285': buildEquipFromWzInfo('01182285', '創世的胸章', {
+    wzPart: 'Accessory',
+    islot: 'Ba',
+    vslot: 'Ba',
+    reqJob: 0,
+    reqLevel: 200,
+    incSTR: 15,
+    incDEX: 15,
+    incINT: 15,
+    incLUK: 15,
+    incPAD: 10,
+    incMAD: 10,
+    incSpeed: 10,
+    incJump: 10,
+    tuc: 2,
+    setItemID: 677,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    equipTradeBlock: 1,
+    price: 1
+  }),
+
 '01190566': buildEquipFromWzInfo('01190566', '米特拉的憤怒: 劍士', {
-    wzPart: 'Energy',
-    islot: 'En',
-    vslot: 'En',
+    wzPart: 'Emblem',
+    islot: 'Em',
+    vslot: 'Em',
     reqJob: 1,
     reqLevel: 200,
     incSTR: 40,
@@ -1391,9 +1572,9 @@ const ITEM_DATABASE = {
   }),
 
 '01190567': buildEquipFromWzInfo('01190567', '米特拉的憤怒: 弓箭手', {
-    wzPart: 'Energy',
-    islot: 'En',
-    vslot: 'En',
+    wzPart: 'Emblem',
+    islot: 'Em',
+    vslot: 'Em',
     reqJob: 1,
     reqLevel: 200,
     incSTR: 40,
@@ -1414,9 +1595,9 @@ const ITEM_DATABASE = {
   }),
 
 '01190568': buildEquipFromWzInfo('01190568', '米特拉的憤怒: 法師', {
-    wzPart: 'Energy',
-    islot: 'En',
-    vslot: 'En',
+    wzPart: 'Emblem',
+    islot: 'Em',
+    vslot: 'Em',
     reqJob: 1,
     reqLevel: 200,
     incSTR: 0,
@@ -1437,9 +1618,9 @@ const ITEM_DATABASE = {
   }),
 
 '01190569': buildEquipFromWzInfo('01190569', '米特拉的憤怒: 盜賊', {
-    wzPart: 'Energy',
-    islot: 'En',
-    vslot: 'En',
+    wzPart: 'Emblem',
+    islot: 'Em',
+    vslot: 'Em',
     reqJob: 1,
     reqLevel: 200,
     incSTR: 0,
@@ -1460,9 +1641,9 @@ const ITEM_DATABASE = {
   }),
 
 '01190570': buildEquipFromWzInfo('01190570', '米特拉的憤怒: 海盜', {
-    wzPart: 'Energy',
-    islot: 'En',
-    vslot: 'En',
+    wzPart: 'Emblem',
+    islot: 'Em',
+    vslot: 'Em',
     reqJob: 1,
     reqLevel: 200,
     incSTR: 40,
@@ -1791,6 +1972,12 @@ playerInventory[58] = '01152216';
 playerInventory[59] = '01113341';
 playerInventory[60] = '01143286';
 playerInventory[61] = '01113360';
+playerInventory[62] = '01113075';
+playerInventory[63] = '01182285';
+playerInventory[64] = '01162080';
+playerInventory[65] = '01162081';
+playerInventory[66] = '01162082';
+playerInventory[67] = '01162083';
 
 let currentEnchantItem = null;
 

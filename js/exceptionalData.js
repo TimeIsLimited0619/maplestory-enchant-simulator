@@ -102,7 +102,7 @@ function canUseExceptional(item) {
   if (!item) return false;
   const id = String(item.itemId || item.id || '');
   if (EXCEPTIONAL_ELIGIBLE_ITEM_IDS.has(id)) {
-    if (id === '01143471') return item.islot === 'Md';
+    if (id === '01143471') return item.islot === 'Me' || item.islot === 'Md';
     return EXCEPTIONAL_DARK_SET_SLOTS.has(item.islot);
   }
   return false;
@@ -110,7 +110,7 @@ function canUseExceptional(item) {
 
 function getExceptionalSlotKey(item) {
   if (!item) return null;
-  if (item.islot === 'Md') return 'Md';
+  if (item.islot === 'Me' || item.islot === 'Md') return 'Md';
   return EXCEPTIONAL_DARK_SET_SLOTS.has(item.islot) ? item.islot : null;
 }
 

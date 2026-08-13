@@ -138,6 +138,9 @@ function getAddPotCubeBlockReason(cube, itemData) {
   if (typeof isMedalItem === 'function' && isMedalItem(itemData)) {
     return '勳章無法使用方塊洗附加潛能';
   }
+  if (typeof isPinItem === 'function' && isPinItem(itemData)) {
+    return '胸章無法使用方塊洗附加潛能';
+  }
   if (typeof hasEquipPotentialLines === 'function'
     && !hasEquipPotentialLines(itemData, 'additional')) {
     return '需先使用附加傳說潛在能力卷軸賦予附加潛能';

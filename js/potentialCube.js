@@ -109,7 +109,7 @@ function getEquipPotentialCategoryMinor(item) {
 
   if (typeof isEnergyBadgeItem === 'function'
     ? isEnergyBadgeItem(item)
-    : item.mainType === EQUIP_TYPE.Energy) {
+    : item.mainType === EQUIP_TYPE.Emblem) {
     return '徽章';
   }
 
@@ -165,7 +165,7 @@ function getEquipPotentialCategory(item) {
 
   if (typeof isEnergyBadgeItem === 'function'
     ? isEnergyBadgeItem(item)
-    : item.mainType === EQUIP_TYPE.Energy) {
+    : item.mainType === EQUIP_TYPE.Emblem) {
     return { major: '能源/徽章', minor: getEquipPotentialCategoryMinor(item) };
   }
 
@@ -227,8 +227,9 @@ function isRegularWeaponItem(item) {
     ? isWeaponPotentialEquip(item)
     : item?.mainType === EQUIP_TYPE.WEAPON;
   return isWeaponLike
-    && item?.islot !== 'Bt'
-    && item?.subType !== 'badge';
+    && item?.islot !== 'Ba'
+    && item?.subType !== 'badge'
+    && item?.subType !== 'emblem';
 }
 
 function pickWeaponStatRateGroup(candidates, category) {

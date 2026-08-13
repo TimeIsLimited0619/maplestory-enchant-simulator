@@ -47,7 +47,8 @@ const ScrollModule = {
   autoRunning: false,
   autoCancelled: false,
   autoCancelHandler: null,
-  AUTO_ENHANCE_DELAY_MS: 8,
+  AUTO_ENHANCE_DELAY_MS: 4,
+  AUTO_ENHANCE_BATCH_SIZE: 10,
   RECOVERY_HIGHLIGHT: {
     frameCount: 12,
     frameMs: 80,
@@ -402,17 +403,21 @@ const ScrollModule = {
 
   canUseScrollAutoEnhance() {
     const scroll = this.getSelectedScroll();
-    if (!scroll || isChaosScroll(scroll)) return false;
+    if (!scroll) return false;
     return Boolean(
       this.itemData
       && !this.isScrollUsesExhausted()
       && this.selectedTab === 'special'
-      && (isRandomRollScroll(scroll) || isMultiStatRollScroll(scroll))
+      && (isChaosScroll(scroll) || isRandomRollScroll(scroll) || isMultiStatRollScroll(scroll))
       && !this.getScrollEquipError()
     );
   },
 
   getAutoTargetDefs(scroll) {
+    if (isChaosScroll(scroll)) {
+      return (typeof CHAOS_AUTO_TARGET_DEFS !== 'undefined' ? CHAOS_AUTO_TARGET_DEFS : [])
+        .map((line) => ({ field: line.field, label: line.label }));
+    }
     if (isMultiStatRollScroll(scroll)) {
       return (scroll.multiStatRoll.stats || []).map((line) => ({
         field: line.field,
@@ -429,6 +434,9 @@ const ScrollModule = {
   },
 
   getAutoTargetRange(scroll) {
+    if (isChaosScroll(scroll)) {
+      return typeof getChaosStatRange === 'function' ? getChaosStatRange() : { min: 0, max: 7 };
+    }
     if (isMultiStatRollScroll(scroll)) return getMultiStatRollRange(scroll);
     if (isRandomRollScroll(scroll)) return getRandomStatRange(scroll);
     return null;
@@ -576,10 +584,12 @@ const ScrollModule = {
 
   meetsAutoTargets(scroll, payload, targets) {
     if (!targets) return false;
-    if (isMultiStatRollScroll(scroll)) {
+    if (isChaosScroll(scroll) || isMultiStatRollScroll(scroll)) {
       return Object.entries(targets).every(([field, min]) => {
         const change = (payload || []).find((row) => row.field === field);
-        return Boolean(change) && Number(change.val) >= min;
+        if (!change) return false;
+        const amount = change.applied != null ? change.applied : change.val;
+        return Number(amount) >= min;
       });
     }
     if (isRandomRollScroll(scroll)) {
@@ -593,9 +603,6 @@ const ScrollModule = {
     if (this.autoRunning || !this.itemData) return;
 
     const scroll = this.getSelectedScroll();
-    if (isChaosScroll(scroll)) {
-      return addLog('⚠️ 混沌卷軸不可使用自動強化。', 'log-fail');
-    }
     if (!this.canUseScrollAutoEnhance()) {
       return addLog('⚠️ 自動強化僅適用可骰數值的專用卷軸。', 'log-fail');
     }
@@ -624,85 +631,101 @@ const ScrollModule = {
     let recoveryUsed = 0;
     let succeeded = false;
     const targetText = this.formatAutoTargetsText(targets);
+    const isChaos = isChaosScroll(scroll);
     const isMulti = isMultiStatRollScroll(scroll);
 
     try {
+      const batchSize = Math.max(1, Number(this.AUTO_ENHANCE_BATCH_SIZE) || 1);
       while (
         this.autoRunning
         && this.itemData
         && this.getRemainingUses() > 0
-        && playerRecoveryCardCount > 0
       ) {
-        attempts++;
-        trackScrollGloryCost();
-        const success = Math.random() * 100 < scroll.rate;
+        let stopBatch = false;
 
-        if (!success) {
-          if (this.tryConsumeRecoveryCardOnFail()) {
-            recoveryUsed++;
-          } else {
-            incrementScrollUsedCountOnly(this.itemData, false);
-            this.itemData.scrollFailUses = (this.itemData.scrollFailUses || 0) + 1;
+        for (let step = 0; step < batchSize; step++) {
+          if (!this.autoRunning || !this.itemData || this.getRemainingUses() <= 0) {
+            stopBatch = true;
             break;
           }
 
-          this.renderRecoveryCard();
-          this.updateUI();
-          updateStatusPanel();
-          await new Promise((resolve) => setTimeout(resolve, this.AUTO_ENHANCE_DELAY_MS));
-          continue;
-        }
+          attempts++;
+          trackScrollGloryCost();
+          const success = Math.random() * 100 < scroll.rate;
 
-        const rolled = isMulti
-          ? rollMultiStatChanges(scroll)
-          : rollRandomStatValue(scroll);
-
-        if (this.meetsAutoTargets(scroll, rolled, targets)) {
-          if (isMulti) {
-            applyMultiStatScrollBonus(this.itemData, rolled);
-          } else {
-            applyRandomScrollBonus(this.itemData, scroll, rolled);
+          // A：卷軸失敗 → 消耗恢復卡保次數 → 繼續
+          if (!success) {
+            if (this.tryConsumeRecoveryCardOnFail()) {
+              recoveryUsed++;
+            } else {
+              incrementScrollUsedCountOnly(this.itemData, false);
+              this.itemData.scrollFailUses = (this.itemData.scrollFailUses || 0) + 1;
+              stopBatch = true;
+              break;
+            }
+            if (attempts > 10000) {
+              stopBatch = true;
+              break;
+            }
+            continue;
           }
-          incrementScrollUsedCountOnly(this.itemData);
+
+          const rolled = isChaos
+            ? rollChaosChanges(this.itemData)
+            : isMulti
+              ? rollMultiStatChanges(scroll)
+              : rollRandomStatValue(scroll);
+
+          // C：成功且達標 → 套用並結束
+          if (this.meetsAutoTargets(scroll, rolled, targets)) {
+            if (isChaos) applyChaosScrollBonus(this.itemData, rolled);
+            else if (isMulti) applyMultiStatScrollBonus(this.itemData, rolled);
+            else applyRandomScrollBonus(this.itemData, scroll, rolled);
+
+            incrementScrollUsedCountOnly(this.itemData);
+            consumeRecoveryCard();
+            recoveryUsed++;
+            succeeded = true;
+
+            this.renderRecoveryCard();
+            this.updateUI();
+            updateStatusPanel();
+
+            const resultText = (isChaos || isMulti)
+              ? (isChaos ? formatChaosChangeLog(rolled) : formatMultiStatChangeLog(rolled))
+              : `${scroll.randomRoll?.statLabel || '屬性'} +${rolled}`;
+            addLog(
+              `⚡ 自動強化成功！${resultText}（目標 ${targetText}，共 ${attempts} 次，恢復卡 ${recoveryUsed} 張）`,
+              'log-success'
+            );
+            stopBatch = true;
+            break;
+          }
+
+          // B：成功未達標 → 消耗恢復卡、不套用 → 繼續
           consumeRecoveryCard();
           recoveryUsed++;
-          succeeded = true;
-
-          this.renderRecoveryCard();
-          this.updateUI();
-          updateStatusPanel();
-
-          const resultText = isMulti
-            ? formatMultiStatChangeLog(rolled)
-            : `${scroll.randomRoll?.statLabel || '屬性'} +${rolled}`;
-          addLog(
-            `⚡ 自動強化成功！${resultText}（目標 ${targetText}，共 ${attempts} 次，恢復卡 ${recoveryUsed} 張）`,
-            'log-success'
-          );
-          break;
+          if (attempts > 10000) {
+            stopBatch = true;
+            break;
+          }
         }
 
-        consumeRecoveryCard();
-        recoveryUsed++;
         this.renderRecoveryCard();
         this.updateUI();
         updateStatusPanel();
-        await new Promise((resolve) => setTimeout(resolve, this.AUTO_ENHANCE_DELAY_MS));
 
-        if (attempts > 10000) break;
+        if (succeeded || stopBatch || !this.autoRunning || attempts > 10000) break;
+        await new Promise((resolve) => setTimeout(resolve, this.AUTO_ENHANCE_DELAY_MS));
       }
 
       if (
         this.autoRunning
         && !succeeded
         && this.itemData
-        && (this.getRemainingUses() <= 0 || playerRecoveryCardCount <= 0)
+        && this.getRemainingUses() <= 0
       ) {
-        if (playerRecoveryCardCount <= 0) {
-          addLog('⚠️ 恢復卡已用完，自動強化停止。', 'log-fail');
-        } else {
-          addLog(`⚠️ 升級次數已用完，未達成目標（${targetText}）。`, 'log-fail');
-        }
+        addLog(`⚠️ 升級次數已用完，未達成目標（${targetText}）。`, 'log-fail');
       }
     } finally {
       this.unbindAutoCancelListener();
@@ -1580,9 +1603,6 @@ const ScrollModule = {
       const auto = document.getElementById('chkScrollAutoEnhance')?.checked;
       if (auto) {
         const scroll = this.getSelectedScroll();
-        if (isChaosScroll(scroll)) {
-          return addLog('⚠️ 混沌卷軸不可使用自動強化。', 'log-fail');
-        }
         if (!this.canUseScrollAutoEnhance()) {
           return addLog('⚠️ 目前卷軸無法使用自動強化。', 'log-fail');
         }
