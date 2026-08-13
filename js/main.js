@@ -512,6 +512,22 @@ function isBlockingOverlayOpen() {
   });
 }
 
+/** 強化台右上角 ×（HTML 內建，獨立初始化） */
+function initEnchantWorkbenchClose() {
+  const btn = document.getElementById('enchantWorkbenchClose');
+  if (!btn) return;
+  if (btn.dataset.closeBound === '1') return;
+  btn.dataset.closeBound = '1';
+  btn.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+  });
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof UiEquipModule !== 'undefined') UiEquipModule.setEnchantOpen(false);
+  });
+}
+
 function handleGlobalEscapeKey() {
   if (typeof InventoryModule !== 'undefined' && InventoryModule.pendingPotentialScrollId) {
     InventoryModule.cancelPotentialScrollUse();
@@ -1854,6 +1870,7 @@ function calculateCost() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  initEnchantWorkbenchClose();
   if (typeof seedStarForceScrollConsumeInventory === 'function'
     && !(typeof SessionPersistenceModule !== 'undefined' && SessionPersistenceModule.hasSavedSession())) {
     seedStarForceScrollConsumeInventory();
@@ -1882,25 +1899,18 @@ window.addEventListener('DOMContentLoaded', () => {
   if (typeof PanelDrag !== 'undefined') {
     // 工具列 + 中控台包成一體再拖曳
     (function ensureEnchantWorkbench() {
-      if (document.getElementById('enchantWorkbench')) return;
+      const existing = document.getElementById('enchantWorkbench');
+      if (existing) {
+        document.getElementById('enchantWorkbenchDragHandle')?.remove();
+        document.getElementById('mainPanelDragHandle')?.remove();
+        return;
+      }
       const sidebar = document.querySelector('#pageEnhance .ms-sidebar');
       const main = document.getElementById('mainContentPanel');
       if (!sidebar || !main || !sidebar.parentNode) return;
       const wrap = document.createElement('div');
       wrap.id = 'enchantWorkbench';
       wrap.className = 'enchant-workbench';
-      const handle = document.createElement('div');
-      handle.id = 'enchantWorkbenchDragHandle';
-      handle.className = 'panel-drag-handle-bar';
-      handle.title = '拖曳強化台';
-      const closeBtn = document.createElement('button');
-      closeBtn.type = 'button';
-      closeBtn.id = 'enchantWorkbenchClose';
-      closeBtn.className = 'panel-btn-close';
-      closeBtn.title = '關閉';
-      closeBtn.textContent = '×';
-      wrap.appendChild(handle);
-      wrap.appendChild(closeBtn);
       sidebar.parentNode.insertBefore(wrap, sidebar);
       wrap.appendChild(sidebar);
       wrap.appendChild(main);
@@ -1910,27 +1920,39 @@ window.addEventListener('DOMContentLoaded', () => {
         if (el) wrap.appendChild(el);
       });
       document.getElementById('mainPanelDragHandle')?.remove();
-      closeBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (typeof UiEquipModule !== 'undefined') UiEquipModule.setEnchantOpen(false);
-      });
+      document.getElementById('enchantWorkbenchDragHandle')?.remove();
     })();
 
     PanelDrag.enable(document.getElementById('enchantWorkbench'), {
-      handle: '#enchantWorkbenchDragHandle',
+      panelDrag: true,
       storageKey: 'ui.drag.enchantWorkbench',
-      title: '拖曳強化台',
-      ignoreSelector: '.ms-tab-btn, .ms-sidebar-log, .ms-sidebar-reset-btn, .ms-sidebar-inspect-btn, #totalCostDisplay, .panel-btn-close',
+      ignoreSelector: [
+        '#enchantWorkbenchClose',
+        '.panel-wb-close',
+        '.enchant-wb-close',
+        '.ms-tab-btn',
+        '.ms-sidebar-log',
+        '.ms-sidebar-reset-btn',
+        '.ms-sidebar-inspect-btn',
+        '#totalCostDisplay',
+        '#equipDropZone',
+        '.ms-drop-zone',
+        '.pt-cube-slot',
+        '.sc-tab',
+        '.ex-tab-btn',
+        '.sc-scroll-thumb',
+        '.sc-scroll-track',
+      ].join(', '),
     });
     PanelDrag.enable(document.getElementById('uiEquipPanel'), {
       handle: '#uiEquipDragHandle',
       storageKey: 'ui.drag.equipPanel',
       title: '拖曳裝備欄',
-      ignoreSelector: '.panel-btn-close',
+      ignoreSelector: '.panel-wb-close',
     });
     PanelDrag.enable(document.getElementById('inventoryPanel'), {
       handle: '#inventoryDragHandle',
-      ignoreSelector: '.inv-size-btn, .inv-tab, .inv-sort-btn, .panel-btn-close',
+      ignoreSelector: '.inv-size-btn, .inv-tab, .inv-sort-btn, .panel-wb-close',
       storageKey: 'ui.drag.inventoryPanel',
       title: '拖曳背包',
     });
@@ -1948,13 +1970,13 @@ window.addEventListener('DOMContentLoaded', () => {
   if (typeof PanelDrag !== 'undefined') {
     PanelDrag.enable(document.getElementById('ccpRoot'), {
       handle: '.ccp-header',
-      ignoreSelector: '.panel-btn-close, #ccpClose',
+      ignoreSelector: '.panel-wb-close, #ccpClose',
       storageKey: 'ui.drag.combatPanel',
       title: '拖曳戰鬥力數值',
     });
     PanelDrag.enable(document.getElementById('equipStatPanel'), {
       handle: '.equip-stat-panel-header',
-      ignoreSelector: '.panel-btn-close, #equipStatPanelClose',
+      ignoreSelector: '.panel-wb-close, #equipStatPanelClose',
       storageKey: 'ui.drag.detailPanel',
       title: '拖曳屬性明細',
     });

@@ -255,7 +255,7 @@ const CharacterCombatPanel = (() => {
     root.innerHTML = `
       <div class="ccp-header">
         <span>戰鬥力數值（角色基底）</span>
-        <button type="button" id="ccpClose" class="ccp-close panel-btn-close" title="關閉">×</button>
+        <button type="button" id="ccpClose" class="panel-wb-close panel-wb-close--inline" aria-label="關閉戰力面板" title="關閉"><span aria-hidden="true">×</span></button>
       </div>
       <div id="ccpBody" class="ccp-body"></div>
     `;

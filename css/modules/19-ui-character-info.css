@@ -43,29 +43,10 @@
   z-index: 6;
 }
 
-.uci-btn-close {
-  position: absolute;
-  left: 449px;
-  top: 10px;
+#uciClose.panel-wb-close {
+  left: 438px;
+  top: 6px;
   right: auto;
-  width: 18px;
-  height: 18px;
-  z-index: 8;
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  color: #d8dde3;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 18px;
-  cursor: pointer;
-}
-
-.uci-btn-close:hover {
-  background: transparent;
-  color: #fff;
 }
 
 /* ---- local/detail：接在 main 下方 top=230 ---- */

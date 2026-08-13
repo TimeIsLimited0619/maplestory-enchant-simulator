@@ -29,20 +29,8 @@
   height: 30px;
 }
 
-#inventoryClose {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  z-index: 20;
-  pointer-events: auto;
-}
-
 .ms-inventory.inv-mode-full #inventoryDragHandle {
   width: calc(100% - 72px);
-}
-
-.ms-inventory.inv-mode-full #inventoryClose {
-  right: 6px;
 }
 
 .ms-inventory.inv-mode-full {
@@ -70,7 +58,7 @@
 }
 
 .inv-size-full {
-  right: 28px;
+  right: 38px;
   background-image: url('../../images/iventory/AutoBuild.button_full.normal.0.png');
 }
 
@@ -83,7 +71,7 @@
 }
 
 .inv-size-min {
-  right: 28px;
+  right: 38px;
   background-image: url('../../images/iventory/AutoBuild.button_min.normal.0.png');
 }
 

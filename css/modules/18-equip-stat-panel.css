@@ -35,26 +35,6 @@
   user-select: none;
 }
 
-.equip-stat-panel-close {
-  position: static;
-  width: 18px;
-  height: 18px;
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  color: #d8dde3;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 18px;
-  cursor: pointer;
-  padding: 0;
-}
-
-.equip-stat-panel-close:hover {
-  color: #fff;
-  background: transparent;
-}
-
 .equip-stat-panel-body {
   overflow: auto;
   padding: 8px 10px 12px;

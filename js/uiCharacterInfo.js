@@ -135,7 +135,7 @@ const UiCharacterInfo = (() => {
     root.innerHTML = `
       <div class="uci-main" id="uciMain">
         <div class="uci-drag-handle" id="uciDragHandle" title="拖曳視窗"></div>
-        <button type="button" class="uci-btn-close panel-btn-close" id="uciClose" title="關閉">×</button>
+        <button type="button" class="panel-wb-close" id="uciClose" aria-label="關閉角色資訊" title="關閉"><span aria-hidden="true">×</span></button>
       </div>
       <div class="uci-detail" id="uciDetail">
         <div class="uci-layer-stat" aria-hidden="true"></div>

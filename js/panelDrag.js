@@ -95,6 +95,29 @@ const PanelDrag = (() => {
     }
   }
 
+  function isDragBlocked(target, opts) {
+    if (!target) return true;
+    if (opts.ignoreSelector && target.closest?.(opts.ignoreSelector)) return true;
+    const tag = String(target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'select' || tag === 'textarea' || tag === 'option') return true;
+    if (tag === 'button' || tag === 'a' || tag === 'label') return true;
+    if (target.closest?.('button, input, select, textarea, a, label')) return true;
+    return false;
+  }
+
+  function startDrag(el, e, opts, grid) {
+    e.preventDefault();
+    pinFixed(el, grid);
+    const rect = el.getBoundingClientRect();
+    current = {
+      el,
+      ox: e.clientX - rect.left,
+      oy: e.clientY - rect.top,
+      storageKey: opts.storageKey || '',
+      grid,
+    };
+  }
+
   function enable(el, opts) {
     opts = opts || {};
     if (!el || el.dataset.panelDragBound === '1') return;
@@ -105,15 +128,16 @@ const PanelDrag = (() => {
 
     if (opts.storageKey) restore(el, opts.storageKey, grid);
 
-    let handle = opts.handle ? $(opts.handle, el) : el;
+    const panelDrag = opts.panelDrag === true;
+    let handle = panelDrag ? el : (opts.handle ? $(opts.handle, el) : el);
     if (!handle && opts.handle) {
-      // handle 尚未插入時允許之後用 ensureHandle
       handle = null;
     }
     if (!handle) handle = el;
 
-    if (opts.title) handle.setAttribute('title', opts.title);
-    handle.classList.add('panel-drag-handle');
+    if (opts.title && !panelDrag) handle.setAttribute('title', opts.title);
+    if (!panelDrag) handle.classList.add('panel-drag-handle');
+    if (panelDrag) el.classList.add('is-panel-drag-surface');
 
     // 點擊視窗任意處即可置頂（含按鈕／輸入，不攔截操作）
     el.addEventListener('mousedown', (e) => {
@@ -123,20 +147,8 @@ const PanelDrag = (() => {
 
     handle.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return;
-      if (opts.ignoreSelector && e.target.closest?.(opts.ignoreSelector)) return;
-      // 避免拖到輸入／按鈕時搶走操作
-      const tag = String(e.target?.tagName || '').toLowerCase();
-      if (tag === 'input' || tag === 'select' || tag === 'textarea' || tag === 'option') return;
-      e.preventDefault();
-      pinFixed(el, grid);
-      const rect = el.getBoundingClientRect();
-      current = {
-        el,
-        ox: e.clientX - rect.left,
-        oy: e.clientY - rect.top,
-        storageKey: opts.storageKey || '',
-        grid,
-      };
+      if (isDragBlocked(e.target, opts)) return;
+      startDrag(el, e, opts, grid);
     });
   }
 

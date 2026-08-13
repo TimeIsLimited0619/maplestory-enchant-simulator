@@ -10,10 +10,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <!-- 自訂 CSS（modules；file:// 勿用 @import） -->
-  <link rel="stylesheet" href="css/modules/01-base.css?v=20260813info1">
+  <link rel="stylesheet" href="css/modules/01-base.css?v=20260813wbClose3">
   <link rel="stylesheet" href="css/modules/02-sidebar.css?v=20260813wear3">
   <link rel="stylesheet" href="css/modules/03-main-panel.css?v=20260813menu1">
-  <link rel="stylesheet" href="css/modules/04-inventory.css?v=20260813esc3">
+  <link rel="stylesheet" href="css/modules/04-inventory.css?v=20260813wbClose3">
   <link rel="stylesheet" href="css/modules/05-forms-modal.css?v=20260813wear3">
   <link rel="stylesheet" href="css/modules/06-starforce-extras.css?v=20260813wear3">
   <link rel="stylesheet" href="css/modules/07-starforce.css?v=20260813wear3">
@@ -26,10 +26,10 @@
   <link rel="stylesheet" href="css/modules/14-potential-inspect.css?v=20260813wear3">
   <link rel="stylesheet" href="css/modules/15-equip-tooltip.css?v=20260813tipZ1">
   <link rel="stylesheet" href="css/modules/16-bonus-stat.css?v=20260813blur1">
-  <link rel="stylesheet" href="css/modules/17-uiequip.css?v=20260813esc1">
-  <link rel="stylesheet" href="css/modules/18-equip-stat-panel.css?v=20260813drag2">
-  <link rel="stylesheet" href="css/modules/19-ui-character-info.css?v=20260813esc1">
-  <link rel="stylesheet" href="css/modules/20-character-combat-panel.css?v=20260813drag2">
+  <link rel="stylesheet" href="css/modules/17-uiequip.css?v=20260813wbClose3">
+  <link rel="stylesheet" href="css/modules/18-equip-stat-panel.css?v=20260813wbClose3">
+  <link rel="stylesheet" href="css/modules/19-ui-character-info.css?v=20260813uciClose1">
+  <link rel="stylesheet" href="css/modules/20-character-combat-panel.css?v=20260813wbClose3">
 </head>
 <body class="enchant-boot-loading">
 
@@ -182,7 +182,7 @@
       <!-- 2a. 裝備欄（可與強化台並存） -->
       <div id="uiEquipPanel" class="uiequip-panel hidden" aria-label="裝備欄">
         <div class="panel-drag-handle-bar" id="uiEquipDragHandle" title="拖曳裝備欄"></div>
-        <button type="button" class="panel-btn-close" id="uiEquipClose" title="關閉">×</button>
+        <button type="button" class="panel-wb-close" id="uiEquipClose" aria-label="關閉裝備欄" title="關閉"><span aria-hidden="true">×</span></button>
         <button type="button" class="uiequip-tab uiequip-tab-equip" tabindex="-1" aria-hidden="true" title="裝備"></button>
         <button type="button" class="uiequip-tab uiequip-tab-cash" tabindex="-1" aria-hidden="true" title="裝扮"></button>
         <div class="uiequip-canvas" aria-hidden="true"></div>
@@ -196,6 +196,7 @@
 
       <!-- 2. 中間強化主面板 -->
       <div class="ms-main-content" id="mainContentPanel">
+        <button type="button" class="panel-wb-close enchant-wb-close" id="enchantWorkbenchClose" aria-label="關閉強化台" title="關閉"><span aria-hidden="true">×</span></button>
 
         <!-- 中央裝備放置區 (與等待箭頭) -->
         <div class="ms-equip-area">
@@ -1120,7 +1121,7 @@
       <div class="ms-inventory-column">
       <div class="ms-inventory inv-mode-min" id="inventoryPanel">
         <div class="panel-drag-handle-bar" id="inventoryDragHandle" title="拖曳背包"></div>
-        <button type="button" class="panel-btn-close" id="inventoryClose" title="關閉">×</button>
+        <button type="button" class="panel-wb-close" id="inventoryClose" aria-label="關閉物品欄" title="關閉"><span aria-hidden="true">×</span></button>
         <button type="button" class="inv-size-btn inv-size-full" id="invBtnFull" aria-label="大背包"></button>
         <button type="button" class="inv-size-btn inv-size-min hidden" id="invBtnMin" aria-label="小背包"></button>
 
@@ -2072,7 +2073,7 @@
   <div id="equipStatPanel" class="equip-stat-panel is-hidden" aria-label="身上屬性驗證面板">
     <div class="equip-stat-panel-header">
       <span>身上屬性（驗證明細）</span>
-      <button type="button" id="equipStatPanelClose" class="equip-stat-panel-close panel-btn-close" title="關閉">×</button>
+      <button type="button" id="equipStatPanelClose" class="panel-wb-close panel-wb-close--inline" aria-label="關閉屬性明細" title="關閉"><span aria-hidden="true">×</span></button>
     </div>
     <div id="equipStatPanelBody" class="equip-stat-panel-body"></div>
   </div>
@@ -2081,13 +2082,13 @@
   <script src="js/potentialInspect.js"></script>
   <script src="js/equipTooltip.js?v=20260813bossMerge1"></script>
   <script src="js/equipStatPanel.js?v=20260813front2"></script>
-  <script src="js/panelDrag.js?v=20260813front1"></script>
+  <script src="js/panelDrag.js?v=20260813panelDrag1"></script>
   <script src="js/formatPower.js?v=20260813uci3"></script>
   <script src="js/combatJobs.js?v=20260813uci5"></script>
   <script src="js/combatPower.js?v=20260813uci10"></script>
-  <script src="js/characterCombatPanel.js?v=20260813front2"></script>
-  <script src="js/uiCharacterInfo.js?v=20260813front2"></script>
+  <script src="js/characterCombatPanel.js?v=20260813wbClose3"></script>
+  <script src="js/uiCharacterInfo.js?v=20260813wbClose3"></script>
   <script src="js/costTracker.js?v=20260812priceSel1"></script>
-  <script src="js/main.js?v=20260813escZ1"></script>
+  <script src="js/main.js?v=20260813wbClose2"></script>
 </body>
 </html>

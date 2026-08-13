@@ -79,40 +79,68 @@ body {
   overflow: visible;
 }
 
-#enchantWorkbenchDragHandle {
+/* 各面板共用關閉鈕（白 ×、hover 變紅，獨立於 Bootstrap） */
+.panel-wb-close,
+.enchant-wb-close {
+  box-sizing: border-box;
   position: absolute;
-  left: 0;
-  top: 0;
-  width: calc(100% - 28px);
-  height: 32px;
-  z-index: 50;
-}
-
-/* 各面板共用：純文字 ×，無外框 */
-.panel-btn-close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 60;
-  width: 18px;
-  height: 18px;
-  padding: 0;
+  top: 6px;
+  right: 6px;
+  z-index: 10000;
+  width: 28px;
+  height: 28px;
   margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
-  color: #d8dde3;
-  font-size: 16px;
+  font-family: Arial, "Microsoft JhengHei", sans-serif;
+  font-size: 22px;
   font-weight: 700;
-  line-height: 18px;
-  text-align: center;
+  line-height: 1;
+  color: #ffffff;
   cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-appearance: none;
+  appearance: none;
+  opacity: 1;
 }
 
-.panel-btn-close:hover {
-  color: #fff;
-  background: transparent;
+.panel-wb-close:hover,
+.enchant-wb-close:hover {
+  color: #ff8888;
+}
+
+.panel-wb-close:active,
+.enchant-wb-close:active {
+  color: #ff5555;
+}
+
+.panel-wb-close:focus-visible,
+.enchant-wb-close:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 1px;
+}
+
+.panel-wb-close span,
+.enchant-wb-close span {
+  display: block;
+  line-height: 1;
+  pointer-events: none;
+  color: inherit;
+}
+
+/* 標題列內嵌（明細／戰力等 flex header） */
+.panel-wb-close--inline {
+  position: static;
+  top: auto;
+  right: auto;
+  flex-shrink: 0;
 }
 
 #pageEnhance {
@@ -142,6 +170,21 @@ body {
 .is-panel-drag-pinned {
   /* fixed 座標由 JS 寫入；避免 flex 拉伸干擾 */
   flex-shrink: 0;
+}
+
+.is-panel-drag-surface {
+  cursor: move;
+}
+
+.is-panel-drag-surface button,
+.is-panel-drag-surface input,
+.is-panel-drag-surface select,
+.is-panel-drag-surface textarea,
+.is-panel-drag-surface a,
+.is-panel-drag-surface label,
+.is-panel-drag-surface .ms-drop-zone,
+.is-panel-drag-surface #equipDropZone {
+  cursor: default;
 }
 
 
