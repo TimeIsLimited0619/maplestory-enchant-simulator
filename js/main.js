@@ -941,12 +941,17 @@ const ENCHANT_TAB_BUTTON_STATES = [
   'disabled',
 ];
 
-/** 各分頁待機／共用介面底圖（不含特效幀） */
+/** 各分頁待機／道具欄／使用按鈕（不含特效幀、全螢幕彈窗） */
 const ENCHANT_UI_CHROME_EXTRAS = [
   'images/common_backgrnd.png',
   'images/none_waitEquip.png',
+
+  // 待機
   'images/starforce/Enchant.img.starForce.layer_waitEquip.png',
+  'images/starforce/Enchant.img.starForce.layer_waitEquipMeso.png',
+  'images/starforce/Enchant.img.starForce.layer_waitEquipItem.png',
   'images/hammer/hammer.layer_waitEquip.png',
+  'images/hammer/hammer.layer_waitEquipItem.png',
   'images/SoulWeapon/soulWeapon_layer_waitEquip.png',
   'images/scroll/scroll.layer_waitEquip0.png',
   'images/scroll/scroll.layer_waitEquip1.png',
@@ -955,6 +960,117 @@ const ENCHANT_UI_CHROME_EXTRAS = [
   'images/additionalPotentail/layer_waitEquip.png',
   'images/bonusStat/bonusStat_layer_waitEquip.png',
   'images/exceptional/exceptional_layer_waitEquip.png',
+
+  // 星力：花費欄 + 強化按鈕
+  'images/starforce/starForce.layer_costMesoBox.png',
+  'images/starforce/starForce.layer_costItemBox.png',
+  'images/starforce/Enchant_starForce _ button_confirm _ normal_0.png',
+  'images/starforce/Enchant_starForce _ button_confirm _ mouseOver_0.png',
+  'images/starforce/Enchant_starForce _ button_confirm _ pressed_0.png',
+  'images/starforce/Enchant_starForce _ button_confirm _ disabled_0.png',
+
+  // 黃金錘：道具欄 + 強化按鈕
+  'images/hammer/hammer.layer_costInvenBox.png',
+  'images/hammer/hammer.costInven.selected.png',
+  'images/hammer/hammer.button_confirm.normal.0.png',
+  'images/hammer/hammer.button_confirm.mouseOver.0.png',
+  'images/hammer/hammer.button_confirm.pressed.0.png',
+  'images/hammer/hammer.button_confirm.disabled.0.png',
+
+  // 靈魂武器：道具欄 + 使用按鈕
+  'images/SoulWeapon/soulWeapon_layer_costInvenBox.png',
+  'images/SoulWeapon/soulWeapon_button_confirmEnchanter_normal_0.png',
+  'images/SoulWeapon/soulWeapon_button_confirmEnchanter_mouseOver_0.png',
+  'images/SoulWeapon/soulWeapon_button_confirmEnchanter_pressed_0.png',
+  'images/SoulWeapon/soulWeapon_button_confirmEnchanter_disabled_0.png',
+  'images/SoulWeapon/soulWeapon_button_confirmSoul_normal_0.png',
+  'images/SoulWeapon/soulWeapon_button_confirmSoul_mouseOver_0.png',
+  'images/SoulWeapon/soulWeapon_button_confirmSoul_pressed_0.png',
+  'images/SoulWeapon/soulWeapon_button_confirmSoul_disabled_0.png',
+
+  // 卷軸：道具欄 + 強化按鈕
+  'images/scroll/scroll.costScroll.layer_costScrollBox.png',
+  'images/scroll/scroll.costTrace.layer_costTraceBox.png',
+  'images/scroll/scroll.costScroll.inven.selected.png',
+  'images/scroll/scroll.button_confirm.normal.0.png',
+  'images/scroll/scroll.button_confirm.mouseOver.0.png',
+  'images/scroll/scroll.button_confirm.pressed.0.png',
+  'images/scroll/scroll.button_confirm.disabled.0.png',
+
+  // 潛能／附加潛能：方塊欄 + 使用按鈕
+  'images/potential/potential.costItem.layer_costItemBox.png',
+  'images/additionalPotentail/additionalPotential.layer_costMeso100.png',
+  'images/potential/potential.button_confirm.normal.0.png',
+  'images/potential/potential.button_confirm.mouseOver.0.png',
+  'images/potential/potential.button_confirm.pressed.0.png',
+  'images/potential/potential.button_confirm.disabled.0.png',
+
+  // 追加屬性：花費欄 + 使用按鈕
+  'images/bonusStat/bonusStat_costMeso_layer_costMesoBox.png',
+  'images/bonusStat/bonusStat_costItem_layer_costItemBox.png',
+  'images/bonusStat/bonusStat_costItem_inven_selected.png',
+  'images/bonusStat/bonusStat_button_confirm_normal_0.png',
+  'images/bonusStat/bonusStat_button_confirm_mouseOver_0.png',
+  'images/bonusStat/bonusStat_button_confirm_pressed_0.png',
+  'images/bonusStat/bonusStat_button_confirm_disabled_0.png',
+  'images/bonusStat/bonusStat_button_confirm1_normal_0.png',
+  'images/bonusStat/bonusStat_button_confirm1_mouseOver_0.png',
+  'images/bonusStat/bonusStat_button_confirm1_pressed_0.png',
+  'images/bonusStat/bonusStat_button_confirm1_disabled_0.png',
+  'images/bonusStat/bonusStat_button_confirm3_normal_0.png',
+  'images/bonusStat/bonusStat_button_confirm3_mouseOver_0.png',
+  'images/bonusStat/bonusStat_button_confirm3_pressed_0.png',
+  'images/bonusStat/bonusStat_button_confirm3_disabled_0.png',
+
+  // 卓越強化：花費欄 + 強化按鈕
+  'images/exceptional/exceptional_tabEnchant_layer_costEnchantBox.png',
+  'images/exceptional/exceptional_tabEnchant_button_enchant_normal_0.png',
+  'images/exceptional/exceptional_tabEnchant_button_enchant_mouseOver_0.png',
+  'images/exceptional/exceptional_tabEnchant_button_enchant_pressed_0.png',
+  'images/exceptional/exceptional_tabEnchant_button_enchant_disabled_0.png',
+
+  // 裝備欄 UIEquip：外殼／畫布／頁籤／預設按鈕／欄位底圖
+  'images/UIEquip/main/main_backgrnd.png',
+  'images/UIEquip/EquipTab/EquipTab.canvas_equip.png',
+  'images/UIEquip/main/tab_detailTab/main_tab_detailTab_selected_0.png',
+  'images/UIEquip/main/tab_detailTab/main_tab_detailTab_normal_1.png',
+  'images/UIEquip/EquipTab/presetSelected/presetSelected.0.png',
+  'images/UIEquip/EquipTab/button_preset1/button_preset1_normal_0.png',
+  'images/UIEquip/EquipTab/button_preset1/button_preset1_mouseOver_0.png',
+  'images/UIEquip/EquipTab/button_preset1/button_preset1_pressed_0.png',
+  'images/UIEquip/EquipTab/button_preset1/button_preset1_checked_0.png',
+  'images/UIEquip/EquipTab/button_preset2/button_preset2_normal_0.png',
+  'images/UIEquip/EquipTab/button_preset2/button_preset2_mouseOver_0.png',
+  'images/UIEquip/EquipTab/button_preset2/button_preset2_pressed_0.png',
+  'images/UIEquip/EquipTab/button_preset2/button_preset2_checked_0.png',
+  'images/UIEquip/EquipTab/button_preset3/button_preset3_normal_0.png',
+  'images/UIEquip/EquipTab/button_preset3/button_preset3_mouseOver_0.png',
+  'images/UIEquip/EquipTab/button_preset3/button_preset3_pressed_0.png',
+  'images/UIEquip/EquipTab/button_preset3/button_preset3_checked_0.png',
+  'images/UIEquip/EquipTab/button_presetApplication/button_presetApplication_normal_0.png',
+  'images/UIEquip/EquipTab/button_presetApplication/button_presetApplication_mouseOver_0.png',
+  'images/UIEquip/EquipTab/button_presetApplication/button_presetApplication_pressed_0.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_1.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_2.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_3.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_4.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_5.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_6.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_7.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_8.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_9.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_10.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_11.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_12.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_17.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_21.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_22.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_28.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_31.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_32.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_33.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_34.png',
+  'images/UIEquip/EquipTab/SlotName/SlotName_35.png',
 ];
 
 function collectEssentialEnchantChromeUrls() {
