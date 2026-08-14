@@ -266,7 +266,7 @@
 .uci-attack-power {
   position: absolute;
   left: 223px;
-  top: 10px;
+  top: 4px;
   transform: translateX(-50%);
   z-index: 6;
   font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;

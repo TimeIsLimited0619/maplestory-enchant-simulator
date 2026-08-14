@@ -20,9 +20,9 @@ const UiCharacterInfo = (() => {
     { id: 4, numPos: [217, 93], key: 'INT', source: 'main' },
     { id: 5, numPos: [425, 93], key: 'LUK', source: 'main' },
     // 攻擊區（attackFont）
-    { id: 7, numPos: [217, 132], key: '攻擊力', source: 'main', labelFallback: true },
+    { id: 7, numPos: [217, 132], key: '屬性攻擊力', source: 'panelAttack', format: 'power' },
     { id: 6, numPos: [437, 132], key: '傷害', source: 'extraOrEx', percent: true },
-    { id: 9, numPos: [217, 154], key: '最終傷害', source: 'extraOrEx', percent: true },
+    { id: 9, numPos: [217, 154], key: '最終傷害', source: 'finalDamage', percent: true },
     { id: 8, numPos: [437, 154], key: 'BOSS怪物傷害', source: 'extraOrEx', percent: true },
     { id: 12, numPos: [217, 176], key: '無視防禦率', source: 'ied', percent: true },
     { id: 11, numPos: [437, 176], key: '一般怪物傷害', source: 'extraOrEx', percent: true },
@@ -45,28 +45,38 @@ const UiCharacterInfo = (() => {
     { id: 27, numPos: [437, 369], key: '真實力量', source: 'zero' },
   ];
 
-  // id7 與 id10 都指向攻擊力：7 在遊戲是「屬性攻擊力」（角色演算），本模擬器無此值 → 跳過 7
-  const RENDER_SLOTS = STAT_SLOTS.filter((s) => s.id !== 7);
+  const RENDER_SLOTS = STAT_SLOTS;
 
   let inited = false;
-  let open = true;
+  let open = false;
 
   function $(id) {
     return document.getElementById(id);
   }
 
+  function formatWithCommas(n) {
+    const rounded = Math.round(Number(n) || 0);
+    return rounded.toLocaleString('en-US');
+  }
+
   function formatNumber(n, slot) {
     const v = Number(n) || 0;
     if (slot?.format === 'sec') {
-      return `${Math.round(Math.abs(v))}秒`;
+      return `${formatWithCommas(Math.abs(v))}秒`;
+    }
+    if (slot?.format === 'power') {
+      if (typeof formatPower !== 'function') return formatWithCommas(v);
+      // 屬性攻擊力：億／萬後加空格（例：21億 1432萬 7596）
+      return formatPower(v).replace(/億/g, '億 ').replace(/萬/g, '萬 ');
     }
     if (slot?.percent) {
       // 無視防禦乘算後常有小數；其餘多半為整數
       const rounded = Math.round(v * 100) / 100;
-      const t = Number.isInteger(rounded) ? String(rounded) : String(rounded);
-      return `${t}%`;
+      if (Number.isInteger(rounded)) return `${formatWithCommas(rounded)}%`;
+      const [intPart, frac] = String(rounded).split('.');
+      return `${Number(intPart).toLocaleString('en-US')}.${frac}%`;
     }
-    return String(Math.round(v));
+    return formatWithCommas(v);
   }
 
   /** 基礎 × (1 + pct/100)，向下取整（對齊 MapleCombat floorPercentApplied） */
@@ -124,6 +134,12 @@ const UiCharacterInfo = (() => {
   const ALL_STAT_PERCENT_KEYS = ['全屬性%', '全屬性'];
   const ATK_PERCENT_KEYS = ['攻擊力%', '物理攻擊力%', '攻擊力', '物理攻擊力'];
   const MAD_PERCENT_KEYS = ['攻擊力%', '魔法攻擊力%', '攻擊力', '魔法攻擊力'];
+
+  function allStatFlatFromSet(snapshot) {
+    const row = snapshot?.extraTotals?.['全屬性'];
+    if (!row || row.isPercent) return 0;
+    return Number(row.total) || 0;
+  }
 
   function ensureDom() {
     if ($('uciRoot')) return;
@@ -218,13 +234,77 @@ const UiCharacterInfo = (() => {
     if (key === 'BOSS怪物傷害') return Number(resolved.bossDamage) || 0;
     if (key === '爆擊傷害') return Number(resolved.critDamage) || 0;
 
-    // 最終傷害：裝備加總 + 面板萌獸終傷（顯示用加總；戰鬥力內萌獸為乘算）
-    if (key === '最終傷害') {
-      const equipFinal = sumAdditiveStat(snapshot, key);
-      const fam = Number(fields?.famFinal) || 0;
-      return equipFinal + fam;
-    }
     return null;
+  }
+
+  /** 終傷來源（各自獨立 %）；倍率 = ∏(1 + 終傷_i%/100) */
+  function collectFinalDamageSources(snapshot, combat) {
+    const sources = [];
+    const push = (name, value) => {
+      const n = Number(value) || 0;
+      if (!n) return;
+      sources.push({ name, value: n });
+    };
+    push('裝備', sumAdditiveStat(snapshot || {}, '最終傷害'));
+    push('萌獸', combat?.fields?.famFinal);
+    if (combat?.ctx?.genesisFinalChecked) push('創世', 10);
+    push('毀滅盾牌', combat?.fields?.ruinFinal);
+    return sources;
+  }
+
+  function finalDamageMultiplier(sources) {
+    return (sources || []).reduce((acc, row) => {
+      const pct = Number(row?.value) || 0;
+      return acc * (1 + pct / 100);
+    }, 1);
+  }
+
+  /** 等效終傷% = (總倍率 − 1) × 100，供面板顯示 */
+  function finalDamageEquivalentPercent(snapshot, combat) {
+    const mult = finalDamageMultiplier(collectFinalDamageSources(snapshot, combat));
+    return (mult - 1) * 100;
+  }
+
+  /**
+   * 屬性攻擊力（面板上限）
+   * 武器係數 × (4×主屬 + 副屬) × 總攻魔/100 × (1+傷害%/100) × ∏(1+終傷_i%/100)
+   */
+  function calcPanelAttack(snapshot, combat) {
+    if (!combat?.resolved) return 0;
+    const { resolved, ctx } = combat;
+    const jobCat = ctx?.jobCategory || 'normal';
+    const subtwo = Number(resolved.subtwo?.total) || 0;
+    let statPart = 0;
+    if (jobCat === 'xenon') {
+      // 傑諾：三屬等權
+      statPart = (Number(resolved.main?.total) || 0)
+        + (Number(resolved.sub?.total) || 0)
+        + subtwo;
+    } else if (jobCat === 'da') {
+      // 惡復：等效主屬（HP 換算）+ 副屬
+      statPart = (Number(resolved.equivalentMain) || 0)
+        + (Number(resolved.sub?.total) || 0);
+    } else {
+      statPart = 4 * (Number(resolved.main?.total) || 0)
+        + (Number(resolved.sub?.total) || 0)
+        + subtwo;
+    }
+
+    const atk = Number(resolved.attack?.total) || 0;
+    const dmgPct = Number(resolved.damage) || 0;
+    const fdMult = finalDamageMultiplier(collectFinalDamageSources(snapshot, combat));
+    let weaponMult = 1.2;
+    if (typeof WeaponTypeMap !== 'undefined'
+      && typeof WeaponTypeMap.getEquippedWeaponMultiplier === 'function'
+      && typeof UiEquipModule !== 'undefined') {
+      weaponMult = WeaponTypeMap.getEquippedWeaponMultiplier(
+        (slotId) => UiEquipModule.getWornEntry?.(slotId),
+      );
+    }
+
+    const value = weaponMult * statPart * (atk / 100) * (1 + dmgPct / 100) * fdMult;
+    if (!Number.isFinite(value) || value <= 0) return 0;
+    return Math.floor(value);
   }
 
   /** 裝備冷卻減少為固定秒數（潛能「所有技能冷卻時間 -N秒」）；% 來源尚無 → 不加 */
@@ -280,6 +360,12 @@ const UiCharacterInfo = (() => {
     if (source === 'cooldownSec') {
       return readCooldownSeconds(snapshot);
     }
+    if (source === 'panelAttack') {
+      return calcPanelAttack(snapshot || {}, combat);
+    }
+    if (source === 'finalDamage') {
+      return finalDamageEquivalentPercent(snapshot || {}, combat);
+    }
 
     const fromPanel = readCombatPanelValue(snapshot || {}, slot, combat);
     if (fromPanel != null) return fromPanel;
@@ -301,7 +387,10 @@ const UiCharacterInfo = (() => {
       let soul = 0;
       if (key === '攻擊力') soul = Number(snapshot?.soulFlat?.['攻擊力']) || 0;
       if (key === '魔法攻擊力') soul = Number(snapshot?.soulFlat?.['魔法攻擊力']) || 0;
-      const flat = base + ex + soul;
+      const flat = base + ex + soul
+        + ((key === 'STR' || key === 'DEX' || key === 'INT' || key === 'LUK')
+          ? allStatFlatFromSet(snapshot)
+          : 0);
 
       // 四屬：基礎 × (1 + 主屬% + 全屬%)
       if (STAT_PERCENT_KEYS[key]) {
@@ -315,6 +404,12 @@ const UiCharacterInfo = (() => {
       }
       if (key === '魔法攻擊力') {
         return applyPercent(flat, sumPercentSources(snapshot, MAD_PERCENT_KEYS));
+      }
+      if (key === '最大HP') {
+        return applyPercent(flat, sumPercentSources(snapshot, ['最大HP%']));
+      }
+      if (key === '最大MP') {
+        return applyPercent(flat, sumPercentSources(snapshot, ['最大MP%']));
       }
       return flat;
     }
@@ -456,7 +551,7 @@ const UiCharacterInfo = (() => {
       CharacterCombatPanel.init?.();
       CharacterCombatPanel.syncToCombatPower?.();
     }
-    setOpen(true);
+    setOpen(false);
     refresh();
     if (typeof EquipStatPanel !== 'undefined' && typeof EquipStatPanel.setOpen === 'function') {
       EquipStatPanel.setOpen(false);

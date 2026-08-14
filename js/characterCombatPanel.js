@@ -22,6 +22,9 @@ const CharacterCombatPanel = (() => {
     includeEquipDelta: true,
     genesisFinalCheck: false,
     values: {},
+    /** 專屬武器鎖定時不給改下拉；由裝備欄同步，不寫入 localStorage */
+    jobLockedByWeapon: false,
+    detectedWeaponType: '',
   };
 
   function $(id) {
@@ -119,6 +122,37 @@ const CharacterCombatPanel = (() => {
     if (typeof UiCharacterInfo !== 'undefined') UiCharacterInfo.refresh?.();
   }
 
+  function detectEquippedWeapon() {
+    if (typeof WeaponTypeMap === 'undefined' || typeof UiEquipModule === 'undefined') {
+      return null;
+    }
+    return WeaponTypeMap.resolveFromEquippedSlots(
+      (slotId) => UiEquipModule.getWornEntry?.(slotId)
+    );
+  }
+
+  /**
+   * 專屬武器：自動寫入職業並鎖下拉。
+   * 共用／無武器：解開下拉，職業維持上次選擇。
+   */
+  function syncFromEquippedWeapon() {
+    const detected = detectEquippedWeapon();
+    const nextLocked = !!(detected && detected.exclusive && detected.jobName);
+    const nextType = nextLocked ? (detected.weaponType || '') : '';
+    const nextJob = nextLocked ? detected.jobName : state.jobName;
+    const jobChanged = nextJob !== state.jobName;
+    const lockChanged = nextLocked !== state.jobLockedByWeapon
+      || nextType !== state.detectedWeaponType;
+
+    if (jobChanged) state.jobName = nextJob;
+    state.jobLockedByWeapon = nextLocked;
+    state.detectedWeaponType = nextType;
+
+    if (!inited) return;
+    if (jobChanged) notifyRefresh();
+    if (jobChanged || lockChanged) render();
+  }
+
   function inputCell(id, placeholder) {
     const v = state.values[id] != null ? state.values[id] : '';
     return `<input type="number" class="ccp-input" data-field="${id}" value="${v}" placeholder="${placeholder || '0'}" step="any">`;
@@ -145,15 +179,20 @@ const CharacterCombatPanel = (() => {
     const showDa = job.category === 'da';
     const showRuin = job.category === 'da' || job.name === '惡魔殺手';
 
+    const jobLocked = !!state.jobLockedByWeapon;
     const jobOpts = (typeof CombatJobs !== 'undefined' ? CombatJobs.jobOptions : [])
       .map((j) => `<option value="${j.name}" ${j.name === state.jobName ? 'selected' : ''}>${j.name}</option>`)
       .join('');
+    const jobDetectNote = jobLocked && state.detectedWeaponType
+      ? `<span class="ccp-job-detect">${state.detectedWeaponType} · 自動偵測</span>`
+      : '';
 
     body.innerHTML = `
       <div class="ccp-row ccp-row-top">
         <label class="ccp-label">職業
-          <select id="ccpJob" class="ccp-select">${jobOpts}</select>
+          <select id="ccpJob" class="ccp-select" ${jobLocked ? 'disabled' : ''}>${jobOpts}</select>
         </label>
+        ${jobDetectNote}
         <label class="ccp-check">
           <input type="checkbox" id="ccpIncludeEquip" ${state.includeEquipDelta ? 'checked' : ''}>
           自動加總身上裝備
@@ -222,6 +261,7 @@ const CharacterCombatPanel = (() => {
 
   function bindBodyEvents() {
     $('ccpJob')?.addEventListener('change', (e) => {
+      if (state.jobLockedByWeapon) return;
       state.jobName = e.target.value;
       notifyRefresh();
       render();
@@ -293,7 +333,8 @@ const CharacterCombatPanel = (() => {
     ensureDom();
     inited = true;
     bind();
-    render();
+    syncFromEquippedWeapon();
+    if (!$('ccpBody')?.innerHTML) render();
     syncToCombatPower();
     setOpen(false);
   }
@@ -305,6 +346,7 @@ const CharacterCombatPanel = (() => {
     toggle() { setOpen(!open); },
     isOpen: () => !!open,
     syncToCombatPower,
+    syncFromEquippedWeapon,
     getState: () => ({ ...state, values: { ...state.values } }),
   };
 })();

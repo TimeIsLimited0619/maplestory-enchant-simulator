@@ -1,0 +1,139 @@
+/* 物品清單 */
+.irq-root {
+  position: fixed;
+  left: 12px;
+  top: 56px;
+  z-index: 12007;
+  width: min(386px, calc(100vw - 24px));
+  height: min(72vh, 640px);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: rgba(18, 18, 18, 0.96);
+  color: #ddd;
+  border: 1px solid #555;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow: hidden;
+}
+
+.irq-root.is-hidden {
+  display: none;
+}
+
+.irq-root.is-drop-target {
+  outline: 2px solid #c6e34a;
+  outline-offset: -2px;
+}
+
+.irq-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #444;
+  background: #1f1f1f;
+  border-radius: 6px 6px 0 0;
+  font-weight: 600;
+  cursor: move;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.irq-hint {
+  margin: 8px 10px 0;
+  color: #8a949c;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.irq-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  flex-shrink: 0;
+}
+
+.irq-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.irq-filter {
+  padding: 2px 8px;
+  border: 1px solid #555;
+  border-radius: 3px;
+  background: #111;
+  color: #c5ced6;
+  cursor: pointer;
+}
+
+.irq-filter.is-active {
+  border-color: #4a5a3a;
+  color: #c6e34a;
+  background: #1a2214;
+}
+
+.irq-search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  border: 1px solid #555;
+  border-radius: 3px;
+  background: #0e1114;
+  color: #eee;
+}
+
+.irq-drop {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 10px 8px;
+}
+
+.irq-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 42px);
+  gap: 4px;
+}
+
+.irq-slot {
+  width: 42px;
+  height: 42px;
+  box-sizing: border-box;
+  border: 1px solid #333;
+  background: #14181c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+
+.irq-slot img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: auto;
+}
+
+.irq-slot.is-dragging {
+  opacity: 0.45;
+}
+
+.irq-slot:hover {
+  border-color: #8ab4f8;
+}
+
+.irq-footer {
+  padding: 6px 10px 8px;
+  border-top: 1px solid #333;
+  color: #8a949c;
+  font-size: 11px;
+  flex-shrink: 0;
+}

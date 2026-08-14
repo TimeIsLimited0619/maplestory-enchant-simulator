@@ -64,7 +64,7 @@
 }
 
 .esp-row-main {
-  grid-template-columns: 1fr auto minmax(110px, auto);
+  grid-template-columns: minmax(72px, 1fr) auto 1fr;
 }
 
 .esp-k {
@@ -81,11 +81,19 @@
 }
 
 .esp-break {
-  color: #888;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0 8px;
   font-size: 11px;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
+.esp-part-base { color: #ffffff; }
+.esp-part-star { color: #ffcc00; }
+.esp-part-scroll { color: #afadff; }
+.esp-part-bonus { color: #0ae3ad; }
 
 .esp-empty {
   color: #777;

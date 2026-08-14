@@ -96,6 +96,7 @@ const CostTrackerModule = {
     this.render();
     this.syncLegacyPriceInputs();
     this.updateUnitToggleButton();
+    this.syncMenuButton();
   },
 
   seedCubeUsageKeys() {
@@ -575,41 +576,52 @@ const CostTrackerModule = {
   },
 
   open() {
-    const overlay = document.getElementById('costTrackerOverlay');
-    if (!overlay) return;
-    this.isOpen = true;
-    if (typeof beginModalFadeIn === 'function') {
-      beginModalFadeIn(overlay);
-    } else {
-      overlay.classList.remove('hidden');
-      overlay.setAttribute('aria-hidden', 'false');
-    }
-    this.render();
-    this.updateUnitToggleButton();
+    this.setOpen(true);
   },
 
   close() {
-    this.hotSavePricesFromForm({ refreshDisplay: true });
+    this.setOpen(false);
+  },
+
+  setOpen(next) {
     const overlay = document.getElementById('costTrackerOverlay');
     if (!overlay) return;
-    this.isOpen = false;
-    overlay.classList.add('hidden');
-    overlay.setAttribute('aria-hidden', 'true');
+    const open = !!next;
+    if (this.isOpen && open) {
+      this.render();
+      this.updateUnitToggleButton();
+      if (typeof PanelDrag !== 'undefined') PanelDrag.bringFront(overlay);
+      this.syncMenuButton();
+      return;
+    }
+    if (this.isOpen && !open) {
+      this.hotSavePricesFromForm({ refreshDisplay: true });
+    }
+    this.isOpen = open;
+    overlay.classList.toggle('is-hidden', !open);
+    overlay.classList.toggle('hidden', !open);
+    overlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+    if (open) {
+      this.render();
+      this.updateUnitToggleButton();
+      if (typeof PanelDrag !== 'undefined') PanelDrag.bringFront(overlay);
+    }
+    this.syncMenuButton();
+  },
+
+  syncMenuButton() {
+    document.getElementById('btnViewCost')?.classList.toggle('is-active', !!this.isOpen);
   },
 
   bindLogOpen() {
-    const logBox = document.getElementById('logBox');
-    if (logBox && !logBox.dataset.costTrackerBound) {
-      logBox.dataset.costTrackerBound = '1';
-      logBox.classList.add('ms-sidebar-log-clickable');
-      logBox.title = '點擊開啟成本統計';
-      logBox.addEventListener('click', () => this.open());
-    }
+    document.getElementById('btnViewCost')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.setOpen(!this.isOpen);
+    });
   },
 
   bindModal() {
     const closeBtn = document.getElementById('costTrackerClose');
-    const backdrop = document.getElementById('costTrackerBackdrop');
     const resetBtn = document.getElementById('costTrackerReset');
     const saveBtn = document.getElementById('costTrackerSavePrices');
     const unitBtn = document.getElementById('costTrackerUnitToggle');
@@ -618,7 +630,6 @@ const CostTrackerModule = {
     const importFile = document.getElementById('costTrackerImportFile');
 
     closeBtn?.addEventListener('click', () => this.close());
-    backdrop?.addEventListener('click', () => this.close());
     resetBtn?.addEventListener('click', () => {
       if (window.confirm('確定要重置所有使用次數與楓幣花費統計嗎？（單價設定會保留）')) {
         this.resetAll();
@@ -629,10 +640,6 @@ const CostTrackerModule = {
     exportBtn?.addEventListener('click', () => this.handleExportSave());
     importBtn?.addEventListener('click', () => importFile?.click());
     importFile?.addEventListener('change', (event) => this.handleImportSaveFile(event));
-
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && this.isOpen) this.close();
-    });
 
     if (!this._beforeUnloadBound) {
       this._beforeUnloadBound = true;

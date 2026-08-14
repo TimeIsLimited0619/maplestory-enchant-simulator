@@ -83,6 +83,18 @@
   padding: 2px 4px;
 }
 
+.ccp-select:disabled {
+  opacity: 0.85;
+  cursor: default;
+  color: #c6e34a;
+  border-color: #4a5a3a;
+}
+
+.ccp-job-detect {
+  color: #8a949c;
+  font-size: 11px;
+}
+
 .ccp-table {
   width: 100%;
   border-collapse: collapse;

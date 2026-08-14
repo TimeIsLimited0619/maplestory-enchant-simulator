@@ -75,8 +75,13 @@ const WZ_CHARACTER_PART = {
   /** 胸章（WZ islot Ba）；原 Bt Badge 已無裝備使用而移除 */
   Badge: { islot: 'Ba', mainType: EQUIP_TYPE.ACCESSORY, subType: 'badge' },
   Pocket: { islot: 'Po', mainType: EQUIP_TYPE.ACCESSORY, subType: 'pocket' },
+  /** 圖騰（WZ islot 常為 Po，以 wzPart Totem / subType 區分口袋） */
+  Totem: { islot: 'Po', mainType: EQUIP_TYPE.ACCESSORY, subType: 'totem' },
   Shoulder: { islot: 'Sh', mainType: EQUIP_TYPE.ARMOR, subType: 'shoulder' },
-  Android: { islot: 'Tm', mainType: EQUIP_TYPE.ACCESSORY, subType: 'android' },
+  /** 機器心臟（裝備欄 Tm → 槽 33） */
+  Heart: { islot: 'Tm', mainType: EQUIP_TYPE.ARMOR, subType: 'heart' },
+  /** 機器人（裝備欄 An → 槽 32；之後新增） */
+  Android: { islot: 'An', mainType: EQUIP_TYPE.ACCESSORY, subType: 'android' },
   OffHandWeapon: { islot: 'ohp', mainType: EQUIP_TYPE.offHandWeapon, subType: 'offHandWeapon' },
   /** 勳章（WZ islot Me；舊碼 Md 仍相容） */
   Medal: { islot: 'Me', mainType: EQUIP_TYPE.ACCESSORY, subType: 'medal' },
@@ -112,12 +117,56 @@ const ISLOT_TO_MAIN_TYPE = {
   Ex: EQUIP_TYPE.ACCESSORY, // 舊碼相容 → pocket
   Cp: EQUIP_TYPE.ARMOR,
   Tm: EQUIP_TYPE.ARMOR,
+  An: EQUIP_TYPE.ACCESSORY,
   Hr: EQUIP_TYPE.ACCESSORY,
   Face: EQUIP_TYPE.ACCESSORY,
   Md: EQUIP_TYPE.ACCESSORY, // 舊碼相容 → medal
   Em: EQUIP_TYPE.Emblem,
   Ba: EQUIP_TYPE.ACCESSORY
 };
+
+/** 是否為圖騰（wzPart Totem / subType totem；islot 可能仍為 Po） */
+function isTotemItem(item) {
+  if (!item) return false;
+  if (item.subType === 'totem') return true;
+  if (item.wzPart === 'Totem' || item.wz?.wzPart === 'Totem') return true;
+  return false;
+}
+
+/** 是否為口袋道具（islot Po／Ex；與圖騰同 islot 時以 totem 優先） */
+function isPocketItem(item) {
+  if (!item) return false;
+  if (isTotemItem(item)) return false;
+  if (item.subType === 'pocket') return true;
+  return item.islot === 'Po' || item.islot === 'Ex';
+}
+
+/** 是否為機器心臟（islot Tm / subType heart） */
+function isHeartItem(item) {
+  if (!item) return false;
+  if (item.subType === 'heart') return true;
+  if (item.islot === 'Tm') return true;
+  if (item.wzPart === 'Heart' || item.wz?.wzPart === 'Heart') return true;
+  return false;
+}
+
+/** 是否為機器人（islot An / subType android；與機器心臟 Tm 分開） */
+function isAndroidItem(item) {
+  if (!item) return false;
+  if (isHeartItem(item)) return false;
+  if (item.subType === 'android') return true;
+  if (item.islot === 'An') return true;
+  if (item.wzPart === 'Android' || item.wz?.wzPart === 'Android') return true;
+  return false;
+}
+
+/**
+ * 全強化功能鎖定（目前：機器人 An）
+ * 機器心臟 Tm 不鎖定。之後若有新部位要全面鎖強化，集中加在這裡即可。
+ */
+function isEnhancementLockedItem(item) {
+  return isAndroidItem(item);
+}
 
 /** 是否為勳章（islot Me；舊 Md 相容） */
 function isMedalItem(item) {
@@ -149,18 +198,32 @@ function hasEquipPotentialLines(item, which = 'main') {
   return Array.isArray(pot?.lines) && pot.lines.length > 0;
 }
 
-/** 可使用主潛能強化（方塊等）；勳章／尚未賦予潛能者不可 */
-function canUsePotentialEnhancement(item) {
+/** 裝備類型是否可擁有主潛能（尚未賦予也算可 → tooltip「無」） */
+function canHaveMainPotential(item) {
   if (!item) return false;
+  if (isEnhancementLockedItem(item)) return false;
   if (isMedalItem(item)) return false;
+  if (isTotemItem(item)) return false;
+  if (isPocketItem(item)) return false;
+  return true;
+}
+
+/** 裝備類型是否可擁有附加潛能 */
+function canHaveAdditionalPotential(item) {
+  if (!canHaveMainPotential(item)) return false;
+  if (isPinItem(item)) return false;
+  return true;
+}
+
+/** 可使用主潛能強化（方塊等）；類型不可用／尚未賦予潛能者不可 */
+function canUsePotentialEnhancement(item) {
+  if (!canHaveMainPotential(item)) return false;
   return hasEquipPotentialLines(item, 'main');
 }
 
-/** 可使用附加潛能強化；勳章／胸章／尚未賦予附加潛能者不可 */
+/** 可使用附加潛能強化；類型不可用／尚未賦予附加潛能者不可 */
 function canUseAdditionalPotentialEnhancement(item) {
-  if (!item) return false;
-  if (isMedalItem(item)) return false;
-  if (isPinItem(item)) return false;
+  if (!canHaveAdditionalPotential(item)) return false;
   return hasEquipPotentialLines(item, 'additional');
 }
 
@@ -201,7 +264,8 @@ const ISLOT_TO_SUB_TYPE = {
   Po: 'pocket',
   Ex: 'pocket', // 舊碼相容
   Cp: 'cap',
-  Tm: 'android',
+  Tm: 'heart',
+  An: 'android',
   Hr: 'hair',
   Op: 'weapon',
   ohp: 'offHandWeapon',
@@ -214,6 +278,7 @@ const ISLOT_TO_SUB_TYPE = {
 /**
  * 由 Character.*.img.xml 的 info 節點建立裝備資料。
  * 圖示固定為 images/equip/{itemId}.png
+ * 機器人另有：裝備欄 {id}D.png、外型 images/Android/{id}A.png
  *
  * @param {string} itemId - 物品 ID（與 XML 檔名一致，如 01215041）
  * @param {string} name - 顯示名稱（String.wz 需自行查表填入）
@@ -222,16 +287,21 @@ const ISLOT_TO_SUB_TYPE = {
 function buildEquipFromWzInfo(itemId, name, info) {
   const islot = info.islot || info.vslot || 'Wp';
   const partHint = info.wzPart ? WZ_CHARACTER_PART[info.wzPart] : null;
+  const isTotem = info.wzPart === 'Totem' || partHint?.subType === 'totem';
+  const isAndroid = info.wzPart === 'Android' || partHint?.subType === 'android' || islot === 'An';
   const mainType = ISLOT_TO_MAIN_TYPE[islot] || partHint?.mainType || EQUIP_TYPE.ARMOR;
-  const subType = ISLOT_TO_SUB_TYPE[islot] || partHint?.subType || 'unknown';
+  const subType = isTotem
+    ? 'totem'
+    : (ISLOT_TO_SUB_TYPE[islot] || partHint?.subType || 'unknown');
   const tuc = Number(info.tuc) || 0;
   const isDestinyWeapon = mainType === EQUIP_TYPE.WEAPON && Boolean(info.exceptUpgrade);
   const isPin = islot === 'Ba';
+  const displayName = name || itemId;
 
-  return {
+  const item = {
     id: itemId,
     itemId,
-    name: name || itemId,
+    name: displayName,
     icon: `images/equip/${itemId}.png`,
     reqLevel: Number(info.reqLevel) || 0,
     mainType,
@@ -279,6 +349,7 @@ function buildEquipFromWzInfo(itemId, name, info) {
       onlyUpgradeThousand: info.onlyUpgradeThousand || null,
       tradeBlock: Boolean(info.tradeBlock),
       equipTradeBlock: Boolean(info.equipTradeBlock),
+      accountSharable: Number(info.accountSharable) || 0,
       tradeAvailable: Number(info.tradeAvailable) || 0,
       notSale: Boolean(info.notSale),
       bossReward: Boolean(info.bossReward),
@@ -291,6 +362,29 @@ function buildEquipFromWzInfo(itemId, name, info) {
       unsyntesizable: Boolean(info.unsyntesizable || info.unsynthesizable),
     }
   };
+
+  if (isAndroid) {
+    item.equipIcon = `images/equip/${itemId}D.png`;
+    item.androidLook = `images/Android/${itemId}A.png`;
+    item.androidGrade = Number(info.androidGrade ?? info.grade) || 1;
+    item.androidShortName = String(info.androidShortName || '')
+      || String(displayName).replace(/機器人$/, '')
+      || displayName;
+    item.androidNonHuman = Boolean(info.androidNonHuman);
+    item.androidShop = info.androidShop !== false;
+    item.maxStar = 0;
+  }
+
+  return item;
+}
+
+/** 裝備欄／穿著顯示用圖示（機器人用 D 圖） */
+function getEquipDisplayIcon(item) {
+  if (!item) return '';
+  if (typeof isAndroidItem === 'function' ? isAndroidItem(item) : item.subType === 'android') {
+    return item.equipIcon || `images/equip/${item.itemId || item.id}D.png`;
+  }
+  return item.icon || '';
 }
 
 /** 裝備本身是否具有可強化次數（WZ tuc / baseMaxUpgradeSlots > 0） */
@@ -300,8 +394,23 @@ function hasBaseUpgradeSlots(item) {
   return base > 0;
 }
 
-/** 是否可進行星力強化（有 tuc，或為阿特拉斯副武器；胸章除外） */
+/** 是否可進行卷軸強化 */
+function canUseScrollEnhancement(item) {
+  if (!item) return false;
+  if (isEnhancementLockedItem(item)) return false;
+  return hasBaseUpgradeSlots(item);
+}
+
+/** 是否可使用白金／黃金鐵鎚 */
+function canUseHammerEnhancement(item) {
+  if (!canUseScrollEnhancement(item)) return false;
+  if (typeof isAtlasOffHandWeapon === 'function' && isAtlasOffHandWeapon(item)) return false;
+  return (item.maxPlatinumHammer ?? 5) > 0 || (item.maxGoldenHammer ?? 1) > 0;
+}
+
+/** 是否可進行星力強化（有 tuc，或為阿特拉斯副武器；胸章／機器人除外） */
 function canUseStarForce(item) {
+  if (isEnhancementLockedItem(item)) return false;
   if (isPinItem(item)) return false;
   return hasBaseUpgradeSlots(item) || isAtlasOffHandWeapon(item);
 }
@@ -309,6 +418,7 @@ function canUseStarForce(item) {
 /** 不可使用附加能力（星火）的部位 */
 const BONUS_STAT_BLOCKED_SUBTYPES = new Set([
   'ring',
+  'heart',
   'android',
   'offHandWeapon',
   'shield',
@@ -316,16 +426,30 @@ const BONUS_STAT_BLOCKED_SUBTYPES = new Set([
   'badge', // 胸章 Ba
 ]);
 
-const BONUS_STAT_BLOCKED_ISLOTS = new Set(['Ri', 'Tm', 'ohp', 'Si', 'Em', 'Ba']);
+const BONUS_STAT_BLOCKED_ISLOTS = new Set(['Ri', 'Tm', 'An', 'ohp', 'Si', 'Em', 'Ba']);
+
+/** 圖騰中唯一可使用追加屬性者 */
+const BONUS_STAT_TOTEM_ALLOW_IDS = new Set(['01202287']); // 古代石板複製品
+const BONUS_STAT_TOTEM_ALLOW_NAMES = new Set(['古代石板複製品']);
+
+function canTotemUseBonusStat(item) {
+  if (!item) return false;
+  const id = String(item.itemId || item.id || '');
+  if (BONUS_STAT_TOTEM_ALLOW_IDS.has(id)) return true;
+  return BONUS_STAT_TOTEM_ALLOW_NAMES.has(String(item.name || ''));
+}
 
 /** 是否可使用附加能力（bonusStat） */
 function canUseBonusStat(item) {
   if (!item) return false;
+  if (isEnhancementLockedItem(item)) return false;
   if (isPinItem(item)) return false;
   if (item.mainType === EQUIP_TYPE.offHandWeapon) return false;
   if (item.mainType === EQUIP_TYPE.Emblem) return false;
   if (BONUS_STAT_BLOCKED_SUBTYPES.has(item.subType)) return false;
   if (BONUS_STAT_BLOCKED_ISLOTS.has(item.islot)) return false;
+  // 圖騰：僅古代石板複製品
+  if (isTotemItem(item)) return canTotemUseBonusStat(item);
   return true;
 }
 
@@ -1096,36 +1220,6 @@ const ITEM_DATABASE = {
     tradeAvailable: 2
   }),
 
-'01113075': buildEquipFromWzInfo('01113075', '頂級培羅德戒指', {
-    wzPart: 'Ring',
-    islot: 'Ri',
-    vslot: 'Ri',
-    reqJob: 0,
-    reqLevel: 150,
-    incSTR: 10,
-    incDEX: 10,
-    incINT: 10,
-    incLUK: 10,
-    incPAD: 8,
-    incMAD: 8,
-    incPDD: 150,
-    incMDD: 150,
-    incMHP: 250,
-    incMMP: 250,
-    incSpeed: 10,
-    incJump: 0,
-    tuc: 7,
-    attackSpeed: 0,
-    setItemID: 318,
-    notSale: 0,
-    cash: 0,
-    equipTradeBlock: 1,
-    exItem: 1,
-    onlyEquip: 1,
-    price: 1,
-    tradeAvailable: 2
-  }),
-
 '01113306': buildEquipFromWzInfo('01113306', '巨大的恐怖', {
     wzPart: 'Ring',
     islot: 'Ri',
@@ -1503,7 +1597,7 @@ const ITEM_DATABASE = {
     price: 1
   }),
 
-  '01162083': buildEquipFromWzInfo('01162083', '受詛咒的黃魔導書', {
+'01162083': buildEquipFromWzInfo('01162083', '受詛咒的黃魔導書', {
     wzPart: 'Accessory',
     islot: 'Po',
     vslot: 'Po',
@@ -1665,26 +1759,316 @@ const ITEM_DATABASE = {
     price: 1
   }),
 
-'01215032': buildEquipFromWzInfo('01215032', '神秘冥界幽靈之劍', {
+'01202253': buildEquipFromWzInfo('01202253', '超越的圖騰', {
+    wzPart: 'Totem',
+    islot: 'Po',
+    vslot: 'Po',
+    reqJob: 0,
+    reqLevel: 0,
+    incSTR: 40,
+    incDEX: 40,
+    incINT: 40,
+    incLUK: 40,
+    incPAD: 20,
+    incMAD: 20,
+    tuc: 0,
+    tradeBlock: 1,
+    cash: 0,
+    onlyEquip: 1,
+    price: 0
+  }),
+
+'01202287': buildEquipFromWzInfo('01202287', '古代石板複製品', {
+    wzPart: 'Totem',
+    islot: 'Po',
+    vslot: 'Po',
+    reqJob: 0,
+    reqLevel: 200,
+    incSTR: 20,
+    incDEX: 20,
+    incINT: 20,
+    incLUK: 20,
+    incPAD: 5,
+    incMAD: 5,
+    tuc: 0,
+    tradeBlock: 1,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    onlyEquip: 1,
+    price: 0
+  }),
+
+'01212129': buildEquipFromWzInfo('01212129', '創世閃耀之杖', {
+    wzPart: 'Weapon',
     islot: 'Wp',
     vslot: 'Wp',
-    reqJob: 1,
-    reqJob2: 161,
+    reqJob: 2,
     reqLevel: 200,
-    incSTR: 100,
-    incDEX: 100,
-    incPAD: 295,
+    incINT: 150,
+    incLUK: 150,
+    incPAD: 237,
+    incMAD: 400,
     tuc: 8,
     attackSpeed: 4,
     imdR: 20,
     bdR: 30,
-    setItemID: 617,
+    setItemID: 887,
+    sfx: 'mace',
+    afterImage: 'mace',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    exceptTransmission: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    only: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01212145': buildEquipFromWzInfo('01212145', '命運閃耀之杖', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 2,
+    reqLevel: 250,
+    incINT: 190,
+    incLUK: 190,
+    incPAD: 260,
+    incMAD: 439,
+    tuc: 9,
+    attackSpeed: 4,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 887,
+    sfx: 'mace',
+    afterImage: 'mace',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    onlyUpgrade: [
+      204937, 204938, 204939, 20494, 20497, 20499,
+      26440, 26441, 26443, 20482, 20483, 20495,
+      20487, 25360, 50645, 2049370, 2049371, 2049372,
+      2049373, 2049374, 2049375, 2049376, 2049377, 2049378,
+      2049379, 2049380, 2049381, 2049382, 2049383, 2049384,
+      2049385, 2049386, 2049387, 2049388, 2049389, 2049390,
+      2049391, 2049392, 2049393, 2049394, 2049395, 2049396,
+      2049397, 2049398, 2049399
+    ],
+    onlyUpgradeThousand: [2590, 2591],
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01213022': buildEquipFromWzInfo('01213022', '創世調節器', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 1,
+    reqLevel: 200,
+    incSTR: 150,
+    incDEX: 150,
+    incPAD: 340,
+    tuc: 8,
+    attackSpeed: 4,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 886,
+    sfx: 'tGlove',
+    afterImage: 'swordOL',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    exceptTransmission: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    only: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01213054': buildEquipFromWzInfo('01213054', '命運調節器', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 1,
+    reqLevel: 250,
+    incSTR: 190,
+    incDEX: 190,
+    incPAD: 373,
+    tuc: 9,
+    attackSpeed: 4,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 886,
+    sfx: 'tGlove',
+    afterImage: 'swordOL',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    onlyUpgrade: [
+      204937, 204938, 204939, 20494, 20497, 20499,
+      26440, 26441, 26443, 20482, 20483, 20495,
+      20487, 25360, 50645, 2049370, 2049371, 2049372,
+      2049373, 2049374, 2049375, 2049376, 2049377, 2049378,
+      2049379, 2049380, 2049381, 2049382, 2049383, 2049384,
+      2049385, 2049386, 2049387, 2049388, 2049389, 2049390,
+      2049391, 2049392, 2049393, 2049394, 2049395, 2049396,
+      2049397, 2049398, 2049399
+    ],
+    onlyUpgradeThousand: [2590, 2591],
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01214022': buildEquipFromWzInfo('01214022', '創世龍息射手', {
+    wzPart: 'Weapon',
+    islot: 'WpSi',
+    vslot: 'WpSi',
+    reqJob: 4,
+    reqSpecJob: 63,
+    reqLevel: 200,
+    incSTR: 150,
+    incDEX: 150,
+    incPAD: 318,
+    incSpeed: 19,
+    tuc: 8,
+    attackSpeed: 4,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 888,
+    sfx: 'bow',
+    afterImage: 'breathshooter',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    exceptTransmission: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    only: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01214050': buildEquipFromWzInfo('01214050', '命運龍息射手', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 4,
+    reqSpecJob: 63,
+    reqLevel: 250,
+    incSTR: 190,
+    incDEX: 190,
+    incPAD: 349,
+    incSpeed: 19,
+    tuc: 9,
+    attackSpeed: 4,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 888,
+    sfx: 'bow',
+    afterImage: 'breathshooter',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    onlyUpgrade: [
+      204937, 204938, 204939, 20494, 20497, 20499,
+      26440, 26441, 26443, 20482, 20483, 20495,
+      20487, 25360, 50645, 2049370, 2049371, 2049372,
+      2049373, 2049374, 2049375, 2049376, 2049377, 2049378,
+      2049379, 2049380, 2049381, 2049382, 2049383, 2049384,
+      2049385, 2049386, 2049387, 2049388, 2049389, 2049390,
+      2049391, 2049392, 2049393, 2049394, 2049395, 2049396,
+      2049397, 2049398, 2049399
+    ],
+    onlyUpgradeThousand: [2590, 2591],
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01215024': buildEquipFromWzInfo('01215024', '創世長劍', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 1,
+    reqSpecJob: 161,
+    reqLevel: 200,
+    incSTR: 150,
+    incDEX: 150,
+    incPAD: 340,
+    tuc: 8,
+    attackSpeed: 6,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 886,
     sfx: 'swordS',
     afterImage: 'swordOS',
     exceptUpgrade: 1,
     tradeBlock: 1,
     notSale: 1,
-    equipTradeBlock: 1
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    exceptTransmission: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    only: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
   }),
 
 '01215041': buildEquipFromWzInfo('01215041', '命運之劍', {
@@ -1716,6 +2100,195 @@ const ITEM_DATABASE = {
     exceptToadsHammer: 1,
     jokerToSetItem: 1,
     noDrop: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01222122': buildEquipFromWzInfo('01222122', '創世靈魂射手', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 16,
+    reqLevel: 200,
+    incSTR: 150,
+    incDEX: 150,
+    incPAD: 255,
+    tuc: 8,
+    attackSpeed: 5,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 890,
+    sfx: 'tGlove',
+    afterImage: 'swordOL',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    exceptTransmission: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    only: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01222136': buildEquipFromWzInfo('01222136', '命運靈魂射手', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 16,
+    reqLevel: 250,
+    incSTR: 190,
+    incDEX: 190,
+    incPAD: 280,
+    tuc: 9,
+    attackSpeed: 5,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 890,
+    sfx: 'tGlove',
+    afterImage: 'swordOL',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    onlyUpgrade: [
+      204937, 204938, 204939, 20494, 20497, 20499,
+      26440, 26441, 26443, 20482, 20483, 20495,
+      20487, 25360, 50645, 2049370, 2049371, 2049372,
+      2049373, 2049374, 2049375, 2049376, 2049377, 2049378,
+      2049379, 2049380, 2049381, 2049382, 2049383, 2049384,
+      2049385, 2049386, 2049387, 2049388, 2049389, 2049390,
+      2049391, 2049392, 2049393, 2049394, 2049395, 2049396,
+      2049397, 2049398, 2049399
+    ],
+    onlyUpgradeThousand: [2590, 2591],
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01232122': buildEquipFromWzInfo('01232122', '創世魔劍', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 1,
+    reqLevel: 200,
+    incSTR: 150,
+    incPAD: 340,
+    incMHP: 2800,
+    tuc: 8,
+    attackSpeed: 6,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 886,
+    sfx: 'swordS',
+    afterImage: 'swordOL',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    exceptTransmission: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    only: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01232136': buildEquipFromWzInfo('01232136', '命運魔劍', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 1,
+    reqLevel: 250,
+    incSTR: 190,
+    incPAD: 373,
+    incMHP: 3040,
+    tuc: 9,
+    attackSpeed: 6,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 886,
+    sfx: 'swordS',
+    afterImage: 'swordOL',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    onlyUpgrade: [
+      204937, 204938, 204939, 20494, 20497, 20499,
+      26440, 26441, 26443, 20482, 20483, 20495,
+      20487, 25360, 50645, 2049370, 2049371, 2049372,
+      2049373, 2049374, 2049375, 2049376, 2049377, 2049378,
+      2049379, 2049380, 2049381, 2049382, 2049383, 2049384,
+      2049385, 2049386, 2049387, 2049388, 2049389, 2049390,
+      2049391, 2049392, 2049393, 2049394, 2049395, 2049396,
+      2049397, 2049398, 2049399
+    ],
+    onlyUpgradeThousand: [2590, 2591],
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01242141': buildEquipFromWzInfo('01242141', '創世能量劍', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 24,
+    reqSpecJob: 36,
+    reqLevel: 200,
+    incDEX: 150,
+    incLUK: 150,
+    incPAD: 255,
+    tuc: 8,
+    attackSpeed: 5,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 889,
+    sfx: 'swordS',
+    afterImage: 'swordOS',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    exceptTransmission: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    only: 1,
     onlyEquip: 1,
     price: 1,
     undecomposable: 1,
@@ -1755,6 +2328,40 @@ const ITEM_DATABASE = {
     unsyntesizable: 1
   }),
 
+'01254028': buildEquipFromWzInfo('01254028', '創世陰陽扇', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 2,
+    reqLevel: 200,
+    incINT: 150,
+    incLUK: 150,
+    incPAD: 237,
+    incMAD: 400,
+    tuc: 8,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 887,
+    sfx: 'mace',
+    afterImage: 'mace',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    exceptTransmission: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    only: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
 '01254029': buildEquipFromWzInfo('01254029', '命運陰陽扇', {
     islot: 'Wp',
     vslot: 'Wp',
@@ -1776,6 +2383,275 @@ const ITEM_DATABASE = {
     tradeBlock: 1,
     notSale: 1,
     onlyEquip: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01262051': buildEquipFromWzInfo('01262051', '創世ESP限制器', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 2,
+    reqSpecJob: 142,
+    reqLevel: 200,
+    incINT: 150,
+    incLUK: 150,
+    incPAD: 237,
+    incMAD: 400,
+    tuc: 8,
+    attackSpeed: 6,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 887,
+    sfx: 'tGlove',
+    afterImage: 'swordOL',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    exceptTransmission: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    only: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01262066': buildEquipFromWzInfo('01262066', '命運ESP限制器', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 2,
+    reqSpecJob: 142,
+    reqLevel: 250,
+    incINT: 190,
+    incLUK: 190,
+    incPAD: 260,
+    incMAD: 439,
+    tuc: 9,
+    attackSpeed: 6,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 887,
+    sfx: 'tGlove',
+    afterImage: 'swordOL',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    onlyUpgrade: [
+      204937, 204938, 204939, 20494, 20497, 20499,
+      26440, 26441, 26443, 20482, 20483, 20495,
+      20487, 25360, 50645, 2049370, 2049371, 2049372,
+      2049373, 2049374, 2049375, 2049376, 2049377, 2049378,
+      2049379, 2049380, 2049381, 2049382, 2049383, 2049384,
+      2049385, 2049386, 2049387, 2049388, 2049389, 2049390,
+      2049391, 2049392, 2049393, 2049394, 2049395, 2049396,
+      2049397, 2049398, 2049399
+    ],
+    onlyUpgradeThousand: [2590, 2591],
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01272040': buildEquipFromWzInfo('01272040', '創世鎖鏈', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 8,
+    reqLevel: 200,
+    incDEX: 150,
+    incLUK: 150,
+    incPAD: 318,
+    tuc: 8,
+    attackSpeed: 4,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 889,
+    sfx: 'swordS',
+    afterImage: 'swordOS',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    exceptTransmission: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    only: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01272055': buildEquipFromWzInfo('01272055', '命運鎖鏈', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 8,
+    reqLevel: 250,
+    incDEX: 190,
+    incLUK: 190,
+    incPAD: 349,
+    tuc: 9,
+    attackSpeed: 4,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 889,
+    sfx: 'swordS',
+    afterImage: 'swordOS',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    onlyUpgrade: [
+      204937, 204938, 204939, 20494, 20497, 20499,
+      26440, 26441, 26443, 20482, 20483, 20495,
+      20487, 25360, 50645, 2049370, 2049371, 2049372,
+      2049373, 2049374, 2049375, 2049376, 2049377, 2049378,
+      2049379, 2049380, 2049381, 2049382, 2049383, 2049384,
+      2049385, 2049386, 2049387, 2049388, 2049389, 2049390,
+      2049391, 2049392, 2049393, 2049394, 2049395, 2049396,
+      2049397, 2049398, 2049399
+    ],
+    onlyUpgradeThousand: [2590, 2591],
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01282040': buildEquipFromWzInfo('01282040', '創世魔法護腕', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 2,
+    reqSpecJob: 152,
+    reqLevel: 200,
+    incINT: 150,
+    incLUK: 150,
+    incPAD: 237,
+    incMAD: 400,
+    tuc: 8,
+    attackSpeed: 6,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 887,
+    sfx: 'tGlove',
+    afterImage: 'swordOL',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    exceptTransmission: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    only: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01282056': buildEquipFromWzInfo('01282056', '命運魔法護腕', {
+    wzPart: 'Weapon',
+    islot: 'Wp',
+    vslot: 'Wp',
+    reqJob: 2,
+    reqSpecJob: 152,
+    reqLevel: 250,
+    incINT: 190,
+    incLUK: 190,
+    incPAD: 260,
+    incMAD: 439,
+    tuc: 9,
+    attackSpeed: 6,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 887,
+    sfx: 'tGlove',
+    afterImage: 'swordOL',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    onlyUpgrade: [
+      204937, 204938, 204939, 20494, 20497, 20499,
+      26440, 26441, 26443, 20482, 20483, 20495,
+      20487, 25360, 50645, 2049370, 2049371, 2049372,
+      2049373, 2049374, 2049375, 2049376, 2049377, 2049378,
+      2049379, 2049380, 2049381, 2049382, 2049383, 2049384,
+      2049385, 2049386, 2049387, 2049388, 2049389, 2049390,
+      2049391, 2049392, 2049393, 2049394, 2049395, 2049396,
+      2049397, 2049398, 2049399
+    ],
+    onlyUpgradeThousand: [2590, 2591],
+    bossReward: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    jokerToSetItem: 1,
+    noDrop: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01342127': buildEquipFromWzInfo('01342127', '阿斯特拉雙刀', {
+    wzPart: 'Weapon',
+    islot: 'Si',
+    vslot: 'Si',
+    reqJob: 8,
+    reqLevel: 200,
+    incSTR: 30,
+    incDEX: 30,
+    incLUK: 35,
+    incPAD: 171,
+    tuc: 9,
+    attackSpeed: 3,
+    imdR: 10,
+    bdR: 30,
+    sfx: 'swordB',
+    afterImage: 'swordOL',
+    exceptUpgrade: 0,
+    tradeBlock: 1,
+    notSale: 1,
+    cash: 0,
+    charmEXP: 200,
+    exItem: 1,
+    exceptToadsHammer: 1,
+    noDrop: 1,
+    onlyEquip: 1,
+    price: 1,
     undecomposable: 1,
     unsyntesizable: 1
   }),
@@ -1824,8 +2700,33 @@ const ITEM_DATABASE = {
     unsyntesizable: 1
   }),
 
-'01672101': buildEquipFromWzInfo('01672101', '全面控制核心', {
+  '01662306': buildEquipFromWzInfo('01662306', 'CHANGE露希妲機器人', {
     wzPart: 'Android',
+    islot: 'An',
+    vslot: 'An',
+    reqJob: 0,
+    reqLevel: 10,
+    notSale: 1,
+    charmEXP: 80,
+    accountSharable: 1,
+    price: 1
+  }),
+
+'01662308': buildEquipFromWzInfo('01662308', '西格德機器人', {
+    wzPart: 'Android',
+    islot: 'An',
+    vslot: 'An',
+    reqJob: 0,
+    reqLevel: 0,
+    androidGrade: 1,
+    androidShortName: '西格德',
+    notSale: 1,
+    accountSharable: 1,
+    price: 1
+  }),
+
+'01672101': buildEquipFromWzInfo('01672101', '全面控制核心', {
+    wzPart: 'Heart',
     islot: 'Tm',
     vslot: 'Tm',
     reqJob: 0,
@@ -1958,7 +2859,7 @@ playerInventory[42] = '01190567';
 playerInventory[43] = '01190568';
 playerInventory[44] = '01190569';
 playerInventory[45] = '01190570';
-playerInventory[46] = '01215032';
+playerInventory[46] = '01202253';
 playerInventory[47] = '01215041';
 playerInventory[48] = '01242163';
 playerInventory[49] = '01254029';
@@ -1974,19 +2875,40 @@ playerInventory[58] = '01152216';
 playerInventory[59] = '01113341';
 playerInventory[60] = '01143286';
 playerInventory[61] = '01113360';
-playerInventory[62] = '01113075';
+playerInventory[62] = '01202287';
 playerInventory[63] = '01182285';
 playerInventory[64] = '01162080';
 playerInventory[65] = '01162081';
 playerInventory[66] = '01162082';
 playerInventory[67] = '01162083';
+playerInventory[68] = '01342127';
+playerInventory[69] = '01212145';
+playerInventory[70] = '01222136';
+playerInventory[71] = '01213054';
+playerInventory[72] = '01214050';
+playerInventory[73] = '01212129';
+playerInventory[74] = '01213022';
+playerInventory[75] = '01214022';
+playerInventory[76] = '01215024';
+playerInventory[77] = '01222122';
+playerInventory[78] = '01232122';
+playerInventory[79] = '01232136';
+playerInventory[80] = '01242141';
+playerInventory[81] = '01282056';
+playerInventory[82] = '01254028';
+playerInventory[83] = '01262051';
+playerInventory[84] = '01262066';
+playerInventory[85] = '01272040';
+playerInventory[86] = '01272055';
+playerInventory[87] = '01282040';
+playerInventory[88] = '01662308';
+playerInventory[89] = '01662306';
 
 let currentEnchantItem = null;
 
 /**
  * 預設背包裝備順序（必須放在 currentEnchantItem 之後，避免 import --inventory 打亂）
- * 1) playerInventory 明確指定的順序
- * 2) ITEM_DATABASE 其餘裝備自動補上（之後新增裝備只要寫進資料庫即可）
+ * 僅收 playerInventory 明確指定的格子；其餘裝備改由「物品清單」取得。
  */
 function buildDefaultPlayerInventoryEquipIds() {
   const ids = [];
@@ -1996,14 +2918,6 @@ function buildDefaultPlayerInventoryEquipIds() {
     for (const id of playerInventoryEquip) {
       if (!id || seen.has(id)) continue;
       if (typeof ITEM_DATABASE !== 'undefined' && !ITEM_DATABASE[id]) continue;
-      ids.push(id);
-      seen.add(id);
-    }
-  }
-
-  if (typeof ITEM_DATABASE !== 'undefined') {
-    for (const id of Object.keys(ITEM_DATABASE)) {
-      if (seen.has(id)) continue;
       ids.push(id);
       seen.add(id);
     }

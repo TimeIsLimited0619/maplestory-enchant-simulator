@@ -145,7 +145,9 @@ const HammerModule = {
   selectHammer(hammerId) {
     if (!this.itemData) return;
 
-    if (!hasBaseUpgradeSlots(this.itemData)) {
+    if (!(typeof canUseHammerEnhancement === 'function'
+      ? canUseHammerEnhancement(this.itemData)
+      : hasBaseUpgradeSlots(this.itemData))) {
       return addLog('⚠️ 此裝備本身無強化次數，無法增加強化次數。', 'log-fail');
     }
 
@@ -329,7 +331,11 @@ const HammerModule = {
     if (!btn) return;
 
     const effectPlaying = typeof HammerEffectModule !== 'undefined' && HammerEffectModule.isPlaying();
-    const canUseHammer = Boolean(this.itemData && hasBaseUpgradeSlots(this.itemData));
+    const canUseHammer = Boolean(this.itemData && (
+      typeof canUseHammerEnhancement === 'function'
+        ? canUseHammerEnhancement(this.itemData)
+        : hasBaseUpgradeSlots(this.itemData)
+    ));
     const autoCheck = document.getElementById('chkHammerAutoEnhance');
     if (autoCheck) autoCheck.disabled = !canUseHammer || effectPlaying;
 
@@ -353,7 +359,9 @@ const HammerModule = {
       return;
     }
 
-    if (!hasBaseUpgradeSlots(this.itemData)) {
+    if (!(typeof canUseHammerEnhancement === 'function'
+      ? canUseHammerEnhancement(this.itemData)
+      : hasBaseUpgradeSlots(this.itemData))) {
       this.selectedHammer = null;
       this.setPanelMode('blocked');
       return;
@@ -370,7 +378,9 @@ const HammerModule = {
   handleUseClick() {
     if (!this.itemData) return;
 
-    if (!hasBaseUpgradeSlots(this.itemData)) {
+    if (!(typeof canUseHammerEnhancement === 'function'
+      ? canUseHammerEnhancement(this.itemData)
+      : hasBaseUpgradeSlots(this.itemData))) {
       return addLog('⚠️ 此裝備本身無強化次數，無法增加強化次數。', 'log-fail');
     }
 
@@ -390,7 +400,9 @@ const HammerModule = {
     const hammerId = this.selectedHammer;
     if (!this.itemData || !hammerId) return null;
 
-    if (!hasBaseUpgradeSlots(this.itemData)) {
+    if (!(typeof canUseHammerEnhancement === 'function'
+      ? canUseHammerEnhancement(this.itemData)
+      : hasBaseUpgradeSlots(this.itemData))) {
       addLog('⚠️ 此裝備本身無強化次數，無法增加強化次數。', 'log-fail');
       return null;
     }
@@ -456,7 +468,9 @@ const HammerModule = {
     const hammerId = forceHammerId || this.selectedHammer;
     if (!this.itemData || !hammerId) return null;
 
-    if (!hasBaseUpgradeSlots(this.itemData)) {
+    if (!(typeof canUseHammerEnhancement === 'function'
+      ? canUseHammerEnhancement(this.itemData)
+      : hasBaseUpgradeSlots(this.itemData))) {
       if (!silent) addLog('⚠️ 此裝備本身無強化次數，無法增加強化次數。', 'log-fail');
       return null;
     }

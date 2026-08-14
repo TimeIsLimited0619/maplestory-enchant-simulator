@@ -153,7 +153,8 @@ function consumePotentialScroll(scrollId, amount = 1) {
 
 /**
  * 潛能賦予卷使用限制：
- * - 勳章不可用
+ * - 勳章／圖騰／口袋／機器人不可用
+ * - 胸章不可用附加潛能卷
  * - 主潛卷：不可用於已有主要潛能的裝備
  * - 附潛卷：需先有主要潛能；不可用於已有附加潛能的裝備
  */
@@ -163,8 +164,17 @@ function getPotentialScrollBlockReason(item, scroll) {
   const target = scroll.target === 'additional' ? 'additional' : 'main';
   const scrollName = scroll.name || (target === 'additional' ? '附加潛能賦予卷軸' : '潛能賦予卷軸');
 
+  if (typeof isEnhancementLockedItem === 'function' && isEnhancementLockedItem(item)) {
+    return `此裝備無法使用${scrollName}`;
+  }
   if (typeof isMedalItem === 'function' && isMedalItem(item)) {
     return `勳章無法使用${scrollName}`;
+  }
+  if (typeof isTotemItem === 'function' && isTotemItem(item)) {
+    return `圖騰無法使用${scrollName}`;
+  }
+  if (typeof isPocketItem === 'function' && isPocketItem(item)) {
+    return `口袋道具無法使用${scrollName}`;
   }
   if (typeof isPinItem === 'function' && isPinItem(item) && target === 'additional') {
     return '胸章無法使用附加潛能賦予卷軸';

@@ -376,106 +376,23 @@ const SessionPersistenceModule = {
   },
 
   /**
-   * 以 item.js 預設順序 + ITEM_DATABASE 全量為準：
-   * - 補上存檔缺少的新增裝備（含只寫進資料庫、未手動塞背包的）
-   * - 依預設順序重排；存檔多出的裝備接在後面
-   * - 保留既有強化進度
+   * 只清掉資料庫已不存在的格子；不再把 ITEM_DATABASE 全量塞進背包。
+   * 新裝備請從物品清單拿取。
    */
-  getDefaultEquipInventoryIds() {
-    const ids = [];
-    const seen = new Set();
-
-    const preferred = (typeof DEFAULT_PLAYER_INVENTORY_EQUIP_IDS !== 'undefined'
-      && Array.isArray(DEFAULT_PLAYER_INVENTORY_EQUIP_IDS))
-      ? DEFAULT_PLAYER_INVENTORY_EQUIP_IDS
-      : (typeof buildDefaultPlayerInventoryEquipIds === 'function'
-        ? buildDefaultPlayerInventoryEquipIds()
-        : []);
-
-    preferred.forEach((id) => {
-      if (!id || seen.has(id) || !this.isValidItemId(id)) return;
-      ids.push(id);
-      seen.add(id);
-    });
-
-    if (typeof ITEM_DATABASE !== 'undefined') {
-      Object.keys(ITEM_DATABASE).forEach((id) => {
-        if (seen.has(id) || !this.isValidItemId(id)) return;
-        ids.push(id);
-        seen.add(id);
-      });
-    }
-
-    return ids;
-  },
-
   mergeDefaultEquipInventory() {
-    const defaults = this.getDefaultEquipInventoryIds();
-    if (!defaults.length) return;
-
     const count = typeof INVENTORY_SLOT_COUNT !== 'undefined' ? INVENTORY_SLOT_COUNT : 128;
-    const equippedId = this.equippedSlotIndex != null
-      ? playerInventoryEquip[this.equippedSlotIndex]
-      : null;
+    if (typeof playerInventoryEquip === 'undefined') return;
 
-    const wornIds = (typeof UiEquipModule !== 'undefined' && typeof UiEquipModule.getWornItemIds === 'function')
-      ? UiEquipModule.getWornItemIds()
-      : new Set();
-
-    // 強化槽持有中的裝備也不應被 merge 塞回背包
-    if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
-      const eid = currentEnchantItem.itemId || currentEnchantItem.id;
-      if (eid) wornIds.add(eid);
-    }
-    if (this._pendingEquippedItem?.itemId) {
-      wornIds.add(this._pendingEquippedItem.itemId);
-    }
-
-    const stateById = new Map();
     for (let i = 0; i < count; i++) {
       const itemId = playerInventoryEquip[i];
-      if (!itemId || !this.isValidItemId(itemId)) continue;
-      if (!stateById.has(itemId)) {
-        stateById.set(itemId, playerInventoryState[i] ?? null);
-      }
+      if (!itemId) continue;
+      if (this.isValidItemId(itemId)) continue;
+      playerInventoryEquip[i] = null;
+      if (typeof playerInventoryState !== 'undefined') playerInventoryState[i] = null;
     }
 
-    const defaultSet = new Set(defaults);
-    const extras = [];
-    for (let i = 0; i < count; i++) {
-      const itemId = playerInventoryEquip[i];
-      if (!itemId || !this.isValidItemId(itemId)) continue;
-      if (defaultSet.has(itemId)) continue;
-      if (extras.includes(itemId)) continue;
-      if (wornIds.has(itemId)) continue;
-      extras.push(itemId);
-    }
-
-    const nextEquip = new Array(count).fill(null);
-    const nextState = new Array(count).fill(null);
-    let write = 0;
-
-    const place = (itemId) => {
-      if (write >= count || !itemId) return;
-      if (wornIds.has(itemId)) return; // 已穿在身上／強化中，不重複放回背包
-      nextEquip[write] = itemId;
-      const prev = stateById.get(itemId);
-      nextState[write] = prev && prev.itemId === itemId ? prev : null;
-      write += 1;
-    };
-
-    defaults.forEach(place);
-    extras.forEach(place);
-
-    playerInventoryEquip.splice(0, playerInventoryEquip.length, ...nextEquip);
-    playerInventoryState.splice(0, playerInventoryState.length, ...nextState);
-
-    // 舊版以 bag index 記強化槽；新版改 equippedItem，此處僅相容 remap
-    if (equippedId && !wornIds.has(equippedId)) {
-      const idx = nextEquip.indexOf(equippedId);
-      this.equippedSlotIndex = idx >= 0 ? idx : null;
-    } else {
-      this.equippedSlotIndex = null;
+    if (typeof playerInventory !== 'undefined' && Array.isArray(playerInventory)) {
+      playerInventory.splice(0, playerInventory.length, ...playerInventoryEquip);
     }
   },
 

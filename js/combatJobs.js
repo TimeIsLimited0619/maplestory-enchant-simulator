@@ -28,7 +28,7 @@ const CombatJobs = (() => {
     { name: '狂狼勇士', category: 'normal' },
     { name: '龍魔導士', category: 'normal' },
     { name: '夜光', category: 'normal' },
-    { name: '精靈遊俠', category: 'normal' },
+    { name: '精靈遊俠', category: 'normal', aliases: ['精靈射手'] },
     { name: '幻影俠盜', category: 'normal' },
     { name: '隱月', category: 'normal' },
     { name: '爆拳槍神', category: 'normal' },

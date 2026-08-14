@@ -267,3 +267,123 @@
   z-index: 3;
   overflow: visible;
 }
+
+/* ===== totemEquip（VALUABLE / 圖騰區）=====
+   VALUABLE：裝備欄左下角
+   圖騰面板：自裝備欄底緣向下展開（slot 相對面板內座標仍依 XML）
+*/
+.uiequip-totem-btn {
+  position: absolute;
+  left: 12px;
+  top: 443px;
+  width: 84px;
+  height: 23px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 84px 23px;
+  background-image: url('../../images/UIEquip/EquipTab/button/totem/normal/0.png');
+  cursor: pointer;
+  image-rendering: pixelated;
+  z-index: 6;
+}
+
+.uiequip-totem-btn:hover {
+  background-image: url('../../images/UIEquip/EquipTab/button/totem/mouseOver/0.png');
+}
+
+.uiequip-totem-btn:active {
+  background-image: url('../../images/UIEquip/EquipTab/button/totem/pressed/0.png');
+}
+
+.uiequip-totem-btn.is-open,
+.uiequip-totem-btn.is-open:hover {
+  background-image: url('../../images/UIEquip/EquipTab/button/totem/pressed/0.png');
+}
+
+.uiequip-totem-panel {
+  position: absolute;
+  left: 0;
+  top: 472px;
+  width: 198px;
+  height: 219px;
+  z-index: 8;
+  image-rendering: pixelated;
+}
+
+.uiequip-totem-panel.is-hidden {
+  display: none;
+}
+
+.uiequip-totem-canvas {
+  position: absolute;
+  inset: 0;
+  background: url('../../images/UIEquip/EquipTab/totemEquip/canvas/totem.png') no-repeat 0 0;
+  pointer-events: none;
+}
+
+.uiequip-totem-slots {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.uiequip-jewel-btn {
+  position: absolute;
+  left: 153px;
+  top: 77px;
+  width: 23px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 23px 24px;
+  background-image: url('../../images/UIEquip/EquipTab/totemEquip/button/Jewel/normal/0.png');
+  cursor: pointer;
+  image-rendering: pixelated;
+  z-index: 2;
+}
+
+.uiequip-jewel-btn:hover {
+  background-image: url('../../images/UIEquip/EquipTab/totemEquip/button/Jewel/mouseOver/0.png');
+}
+
+.uiequip-jewel-btn:active {
+  background-image: url('../../images/UIEquip/EquipTab/totemEquip/button/Jewel/pressed/0.png');
+}
+
+.uiequip-jewel-btn:disabled,
+.uiequip-jewel-btn.is-disabled {
+  background-image: url('../../images/UIEquip/EquipTab/totemEquip/button/Jewel/disabled/0.png');
+  cursor: default;
+  pointer-events: none;
+}
+
+.uiequip-totem-slots .uiequip-slot[data-slot="5250"] {
+  left: 78px;
+  top: 50px;
+  background-image: url('../../images/UIEquip/EquipTab/totemEquip/SlotName/5250.png');
+}
+
+.uiequip-totem-slots .uiequip-slot[data-slot="5000"] {
+  left: 30px;
+  top: 147px;
+  background-image: url('../../images/UIEquip/EquipTab/totemEquip/SlotName/5000.png');
+}
+
+.uiequip-totem-slots .uiequip-slot[data-slot="5001"] {
+  left: 78px;
+  top: 147px;
+  background-image: url('../../images/UIEquip/EquipTab/totemEquip/SlotName/5001.png');
+}
+
+.uiequip-totem-slots .uiequip-slot[data-slot="5002"] {
+  left: 126px;
+  top: 147px;
+  background-image: url('../../images/UIEquip/EquipTab/totemEquip/SlotName/5002.png');
+}
+

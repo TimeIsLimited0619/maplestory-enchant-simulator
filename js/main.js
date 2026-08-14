@@ -45,9 +45,14 @@ function isCategoryAvailable(category, item = currentEnchantItem) {
       return canUseStarForce(item)
         && getCurrentStarCount(item) < (item.maxStar || 30);
     case 'hammer':
-      return hasBaseUpgradeSlots(item) && !areAllHammersExhaustedForItem(item);
+      return (typeof canUseHammerEnhancement === 'function'
+        ? canUseHammerEnhancement(item)
+        : hasBaseUpgradeSlots(item))
+        && !areAllHammersExhaustedForItem(item);
     case 'scroll':
-      return hasBaseUpgradeSlots(item);
+      return typeof canUseScrollEnhancement === 'function'
+        ? canUseScrollEnhancement(item)
+        : hasBaseUpgradeSlots(item);
     case 'soulWeapon':
       return typeof canUseSoulWeapon === 'function'
         ? canUseSoulWeapon(item)
@@ -140,6 +145,9 @@ function createEnchantState(itemData, slotIndex) {
     scrollAllStatR: 0,
     catValleyLevel: itemData.catValleyLevel || 0,
     medalEnhanceLevel: itemData.medalEnhanceLevel || 0,
+    medalEnhanceStarted: itemData.medalEnhanceStarted
+      ?? ((itemData.medalEnhanceLevel || 0) > 0),
+    catValleyTotemStarted: Boolean(itemData.catValleyTotemStarted),
     catValleyJackpotMain: itemData.catValleyJackpotMain || null,
     catValleyJackpotAdd: itemData.catValleyJackpotAdd || null,
     goldenHammerUsed: 0,
@@ -560,6 +568,21 @@ function handleGlobalEscapeKey() {
       close: () => UiCharacterInfo.setOpen(false),
     },
     {
+      id: 'costTrackerOverlay',
+      isOpen: () => typeof CostTrackerModule !== 'undefined' && !!CostTrackerModule.isOpen,
+      close: () => CostTrackerModule.close(),
+    },
+    {
+      id: 'logRoot',
+      isOpen: () => typeof LogPanel !== 'undefined' && LogPanel.isOpen?.(),
+      close: () => LogPanel.setOpen(false),
+    },
+    {
+      id: 'irqRoot',
+      isOpen: () => typeof ItemRequestPanel !== 'undefined' && ItemRequestPanel.isOpen?.(),
+      close: () => ItemRequestPanel.setOpen(false),
+    },
+    {
       id: 'inventoryPanel',
       isOpen: () => typeof InventoryModule !== 'undefined' && InventoryModule.isOpen?.(),
       close: () => InventoryModule.setOpen(false),
@@ -673,11 +696,13 @@ function loadEquipToSlot(itemId, slotIndex) {
     unloadEquipFromSlot();
   }
 
-  // 與裝備欄互斥：身上有同一件則先卸回背包
+  // 與裝備欄互斥：身上有同一 itemId 則先卸回背包
+  // 注意：不可用 indexOf(itemId) 重找格位——同 ID 多件時會抓到剛卸下的那件
   if (typeof UiEquipModule !== 'undefined' && UiEquipModule.isItemWorn?.(itemId)) {
     UiEquipModule.unequipItemId(itemId, { refreshUi: false });
-    slotIndex = playerInventoryEquip.indexOf(itemId);
-    if (slotIndex < 0) return;
+    if (!Number.isInteger(slotIndex) || slotIndex < 0 || !playerInventoryEquip[slotIndex]) {
+      return;
+    }
   }
 
   const itemData = ITEM_DATABASE[itemId];
@@ -950,13 +975,11 @@ const ENCHANT_UI_CHROME_EXTRAS = [
   'images/starforce/Enchant.img.starForce.layer_waitEquip.png',
   'images/starforce/Enchant.img.starForce.layer_waitEquipMeso.png',
   'images/starforce/Enchant.img.starForce.layer_waitEquipItem.png',
-  'images/hammer/hammer.layer_waitEquip.png',
-  'images/hammer/hammer.layer_waitEquipItem.png',
+  'images/hammer/layer_waitEquip.png',
   'images/SoulWeapon/soulWeapon_layer_waitEquip.png',
   'images/scroll/scroll.layer_waitEquip0.png',
   'images/scroll/scroll.layer_waitEquip1.png',
-  'images/potential/potential.layer_waitEquip.png',
-  'images/potential/potential.layer_waitEquip1.png',
+  'images/potential/potential.layer_waitEquip2.png',
   'images/additionalPotentail/layer_waitEquip.png',
   'images/bonusStat/bonusStat_layer_waitEquip.png',
   'images/exceptional/exceptional_layer_waitEquip.png',
@@ -1274,7 +1297,11 @@ function collectDatabaseIconUrls() {
     Object.values(ADDPOT_IMAGES).forEach(addIcon);
   }
   if (typeof ITEM_DATABASE !== 'undefined') {
-    Object.values(ITEM_DATABASE).forEach((item) => addIcon(item?.icon));
+    Object.values(ITEM_DATABASE).forEach((item) => {
+      addIcon(item?.icon);
+      addIcon(item?.equipIcon);
+      addIcon(item?.androidLook);
+    });
   }
 
   return [...urls];
@@ -2014,6 +2041,46 @@ function addLog(text, className = '') {
   logBox.scrollTop = logBox.scrollHeight;
 }
 
+const LogPanel = {
+  open: false,
+
+  isOpen() {
+    return !!this.open;
+  },
+
+  syncMenuButton() {
+    document.getElementById('btnViewLog')?.classList.toggle('is-active', !!this.open);
+  },
+
+  setOpen(next) {
+    this.open = !!next;
+    const root = document.getElementById('logRoot');
+    if (root) root.classList.toggle('is-hidden', !this.open);
+    if (this.open && typeof PanelDrag !== 'undefined') {
+      PanelDrag.bringFront(root);
+    }
+    this.syncMenuButton();
+  },
+
+  toggle() {
+    this.setOpen(!this.open);
+  },
+
+  init() {
+    if (this._bound) return;
+    this._bound = true;
+    document.getElementById('btnViewLog')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.toggle();
+    });
+    document.getElementById('logClose')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.setOpen(false);
+    });
+    this.setOpen(this.open);
+  },
+};
+
 /** 楓幣分段：兆(10^12)／億(10^8)／萬(10^4)／個；為 0 的段不顯示單位 */
 function formatMesoParts(amount) {
   const n = Math.floor(Math.abs(Number(amount) || 0));
@@ -2129,7 +2196,7 @@ window.addEventListener('DOMContentLoaded', () => {
       if (!sidebar || !main || !sidebar.parentNode) return;
       const wrap = document.createElement('div');
       wrap.id = 'enchantWorkbench';
-      wrap.className = 'enchant-workbench';
+      wrap.className = 'enchant-workbench hidden';
       sidebar.parentNode.insertBefore(wrap, sidebar);
       wrap.appendChild(sidebar);
       wrap.appendChild(main);
@@ -2150,7 +2217,6 @@ window.addEventListener('DOMContentLoaded', () => {
         '.panel-wb-close',
         '.enchant-wb-close',
         '.ms-tab-btn',
-        '.ms-sidebar-log',
         '.ms-sidebar-reset-btn',
         '.ms-sidebar-inspect-btn',
         '#totalCostDisplay',
@@ -2174,6 +2240,28 @@ window.addEventListener('DOMContentLoaded', () => {
       ignoreSelector: '.inv-size-btn, .inv-tab, .inv-sort-btn, .panel-wb-close',
       storageKey: 'ui.drag.inventoryPanel',
       title: '拖曳背包',
+    });
+    if (typeof ItemRequestPanel !== 'undefined') {
+      ItemRequestPanel.init();
+    }
+    PanelDrag.enable(document.getElementById('irqRoot'), {
+      handle: '.irq-header',
+      ignoreSelector: '.panel-wb-close, #irqClose, .irq-filter, .irq-search, .irq-grid',
+      storageKey: 'ui.drag.requestPanel',
+      title: '拖曳物品清單',
+    });
+    if (typeof LogPanel !== 'undefined') LogPanel.init();
+    PanelDrag.enable(document.getElementById('logRoot'), {
+      handle: '.log-header',
+      ignoreSelector: '.panel-wb-close, #logClose, #logBox',
+      storageKey: 'ui.drag.logPanel',
+      title: '拖曳 Log',
+    });
+    PanelDrag.enable(document.getElementById('costTrackerOverlay'), {
+      handle: '.cost-tracker-header',
+      ignoreSelector: '.panel-wb-close, #costTrackerClose, input, button, .cost-tracker-body',
+      storageKey: 'ui.drag.costPanel',
+      title: '拖曳成本統計',
     });
 
     if (typeof UiEquipModule !== 'undefined' && typeof UiEquipModule.setEnchantOpen === 'function') {

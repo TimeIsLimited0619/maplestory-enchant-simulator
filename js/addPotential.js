@@ -36,11 +36,9 @@ const AddPotentialModule = {
   },
 
   setIdleMode(isIdle) {
-    const idlePanel = document.getElementById('apIdlePanel');
     const activePanel = document.getElementById('apActivePanel');
     const bottomOptions = document.getElementById('apBottomOptions');
 
-    if (idlePanel) idlePanel.classList.toggle('hidden', !isIdle);
     if (activePanel) activePanel.classList.toggle('hidden', isIdle);
     if (bottomOptions) bottomOptions.classList.toggle('hidden', isIdle);
 

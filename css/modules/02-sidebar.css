@@ -14,6 +14,16 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: visible;
+}
+
+.ms-sidebar.cat-valley-submenu-open {
+  z-index: 25;
+}
+
+.ms-sidebar.cat-valley-submenu-open .ms-sidebar-buttons {
+  position: relative;
+  z-index: 35;
 }
 
 /* 按鈕放置容器 */
@@ -25,36 +35,6 @@
   padding: 4px;
   position: relative;
   z-index: 2;
-}
-
-/* 左側 Log（卓越強化分頁下方，避免擋住切換） */
-.ms-sidebar-log {
-  position: absolute;
-  top: 552px;
-  left: 12px;
-  width: 122px;
-  height: 64px;
-  z-index: 1;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
-  padding: 6px 5px;
-  overflow-y: auto;
-  font-family: inherit;
-  font-size: 10px;
-  line-height: 1.35;
-  color: #bbb;
-  text-align: left;
-  box-sizing: border-box;
-}
-
-.ms-sidebar-log::-webkit-scrollbar {
-  width: 4px;
-}
-
-.ms-sidebar-log::-webkit-scrollbar-thumb {
-  background: #555;
-  border-radius: 2px;
 }
 
 .ms-sidebar-inspect-btn {
@@ -193,3 +173,88 @@
   --img-checked:  url('../../images/tabbutton/exceptional_tab_checked.png');
   --img-disabled: url('../../images/tabbutton/exceptional_tab_disabled.png');
 }
+.tab-catValley {
+  --img-normal:   url('../../images/tabbutton/catValley_tab_normal.png');
+  --img-hover:    url('../../images/tabbutton/catValley_tab_mouseOver.png');
+  --img-pressed:  url('../../images/tabbutton/catValley_tab_pressed.png');
+  --img-checked:  url('../../images/tabbutton/catValley_tab_normal.png');
+  --img-disabled: url('../../images/tabbutton/catValley_tab_disabled.png');
+}
+
+/* 貓谷特殊強化：動作鈕（非頁籤），潛能子選單往左側展開（避開裝備 tooltip） */
+.ms-sidebar .ms-cat-valley-submenu {
+  position: absolute;
+  left: auto;
+  right: 100%;
+  margin-right: 6px;
+  top: 0;
+  width: 260px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  z-index: 40;
+  pointer-events: auto;
+}
+
+.ms-sidebar .ms-cat-valley-submenu.hidden {
+  display: none;
+}
+
+.ms-sidebar .ms-cat-valley-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  background: rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.ms-sidebar .ms-cat-valley-mask.hidden {
+  display: none;
+}
+
+.ms-cat-valley-sub-btn {
+  width: 100%;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid rgba(180, 210, 230, 0.35);
+  border-radius: 4px;
+  background: linear-gradient(180deg, #3a5564 0%, #1e3340 100%);
+  color: #f2f7fb;
+  font-family: 'Microsoft JhengHei', 'PingFang TC', 'Noto Sans TC', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 24px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.ms-cat-valley-sub-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #4a6a7c 0%, #2a4554 100%);
+}
+
+.ms-cat-valley-sub-btn:active:not(:disabled) {
+  background: linear-gradient(180deg, #2a3f4c 0%, #162530 100%);
+}
+
+.ms-cat-valley-sub-btn:disabled,
+.ms-cat-valley-sub-btn.is-disabled {
+  cursor: default;
+  opacity: 0.45;
+  color: #a8b4bc;
+}
+
+.ms-cat-valley-sub-wide {
+  grid-column: 1 / -1;
+}
+
+.ms-cat-valley-auto-btn.is-running {
+  border-color: rgba(255, 160, 120, 0.55);
+  background: linear-gradient(180deg, #6a3a32 0%, #3e221c 100%);
+  color: #ffe8e0;
+}
+
+.ms-cat-valley-btn-label {
+  display: inline-block;
+  pointer-events: none;
+}
+

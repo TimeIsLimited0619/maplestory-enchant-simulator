@@ -31,12 +31,30 @@ const EQUIP_TOOLTIP_ASSETS = {
     shade: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Common_ItemIcon_shade.png`,
   },
   textIcon: {
-    starForce: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_starForce_enhanced.png`,
-    scroll: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_scroll_enhanced.png`,
-    hammer: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_hammer_enhanced.png`,
-    bonusStat: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_bonusStat_enhanced.png`,
-    potential: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_potential_normal.png`,
-    additionalPotential: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_additionalPotential_normal.png`,
+    starForce: {
+      normal: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_starForce_normal.png`,
+      enhanced: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_starForce_enhanced.png`,
+    },
+    scroll: {
+      normal: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_scroll_normal.png`,
+      enhanced: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_scroll_enhanced.png`,
+    },
+    hammer: {
+      normal: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_hammer_normal.png`,
+      enhanced: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_hammer_enhanced.png`,
+    },
+    bonusStat: {
+      normal: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_bonusStat_normal.png`,
+      enhanced: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_bonusStat_enhanced.png`,
+    },
+    potential: {
+      normal: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_potential_normal.png`,
+      enhanced: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_potential_normal.png`,
+    },
+    additionalPotential: {
+      normal: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_additionalPotential_normal.png`,
+      enhanced: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_additionalPotential_normal.png`,
+    },
     soulWeapon: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_soulWeapon_normal.png`,
     exceptional: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_exceptional_enhanced.png`,
     setGuide: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_set_guide.png`,
@@ -49,6 +67,12 @@ const EQUIP_TOOLTIP_ASSETS = {
     bonusStatNumber(index) {
       const n = Math.max(0, Math.min(9, Math.floor(Number(index) || 0)));
       return `${EQUIP_TOOLTIP_BASE}/Equip.textIcon.bonusStat.number.${n}.png`;
+    },
+  },
+  atkPow: {
+    equipped: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_imgFont_atkPow_equipped.png`,
+    glyph(tone, name) {
+      return `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_imgFont_atkPow_${tone}_${name}.png`;
     },
   },
   star: {
@@ -134,7 +158,7 @@ const EQUIP_MAIN_TYPE_LABEL = {
 };
 
 /** 僅顯示子類型標籤，不顯示主分類（飾品／防具） */
-const EQUIP_SUBTYPE_HIDE_MAIN_CATEGORY = new Set(['medal', 'android', 'shoulder', 'badge', 'pocket']);
+const EQUIP_SUBTYPE_HIDE_MAIN_CATEGORY = new Set(['medal', 'android', 'heart', 'shoulder', 'badge', 'pocket', 'totem']);
 
 const EQUIP_SUBTYPE_LABEL = {
   weapon: '單手',
@@ -158,8 +182,10 @@ const EQUIP_SUBTYPE_LABEL = {
   badge: '胸章',
   emblem: '徽章',
   pocket: '口袋道具',
+  totem: '圖騰',
   shoulder: '肩榜裝飾',
-  android: '機器心臟',
+  heart: '機器心臟',
+  android: '機器人',
   hair: '髮型',
   unknown: '裝備',
   medal: '勳章',
@@ -215,12 +241,23 @@ const EQUIP_REQ_JOB2_SUBWEAPON_LABELS = {
 const EQUIP_SET_LABELS = {
   619: '神秘冥界套裝(弓箭手)',
   677: '漆黑BOSS套裝',
-  886: '永恆套裝(劍士)',
-  887: '永恆套裝(法師)',
-  888: '永恆套裝(弓箭手)',
-  889: '永恆套裝(盜賊)',
-  890: '永恆套裝(海盜)',
-  1055: '光輝BOSS套組',
+  886: '永恆套組',
+  887: '永恆套組',
+  888: '永恆套組',
+  889: '永恆套組',
+  890: '永恆套組',
+  1055: '光輝Boss套裝',
+};
+
+const EQUIP_SET_TOOLTIP_ASSETS = {
+  frame: {
+    top: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_frame_set_top.png`,
+    mid: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_frame_set_mid.png`,
+    btm: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_frame_set_btm.png`,
+    line: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_frame_set_line.png`,
+  },
+  icon: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_set_normal.png`,
+  luckyIcon: `${EQUIP_TOOLTIP_BASE}/UIToolTip_Item_Equip_textIcon_set_lucky.png`,
 };
 
 function formatEquipReqJobs(reqJob, reqJob2 = 0) {

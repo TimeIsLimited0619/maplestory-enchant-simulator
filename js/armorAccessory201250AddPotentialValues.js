@@ -119,6 +119,7 @@ function classifyArmorAccessory201250AddPotStat(statName) {
   if (statName === '爆擊傷害%') return 'critDamage';
   if (statName === '楓幣獲得量%') return 'mesoPercent';
   if (statName === '道具掉落率%') return 'dropPercent';
+  if (statName === '所有技能的MP消耗%') return 'mpCostPercent';
   if (statName === 'HP恢復道具及恢復技能效果增加') return 'hpRecovery';
   if (statName === '減少所有技能冷卻時間(10秒以下會減少5%，不會減少到未滿5秒)') return 'cooldownReduce';
   if (/^以角色等級為準每9級增加(力量|敏捷|智力|幸運)$/.test(statName)) return 'levelScale';
@@ -136,6 +137,7 @@ function armorAccessory201250AddPotLabelForStat(statName) {
   if (statName === '爆擊傷害%') return '爆擊傷害';
   if (statName === '楓幣獲得量%') return '楓幣獲得量';
   if (statName === '道具掉落率%') return '道具掉落率';
+  if (statName === '所有技能的MP消耗%') return '所有技能的MP消耗';
   if (/^以角色等級為準每9級增加/.test(statName)) return statName;
   if (/^(STR|DEX|INT|LUK)%?$/.test(statName)) return statName.replace(/%$/, '');
   return statName;
@@ -188,6 +190,8 @@ function formatArmorAccessory201250AddPotentialStatValue(statName, internalRank,
       return internalRank === 'legendary' ? `+${pct?.meso ?? 5}%` : null;
     case 'dropPercent':
       return internalRank === 'legendary' ? `+${pct?.drop ?? 5}%` : null;
+    case 'mpCostPercent':
+      return slot === 'accessory' && internalRank === 'legendary' ? '-10%' : null;
     default:
       return null;
   }

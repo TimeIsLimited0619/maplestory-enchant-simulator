@@ -457,7 +457,9 @@ function formatPotentialStatValue(statName, internalRank, context = {}) {
   }
 
   const template = POTENTIAL_STAT_VALUE_TEMPLATES[internalRank] || POTENTIAL_STAT_VALUE_TEMPLATES.rare;
-  if (statName.includes('技能') || statName.includes('實用')) return '';
+  if (statName.includes('技能') || statName.includes('實用')) {
+    if (statName !== '所有技能的MP消耗%') return '';
+  }
   if (/\+\d+%$/.test(statName)) return '';
   if (statName.includes('%') || statName === '總傷害' || /攻擊力%|傷害%|機率%|獲得量%|掉落率%|消耗%|防禦力%/.test(statName)) {
     return template.percent;
@@ -562,7 +564,7 @@ function parsePotentialStat(statName, internalRank, context = {}) {
     }
   }
 
-  if (statName.includes('技能') || statName.includes('實用')) {
+  if ((statName.includes('技能') || statName.includes('實用')) && statName !== '所有技能的MP消耗%') {
     return { label: statName, value: '' };
   }
 

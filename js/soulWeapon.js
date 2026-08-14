@@ -155,6 +155,9 @@ const SoulWeaponModule = {
 
   isSoulWeaponEligible(item = this.itemData) {
     if (!item) return false;
+    if (typeof isEnhancementLockedItem === 'function' && isEnhancementLockedItem(item)) {
+      return false;
+    }
     if (typeof isAtlasOffHandWeapon === 'function' && isAtlasOffHandWeapon(item)) {
       return false;
     }

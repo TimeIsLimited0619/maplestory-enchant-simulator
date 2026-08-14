@@ -11,7 +11,7 @@ const InventoryModule = {
   /** 潛能卷使用中：等待點選裝備 */
   pendingPotentialScrollId: null,
   /** 物品欄開關（頂部選單） */
-  panelOpen: true,
+  panelOpen: false,
 
   SLOT_COUNT: INVENTORY_SLOT_COUNT,
   /** 小背包：4 欄 × 32 列 */
@@ -844,6 +844,66 @@ const InventoryModule = {
     this.updateSlotCount();
   },
 
+  findEmptyEquipSlot() {
+    if (typeof playerInventoryEquip === 'undefined') return -1;
+    for (let i = 0; i < playerInventoryEquip.length; i++) {
+      if (!playerInventoryEquip[i]) return i;
+    }
+    return -1;
+  },
+
+  addEquipFromCatalog(itemId, preferredSlot = null) {
+    if (!itemId || typeof ITEM_DATABASE === 'undefined' || !ITEM_DATABASE[itemId]) return false;
+    if (this.tab !== 'equip') this.setTab('equip');
+
+    let idx = Number.isInteger(preferredSlot) ? preferredSlot : -1;
+    if (idx < 0 || idx >= playerInventoryEquip.length || playerInventoryEquip[idx]) {
+      idx = this.findEmptyEquipSlot();
+    }
+    if (idx < 0) {
+      if (typeof addLog === 'function') addLog('[清單] 物品欄已滿，無法放入裝備。', 'log-fail');
+      return false;
+    }
+
+    playerInventoryEquip[idx] = itemId;
+    playerInventoryState[idx] = null;
+    if (typeof playerInventory !== 'undefined' && Array.isArray(playerInventory)) {
+      playerInventory.splice(0, playerInventory.length, ...playerInventoryEquip);
+    }
+    if (typeof SessionPersistenceModule !== 'undefined') {
+      SessionPersistenceModule.scheduleSave();
+    }
+    this.render();
+    this.updateSlotCount();
+    const name = ITEM_DATABASE[itemId]?.name || itemId;
+    if (typeof addLog === 'function') {
+      addLog(`[清單] 已將【${name}】放入物品欄。`, 'log-success');
+    }
+    return true;
+  },
+
+  removeEquipToCatalog(slotIndex) {
+    if (!Number.isInteger(slotIndex) || slotIndex < 0) return false;
+    const itemId = playerInventoryEquip[slotIndex];
+    if (!itemId) return false;
+
+    const name = (typeof ITEM_DATABASE !== 'undefined' && ITEM_DATABASE[itemId]?.name) || itemId;
+    playerInventoryEquip[slotIndex] = null;
+    playerInventoryState[slotIndex] = null;
+    if (typeof playerInventory !== 'undefined' && Array.isArray(playerInventory)) {
+      playerInventory.splice(0, playerInventory.length, ...playerInventoryEquip);
+    }
+    if (typeof SessionPersistenceModule !== 'undefined') {
+      SessionPersistenceModule.scheduleSave();
+    }
+    this.render();
+    this.updateSlotCount();
+    if (typeof addLog === 'function') {
+      addLog(`[清單] 已從物品欄移除【${name}】。`, 'log-info');
+    }
+    return true;
+  },
+
   handleDrop(e, targetIndex) {
     e.preventDefault();
     e.stopPropagation();
@@ -856,6 +916,11 @@ const InventoryModule = {
 
     try {
       const parsed = JSON.parse(data);
+
+      if (parsed.source === 'request' && parsed.itemId) {
+        this.addEquipFromCatalog(parsed.itemId, targetIndex);
+        return;
+      }
 
       // 從裝備欄拖回背包 = 脫下
       if (parsed.source === 'body' && typeof UiEquipModule !== 'undefined') {

@@ -46,10 +46,25 @@ const EquipStatPanel = (() => {
   }
 
   /** 無視防禦率：1 - ∏(1 - x_i)，x 為 0–100 的百分比；結果上限 100 */
+  function iedRate(raw) {
+    if (raw && typeof raw === 'object') return Number(raw.value) || 0;
+    return Number(raw) || 0;
+  }
+
+  function pushIedSource(list, value, name, kind) {
+    const n = Number(value) || 0;
+    if (!n) return;
+    list.push({
+      value: n,
+      name: name || '',
+      kind: kind || '',
+    });
+  }
+
   function combineIgnoreDefense(ratesPct) {
     let remain = 1;
     (ratesPct || []).forEach((raw) => {
-      const x = Number(raw) || 0;
+      const x = iedRate(raw);
       if (x <= 0) return;
       remain *= (1 - Math.min(x, 100) / 100);
     });
@@ -154,14 +169,14 @@ const EquipStatPanel = (() => {
       const val = Number(m[2]) || 0;
       addNum(totals.soulOptions, key, val);
       totals.soulOptionMeta[key] = m[3] || '';
-      if (isIedLabel(key) && val) totals.iedSources.push(val);
+      if (isIedLabel(key) && val) pushIedSource(totals.iedSources, val, item.name, '靈魂');
     } else {
       addNum(totals.soulTexts, text, 1);
     }
   }
 
   /** 逐條蒐集無視防禦（不可先加總再乘） */
-  function collectIedFromPot(pot, iedSources) {
+  function collectIedFromPot(pot, iedSources, itemName, kind) {
     const lines = pot?.lines;
     if (!Array.isArray(lines) || !lines.length) return;
     lines.forEach((line) => {
@@ -174,18 +189,53 @@ const EquipStatPanel = (() => {
       if (!parsed.num) parsed = parsePotentialValue(labelRaw);
       const key = normalizePotKey(labelRaw, valueRaw);
       if (!isIedLabel(key) && !isIedLabel(labelRaw)) return;
-      if (parsed.num) iedSources.push(parsed.num);
+      if (parsed.num) pushIedSource(iedSources, parsed.num, itemName, kind);
     });
   }
 
-  function buildSnapshot() {
-    const entries = (typeof UiEquipModule !== 'undefined'
-      && typeof UiEquipModule.getActiveWearEntries === 'function')
-      ? UiEquipModule.getActiveWearEntries()
-      : [];
+  function applySetBonuses(entries, mainTotals, extraTotals, iedSources) {
+    if (typeof collectEquipSetBonuses !== 'function') {
+      return { details: [] };
+    }
+    const bonuses = collectEquipSetBonuses(entries);
+    Object.entries(bonuses.main || {}).forEach(([label, n]) => {
+      const amount = Number(n) || 0;
+      if (!amount) return;
+      if (!mainTotals[label]) {
+        mainTotals[label] = { base: 0, star: 0, scroll: 0, bonus: 0, set: 0, total: 0 };
+      }
+      mainTotals[label].set = (mainTotals[label].set || 0) + amount;
+      mainTotals[label].total += amount;
+    });
+    Object.entries(bonuses.extra || {}).forEach(([label, n]) => {
+      const amount = Number(n) || 0;
+      if (!amount) return;
+      if (!extraTotals[label]) {
+        extraTotals[label] = { total: 0, isPercent: !!bonuses.extraPercent?.[label] };
+      }
+      extraTotals[label].total += amount;
+      if (bonuses.extraPercent?.[label]) extraTotals[label].isPercent = true;
+    });
+    (bonuses.details || []).forEach((block) => {
+      (block.totals?.ied || []).forEach((rate) => {
+        pushIedSource(iedSources, rate, block.name, '套組');
+      });
+    });
+    return bonuses;
+  }
+
+  function buildSnapshot(entriesOverride) {
+    const entries = Array.isArray(entriesOverride)
+      ? entriesOverride.filter((entry) => entry?.itemId)
+      : ((typeof UiEquipModule !== 'undefined'
+        && typeof UiEquipModule.getActiveWearEntries === 'function')
+        ? UiEquipModule.getActiveWearEntries()
+        : []);
 
     const mainTotals = {};
-    MAIN_KEYS.forEach(({ label }) => { mainTotals[label] = { base: 0, star: 0, scroll: 0, bonus: 0, total: 0 }; });
+    MAIN_KEYS.forEach(({ label }) => {
+      mainTotals[label] = { base: 0, star: 0, scroll: 0, bonus: 0, set: 0, total: 0 };
+    });
 
     const extraTotals = {}; // label -> { total, isPercent }
     const exceptionalTotals = {};
@@ -250,7 +300,7 @@ const EquipStatPanel = (() => {
           }
           extraTotals[label].total += t;
           if (seg.isPercent) extraTotals[label].isPercent = true;
-          if (isIedLabel(label) && t) iedSources.push(t);
+          if (isIedLabel(label) && t) pushIedSource(iedSources, t, item.name, '裝備');
           if (t) {
             slotExtra.push({
               label,
@@ -283,8 +333,8 @@ const EquipStatPanel = (() => {
 
       collectPotentialAgg(item.potential, potMain);
       collectPotentialAgg(item.additionalPotential, potAdd);
-      collectIedFromPot(item.potential, iedSources);
-      collectIedFromPot(item.additionalPotential, iedSources);
+      collectIedFromPot(item.potential, iedSources, item.name, '主潛能');
+      collectIedFromPot(item.additionalPotential, iedSources, item.name, '附潛');
 
       slots.push({
         slotId: entry.slotId,
@@ -303,6 +353,7 @@ const EquipStatPanel = (() => {
       });
     });
 
+    const setBonuses = applySetBonuses(entries, mainTotals, extraTotals, iedSources);
     const iedTotal = combineIgnoreDefense(iedSources);
 
     return {
@@ -322,6 +373,7 @@ const EquipStatPanel = (() => {
       potMain,
       potAdd,
       sets,
+      setBonuses,
       slots,
       iedSources,
       iedTotal,
@@ -349,13 +401,28 @@ const EquipStatPanel = (() => {
     return rows.length ? rows.join('') : '<div class="esp-empty">（無）</div>';
   }
 
+  function renderSourceBreakdown(row, isPercent) {
+    const suffix = isPercent ? '%' : '';
+    const parts = [
+      ['base', '基礎', Number(row?.base) || 0],
+      ['star', '星力', Number(row?.star) || 0],
+      ['scroll', '卷軸', Number(row?.scroll) || 0],
+      ['bonus', '星火', Number(row?.bonus) || 0],
+    ].filter(([, , n]) => n !== 0);
+    if (!parts.length) return '';
+    return `<span class="esp-break">${parts.map(([cls, name, n]) => {
+      const sign = n > 0 ? '+' : '';
+      return `<span class="esp-part esp-part-${cls}">${name} ${sign}${n}${suffix}</span>`;
+    }).join('')}</span>`;
+  }
+
   function renderMainBreakdown(mainTotals) {
     return MAIN_KEYS.map(({ label }) => {
       const row = mainTotals[label] || { base: 0, star: 0, scroll: 0, bonus: 0, total: 0 };
       return `<div class="esp-row esp-row-main">
         <span class="esp-k">${esc(label)}</span>
         <span class="esp-v">${esc(formatSigned(row.total, false))}</span>
-        <span class="esp-break">b${row.base}/sf${row.star}/sc${row.scroll}/fl${row.bonus}</span>
+        ${renderSourceBreakdown(row, false)}
       </div>`;
     }).join('');
   }
@@ -389,15 +456,15 @@ const EquipStatPanel = (() => {
         return `<div class="esp-row esp-row-main">
           <span class="esp-k">${esc(label)}</span>
           <span class="esp-v">${esc(formatSigned(r.total, false))}</span>
-          <span class="esp-break">b${r.base}/sf${r.star}/sc${r.scroll}/fl${r.bonus}</span>
+          ${renderSourceBreakdown(r, false)}
         </div>`;
       }).join('');
 
     const extraLines = (slot.extra || []).map((seg) => (
-      `<div class="esp-row">
+      `<div class="esp-row esp-row-main">
         <span class="esp-k">${esc(seg.label)}</span>
         <span class="esp-v">${esc(formatSigned(seg.total, seg.isPercent))}</span>
-        <span class="esp-break">b${seg.base}/sf${seg.star}/sc${seg.scroll}/fl${seg.bonus}</span>
+        ${renderSourceBreakdown(seg, seg.isPercent)}
       </div>`
     )).join('');
 
@@ -411,11 +478,30 @@ const EquipStatPanel = (() => {
     </details>`;
   }
 
+  function renderSetBonusRows(totals) {
+    const rows = [];
+    const seen = new Set();
+    const push = (label, n, isPercent) => {
+      const amount = Number(n) || 0;
+      if (!amount || seen.has(label)) return;
+      seen.add(label);
+      rows.push(`<div class="esp-row"><span class="esp-k">${esc(label)}</span><span class="esp-v">${esc(formatSigned(amount, isPercent))}</span></div>`);
+    };
+    push('全屬性', totals?.extra?.['全屬性'] ?? totals?.main?.['全屬性'], !!totals?.extraPercent?.['全屬性']);
+    MAIN_KEYS.forEach(({ label }) => push(label, totals?.main?.[label], false));
+    Object.entries(totals?.extra || {}).forEach(([label, n]) => {
+      push(label, n, !!totals?.extraPercent?.[label]);
+    });
+    return rows.join('');
+  }
+
   function render(snapshot) {
     const body = $('equipStatPanelBody');
     if (!body || !snapshot) return;
 
-    const extraPairs = Object.entries(snapshot.extraTotals).map(([label, info]) => [label, info]);
+    const extraPairs = Object.entries(snapshot.extraTotals)
+      .filter(([label]) => !isIedLabel(label))
+      .map(([label, info]) => [label, info]);
     const exPairs = Object.entries(snapshot.exceptionalTotals);
     const soulFlatPairs = Object.entries(snapshot.soulFlat);
     const soulOptPairs = Object.entries(snapshot.soulOptions).map(([label, v]) => {
@@ -426,32 +512,43 @@ const EquipStatPanel = (() => {
       `<div class="esp-row"><span class="esp-k">${esc(text)}${count > 1 ? ` ×${count}` : ''}</span></div>`
     )).join('');
 
-    const setLines = Object.entries(snapshot.sets).map(([id, count]) => {
-      const name = (typeof EQUIP_SET_LABELS !== 'undefined' && EQUIP_SET_LABELS[id])
-        ? EQUIP_SET_LABELS[id]
-        : `套裝#${id}`;
-      return `<div class="esp-row"><span class="esp-k">${esc(name)}</span><span class="esp-v">${count}件</span></div>`;
-    }).join('') || '<div class="esp-empty">（無）</div>';
+    const iedSourceLines = (snapshot.iedSources || []).length
+      ? (snapshot.iedSources || []).map((row) => {
+        const n = iedRate(row);
+        const kind = row?.kind || '';
+        const name = row?.name || '';
+        const label = [kind, name].filter(Boolean).join(' · ') || '來源';
+        return `<div class="esp-row"><span class="esp-k">${esc(label)}</span><span class="esp-v">${esc(formatSigned(n, true))}</span></div>`;
+      }).join('')
+      : '<div class="esp-empty">（無）</div>';
+    const setBonusDetails = snapshot.setBonuses?.details || [];
+    const setBonusLines = setBonusDetails.length
+      ? setBonusDetails.map((block) => {
+        const stats = renderSetBonusRows(block.totals);
+        return `<div class="esp-row"><span class="esp-k">${esc(block.name)}</span><span class="esp-v">${block.wornCount}/${block.total}</span></div>`
+          + (stats || '<div class="esp-empty">（尚未啟動效果）</div>');
+      }).join('')
+      : '<div class="esp-empty">（無）</div>';
 
     body.innerHTML = `
       <div class="esp-meta">
         預設 ${snapshot.preset} · 穿著 ${snapshot.pieceCount} · 總星 ${snapshot.starSum} · 剩餘捲合計 ${snapshot.upgradeRemain}
       </div>
       <div class="esp-section">
-        <h4>無視防禦率（乘算 1−∏(1−x)）</h4>
-        <div class="esp-row">
-          <span class="esp-k">合計</span>
-          <span class="esp-v">${esc(formatSigned(snapshot.iedTotal || 0, true))}</span>
-          <span class="esp-break">${(snapshot.iedSources || []).length} 來源</span>
-        </div>
-      </div>
-      <div class="esp-section">
-        <h4>主屬性（base+sf+scroll+flame）</h4>
+        <h4>主屬性</h4>
         ${renderMainBreakdown(snapshot.mainTotals)}
       </div>
       <div class="esp-section">
         <h4>百分比／特殊／火焰額外</h4>
         ${renderKvRows(extraPairs)}
+      </div>
+      <div class="esp-section">
+        <h4>無視防禦率</h4>
+        <div class="esp-row">
+          <span class="esp-k">合計</span>
+          <span class="esp-v">${esc(formatSigned(snapshot.iedTotal || 0, true))}</span>
+        </div>
+        ${iedSourceLines}
       </div>
       <div class="esp-section">
         <h4>卓越合計</h4>
@@ -470,8 +567,8 @@ const EquipStatPanel = (() => {
       ${renderPotentialBlock('主潛能合計', snapshot.potMain)}
       ${renderPotentialBlock('附加潛能合計', snapshot.potAdd)}
       <div class="esp-section">
-        <h4>套裝件數</h4>
-        ${setLines}
+        <h4>套組效果</h4>
+        ${setBonusLines}
       </div>
       <div class="esp-section">
         <h4>分槽明細</h4>

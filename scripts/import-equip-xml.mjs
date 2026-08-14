@@ -2,9 +2,10 @@
  * 從 Character.*.img.xml 快速建檔至 js/item.js
  *
  * 用法：
- *   node scripts/import-equip-xml.mjs <xml...> [--write] [--inventory]
+ *   node scripts/import-equip-xml.mjs <xml 或資料夾...> [--write] [--inventory]
  *   node scripts/import-equip-xml.mjs weapon.xml --name 命運之劍 --icon icon.png --write --inventory
  *   node scripts/import-equip-xml.mjs *.xml --names names.txt --write --inventory
+ *   node scripts/import-equip-xml.mjs C:\xmls --icon-dir C:\pngs --write --inventory
  *
  * names.txt 格式（每行）：
  *   01215041=命運之劍
@@ -17,6 +18,13 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
 const ITEM_JS = path.join(ROOT, 'js', 'item.js');
+
+if (typeof process.stdout?.setDefaultEncoding === 'function') {
+  process.stdout.setDefaultEncoding('utf8');
+}
+if (typeof process.stderr?.setDefaultEncoding === 'function') {
+  process.stderr.setDefaultEncoding('utf8');
+}
 
 const INFO_SCALAR_KEYS = new Set([
   'islot', 'vslot', 'reqJob', 'reqJob2', 'reqSpecJob', 'reqLevel', 'tuc',
@@ -37,18 +45,19 @@ const INFO_FIELD_ORDER = [
 
 function usage() {
   console.log(`用法:
-  node scripts/import-equip-xml.mjs <xml...> [選項]
+  node scripts/import-equip-xml.mjs <xml 或資料夾...> [選項]
 
 選項:
   --write              合併寫入 js/item.js（預設只印出片段）
   --inventory          寫入時追加到背包下一格空位
   --name <名稱>        單一 XML 時指定顯示名稱（預設用 ID）
   --icon <png>         複製圖片到 images/equip/{ID}.png（僅單一 XML）
+  --icon-dir <資料夾>  批次複製 {itemId}.png
   --names <檔案>       名稱對照表（01215041=命運之劍 或空白分隔）
 
 範例:
   node scripts/import-equip-xml.mjs ..\\Character.Weapon.01215041.img.xml --name 命運之劍 --write
-  node scripts/import-equip-xml.mjs ..\\*.img.xml --names names.txt --write --inventory`);
+  node scripts/import-equip-xml.mjs ..\\xmls --icon-dir ..\\pngs --names names.txt --write --inventory`);
 }
 
 function parseArgs(argv) {
@@ -56,6 +65,7 @@ function parseArgs(argv) {
   let namesFile = null;
   let singleName = null;
   let iconPath = null;
+  let iconDir = null;
   let write = false;
   let inventory = false;
 
@@ -65,19 +75,78 @@ function parseArgs(argv) {
     else if (arg === '--inventory') inventory = true;
     else if (arg === '--name') singleName = argv[++i];
     else if (arg === '--icon') iconPath = argv[++i];
+    else if (arg === '--icon-dir') iconDir = argv[++i];
     else if (arg === '--names') namesFile = argv[++i];
     else if (arg === '--help' || arg === '-h') return { help: true };
-    else if (!arg.startsWith('-')) files.push(arg);
+    else if (!arg.startsWith('-')) files.push(stripQuotes(arg));
   }
 
-  return { files, namesFile, singleName, iconPath, write, inventory };
+  return { files, namesFile, singleName, iconPath, iconDir, write, inventory };
+}
+
+function stripQuotes(value) {
+  return String(value ?? '').trim().replace(/^["']|["']$/g, '');
+}
+
+function isXmlFileName(name) {
+  return /\.img\.xml$/i.test(name) || (/\.xml$/i.test(name) && /\d{7,8}/.test(name));
+}
+
+function expandXmlInputs(inputs) {
+  const out = [];
+  const seen = new Set();
+  const push = (filePath) => {
+    const resolved = path.resolve(filePath);
+    if (seen.has(resolved)) return;
+    seen.add(resolved);
+    out.push(resolved);
+  };
+
+  for (const raw of inputs) {
+    const input = stripQuotes(raw);
+    if (!input) continue;
+
+    if (/[*?]/.test(input) && typeof fs.globSync === 'function') {
+      const matches = fs.globSync(input, { windowsPathsNoEscape: true });
+      matches.filter((f) => isXmlFileName(f)).forEach(push);
+      continue;
+    }
+
+    const resolved = path.resolve(input);
+    if (!fs.existsSync(resolved)) {
+      throw new Error(`找不到檔案：${resolved}`);
+    }
+    const stat = fs.statSync(resolved);
+    if (stat.isDirectory()) {
+      fs.readdirSync(resolved)
+        .filter(isXmlFileName)
+        .forEach((name) => push(path.join(resolved, name)));
+      continue;
+    }
+    push(resolved);
+  }
+
+  return out;
+}
+
+function copyEquipIcon(itemId, srcPath) {
+  const iconSrc = path.resolve(stripQuotes(srcPath));
+  if (!fs.existsSync(iconSrc) || !fs.statSync(iconSrc).isFile()) {
+    throw new Error(`找不到圖片：${iconSrc}`);
+  }
+  const equipDir = path.join(ROOT, 'images', 'equip');
+  fs.mkdirSync(equipDir, { recursive: true });
+  const dest = path.join(equipDir, `${itemId}.png`);
+  fs.copyFileSync(iconSrc, dest);
+  console.log(`已複製圖片 → images/equip/${itemId}.png`);
 }
 
 function loadNamesMap(filePath) {
   const map = new Map();
   if (!filePath || !fs.existsSync(filePath)) return map;
 
-  for (const line of fs.readFileSync(filePath, 'utf8').split(/\r?\n/)) {
+  const text = fs.readFileSync(filePath, 'utf8').replace(/^\uFEFF/, '');
+  for (const line of text.split(/\r?\n/)) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) continue;
     const eq = trimmed.match(/^(\d+)\s*=\s*(.+)$/);
@@ -174,7 +243,7 @@ function detectWzPart(filePath) {
 }
 
 function parseEquipXml(filePath) {
-  const xml = fs.readFileSync(filePath, 'utf8');
+  const xml = fs.readFileSync(filePath, 'utf8').replace(/^\uFEFF/, '');
   const itemId = extractItemIdFromXml(xml, filePath);
   const block = extractInfoBlock(xml);
   if (!block) throw new Error(`${filePath}：找不到 info 節點`);
@@ -311,19 +380,26 @@ function main() {
     process.exit(1);
   }
 
+  let xmlFiles;
+  try {
+    xmlFiles = expandXmlInputs(args.files);
+  } catch (err) {
+    console.error(err.message || err);
+    process.exit(1);
+  }
+  if (!xmlFiles.length) {
+    console.error('沒有找到可導入的 .img.xml');
+    process.exit(1);
+  }
+
   const namesMap = loadNamesMap(args.namesFile);
   const entries = [];
   const ids = [];
 
-  for (const file of args.files) {
-    const resolved = path.resolve(file);
-    if (!fs.existsSync(resolved)) {
-      console.error(`找不到檔案：${resolved}`);
-      process.exit(1);
-    }
+  for (const resolved of xmlFiles) {
     const { itemId, info } = parseEquipXml(resolved);
     let name = namesMap.get(itemId) || namesMap.get(itemId.replace(/^0+/, ''));
-    if (!name && args.singleName && args.files.length === 1) name = args.singleName;
+    if (!name && args.singleName && xmlFiles.length === 1) name = args.singleName;
     if (!name) name = itemId;
 
     const code = formatEntry(itemId, name, info);
@@ -340,24 +416,30 @@ function main() {
     return;
   }
 
-  if (args.iconPath) {
-    if (args.files.length !== 1) {
-      console.error('--icon 僅支援單一 XML');
-      process.exit(1);
+  try {
+    if (args.iconPath) {
+      if (xmlFiles.length !== 1) {
+        throw new Error('--icon 僅支援單一 XML，批次請用 --icon-dir');
+      }
+      copyEquipIcon(ids[0], args.iconPath);
     }
-    const iconSrc = path.resolve(args.iconPath);
-    if (!fs.existsSync(iconSrc)) {
-      console.error(`找不到圖片：${iconSrc}`);
-      process.exit(1);
+    if (args.iconDir) {
+      const dir = path.resolve(stripQuotes(args.iconDir));
+      if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
+        throw new Error(`找不到圖片資料夾：${dir}`);
+      }
+      ids.forEach((id) => {
+        const src = path.join(dir, `${id}.png`);
+        if (fs.existsSync(src)) copyEquipIcon(id, src);
+        else console.warn(`略過圖片（找不到 ${id}.png）`);
+      });
     }
-    const equipDir = path.join(ROOT, 'images', 'equip');
-    fs.mkdirSync(equipDir, { recursive: true });
-    const dest = path.join(equipDir, `${ids[0]}.png`);
-    fs.copyFileSync(iconSrc, dest);
-    console.log(`\n已複製圖片 → images/equip/${ids[0]}.png`);
+  } catch (err) {
+    console.error(err.message || err);
+    process.exit(1);
   }
 
-  let content = fs.readFileSync(ITEM_JS, 'utf8');
+  let content = fs.readFileSync(ITEM_JS, 'utf8').replace(/^\uFEFF/, '');
   content = mergeDatabase(content, entries);
   if (args.inventory) content = mergeInventory(content, ids);
   fs.writeFileSync(ITEM_JS, content, 'utf8');

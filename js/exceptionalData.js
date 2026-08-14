@@ -100,6 +100,9 @@ const EXCEPTIONAL_STAT_LABELS = {
 
 function canUseExceptional(item) {
   if (!item) return false;
+  if (typeof isEnhancementLockedItem === 'function' && isEnhancementLockedItem(item)) {
+    return false;
+  }
   const id = String(item.itemId || item.id || '');
   if (EXCEPTIONAL_ELIGIBLE_ITEM_IDS.has(id)) {
     if (id === '01143471') return item.islot === 'Me' || item.islot === 'Md';

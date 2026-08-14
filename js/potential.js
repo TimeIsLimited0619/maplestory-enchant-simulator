@@ -36,11 +36,9 @@ const PotentialModule = {
   },
 
   setIdleMode(isIdle) {
-    const idlePanel = document.getElementById('ptIdlePanel');
     const activePanel = document.getElementById('ptActivePanel');
     const bottomOptions = document.getElementById('ptBottomOptions');
 
-    if (idlePanel) idlePanel.classList.toggle('hidden', !isIdle);
     if (activePanel) activePanel.classList.toggle('hidden', isIdle);
     if (bottomOptions) bottomOptions.classList.toggle('hidden', isIdle);
 

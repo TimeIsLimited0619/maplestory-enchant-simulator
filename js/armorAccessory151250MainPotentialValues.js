@@ -145,6 +145,7 @@ function armorAccessory151250LabelForStat(statName) {
   if (statName === '爆擊傷害%') return '爆擊傷害';
   if (statName === '楓幣獲得量%') return '楓幣獲得量';
   if (statName === '道具掉落率%') return '道具掉落率';
+  if (statName === '所有技能的MP消耗%') return '所有技能的MP消耗';
   if (/^(STR|DEX|INT|LUK)%?$/.test(statName)) return statName.replace(/%$/, '');
   return statName;
 }

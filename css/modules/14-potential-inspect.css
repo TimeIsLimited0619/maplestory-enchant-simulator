@@ -1,19 +1,27 @@
 /* ==========================================
-   潛能詞條查詢（debug）
+   潛能詞條查詢／追加屬性機率表
    ========================================== */
 .pt-inspect-overlay {
   position: fixed;
   inset: 0;
-  z-index: 12000;
+  /* 置頂：高於拖曳面板（~12k+）與強化彈窗（25k） */
+  z-index: 30000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(4px);
+  background: rgba(8, 10, 18, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.pt-inspect-overlay.hidden {
+  display: none !important;
 }
 
 .pt-inspect-panel {
+  position: relative;
+  z-index: 1;
   width: min(920px, 96vw);
   max-height: min(84vh, 760px);
   display: flex;

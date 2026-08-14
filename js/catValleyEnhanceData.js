@@ -8,6 +8,7 @@ const CAT_VALLEY_ENHANCE_TYPE = {
   NEW_ETERNAL: 'newEternal',
   MITRA: 'mitra',
   OFFHAND: 'offhand',
+  TOTEM: 'totem',
 };
 
 const CAT_VALLEY_ENHANCE_META = {
@@ -30,6 +31,13 @@ const CAT_VALLEY_ENHANCE_META = {
     id: CAT_VALLEY_ENHANCE_TYPE.OFFHAND,
     label: '副手強化',
     maxLevel: 10,
+  },
+  /** 首次開啟為 Lv.0，後續 +1～+25，共 26 次 */
+  [CAT_VALLEY_ENHANCE_TYPE.TOTEM]: {
+    id: CAT_VALLEY_ENHANCE_TYPE.TOTEM,
+    label: '圖騰強化',
+    maxLevel: 25,
+    totalUses: 26,
   },
 };
 
@@ -112,9 +120,59 @@ function isCatValleyOffhandItem(item) {
   return false;
 }
 
+/** 超越的圖騰（貓谷圖騰特殊強化） */
+const CAT_VALLEY_TOTEM_ITEM_IDS = new Set(['01202253']);
+const CAT_VALLEY_TOTEM_ITEM_NAMES = new Set(['超越的圖騰']);
+
+function isCatValleyTotemItem(item) {
+  if (!item) return false;
+  const id = String(item.itemId || item.id || '');
+  if (CAT_VALLEY_TOTEM_ITEM_IDS.has(id)) return true;
+  if (CAT_VALLEY_TOTEM_ITEM_NAMES.has(String(item.name || ''))) return true;
+  return false;
+}
+
+function isCatValleyTotemStarted(item) {
+  return Boolean(item?.catValleyTotemStarted);
+}
+
+/**
+ * 超越的圖騰：每次強化追加數值（非累積表；依目標等級套用該列）
+ * imdR=無視防禦% bdR=BOSS傷害% damR=傷害% allStatR=全屬性%
+ */
+const CAT_VALLEY_TOTEM_ENHANCE_TABLE = {
+  0: { imdR: 30, bdR: 30, damR: 10, allStatR: 0 },
+  1: { imdR: 0, bdR: 10, damR: 10, allStatR: 20 },
+  2: { imdR: 10, bdR: 10, damR: 10, allStatR: 10 },
+  3: { imdR: 10, bdR: 10, damR: 10, allStatR: 10 },
+  4: { imdR: 5, bdR: 10, damR: 10, allStatR: 10 },
+  5: { imdR: 5, bdR: 10, damR: 10, allStatR: 10 },
+  6: { imdR: 5, bdR: 10, damR: 10, allStatR: 10 },
+  7: { imdR: 5, bdR: 10, damR: 10, allStatR: 10 },
+  8: { imdR: 5, bdR: 10, damR: 10, allStatR: 10 },
+  9: { imdR: 5, bdR: 10, damR: 10, allStatR: 10 },
+  10: { imdR: 5, bdR: 10, damR: 10, allStatR: 10 },
+  11: { imdR: 5, bdR: 10, damR: 10, allStatR: 10 },
+  12: { imdR: 5, bdR: 10, damR: 10, allStatR: 10 },
+  13: { imdR: 5, bdR: 10, damR: 10, allStatR: 10 },
+  14: { imdR: 5, bdR: 10, damR: 10, allStatR: 10 },
+  15: { imdR: 5, bdR: 10, damR: 10, allStatR: 10 },
+  16: { imdR: 5, bdR: 10, damR: 10, allStatR: 10 },
+  17: { imdR: 5, bdR: 10, damR: 10, allStatR: 10 },
+  18: { imdR: 5, bdR: 10, damR: 10, allStatR: 10 },
+  19: { imdR: 5, bdR: 10, damR: 10, allStatR: 10 },
+  20: { imdR: 5, bdR: 6, damR: 8, allStatR: 8 },
+  21: { imdR: 5, bdR: 6, damR: 8, allStatR: 8 },
+  22: { imdR: 5, bdR: 6, damR: 8, allStatR: 8 },
+  23: { imdR: 5, bdR: 6, damR: 8, allStatR: 8 },
+  24: { imdR: 5, bdR: 6, damR: 8, allStatR: 8 },
+  25: { imdR: 5, bdR: 5, damR: 15, allStatR: 15 },
+};
+
 function getCatValleyEnhanceType(item) {
   if (!item) return null;
 
+  if (isCatValleyTotemItem(item)) return CAT_VALLEY_ENHANCE_TYPE.TOTEM;
   if (isCatValleyMitraItem(item)) return CAT_VALLEY_ENHANCE_TYPE.MITRA;
   if (isCatValleyOffhandItem(item)) return CAT_VALLEY_ENHANCE_TYPE.OFFHAND;
 
@@ -139,6 +197,11 @@ function getCatValleyLevel(item) {
 function getCatValleyRemainingUses(item) {
   const meta = getCatValleyEnhanceMeta(item);
   if (!meta) return 0;
+  // 圖騰：未開啟時仍可強化（首次＝Lv.0），共 totalUses 次
+  if (meta.id === CAT_VALLEY_ENHANCE_TYPE.TOTEM) {
+    if (!isCatValleyTotemStarted(item)) return meta.totalUses || (meta.maxLevel + 1);
+    return Math.max(0, meta.maxLevel - getCatValleyLevel(item));
+  }
   return Math.max(0, meta.maxLevel - getCatValleyLevel(item));
 }
 
@@ -149,8 +212,13 @@ function canUseCatValleyEnhance(item) {
 
 const CAT_VALLEY_MEDAL_ENHANCE_MAX = 10;
 
-/** 勳章強化（不朽的遺產／喵喵天使）：目標等級 → 額外數值；每次皆含 四屬+10、雙攻+10 */
+/**
+ * 勳章強化（不朽的遺產／喵喵天使）
+ * - 首次強化＝Lv.0（像超越圖騰）：10% BOSS傷、10% 傷害、15% 無視
+ * - Lv.1～10：額外數值表；每次皆含 四屬+10、雙攻+10、HP/MP+1000
+ */
 const CAT_VALLEY_MEDAL_ENHANCE_TABLE = {
+  0: { bdR: 10, damR: 10, imdR: 15 },
   1: { bdR: 5 },
   2: { bdR: 10 },
   3: { imdR: 5, damR: 5 },
@@ -164,6 +232,7 @@ const CAT_VALLEY_MEDAL_ENHANCE_TABLE = {
 };
 
 function getCatValleyMedalEnhanceTaichuCost(targetLevel) {
+  if (targetLevel === 0) return 0;
   if (targetLevel >= 1 && targetLevel <= 3) return 100;
   if (targetLevel >= 4 && targetLevel <= 5) return 150;
   if (targetLevel >= 6 && targetLevel <= 7) return 200;
@@ -176,8 +245,16 @@ function getMedalEnhanceLevel(item) {
   return Math.max(0, Number(item?.medalEnhanceLevel) || 0);
 }
 
+/** 已做過首次（+0）之後視為已開啟；舊存檔 level>0 亦視為已開啟 */
+function isCatValleyMedalEnhanceStarted(item) {
+  if (!item) return false;
+  if (item.medalEnhanceStarted) return true;
+  return getMedalEnhanceLevel(item) > 0;
+}
+
 function isCatValleyMedalEnhanceMaxed(item) {
-  return getMedalEnhanceLevel(item) >= CAT_VALLEY_MEDAL_ENHANCE_MAX;
+  return isCatValleyMedalEnhanceStarted(item)
+    && getMedalEnhanceLevel(item) >= CAT_VALLEY_MEDAL_ENHANCE_MAX;
 }
 
 function canUseCatValleyMedalEnhance(item) {
@@ -196,11 +273,18 @@ function applyCatValleyMedalEnhanceOnce(item) {
   if (!isCatValleyPotentialItem(item)) {
     return { ok: false, level: 0, changes: [], taichuCost: 0, message: '此裝備無法使用勳章強化' };
   }
-  const levelBefore = getMedalEnhanceLevel(item);
-  if (levelBefore >= CAT_VALLEY_MEDAL_ENHANCE_MAX) {
-    return { ok: false, level: levelBefore, changes: [], taichuCost: 0, message: '勳章強化已達上限' };
+  if (isCatValleyMedalEnhanceMaxed(item)) {
+    return {
+      ok: false,
+      level: getMedalEnhanceLevel(item),
+      changes: [],
+      taichuCost: 0,
+      message: '勳章強化已達上限',
+    };
   }
 
+  const started = isCatValleyMedalEnhanceStarted(item);
+  const levelBefore = started ? getMedalEnhanceLevel(item) : -1;
   const nextLevel = levelBefore + 1;
   const bonus = CAT_VALLEY_MEDAL_ENHANCE_TABLE[nextLevel] || {};
   const changes = [];
@@ -210,24 +294,38 @@ function applyCatValleyMedalEnhanceOnce(item) {
     changes.push({ field, val, label });
   };
 
-  add('scrollStat', 10, '四屬');
-  add('scrollAtk', 10, '攻擊力');
-  add('scrollMatk', 10, '魔法攻擊力');
-  if (bonus.bdR) add('scrollBdR', bonus.bdR, 'BOSS怪物傷害');
-  if (bonus.imdR) add('scrollImdR', bonus.imdR, '無視怪物防禦率');
-  if (bonus.damR) add('scrollDamR', bonus.damR, '傷害');
-  if (bonus.allStatR) add('scrollAllStatR', bonus.allStatR, '全屬性');
+  if (nextLevel === 0) {
+    // 首次開啟（+0）：僅套用表上百分比
+    if (bonus.bdR) add('scrollBdR', bonus.bdR, 'BOSS怪物傷害');
+    if (bonus.damR) add('scrollDamR', bonus.damR, '傷害');
+    if (bonus.imdR) add('scrollImdR', bonus.imdR, '無視怪物防禦率');
+  } else {
+    add('scrollStat', 10, '四屬');
+    add('scrollAtk', 10, '攻擊力');
+    add('scrollMatk', 10, '魔法攻擊力');
+    add('scrollHp', 1000, '最大HP');
+    add('scrollMp', 1000, '最大MP');
+    if (bonus.bdR) add('scrollBdR', bonus.bdR, 'BOSS怪物傷害');
+    if (bonus.imdR) add('scrollImdR', bonus.imdR, '無視怪物防禦率');
+    if (bonus.damR) add('scrollDamR', bonus.damR, '傷害');
+    if (bonus.allStatR) add('scrollAllStatR', bonus.allStatR, '全屬性');
+  }
 
   item.medalEnhanceLevel = nextLevel;
+  item.medalEnhanceStarted = true;
   const taichuCost = getCatValleyMedalEnhanceTaichuCost(nextLevel);
   if (taichuCost > 0) trackCatValleyTaichuCost(taichuCost);
+
+  const levelText = nextLevel === 0
+    ? '首次開啟（+0）'
+    : `Lv.${nextLevel}/${CAT_VALLEY_MEDAL_ENHANCE_MAX}`;
 
   return {
     ok: true,
     level: nextLevel,
     changes,
     taichuCost,
-    message: `勳章強化：Lv.${nextLevel}/${CAT_VALLEY_MEDAL_ENHANCE_MAX}`
+    message: `勳章強化：${levelText}`
       + (taichuCost ? `（消耗太初 ${taichuCost}）` : ''),
   };
 }
@@ -523,6 +621,10 @@ function ensureCatValleyScrollFields(item) {
   if (item.scrollAllStatR == null) item.scrollAllStatR = 0;
   if (item.catValleyLevel == null) item.catValleyLevel = 0;
   if (item.medalEnhanceLevel == null) item.medalEnhanceLevel = 0;
+  if (item.medalEnhanceStarted == null) {
+    item.medalEnhanceStarted = getMedalEnhanceLevel(item) > 0;
+  }
+  if (item.catValleyTotemStarted == null) item.catValleyTotemStarted = false;
 }
 
 /**
@@ -534,9 +636,12 @@ function applyCatValleyEnhanceOnce(item) {
   const meta = getCatValleyEnhanceMeta(item);
   if (!meta) return { ok: false, type: null, level: getCatValleyLevel(item), changes: [] };
 
-  const levelBefore = getCatValleyLevel(item);
+  const isTotem = meta.id === CAT_VALLEY_ENHANCE_TYPE.TOTEM;
+  const levelBefore = isTotem && !isCatValleyTotemStarted(item)
+    ? -1
+    : getCatValleyLevel(item);
   if (levelBefore >= meta.maxLevel) {
-    return { ok: false, type: meta.id, level: levelBefore, changes: [] };
+    return { ok: false, type: meta.id, level: Math.max(0, levelBefore), changes: [] };
   }
 
   const nextLevel = levelBefore + 1;
@@ -549,7 +654,14 @@ function applyCatValleyEnhanceOnce(item) {
     changes.push({ field, val, label });
   };
 
-  if (meta.id === CAT_VALLEY_ENHANCE_TYPE.OLD_ETERNAL) {
+  if (isTotem) {
+    const bonus = CAT_VALLEY_TOTEM_ENHANCE_TABLE[nextLevel] || {};
+    if (bonus.imdR) add('scrollImdR', bonus.imdR, '無視怪物防禦率');
+    if (bonus.bdR) add('scrollBdR', bonus.bdR, 'BOSS怪物傷害');
+    if (bonus.damR) add('scrollDamR', bonus.damR, '傷害');
+    if (bonus.allStatR) add('scrollAllStatR', bonus.allStatR, '全屬性');
+    item.catValleyTotemStarted = true;
+  } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.OLD_ETERNAL) {
     add('scrollStat', 12, '四屬');
     add('scrollHp', 210, '最大HP');
     if (nextLevel === 5 || nextLevel === 15) add('scrollImdR', 5, '無視怪物防禦率');
@@ -592,7 +704,7 @@ function applyCatValleyEnhanceAll(item) {
 
   let applied = 0;
   const allChanges = [];
-  while (getCatValleyLevel(item) < meta.maxLevel) {
+  while (getCatValleyRemainingUses(item) > 0) {
     const result = applyCatValleyEnhanceOnce(item);
     if (!result.ok) break;
     applied += 1;

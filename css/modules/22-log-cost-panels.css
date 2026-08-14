@@ -1,0 +1,147 @@
+/* Log：與物品清單同尺寸；成本統計：600×750 */
+.log-root,
+.cost-tracker-root {
+  position: fixed;
+  z-index: 12007;
+  display: flex;
+  flex-direction: column;
+  background: rgba(18, 18, 18, 0.96);
+  color: #ddd;
+  border: 1px solid #555;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow: hidden;
+}
+
+.log-root {
+  left: 12px;
+  top: 56px;
+  width: min(380px, calc(100vw - 24px));
+  height: min(72vh, 640px);
+}
+
+.cost-tracker-root {
+  left: min(404px, calc(100vw - 24px - min(600px, calc(100vw - 24px))));
+  top: 56px;
+  width: 600px;
+  height: 750px;
+}
+
+.log-root.is-hidden,
+.cost-tracker-root.is-hidden,
+.cost-tracker-root.hidden {
+  display: none;
+}
+
+.log-header,
+.cost-tracker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #444;
+  background: #1f1f1f;
+  border-radius: 6px 6px 0 0;
+  font-weight: 600;
+  cursor: move;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.cost-tracker-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ddd;
+}
+
+.log-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #bbb;
+  text-align: left;
+}
+
+.log-body::-webkit-scrollbar,
+.cost-tracker-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.log-body::-webkit-scrollbar-thumb,
+.cost-tracker-body::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+.cost-tracker-hint {
+  margin: 0;
+  padding: 8px 10px 0;
+  font-size: 11px;
+  color: #8a949c;
+  line-height: 1.45;
+  flex-shrink: 0;
+}
+
+.cost-tracker-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 10px;
+}
+
+.cost-tracker-footer {
+  padding: 8px 10px 10px;
+  border-top: 1px solid #333;
+  flex-shrink: 0;
+}
+
+.cost-tracker-total-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.cost-tracker-total-row strong {
+  font-size: 14px;
+  color: #f5d76e;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.cost-tracker-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cost-tracker-actions-left,
+.cost-tracker-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cost-tracker-root .cost-tracker-btn {
+  padding: 5px 8px;
+  font-size: 11px;
+}
+
+.cost-tracker-root .cost-tracker-table th:nth-child(2),
+.cost-tracker-root .cost-tracker-table th:nth-child(3),
+.cost-tracker-root .cost-tracker-table th:nth-child(4),
+.cost-tracker-root .cost-tracker-count,
+.cost-tracker-root .cost-tracker-sub,
+.cost-tracker-root .cost-tracker-price {
+  padding-left: 8px;
+  padding-right: 8px;
+}

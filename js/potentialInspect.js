@@ -272,7 +272,13 @@ const PotentialInspectModule = {
     this.rateKey = this.getSelectedCubeRateKey(config);
 
     const overlay = document.getElementById('ptInspectOverlay');
-    if (overlay) overlay.classList.remove('hidden');
+    if (overlay) {
+      // 開啟時置頂，避免被拖曳面板蓋住
+      document.body.appendChild(overlay);
+      overlay.style.zIndex = '30000';
+      overlay.classList.remove('hidden');
+    }
+    document.body.classList.add('ms-inspect-open');
 
     this.isOpen = true;
     this.render();
@@ -282,6 +288,9 @@ const PotentialInspectModule = {
     const overlay = document.getElementById('ptInspectOverlay');
     if (overlay) overlay.classList.add('hidden');
     this.isOpen = false;
+    if (typeof BonusStatInspectModule === 'undefined' || !BonusStatInspectModule.isOpen) {
+      document.body.classList.remove('ms-inspect-open');
+    }
   }
 };
 

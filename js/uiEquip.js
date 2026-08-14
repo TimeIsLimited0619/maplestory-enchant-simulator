@@ -3,11 +3,16 @@
  * 穿脫：從背包取出實體（itemId + state）放入身體槽；整理背包不影響已穿裝備
  */
 const UiEquipModule = (() => {
-  const SLOT_IDS = [
+  const BODY_SLOT_IDS = [
     '1', '2', '3', '4', '5', '6', '7', '8', '9',
     '10', '11', '12', '13', '15', '16', '17',
     '21', '22', '28', '31', '32', '33', '34', '35', '36', '37',
   ];
+
+  const TOTEM_SLOT_IDS = ['5000', '5001', '5002', '5250'];
+
+  /** 身體 + 圖騰全部槽（穿著 map / 持久化） */
+  const SLOT_IDS = BODY_SLOT_IDS.concat(TOTEM_SLOT_IDS);
 
   const SLOT_LABELS = {
     1: '帽子', 2: '臉飾', 3: '眼飾', 4: '耳環', 5: '上衣', 6: '褲/裙',
@@ -15,6 +20,7 @@ const UiEquipModule = (() => {
     12: '戒指', 13: '戒指', 15: '戒指', 16: '戒指', 17: '墜飾',
     21: '勳章', 22: '腰帶', 28: '肩膀裝飾', 31: '口袋道具', 32: '機器人',
     33: '機器心臟', 34: '胸章', 35: '能源', 36: '墜飾', 37: '神之子輔助武器',
+    5000: '圖騰', 5001: '圖騰', 5002: '圖騰', 5250: '珠寶',
   };
 
   const ISLOT_TO_SLOTS = {
@@ -37,10 +43,14 @@ const UiEquipModule = (() => {
     Sh: ['28'],
     Po: ['31'],
     Ex: ['31'], // 舊碼相容
-    Tm: ['33'],
+    Tm: ['33'], // 機器心臟
+    An: ['32'], // 機器人（之後新增）
     Ba: ['34'],
     Em: ['35'],
   };
+
+  const TOTEM_SLOTS = ['5000', '5001', '5002'];
+  const JEWEL_SLOTS = ['5250'];
 
   const PRESET_SELECTED_ORIGIN = { x: 11, y: 18 };
   const PRESET_SELECTED_NUDGE = { x: 9, y: 3 };
@@ -53,6 +63,7 @@ const UiEquipModule = (() => {
   let pendingPreset = 1;
   let activePreset = 1;
   let inited = false;
+  let totemPanelOpen = false;
 
   /** 三組 preset 各自保留完整穿著 { itemId, state }；切換只換顯示，不拆回背包 */
   const presetWear = {
@@ -104,11 +115,38 @@ const UiEquipModule = (() => {
 
   function getCandidateSlots(item) {
     if (!item) return [];
+    if (typeof isTotemItem === 'function' ? isTotemItem(item) : item.subType === 'totem') {
+      return TOTEM_SLOTS.slice();
+    }
     return (ISLOT_TO_SLOTS[item.islot || ''] || []).slice();
   }
 
   function isSlotCompatible(uiSlotId, item) {
-    return getCandidateSlots(item).includes(String(uiSlotId));
+    const id = String(uiSlotId);
+    if (JEWEL_SLOTS.includes(id)) return false; // 珠寶槽尚未接物品類型
+    return getCandidateSlots(item).includes(id);
+  }
+
+  function isOnlyEquipItem(item) {
+    if (!item) return false;
+    return Boolean(item.wz?.onlyEquip || item.onlyEquip);
+  }
+
+  /**
+   * onlyEquip：目前 preset 是否已穿著同 itemId。
+   * excludeSlotId：換裝目標槽可排除（該槽原件會被換下）。
+   * 不同 preset 互不影響。
+   */
+  function findOnlyEquipConflictInActive(itemId, excludeSlotId = null) {
+    if (!itemId) return null;
+    const item = getItemData(itemId);
+    if (!isOnlyEquipItem(item)) return null;
+    const exclude = excludeSlotId != null ? String(excludeSlotId) : null;
+    for (const id of SLOT_IDS) {
+      if (exclude && String(id) === exclude) continue;
+      if (activeWear[id]?.itemId === itemId) return String(id);
+    }
+    return null;
   }
 
   function resolveWearTarget(item, preferredSlotId) {
@@ -120,6 +158,37 @@ const UiEquipModule = (() => {
     }
     const empty = candidates.find((id) => !activeWear[id]);
     return empty || candidates[0];
+  }
+
+  /**
+   * 假設穿上 item 後的穿著列表（不改真正裝備欄）
+   * 規則對齊 wearFromBag：空槽優先，否則該類型第一槽；套服清褲、穿褲先脫套服。
+   */
+  function previewWearEntries(item, state, preferredSlotId = null) {
+    const current = getActiveWearEntries();
+    if (!item) return current;
+    const target = resolveWearTarget(item, preferredSlotId);
+    if (!target) return current;
+
+    const itemId = item.itemId || item.id;
+    const drop = new Set([String(target)]);
+    const onlyConflict = findOnlyEquipConflictInActive(itemId, target);
+    if (onlyConflict) drop.add(String(onlyConflict));
+    if (item.islot === 'MaPn') drop.add('6');
+    if (item.islot === 'Pn') {
+      const coatEntry = activeWear['5'];
+      const coat = coatEntry ? getItemData(coatEntry.itemId) : null;
+      if (coat?.islot === 'MaPn') drop.add('5');
+    }
+
+    const next = current.filter((entry) => !drop.has(String(entry.slotId)));
+    next.push({
+      slotId: String(target),
+      label: SLOT_LABELS[target] || `槽位 ${target}`,
+      itemId,
+      state: state || null,
+    });
+    return next;
   }
 
   function findEmptyBagSlot() {
@@ -249,6 +318,15 @@ const UiEquipModule = (() => {
       return false;
     }
 
+    // onlyEquip：目前 preset 已穿同 ID → 先強制卸下舊件再穿（不同 preset 互不影響）
+    const onlyConflict = findOnlyEquipConflictInActive(resolvedId, target);
+    if (onlyConflict && activeWear[onlyConflict]) {
+      if (!returnEntryToBagOrWarn(activeWear[onlyConflict])) {
+        return false;
+      }
+      activeWear[onlyConflict] = null;
+    }
+
     const entry = takeFromBag(bagIndex);
     if (!entry) return false;
 
@@ -271,21 +349,21 @@ const UiEquipModule = (() => {
       }
     }
 
-    // 若此件已穿在其他槽，清掉
-    const existingSlot = findSlotByItemId(entry.itemId);
-    if (existingSlot && existingSlot !== target) {
-      activeWear[existingSlot] = null;
-    }
-
+    // 目標槽已有裝備：一律放回背包（即使 itemId 相同，狀態也可能不同）
     const displaced = activeWear[target];
-    if (displaced && displaced.itemId !== entry.itemId) {
+    if (displaced) {
       if (!returnEntryToBagOrWarn(displaced)) {
         putToBag(entry);
         return false;
       }
+      activeWear[target] = null;
     }
 
     activeWear[target] = entry;
+
+    if (TOTEM_SLOTS.includes(String(target))) {
+      setTotemPanelOpen(true);
+    }
 
     if (typeof addLog === 'function') {
       addLog(`[裝備欄] 已穿上【${item.name}】→ ${SLOT_LABELS[target] || target}`, 'log-success');
@@ -401,13 +479,43 @@ const UiEquipModule = (() => {
   }
 
   function renderSlots() {
-    const host = $('uiEquipSlots');
-    if (!host) return;
-    host.innerHTML = SLOT_IDS.map((id) => {
-      const label = SLOT_LABELS[id] || `槽位 ${id}`;
-      return `<div class="uiequip-slot" data-slot="${id}" title="${label}"></div>`;
-    }).join('');
+    const bodyHost = $('uiEquipSlots');
+    if (bodyHost) {
+      bodyHost.innerHTML = BODY_SLOT_IDS.map((id) => {
+        const label = SLOT_LABELS[id] || `槽位 ${id}`;
+        return `<div class="uiequip-slot" data-slot="${id}" title="${label}"></div>`;
+      }).join('');
+    }
+
+    const totemHost = $('uiEquipTotemSlots');
+    if (totemHost) {
+      totemHost.innerHTML = TOTEM_SLOT_IDS.map((id) => {
+        const label = SLOT_LABELS[id] || `槽位 ${id}`;
+        return `<div class="uiequip-slot" data-slot="${id}" title="${label}"></div>`;
+      }).join('');
+    }
+
     bindSlotInteractions();
+    syncTotemPanelUi();
+  }
+
+  function setTotemPanelOpen(next) {
+    totemPanelOpen = !!next;
+    syncTotemPanelUi();
+  }
+
+  function toggleTotemPanel() {
+    setTotemPanelOpen(!totemPanelOpen);
+  }
+
+  function syncTotemPanelUi() {
+    const panel = $('uiEquipTotemPanel');
+    const btn = $('uiEquipTotemBtn');
+    if (panel) panel.classList.toggle('is-hidden', !totemPanelOpen);
+    if (btn) {
+      btn.classList.toggle('is-open', totemPanelOpen);
+      btn.setAttribute('aria-pressed', totemPanelOpen ? 'true' : 'false');
+    }
   }
 
   function beginDragHideTooltip() {
@@ -439,7 +547,7 @@ const UiEquipModule = (() => {
     const rankClasses = ['rare', 'epic', 'unique', 'legendary']
       .map((r) => `uiequip-potential-${r}`);
 
-    document.querySelectorAll('#uiEquipSlots .uiequip-slot').forEach((el) => {
+    document.querySelectorAll('#uiEquipSlots .uiequip-slot, #uiEquipTotemSlots .uiequip-slot').forEach((el) => {
       const id = el.getAttribute('data-slot');
       const entry = activeWear[id];
       const item = getItemData(entry?.itemId);
@@ -457,10 +565,11 @@ const UiEquipModule = (() => {
 
         const img = document.createElement('img');
         img.className = 'uiequip-slot-icon';
-        img.src = item.icon;
+        img.src = (typeof getEquipDisplayIcon === 'function'
+          ? getEquipDisplayIcon(item)
+          : item.equipIcon || item.icon);
         img.alt = item.name;
         img.draggable = true;
-        img.title = `${item.name}（雙擊脫下）`;
         img.dataset.uiSlot = id;
         img.dataset.itemId = entry.itemId;
         img.ondragstart = (e) => {
@@ -483,7 +592,7 @@ const UiEquipModule = (() => {
           InventoryModule.applyPendingPotentialScrollToEquip(entry.itemId, `body:${id}`);
         });
         el.appendChild(img);
-        el.title = item.name;
+        el.removeAttribute('title');
       } else {
         el.title = SLOT_LABELS[id] || `槽位 ${id}`;
       }
@@ -491,7 +600,7 @@ const UiEquipModule = (() => {
   }
 
   function bindSlotInteractions() {
-    document.querySelectorAll('#uiEquipSlots .uiequip-slot').forEach((el) => {
+    document.querySelectorAll('#uiEquipSlots .uiequip-slot, #uiEquipTotemSlots .uiequip-slot').forEach((el) => {
       el.ondragover = (e) => {
         e.preventDefault();
         el.classList.add('is-drag-over');
@@ -591,7 +700,7 @@ const UiEquipModule = (() => {
     });
   }
 
-  let enchantOpen = true;
+  let enchantOpen = false;
   let equipOpen = false;
 
   function syncMenuButtons() {
@@ -602,14 +711,11 @@ const UiEquipModule = (() => {
   function setEnchantOpen(next) {
     enchantOpen = !!next;
     const wb = $('enchantWorkbench');
-    if (wb) wb.classList.toggle('hidden', !enchantOpen);
-    // 相容尚未包工作台時的舊 DOM
     const main = $('mainContentPanel');
     const sidebar = document.querySelector('#pageEnhance .ms-sidebar');
-    if (!wb) {
-      if (main) main.classList.toggle('hidden', !enchantOpen);
-      if (sidebar) sidebar.classList.toggle('hidden', !enchantOpen);
-    }
+    if (wb) wb.classList.toggle('hidden', !enchantOpen);
+    if (main) main.classList.toggle('hidden', !enchantOpen);
+    if (sidebar) sidebar.classList.toggle('hidden', !enchantOpen);
     if (enchantOpen && typeof PanelDrag !== 'undefined') {
       PanelDrag.bringFront(wb || main);
     }
@@ -683,6 +789,10 @@ const UiEquipModule = (() => {
     if (typeof EquipStatPanel !== 'undefined' && typeof EquipStatPanel.refresh === 'function') {
       EquipStatPanel.refresh();
     }
+    if (typeof CharacterCombatPanel !== 'undefined'
+      && typeof CharacterCombatPanel.syncFromEquippedWeapon === 'function') {
+      CharacterCombatPanel.syncFromEquippedWeapon();
+    }
     if (typeof UiCharacterInfo !== 'undefined' && typeof UiCharacterInfo.refresh === 'function') {
       UiCharacterInfo.refresh();
     }
@@ -695,6 +805,10 @@ const UiEquipModule = (() => {
     $('uiEquipPresetApply')?.addEventListener('click', (e) => {
       e.preventDefault();
       applyPendingPreset();
+    });
+    $('uiEquipTotemBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleTotemPanel();
     });
     $('btnViewEnchant')?.addEventListener('click', (e) => {
       e.preventDefault();
@@ -717,7 +831,7 @@ const UiEquipModule = (() => {
     syncPresetSelected();
     bind();
     refreshSlotContents();
-    setEnchantOpen(true);
+    setEnchantOpen(false);
     setEquipOpen(false);
   }
 
@@ -734,7 +848,13 @@ const UiEquipModule = (() => {
     return out;
   }
 
-  function hydrateWearMap(map, src, { pullFromBag = true } = {}) {
+  /**
+   * 還原穿著。
+   * - 字串 layout（舊存檔）：從背包取出實體
+   * - { itemId, state }（新存檔）：穿著本體已在存檔內，不可再依 itemId 從背包抽，
+   *   否則背包若另有同 ID 會被誤拿走（重新載入後物品欄少一件）
+   */
+  function hydrateWearMap(map, src, { pullFromBag = false } = {}) {
     SLOT_IDS.forEach((id) => { map[id] = null; });
     if (!src || typeof src !== 'object') return;
 
@@ -742,27 +862,29 @@ const UiEquipModule = (() => {
       const raw = src[id];
       let itemId = null;
       let state = null;
+      let legacyIdOnly = false;
 
       if (typeof raw === 'string' && raw) {
         itemId = raw;
+        legacyIdOnly = true;
       } else if (raw && typeof raw === 'object' && raw.itemId) {
         itemId = raw.itemId;
         state = cloneState(raw.state);
       }
       if (!itemId || !getItemData(itemId)) return;
 
-      if (pullFromBag) {
+      // 僅舊版「只存 itemId」才從背包抽；完整物件直接還原
+      if (pullFromBag && legacyIdOnly) {
         const bagIdx = findBagIndexByItemId(itemId);
         if (bagIdx >= 0) {
           const taken = takeFromBag(bagIdx);
           if (taken) {
-            map[id] = {
-              itemId: taken.itemId,
-              state: state != null ? state : taken.state,
-            };
+            map[id] = taken;
             return;
           }
         }
+        // 背包找不到就略過（舊存檔無法憑空生出實體）
+        return;
       }
 
       map[id] = { itemId, state };
@@ -811,14 +933,19 @@ const UiEquipModule = (() => {
         if (typeof sample === 'string') {
           applyLayoutToPreset(n, src);
         } else {
-          hydrateWearMap(presetWear[n], src, { pullFromBag: true });
+          hydrateWearMap(presetWear[n], src, { pullFromBag: false });
         }
       });
     }
 
     // 舊存檔只有 bodyWearActive，或 byPreset 為空：灌入目前 preset
     if (!loadedFromPresets && data.bodyWearActive && typeof data.bodyWearActive === 'object') {
-      hydrateWearMap(presetWear[presetNo], data.bodyWearActive, { pullFromBag: true });
+      const sample = SLOT_IDS.map((id) => data.bodyWearActive[id]).find((v) => v != null);
+      if (typeof sample === 'string') {
+        applyLayoutToPreset(presetNo, data.bodyWearActive);
+      } else {
+        hydrateWearMap(presetWear[presetNo], data.bodyWearActive, { pullFromBag: false });
+      }
     }
 
     setActivePreset(presetNo);
@@ -837,9 +964,25 @@ const UiEquipModule = (() => {
     return set;
   }
 
-  /** 給 tooltip：目前穿在身上的 state */
   function getWornEntry(uiSlotId) {
     return activeWear[String(uiSlotId)] || null;
+  }
+
+  /** 背包 hover 比較用：同部位目前穿著（多槽取第一件有裝的） */
+  function findWornCompareEntry(item) {
+    const candidates = getCandidateSlots(item);
+    if (!candidates.length) return null;
+    for (const id of candidates) {
+      const entry = activeWear[id];
+      if (entry?.itemId) {
+        return {
+          slotId: String(id),
+          itemId: entry.itemId,
+          state: entry.state,
+        };
+      }
+    }
+    return null;
   }
 
   return {
@@ -870,7 +1013,9 @@ const UiEquipModule = (() => {
     exportState,
     importState,
     getWornEntry,
+    findWornCompareEntry,
     getActiveWearEntries,
+    previewWearEntries,
     refresh,
   };
 })();

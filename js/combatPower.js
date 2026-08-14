@@ -402,8 +402,12 @@ const CombatPower = (() => {
     addStatFlat('HP', flatOf('最大HP'));
 
     // 全屬／全屬%（惡復：全屬只進副屬；其餘進主+副[+副2]）— 抄 equipmentDelta.ts
-    const allStatFlat = flatOf('全屬性') || 0;
-    const allStatPct = pctOf('全屬性%') || pctOf('全屬性') || 0;
+    const extraAll = extra['全屬性'];
+    const extraAllIsPct = !!(extraAll && extraAll.isPercent);
+    const allStatFlat = flatOf('全屬性')
+      + (!extraAllIsPct ? (Number(extraAll?.total) || 0) : 0);
+    const allStatPct = pctOf('全屬性%')
+      + (extraAllIsPct ? (Number(extraAll?.total) || 0) : 0);
     const isDA = jobCategory === 'da';
     const includeSecondSub = jobCategory === 'xenon' || jobCategory === 'dual';
     if (!isDA) {
@@ -415,6 +419,9 @@ const CombatPower = (() => {
     if (includeSecondSub) {
       delta.baseSubtwo += allStatFlat;
       delta.percentSubtwo += allStatPct;
+    }
+    if (isDA) {
+      delta.percentMain += pctOf('最大HP%');
     }
 
     // 單屬 %（潛能 label 多為 STR + value 12%，少數為 STR%）

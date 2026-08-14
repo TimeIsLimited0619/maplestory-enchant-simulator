@@ -1073,10 +1073,6 @@ function isOneHandWeaponItem(item) {
     && !isOffHandWeaponItem(item);
 }
 
-function isAndroidItem(item) {
-  return item?.subType === 'android' || item?.islot === 'Tm';
-}
-
 function getScrollEquipError(scroll, item) {
   if (!scroll || !item) return null;
 
@@ -1093,8 +1089,8 @@ function getScrollEquipError(scroll, item) {
 
   if (!scroll.equipTarget) return null;
 
-  // 機器心臟（android）可使用任何部位卷軸
-  if (!isAndroidItem(item)) {
+  // 機器心臟（Heart / Tm）可使用任何部位卷軸
+  if (!(typeof isHeartItem === 'function' ? isHeartItem(item) : item?.islot === 'Tm')) {
     if (scroll.equipTarget === SCROLL_EQUIP_TARGET.ARMOR && item.mainType !== EQUIP_TYPE.ARMOR) {
       return '此卷軸僅限防具使用。';
     }
@@ -1246,6 +1242,8 @@ function resetScrollBonusFields(item) {
   });
   item.catValleyLevel = 0;
   item.medalEnhanceLevel = 0;
+  item.medalEnhanceStarted = false;
+  item.catValleyTotemStarted = false;
   item.catValleyJackpotMain = null;
   item.catValleyJackpotAdd = null;
 }

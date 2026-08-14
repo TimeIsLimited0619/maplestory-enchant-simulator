@@ -5,12 +5,16 @@ const EquipTooltipModule = {
   hoverSlot: null,
   starEffectTimer: null,
   starEffectFrame: 0,
-  starEffectImg: null,
+  /** @type {HTMLImageElement[]} */
+  starEffectImgs: [],
   /** 貓谷潛能操作期間強制持續顯示 */
   pinned: false,
   pinAnchor: null,
   /** 拖曳裝備期間隱藏 tooltip */
   dragging: false,
+  /** 物品欄 hover：按住右鍵時側欄改顯示套裝效果 */
+  rmbHeld: false,
+  _rmbGuardsBound: false,
 
   beginDrag() {
     this.dragging = true;
@@ -27,17 +31,25 @@ const EquipTooltipModule = {
     this.bindInventoryHover();
     this.bindDropZoneHover();
     this.bindUiEquipHover();
+    this.bindInventoryCompareRmb();
     this._ready = true;
   },
 
   ensureElement() {
-    if (document.getElementById('equipTooltip')) return;
-
-    const el = document.createElement('div');
-    el.id = 'equipTooltip';
-    el.className = 'eq-tooltip hidden';
-    el.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(el);
+    if (!document.getElementById('equipTooltip')) {
+      const el = document.createElement('div');
+      el.id = 'equipTooltip';
+      el.className = 'eq-tooltip hidden';
+      el.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(el);
+    }
+    if (!document.getElementById('equipSetTooltip')) {
+      const setEl = document.createElement('div');
+      setEl.id = 'equipSetTooltip';
+      setEl.className = 'eq-set-tooltip hidden';
+      setEl.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(setEl);
+    }
   },
 
   bindInventoryHover() {
@@ -75,6 +87,43 @@ const EquipTooltipModule = {
     grid.dataset.eqTooltipReady = '1';
   },
 
+  /** 物品欄：按住右鍵切換側欄（比較裝備 ↔ 套裝效果） */
+  bindInventoryCompareRmb() {
+    if (this._rmbGuardsBound) return;
+    this._rmbGuardsBound = true;
+
+    const isInvEquipHover = () => {
+      if (typeof InventoryModule !== 'undefined' && InventoryModule.tab !== 'equip') return false;
+      const slotIndex = this.hoverSlot?.slotIndex;
+      return Number.isInteger(slotIndex) && slotIndex >= 0;
+    };
+
+    document.addEventListener('mousedown', (event) => {
+      if (event.button !== 2) return;
+      if (!isInvEquipHover()) return;
+      this.rmbHeld = true;
+      this.refreshSidePanel();
+    });
+
+    document.addEventListener('mouseup', (event) => {
+      if (event.button !== 2) return;
+      if (!this.rmbHeld) return;
+      this.rmbHeld = false;
+      if (isInvEquipHover()) this.refreshSidePanel();
+    });
+
+    document.addEventListener('contextmenu', (event) => {
+      if (!isInvEquipHover()) return;
+      const slot = event.target.closest?.('.ms-inv-slot');
+      if (!slot) return;
+      event.preventDefault();
+    });
+  },
+
+  isInventoryEquipSlotIndex(slotIndex) {
+    return Number.isInteger(slotIndex) && slotIndex >= 0;
+  },
+
   bindDropZoneHover() {
     const dropZone = document.getElementById('equipDropZone');
     if (!dropZone || dropZone.dataset.eqTooltipReady) return;
@@ -105,7 +154,12 @@ const EquipTooltipModule = {
   },
 
   bindUiEquipHover() {
-    const host = document.getElementById('uiEquipSlots');
+    this.bindUiEquipHost('uiEquipSlots');
+    this.bindUiEquipHost('uiEquipTotemSlots');
+  },
+
+  bindUiEquipHost(hostId) {
+    const host = document.getElementById(hostId);
     if (!host || host.dataset.eqTooltipReady) return;
 
     host.addEventListener('mouseover', (event) => {
@@ -219,11 +273,30 @@ const EquipTooltipModule = {
     return { stat, atk, matk: atk, def, hp };
   },
 
+  getWeaponTooltipLabels(item) {
+    if (typeof WeaponTypeMap === 'undefined' || typeof WeaponTypeMap.getTooltipLabels !== 'function') {
+      return null;
+    }
+    return WeaponTypeMap.getTooltipLabels(item?.itemId || item?.id) || null;
+  },
+
+  getEquipJobLabel(item) {
+    const mapped = this.getWeaponTooltipLabels(item);
+    if (mapped?.job) return mapped.job;
+    return formatEquipReqJobs(item.reqJob, item.reqJob2);
+  },
+
   getCategoryTags(item) {
     const tags = [];
     const hideMainCategory = EQUIP_SUBTYPE_HIDE_MAIN_CATEGORY.has(item.subType);
     const main = EQUIP_MAIN_TYPE_LABEL[item.mainType];
     if (main && !hideMainCategory) tags.push(main);
+
+    const mapped = this.getWeaponTooltipLabels(item);
+    if (mapped?.category) {
+      if (mapped.category !== main) tags.push(mapped.category);
+      return tags.slice(0, 3);
+    }
 
     const sub = EQUIP_SUBTYPE_LABEL[item.subType] || EQUIP_SUBTYPE_LABEL.unknown;
     if (sub && (hideMainCategory || sub !== main)) tags.push(sub);
@@ -253,13 +326,15 @@ const EquipTooltipModule = {
     return tags.slice(0, 3);
   },
 
-  /** 名稱下方限制文字：tradeBlock / equipTradeBlock */
+  /** 名稱下方限制文字：tradeBlock / equipTradeBlock / accountSharable */
   getRestrictionLines(item) {
     const wz = item?.wz || {};
     const lines = [];
 
     if (wz.tradeBlock || wz.equipTradeBlock) {
       lines.push('無法交換');
+    } else if (Number(wz.accountSharable) === 1) {
+      lines.push('只能在同帳號內移動');
     }
 
     return lines;
@@ -409,7 +484,8 @@ const EquipTooltipModule = {
   createDotline(className = 'eq-tip-dotline') {
     const line = document.createElement('div');
     line.className = className;
-    line.style.backgroundImage = `url('${EQUIP_TOOLTIP_ASSETS.frame.dotline}')`;
+    const src = EQUIP_TOOLTIP_ASSETS.equipFrame?.line || EQUIP_TOOLTIP_ASSETS.frame.dotline;
+    if (src) line.style.backgroundImage = `url('${src}')`;
     return line;
   },
 
@@ -461,7 +537,7 @@ const EquipTooltipModule = {
     return row;
   },
 
-  createEnhanceLine(iconSrc, text) {
+  createEnhanceLine(iconSrc, text, options = {}) {
     const row = document.createElement('div');
     row.className = 'eq-tip-enhance-row';
 
@@ -473,10 +549,53 @@ const EquipTooltipModule = {
 
     const span = document.createElement('span');
     span.className = 'eq-tip-enhance-text';
+    if (options.muted) span.classList.add('is-muted');
     span.textContent = text;
     row.appendChild(span);
 
     return row;
+  },
+
+  /** textIcon 資源：支援 {normal,enhanced} 或舊字串 */
+  getEnhanceTextIcon(key, enhanced = false) {
+    const entry = EQUIP_TOOLTIP_ASSETS.textIcon?.[key];
+    if (!entry) return '';
+    if (typeof entry === 'string') return entry;
+    return enhanced ? (entry.enhanced || entry.normal) : (entry.normal || entry.enhanced);
+  },
+
+  canUseScrollEnhance(item) {
+    if (typeof canUseScrollEnhancement === 'function') return canUseScrollEnhancement(item);
+    if (typeof isEnhancementLockedItem === 'function' && isEnhancementLockedItem(item)) return false;
+    if (typeof hasBaseUpgradeSlots === 'function') return hasBaseUpgradeSlots(item);
+    return this.getBaseSlotCount(item) > 0;
+  },
+
+  canUseHammerEnhance(item) {
+    if (typeof canUseHammerEnhancement === 'function') return canUseHammerEnhancement(item);
+    if (typeof isEnhancementLockedItem === 'function' && isEnhancementLockedItem(item)) return false;
+    if (typeof isAtlasOffHandWeapon === 'function' && isAtlasOffHandWeapon(item)) return false;
+    if (!this.canUseScrollEnhance(item)) return false;
+    return this.getPlatinumHammerMax(item) > 0;
+  },
+
+  /** 裝備類型是否可擁有主潛能（尚未賦予也算「可」→顯示「無」） */
+  itemCanHaveMainPotential(item) {
+    if (typeof canHaveMainPotential === 'function') return canHaveMainPotential(item);
+    if (!item) return false;
+    if (typeof isEnhancementLockedItem === 'function' && isEnhancementLockedItem(item)) return false;
+    if (typeof isMedalItem === 'function' && isMedalItem(item)) return false;
+    if (typeof isTotemItem === 'function' && isTotemItem(item)) return false;
+    if (typeof isPocketItem === 'function' && isPocketItem(item)) return false;
+    return true;
+  },
+
+  /** 裝備類型是否可擁有附加潛能 */
+  itemCanHaveAdditionalPotential(item) {
+    if (typeof canHaveAdditionalPotential === 'function') return canHaveAdditionalPotential(item);
+    if (!this.itemCanHaveMainPotential(item)) return false;
+    if (typeof isPinItem === 'function' && isPinItem(item)) return false;
+    return true;
   },
 
   renderStatValue(totalCell, breakdownCell, line) {
@@ -528,7 +647,7 @@ const EquipTooltipModule = {
       this.starEffectTimer = null;
     }
     this.starEffectFrame = 0;
-    this.starEffectImg = null;
+    this.starEffectImgs = [];
   },
 
   applyStarEffectPosition(effectImg) {
@@ -547,16 +666,28 @@ const EquipTooltipModule = {
   },
 
   startStarEffect(effectImg) {
-    this.stopStarEffect();
-    if (!effectImg || typeof EQUIP_TOOLTIP_STAR_EFFECT === 'undefined') return;
+    this.startStarEffects(effectImg ? [effectImg] : []);
+  },
 
-    this.starEffectImg = effectImg;
-    this.applyStarEffectPosition(effectImg);
-    this.applyStarEffectFrame(effectImg, 0);
+  startStarEffects(effectImgs) {
+    this.stopStarEffect();
+    if (typeof EQUIP_TOOLTIP_STAR_EFFECT === 'undefined') return;
+
+    const list = (Array.isArray(effectImgs) ? effectImgs : [effectImgs])
+      .filter((img) => img instanceof HTMLElement);
+    if (!list.length) return;
+
+    this.starEffectImgs = list;
+    list.forEach((img) => {
+      this.applyStarEffectPosition(img);
+      this.applyStarEffectFrame(img, 0);
+    });
     this.starEffectFrame = 1;
     this.starEffectTimer = window.setInterval(() => {
-      if (!this.starEffectImg) return;
-      this.applyStarEffectFrame(this.starEffectImg, this.starEffectFrame);
+      if (!this.starEffectImgs.length) return;
+      this.starEffectImgs.forEach((img) => {
+        this.applyStarEffectFrame(img, this.starEffectFrame);
+      });
       this.starEffectFrame += 1;
     }, EQUIP_TOOLTIP_STAR_EFFECT.frameDelayMs);
   },
@@ -649,6 +780,25 @@ const EquipTooltipModule = {
     });
   },
 
+  /**
+   * 潛能空狀態列（無／無法強化）；有詞條時仍走 renderPotentialBlock
+   */
+  renderPotentialStatusLine(title, iconKey, canHave, hasLines) {
+    if (hasLines) return null;
+    if (!canHave) {
+      return this.createEnhanceLine(
+        this.getEnhanceTextIcon(iconKey, false),
+        `${title} : 無法強化`,
+        { muted: true },
+      );
+    }
+    return this.createEnhanceLine(
+      this.getEnhanceTextIcon(iconKey, false),
+      `${title} : 無`,
+      { muted: true },
+    );
+  },
+
   renderPotentialBlock(container, title, potState) {
     if (!potState?.lines?.length) return;
 
@@ -730,11 +880,8 @@ const EquipTooltipModule = {
   },
 
   canShowEnhancementUi(item) {
-    if (typeof canUseStarForce === 'function' && canUseStarForce(item)) return true;
-    if (typeof hasBaseUpgradeSlots === 'function') {
-      return hasBaseUpgradeSlots(item);
-    }
-    return (item.baseMaxUpgradeSlots ?? item.maxUpgradeSlots ?? 0) > 0;
+    // 強化列一律顯示（無法強化／無／已強化三種狀態）
+    return Boolean(item);
   },
 
   getBonusStatTooltipIconIndex(line) {
@@ -746,15 +893,35 @@ const EquipTooltipModule = {
   },
 
   renderBonusStatDetail(item) {
-    if (typeof canUseBonusStat === 'function' && !canUseBonusStat(item)) return null;
+    const canBonus = typeof canUseBonusStat === 'function'
+      ? canUseBonusStat(item)
+      : true;
     const lines = item?.bonusStat?.lines || [];
-    if (!lines.length) return null;
+    const hasLines = lines.length > 0;
 
     const block = document.createElement('div');
     block.className = 'eq-tip-bonus-block';
 
+    if (!canBonus) {
+      block.appendChild(this.createEnhanceLine(
+        this.getEnhanceTextIcon('bonusStat', false),
+        '追加屬性 : 無法強化',
+        { muted: true },
+      ));
+      return block;
+    }
+
+    if (!hasLines) {
+      block.appendChild(this.createEnhanceLine(
+        this.getEnhanceTextIcon('bonusStat', false),
+        '追加屬性 : 無',
+        { muted: true },
+      ));
+      return block;
+    }
+
     block.appendChild(this.createEnhanceLine(
-      EQUIP_TOOLTIP_ASSETS.textIcon.bonusStat,
+      this.getEnhanceTextIcon('bonusStat', true),
       '追加屬性',
     ));
 
@@ -800,38 +967,78 @@ const EquipTooltipModule = {
     const enhanceBlock = document.createElement('section');
     enhanceBlock.className = 'eq-tip-block eq-tip-enhance-block';
 
-    const showStarForce = typeof canUseStarForce === 'function'
+    // 星力
+    const canStar = typeof canUseStarForce === 'function'
       ? canUseStarForce(item)
       : true;
-    if (showStarForce) {
+    if (!canStar) {
       enhanceBlock.appendChild(this.createEnhanceLine(
-        EQUIP_TOOLTIP_ASSETS.textIcon.starForce,
-        `星力：${starCount}星 (最多${maxStar}星)`,
+        this.getEnhanceTextIcon('starForce', false),
+        '星力 : 無法強化',
+        { muted: true },
+      ));
+    } else if (!(starCount > 0)) {
+      enhanceBlock.appendChild(this.createEnhanceLine(
+        this.getEnhanceTextIcon('starForce', false),
+        `星力 : 無 (最多${maxStar}星)`,
+        { muted: true },
+      ));
+    } else {
+      enhanceBlock.appendChild(this.createEnhanceLine(
+        this.getEnhanceTextIcon('starForce', true),
+        `星力 : ${starCount}星 (最多${maxStar}星)`,
       ));
     }
 
-    const totalSlots = this.getTotalSlotCount(item);
-    if (totalSlots > 0) {
+    // 卷軸
+    const canScroll = this.canUseScrollEnhance(item);
+    if (!canScroll) {
+      enhanceBlock.appendChild(this.createEnhanceLine(
+        this.getEnhanceTextIcon('scroll', false),
+        '卷軸 : 無法強化',
+        { muted: true },
+      ));
+    } else {
       const scrollUsed = item.scrollUsed || 0;
       const scrollRemain = this.getScrollRemain(item);
       const scrollRecover = this.getScrollRecoverable(item);
-      const scrollText = `卷軸：${scrollUsed}次 (剩餘${scrollRemain}次, 可恢復${scrollRecover}次)`;
-
-      enhanceBlock.appendChild(this.createEnhanceLine(
-        EQUIP_TOOLTIP_ASSETS.textIcon.scroll,
-        scrollText,
-      ));
+      const slotInfo = `(剩餘${scrollRemain}次, 可恢復${scrollRecover}次)`;
+      if (scrollUsed <= 0) {
+        enhanceBlock.appendChild(this.createEnhanceLine(
+          this.getEnhanceTextIcon('scroll', false),
+          `卷軸 : 無 ${slotInfo}`,
+          { muted: true },
+        ));
+      } else {
+        enhanceBlock.appendChild(this.createEnhanceLine(
+          this.getEnhanceTextIcon('scroll', true),
+          `卷軸 : ${scrollUsed}次 ${slotInfo}`,
+        ));
+      }
     }
 
-    const isAtlas = typeof isAtlasOffHandWeapon === 'function' && isAtlasOffHandWeapon(item);
-    const platinumMax = this.getPlatinumHammerMax(item);
-    if (!isAtlas && platinumMax > 0) {
+    // 白金鐵鎚
+    const canHammer = this.canUseHammerEnhance(item);
+    if (!canHammer) {
+      enhanceBlock.appendChild(this.createEnhanceLine(
+        this.getEnhanceTextIcon('hammer', false),
+        '白金鐵鎚 : 無法強化',
+        { muted: true },
+      ));
+    } else {
       const hammerUsed = this.getHammerUsedCount(item);
+      const platinumMax = this.getPlatinumHammerMax(item);
+      const hammerEnhanced = hammerUsed > 0;
       enhanceBlock.appendChild(this.createEnhanceLine(
-        EQUIP_TOOLTIP_ASSETS.textIcon.hammer,
-        `白金鐵鎚：提煉 ${hammerUsed}/${platinumMax}`,
+        this.getEnhanceTextIcon('hammer', hammerEnhanced),
+        `白金鐵鎚 : 提煉 ${hammerUsed}/${platinumMax}`,
+        { muted: !hammerEnhanced },
       ));
     }
+
+    // 追加屬性（無／無法強化／已有詞條）
+    const bonusDetail = this.renderBonusStatDetail(item);
+    if (bonusDetail) enhanceBlock.appendChild(bonusDetail);
 
     return enhanceBlock;
   },
@@ -893,7 +1100,7 @@ const EquipTooltipModule = {
 
     const color = EQUIP_TOOLTIP_FONT.exceptional || '#ff3333';
     const head = this.createEnhanceLine(
-      EQUIP_TOOLTIP_ASSETS.textIcon.exceptional,
+      this.getEnhanceTextIcon('exceptional', true),
       `卓越強化:  ${level}次`,
     );
     const headText = head.querySelector('.eq-tip-enhance-text');
@@ -932,7 +1139,7 @@ const EquipTooltipModule = {
     block.className = 'eq-tip-block eq-tip-soul-block';
 
     const head = this.createEnhanceLine(
-      EQUIP_TOOLTIP_ASSETS.textIcon.soulWeapon,
+      this.getEnhanceTextIcon('soulWeapon', false),
       this.getSoulWeaponDisplayName(item, soul),
     );
     const headText = head.querySelector('.eq-tip-enhance-text');
@@ -962,10 +1169,141 @@ const EquipTooltipModule = {
     return true;
   },
 
+  formatAtkPowGlyphs(delta) {
+    const glyphs = ['sign'];
+    const abs = Math.abs(Math.round(Number(delta) || 0));
+    if (abs === 0) {
+      glyphs.push('0');
+      return glyphs;
+    }
+    const yi = Math.floor(abs / 100000000);
+    const wan = Math.floor((abs % 100000000) / 10000);
+    const rest = abs % 10000;
+    if (yi > 0) {
+      glyphs.push(...String(yi).split(''), 'b');
+    }
+    if (wan > 0) {
+      glyphs.push(...String(wan).split(''), 'a');
+    }
+    if (rest > 0 || (yi === 0 && wan === 0)) {
+      glyphs.push(...String(rest).split(''));
+    }
+    return glyphs;
+  },
+
+  computeAtkPowDelta(item) {
+    if (typeof EquipStatPanel === 'undefined' || typeof CombatPower === 'undefined') return 0;
+    if (typeof CharacterCombatPanel !== 'undefined') {
+      CharacterCombatPanel.syncToCombatPower?.();
+    }
+    const powerOf = (snapshot) => CombatPower.powerValue(CombatPower.calculateCurrentPower(snapshot));
+    let current = 0;
+    let next = 0;
+    try {
+      current = powerOf(EquipStatPanel.buildSnapshot());
+      const previewEntries = (typeof UiEquipModule !== 'undefined'
+        && typeof UiEquipModule.previewWearEntries === 'function')
+        ? UiEquipModule.previewWearEntries(item, item)
+        : null;
+      next = previewEntries
+        ? powerOf(EquipStatPanel.buildSnapshot(previewEntries))
+        : current;
+    } catch (err) {
+      console.error('[EquipTooltip] atkPow delta', err);
+      return 0;
+    }
+    return next - current;
+  },
+
+  renderAtkPowDelta(item) {
+    const wrap = document.createElement('div');
+    wrap.className = 'eq-tip-atkpow';
+    const delta = this.computeAtkPowDelta(item);
+    const tone = delta < 0 ? 'minus' : 'plus';
+    const glyphFn = EQUIP_TOOLTIP_ASSETS.atkPow?.glyph;
+    this.formatAtkPowGlyphs(delta).forEach((name) => {
+      const img = document.createElement('img');
+      img.className = 'eq-tip-atkpow-glyph';
+      img.src = glyphFn ? glyphFn(tone, name) : '';
+      img.alt = '';
+      wrap.appendChild(img);
+    });
+    wrap.dataset.delta = String(delta);
+    return wrap;
+  },
+
+  /**
+   * 機器人 tooltip 下半：外型圖 + 等級 + 說明
+   */
+  renderAndroidTooltipBody(root, item) {
+    const lookSrc = item.androidLook
+      || `images/Android/${item.itemId || item.id}A.png`;
+    const shortName = item.androidShortName
+      || String(item.name || '').replace(/機器人$/, '')
+      || item.name
+      || '機器人';
+    const grade = Number(item.androidGrade) || 1;
+
+    const lookBlock = document.createElement('div');
+    lookBlock.className = 'eq-tip-android-look-block';
+
+    const lookLabel = document.createElement('div');
+    lookLabel.className = 'eq-tip-android-look-label';
+    lookLabel.textContent = '外型:';
+    lookBlock.appendChild(lookLabel);
+
+    const lookImg = document.createElement('img');
+    lookImg.className = 'eq-tip-android-look';
+    lookImg.src = lookSrc;
+    lookImg.alt = `${shortName}外型`;
+    lookImg.draggable = false;
+    lookBlock.appendChild(lookImg);
+    root.appendChild(lookBlock);
+
+    const gradeEl = document.createElement('div');
+    gradeEl.className = 'eq-tip-android-grade';
+    gradeEl.textContent = `等級：${grade}`;
+    root.appendChild(gradeEl);
+
+    const descEl = document.createElement('div');
+    descEl.className = 'eq-tip-android-desc';
+    const shopEnabled = item.androidShop !== false;
+    const parts = [
+      `外型與${shortName}相仿的機器人，`,
+    ];
+    if (shopEnabled) {
+      parts.push('在機器人裝備視窗按下');
+      parts.push({ em: '前往商店' });
+      parts.push('按鈕就可以使用雜貨商店功能。');
+    }
+    parts.push('需要同時裝置');
+    parts.push({ em: '機器人心臟' });
+    parts.push('才能運作。機器人等級需要等於或高過於機器人心臟才可裝置。');
+
+    parts.forEach((part) => {
+      if (typeof part === 'string') {
+        descEl.appendChild(document.createTextNode(part));
+        return;
+      }
+      const em = document.createElement('span');
+      em.className = 'eq-tip-android-em';
+      em.textContent = part.em;
+      descEl.appendChild(em);
+    });
+    root.appendChild(descEl);
+
+    if (item.androidNonHuman) {
+      const note = document.createElement('div');
+      note.className = 'eq-tip-android-note';
+      note.textContent = '不可變更髮型與臉型，是即使穿戴現金道具也無法變更外型的非人類類型機器人。';
+      root.appendChild(note);
+    }
+  },
+
   renderContent(root, item, slotIndex) {
     root.innerHTML = '';
 
-    const isEquipped = currentEnchantItem?.slotIndex === slotIndex;
+    const isEquipped = typeof slotIndex === 'string' && slotIndex.startsWith('body:');
     const tags = this.getCategoryTags(item);
     const statLines = this.buildStatSegments(item);
     const maxStar = item.maxStar || 30;
@@ -996,7 +1334,17 @@ const EquipTooltipModule = {
       : (typeof getCatValleyLevel === 'function'
         ? getCatValleyLevel(item)
         : (Number(item.catValleyLevel) || 0));
-    if (catValleyLevel > 0) {
+    const showCatValleyPlus = typeof isCatValleyPotentialItem === 'function'
+      && isCatValleyPotentialItem(item)
+      ? (typeof isCatValleyMedalEnhanceStarted === 'function'
+        ? isCatValleyMedalEnhanceStarted(item)
+        : catValleyLevel > 0)
+      : (typeof isCatValleyTotemItem === 'function'
+        && isCatValleyTotemItem(item)
+        && typeof isCatValleyTotemStarted === 'function'
+        ? isCatValleyTotemStarted(item)
+        : catValleyLevel > 0);
+    if (showCatValleyPlus) {
       const enhanceEl = document.createElement('div');
       enhanceEl.className = 'eq-tip-cat-valley-enhance';
       enhanceEl.textContent = `強化+${catValleyLevel}的`;
@@ -1053,11 +1401,17 @@ const EquipTooltipModule = {
     equippedEl.className = 'eq-tip-equipped';
     equippedEl.textContent = '戰鬥力提升量';
     headMeta.appendChild(equippedEl);
-    
-    const imgEl = document.createElement('img');
-    imgEl.src = 'images/UIToolTip/UIToolTip_Item_Equip_imgFont_atkPow_equipped.png'; 
-    imgEl.className = 'eq-tip-equipped-img';
-    headMeta.appendChild(imgEl);
+
+    if (isEquipped) {
+      const imgEl = document.createElement('img');
+      imgEl.src = EQUIP_TOOLTIP_ASSETS.atkPow?.equipped
+        || 'images/UIToolTip/UIToolTip_Item_Equip_imgFont_atkPow_equipped.png';
+      imgEl.className = 'eq-tip-equipped-img';
+      imgEl.alt = '目前穿戴中的裝備';
+      headMeta.appendChild(imgEl);
+    } else {
+      headMeta.appendChild(this.renderAtkPowDelta(item));
+    }
 
     const tagRow = document.createElement('div');
     tagRow.className = 'eq-tip-tags';
@@ -1071,15 +1425,24 @@ const EquipTooltipModule = {
     reqBlock.className = 'eq-tip-req-block';
     reqBlock.appendChild(this.createInfoLine(
       '裝備職業',
-      formatEquipReqJobs(item.reqJob, item.reqJob2),
+      this.getEquipJobLabel(item),
     ));
-    reqBlock.appendChild(this.createInfoLine(
-      '要求等級',
-      `Lv. ${item.reqLevel || 0}`,
-    ));
+    const reqLevel = Number(item.reqLevel) || 0;
+    if (reqLevel > 0) {
+      reqBlock.appendChild(this.createInfoLine(
+        '要求等級',
+        `Lv. ${reqLevel}`,
+      ));
+    }
     root.appendChild(reqBlock);
 
     root.appendChild(this.createDotline());
+
+    // 機器人：上半與一般相同，下半改為外型／說明（不顯示屬性與強化列）
+    if (typeof isAndroidItem === 'function' ? isAndroidItem(item) : item.subType === 'android') {
+      this.renderAndroidTooltipBody(root, item);
+      return starEffectImg;
+    }
 
     if (setLabel) {
       const setBlock = document.createElement('div');
@@ -1092,14 +1455,24 @@ const EquipTooltipModule = {
         labelIcon: EQUIP_TOOLTIP_ASSETS.textIcon.setGuide,
       }));
 
-      const isDestinyWeapon = item.weaponTier === 'destiny'
-        && String(item.name || '').includes('命運');
+      const itemName = String(item.name || '');
+      const isDestinyWeapon = item.weaponTier === 'destiny' && itemName.includes('命運');
+      const isGenesisWeapon = item.weaponTier === 'destiny' && itemName.includes('創世');
       if (isDestinyWeapon) {
         setBlock.appendChild(this.createInfoLine(
           '可使用技能',
           '超越: 決戰意志, 超越: 不屈決意',
           { valueTone: 'label' },
         ));
+      }
+      if (isGenesisWeapon) {
+        setBlock.appendChild(this.createInfoLine(
+          '可使用技能',
+          '破壞的雅達巴特, 創造的伊恩',
+          { valueTone: 'label' },
+        ));
+      }
+      if (isDestinyWeapon || isGenesisWeapon) {
         const attackSpeed = Number(item.wz?.attackSpeed) || 0;
         if (attackSpeed > 0) {
           setBlock.appendChild(this.createInfoLine(
@@ -1143,24 +1516,36 @@ const EquipTooltipModule = {
       root.appendChild(this.renderEnhanceBlock(item, starCount, maxStar));
     }
 
-    const bonusDetail = this.renderBonusStatDetail(item);
-    if (bonusDetail) {
-      const bonusWrap = document.createElement('section');
-      bonusWrap.className = 'eq-tip-block eq-tip-enhance-block eq-tip-bonus-wrap';
-      bonusWrap.appendChild(bonusDetail);
-      root.appendChild(bonusWrap);
-    }
-
     const hasMainPotential = !!(item.potential?.lines?.length);
     const hasAddPotential = !!(item.additionalPotential?.lines?.length);
-    if (hasMainPotential || hasAddPotential) {
-      root.appendChild(this.createDotline());
-    }
+    const canMainPot = this.itemCanHaveMainPotential(item);
+    const canAddPot = this.itemCanHaveAdditionalPotential(item);
+
+    // 潛能區一律顯示（無／無法強化／詞條明細）
+    root.appendChild(this.createDotline());
+
     if (hasMainPotential) {
       this.renderPotentialBlock(root, '潛在能力', item.potential);
+    } else {
+      const mainStatus = this.renderPotentialStatusLine(
+        '潛在能力',
+        'potential',
+        canMainPot,
+        false,
+      );
+      if (mainStatus) root.appendChild(mainStatus);
     }
+
     if (hasAddPotential) {
       this.renderPotentialBlock(root, '附加潛在能力', item.additionalPotential);
+    } else {
+      const addStatus = this.renderPotentialStatusLine(
+        '附加潛在能力',
+        'additionalPotential',
+        canAddPot,
+        false,
+      );
+      if (addStatus) root.appendChild(addStatus);
     }
 
     const hasExceptional = typeof getExceptionalLevel === 'function' && getExceptionalLevel(item) > 0;
@@ -1195,23 +1580,33 @@ const EquipTooltipModule = {
   },
 
   buildFrame(contentNode) {
+    const assets = EQUIP_TOOLTIP_ASSETS.equipFrame || {};
     const frame = document.createElement('div');
     frame.className = 'eq-tooltip-frame';
 
-    const slices = ['nw', 'n', 'ne', 'w', 'c', 'e', 'sw', 's', 'se'];
-    slices.forEach((key) => {
-      const slice = document.createElement('div');
-      slice.className = `eq-tooltip-slice eq-tooltip-slice-${key}`;
-      const asset = EQUIP_TOOLTIP_ASSETS.frame[key];
-      if (asset) slice.style.backgroundImage = `url('${asset}')`;
-      frame.appendChild(slice);
-    });
+    const top = document.createElement('div');
+    top.className = 'eq-tooltip-frame-top';
+    if (assets.top) top.style.backgroundImage = `url('${assets.top}')`;
+
+    const midWrap = document.createElement('div');
+    midWrap.className = 'eq-tooltip-mid-wrap';
+    const mid = document.createElement('div');
+    mid.className = 'eq-tooltip-frame-mid';
+    if (assets.mid) mid.style.backgroundImage = `url('${assets.mid}')`;
+    midWrap.appendChild(mid);
+
+    const btm = document.createElement('div');
+    btm.className = 'eq-tooltip-frame-btm';
+    if (assets.btm) btm.style.backgroundImage = `url('${assets.btm}')`;
 
     const body = document.createElement('div');
     body.className = 'eq-tooltip-body';
     body.appendChild(contentNode);
-    frame.appendChild(body);
+    midWrap.appendChild(body);
 
+    frame.appendChild(top);
+    frame.appendChild(midWrap);
+    frame.appendChild(btm);
     return frame;
   },
 
@@ -1243,10 +1638,68 @@ const EquipTooltipModule = {
     tooltip.setAttribute('aria-hidden', 'false');
 
     this.position(tooltip, anchorEl);
-    if (starEffectImg) {
-      window.requestAnimationFrame(() => this.startStarEffect(starEffectImg));
-    }
     this.hoverSlot = { itemId, slotIndex };
+    const compareStarEffectImg = this.updateSidePanel(item, slotIndex);
+    this.positionSet(tooltip);
+    window.requestAnimationFrame(() => this.positionSet(tooltip));
+    window.requestAnimationFrame(() => {
+      this.startStarEffects([starEffectImg, compareStarEffectImg]);
+    });
+  },
+
+  /**
+   * 側欄：物品欄 hover 預設顯示身上同部位裝備；按住右鍵改顯示套裝效果。
+   * 強化槽／裝備欄 hover 維持只顯示套裝效果。
+   * @returns {HTMLImageElement|null} 比對裝備的星力特效圖（若有）
+   */
+  updateSidePanel(item, slotIndex) {
+    if (this.isInventoryEquipSlotIndex(slotIndex) && !this.rmbHeld) {
+      return this.renderCompareTooltip(item);
+    }
+    this.renderSetTooltip(item);
+    return null;
+  },
+
+  refreshSidePanel() {
+    if (!this.hoverSlot) return;
+    const { itemId, slotIndex } = this.hoverSlot;
+    const item = this.resolveItemState(itemId, slotIndex);
+    if (!item) return;
+    const mainStar = document.querySelector('#equipTooltip .eq-tip-star-effect');
+    const compareStar = this.updateSidePanel(item, slotIndex);
+    this.positionSet(document.getElementById('equipTooltip'));
+    this.startStarEffects([mainStar, compareStar]);
+  },
+
+  /** 在套裝提示位置顯示身上同部位裝備的 UIToolTip */
+  renderCompareTooltip(bagItem) {
+    const el = document.getElementById('equipSetTooltip');
+    if (!el) return null;
+
+    const worn = typeof UiEquipModule !== 'undefined'
+      ? UiEquipModule.findWornCompareEntry?.(bagItem)
+      : null;
+    if (!worn?.itemId) {
+      this.hideSetTooltip();
+      return null;
+    }
+
+    const bodySlotKey = `body:${worn.slotId}`;
+    const wornItem = this.resolveItemState(worn.itemId, bodySlotKey, worn.state);
+    if (!wornItem) {
+      this.hideSetTooltip();
+      return null;
+    }
+
+    const content = document.createElement('div');
+    content.className = 'eq-tooltip-content';
+    const starEffectImg = this.renderContent(content, wornItem, bodySlotKey);
+
+    el.innerHTML = '';
+    el.appendChild(this.buildFrame(content));
+    el.classList.remove('hidden');
+    el.setAttribute('aria-hidden', 'false');
+    return starEffectImg || null;
   },
 
   position(tooltip, anchorEl) {
@@ -1264,6 +1717,165 @@ const EquipTooltipModule = {
 
     tooltip.style.left = `${left}px`;
     tooltip.style.top = `${top}px`;
+  },
+
+  hideSetTooltip() {
+    const el = document.getElementById('equipSetTooltip');
+    if (!el) return;
+    el.classList.add('hidden');
+    el.setAttribute('aria-hidden', 'true');
+    el.style.removeProperty('left');
+    el.style.removeProperty('top');
+    el.innerHTML = '';
+  },
+
+  renderSetTooltip(item) {
+    const el = document.getElementById('equipSetTooltip');
+    if (!el) return;
+    const setId = Number(item?.wz?.setItemID) || 0;
+    const snap = typeof getEquipSetSnapshot === 'function' ? getEquipSetSnapshot(setId) : null;
+    if (!snap) {
+      this.hideSetTooltip();
+      return;
+    }
+
+    const assets = typeof EQUIP_SET_TOOLTIP_ASSETS !== 'undefined' ? EQUIP_SET_TOOLTIP_ASSETS : {};
+    const frame = document.createElement('div');
+    frame.className = 'eq-set-frame';
+
+    const top = document.createElement('div');
+    top.className = 'eq-set-frame-top';
+    if (assets.frame?.top) top.style.backgroundImage = `url('${assets.frame.top}')`;
+
+    const midWrap = document.createElement('div');
+    midWrap.className = 'eq-set-mid-wrap';
+    const mid = document.createElement('div');
+    mid.className = 'eq-set-frame-mid';
+    if (assets.frame?.mid) mid.style.backgroundImage = `url('${assets.frame.mid}')`;
+    midWrap.appendChild(mid);
+
+    const btm = document.createElement('div');
+    btm.className = 'eq-set-frame-btm';
+    if (assets.frame?.btm) btm.style.backgroundImage = `url('${assets.frame.btm}')`;
+
+    const body = document.createElement('div');
+    body.className = 'eq-set-body';
+
+    const head = document.createElement('div');
+    head.className = 'eq-set-head';
+    const icon = document.createElement('img');
+    icon.className = 'eq-set-icon';
+    icon.src = assets.icon || '';
+    icon.alt = '';
+    const title = document.createElement('div');
+    title.className = 'eq-set-title';
+    title.textContent = snap.name;
+    const count = document.createElement('div');
+    count.className = 'eq-set-count';
+    count.textContent = `${snap.wornCount} / ${snap.total}`;
+    head.appendChild(icon);
+    head.appendChild(title);
+    head.appendChild(count);
+    body.appendChild(head);
+
+    const lineTop = document.createElement('div');
+    lineTop.className = 'eq-set-line';
+    if (assets.frame?.line) lineTop.style.backgroundImage = `url('${assets.frame.line}')`;
+    body.appendChild(lineTop);
+
+    const list = document.createElement('div');
+    list.className = 'eq-set-list';
+    snap.rows.forEach((row) => {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'eq-set-row';
+      if (row.equipped) rowEl.classList.add('is-equipped');
+
+      const slotEl = document.createElement('span');
+      slotEl.className = 'eq-set-slot';
+      slotEl.textContent = row.slot;
+
+      const nameWrap = document.createElement('span');
+      nameWrap.className = 'eq-set-name';
+      if (row.lucky) {
+        nameWrap.classList.add('is-lucky');
+        nameWrap.classList.add(row.luckyKind === 'genesis' ? 'is-genesis' : 'is-destiny');
+        const luckyIcon = document.createElement('img');
+        luckyIcon.className = 'eq-set-lucky-icon';
+        luckyIcon.src = assets.luckyIcon || '';
+        luckyIcon.alt = '';
+        const text = document.createElement('span');
+        text.className = 'eq-set-lucky-text';
+        text.textContent = row.displayName;
+        nameWrap.appendChild(text);
+        nameWrap.appendChild(luckyIcon);
+      } else {
+        nameWrap.textContent = row.displayName;
+      }
+
+      rowEl.appendChild(slotEl);
+      rowEl.appendChild(nameWrap);
+      list.appendChild(rowEl);
+    });
+    body.appendChild(list);
+
+    const lineMid = document.createElement('div');
+    lineMid.className = 'eq-set-line';
+    if (assets.frame?.line) lineMid.style.backgroundImage = `url('${assets.frame.line}')`;
+    body.appendChild(lineMid);
+
+    const effects = document.createElement('div');
+    effects.className = 'eq-set-effects';
+    snap.effects.forEach((block) => {
+      const group = document.createElement('div');
+      group.className = `eq-set-effect${block.active ? ' is-active' : ''}`;
+      const label = document.createElement('div');
+      label.className = 'eq-set-effect-label';
+      label.textContent = `${block.count}套裝效果`;
+      const linesWrap = document.createElement('div');
+      linesWrap.className = 'eq-set-effect-lines';
+      block.lines.forEach((line) => {
+        const lineEl = document.createElement('div');
+        lineEl.className = 'eq-set-effect-line';
+        lineEl.textContent = line;
+        linesWrap.appendChild(lineEl);
+      });
+      group.appendChild(label);
+      group.appendChild(linesWrap);
+      effects.appendChild(group);
+    });
+    body.appendChild(effects);
+    midWrap.appendChild(body);
+
+    frame.appendChild(top);
+    frame.appendChild(midWrap);
+    frame.appendChild(btm);
+    el.innerHTML = '';
+    el.appendChild(frame);
+    el.classList.remove('hidden');
+    el.setAttribute('aria-hidden', 'false');
+  },
+
+  positionSet(itemTooltip) {
+    const el = document.getElementById('equipSetTooltip');
+    if (!el || el.classList.contains('hidden') || !itemTooltip) return;
+
+    const gap = 1;
+    const rect = itemTooltip.getBoundingClientRect();
+    let left = rect.right + gap;
+    let top = rect.top;
+    if (left + el.offsetWidth > window.innerWidth - 8) {
+      left = rect.left - el.offsetWidth - gap;
+    }
+    if (left < 8) left = 8;
+    const maxTop = window.innerHeight - el.offsetHeight - 8;
+    top = Math.max(8, Math.min(top, maxTop));
+    el.style.left = `${left}px`;
+    el.style.top = `${top}px`;
+
+    // 側欄因視窗底部被上推時，裝備 tooltip 上緣跟著對齊
+    if (top < rect.top - 0.5) {
+      itemTooltip.style.top = `${top}px`;
+    }
   },
 
   refreshIfShowing() {
@@ -1288,11 +1900,17 @@ const EquipTooltipModule = {
     }
 
     if (typeof slotIndex === 'string' && slotIndex.startsWith('body:')) {
-      const host = document.getElementById('uiEquipSlots');
       const uiSlot = slotIndex.slice(5);
-      const slot = host?.querySelector(`.uiequip-slot[data-slot="${uiSlot}"]`);
-      if (slot && host?._eqTooltipSlot === slot) {
-        this.show(slot, itemId, slotIndex);
+      const hosts = [
+        document.getElementById('uiEquipSlots'),
+        document.getElementById('uiEquipTotemSlots'),
+      ];
+      for (const host of hosts) {
+        const slot = host?.querySelector(`.uiequip-slot[data-slot="${uiSlot}"]`);
+        if (slot && host?._eqTooltipSlot === slot) {
+          this.show(slot, itemId, slotIndex);
+          return;
+        }
       }
       return;
     }
@@ -1332,13 +1950,17 @@ const EquipTooltipModule = {
     const grid = document.getElementById('inventoryGrid');
     const dropZone = document.getElementById('equipDropZone');
     const bodyHost = document.getElementById('uiEquipSlots');
+    const totemHost = document.getElementById('uiEquipTotemSlots');
     if (grid) grid._eqTooltipSlot = null;
     if (dropZone) dropZone._eqTooltipActive = false;
     if (bodyHost) bodyHost._eqTooltipSlot = null;
+    if (totemHost) totemHost._eqTooltipSlot = null;
 
     this.pinned = false;
     this.pinAnchor = null;
+    this.rmbHeld = false;
     this.stopStarEffect();
+    this.hideSetTooltip();
     if (!tooltip) return;
     tooltip.classList.add('hidden');
     tooltip.setAttribute('aria-hidden', 'true');

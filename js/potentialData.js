@@ -361,10 +361,18 @@ function formatPotentialDisplayLabel(label) {
   return formatPotentialCooldownLabel(formatPotentialBossDamageLabel(label));
 }
 
+/** 詞條 value 已含正負號時不再加 +（例：MP 消耗 -17%） */
+function formatPotentialLineValue(value) {
+  const v = String(value ?? '').trim();
+  if (!v) return '';
+  if (/^[+-]/.test(v)) return v;
+  return `+${v}`;
+}
+
 function formatPotentialLineDisplay(line) {
   if (!line?.value) return formatPotentialDisplayLabel(line.label);
   const label = formatPotentialDisplayLabel(line.label.replace(/%$/, ''));
-  return `${label} +${line.value}`;
+  return `${label} ${formatPotentialLineValue(line.value)}`;
 }
 
 function splitPotentialLineDisplay(line) {
@@ -379,7 +387,7 @@ function splitPotentialLineDisplay(line) {
 
   return {
     label,
-    value: `+${line.value}`,
+    value: formatPotentialLineValue(line.value),
     alignGroup
   };
 }

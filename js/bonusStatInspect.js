@@ -472,7 +472,12 @@ const BonusStatInspectModule = {
     this.starFireType = this.getCurrentStarFireTypeFromModule();
 
     const overlay = document.getElementById('bsInspectOverlay');
-    if (overlay) overlay.classList.remove('hidden');
+    if (overlay) {
+      document.body.appendChild(overlay);
+      overlay.style.zIndex = '30000';
+      overlay.classList.remove('hidden');
+    }
+    document.body.classList.add('ms-inspect-open');
 
     this.isOpen = true;
     this.render();
@@ -482,5 +487,8 @@ const BonusStatInspectModule = {
     const overlay = document.getElementById('bsInspectOverlay');
     if (overlay) overlay.classList.add('hidden');
     this.isOpen = false;
+    if (typeof PotentialInspectModule === 'undefined' || !PotentialInspectModule.isOpen) {
+      document.body.classList.remove('ms-inspect-open');
+    }
   },
 };

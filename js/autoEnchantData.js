@@ -1490,7 +1490,7 @@ const AUTO_ENCHANT_LOOP_DELAY_MS = 100;
 
 /** 超速模式 : 調整速度（每輪間隔 + 每輪步數） */
 const AUTO_ENCHANT_OVERSPEED_LOOP_DELAY_MS = 5;
-const AUTO_ENCHANT_OVERSPEED_BATCH_SIZE = 50;
+const AUTO_ENCHANT_OVERSPEED_BATCH_SIZE = 20;
 
 function aePotGetAutoEnchantLoopDelayMs(overspeedMode) {
   if (overspeedMode) {

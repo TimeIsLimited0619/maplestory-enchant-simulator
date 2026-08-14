@@ -1,12 +1,12 @@
 /**
- * 貓谷特殊強化 — 背包按鈕 UI
+ * 貓谷特殊強化 — 強化台側欄按鈕 UI（卓越下方）
  * 按鈕常駐顯示；可用時 normal，不可用時 disabled。
  * 不朽的遺產／喵喵天使：點擊展開潛能操作子選單。
  */
 const CatValleyEnhanceModule = {
-  BUTTON_ID: 'invCatValleyBtn',
-  SUBMENU_ID: 'invCatValleySubmenu',
-  MASK_ID: 'invCatValleyMask',
+  BUTTON_ID: 'catValleyBtn',
+  SUBMENU_ID: 'catValleySubmenu',
+  MASK_ID: 'catValleyMask',
   submenuOpen: false,
   autoRunning: false,
   autoTarget: null,
@@ -30,6 +30,7 @@ const CatValleyEnhanceModule = {
   AUTO_ACTIONS: new Set(['autoSixPhys', 'autoSixMag']),
 
   init() {
+    this.removeLegacyInventoryNodes();
     this.ensureButton();
     this.ensureSubmenu();
     this.ensureMask();
@@ -37,35 +38,45 @@ const CatValleyEnhanceModule = {
     this.updateButton();
   },
 
-  ensureButton() {
-    const panel = document.getElementById('inventoryPanel');
-    if (!panel) return null;
+  removeLegacyInventoryNodes() {
+    ['invCatValleyBtn', 'invCatValleySubmenu', 'invCatValleyMask'].forEach((id) => {
+      document.getElementById(id)?.remove();
+    });
+  },
 
+  getHost() {
+    return document.querySelector('.ms-sidebar') || null;
+  },
+
+  ensureButton() {
     let btn = document.getElementById(this.BUTTON_ID);
     if (btn) return btn;
+
+    const hostButtons = document.querySelector('.ms-sidebar-buttons');
+    if (!hostButtons) return null;
 
     btn = document.createElement('button');
     btn.type = 'button';
     btn.id = this.BUTTON_ID;
-    btn.className = 'inv-cat-valley-btn';
+    btn.className = 'ms-tab-btn tab-catValley';
     btn.setAttribute('aria-label', '貓谷特殊強化');
-    btn.innerHTML = '<span class="inv-cat-valley-btn-label">貓谷特殊強化</span>';
-    panel.appendChild(btn);
+    btn.title = '貓谷特殊強化';
+    hostButtons.appendChild(btn);
     return btn;
   },
 
   ensureSubmenu() {
-    const panel = document.getElementById('inventoryPanel');
-    if (!panel) return null;
+    const host = this.getHost();
+    if (!host) return null;
 
     let menu = document.getElementById(this.SUBMENU_ID);
     if (!menu) {
       menu = document.createElement('div');
       menu.id = this.SUBMENU_ID;
-      menu.className = 'inv-cat-valley-submenu hidden';
+      menu.className = 'ms-cat-valley-submenu hidden';
       menu.setAttribute('role', 'group');
       menu.setAttribute('aria-label', '貓谷潛能操作');
-      panel.appendChild(menu);
+      host.appendChild(menu);
     }
 
     if (menu.dataset.layout !== 'autoSix') {
@@ -73,16 +84,16 @@ const CatValleyEnhanceModule = {
       this.SUB_ACTIONS.forEach((action) => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'inv-cat-valley-btn inv-cat-valley-sub-btn';
+        btn.className = 'ms-cat-valley-sub-btn';
         if (this.AUTO_ACTIONS.has(action.id)) {
-          btn.classList.add('inv-cat-valley-auto-btn');
+          btn.classList.add('ms-cat-valley-auto-btn');
         }
         if (action.id === 'addAdd' || action.id === 'clearAdd' || action.id === 'rerollAdd1') {
-          btn.classList.add('inv-cat-valley-sub-wide');
+          btn.classList.add('ms-cat-valley-sub-wide');
         }
         btn.dataset.action = action.id;
         btn.title = action.title;
-        btn.innerHTML = `<span class="inv-cat-valley-btn-label">${action.label}</span>`;
+        btn.innerHTML = `<span class="ms-cat-valley-btn-label">${action.label}</span>`;
         menu.appendChild(btn);
       });
       menu.dataset.layout = 'autoSix';
@@ -92,18 +103,30 @@ const CatValleyEnhanceModule = {
   },
 
   ensureMask() {
-    const panel = document.getElementById('inventoryPanel');
-    if (!panel) return null;
+    const host = this.getHost();
+    if (!host) return null;
 
     let mask = document.getElementById(this.MASK_ID);
     if (mask) return mask;
 
     mask = document.createElement('div');
     mask.id = this.MASK_ID;
-    mask.className = 'inv-cat-valley-mask hidden';
+    mask.className = 'ms-cat-valley-mask hidden';
     mask.setAttribute('aria-hidden', 'true');
-    panel.appendChild(mask);
+    host.appendChild(mask);
     return mask;
+  },
+
+  positionSubmenu() {
+    const btn = document.getElementById(this.BUTTON_ID);
+    const menu = document.getElementById(this.SUBMENU_ID);
+    const host = this.getHost();
+    if (!btn || !menu || !host) return;
+
+    const hostRect = host.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    const top = Math.max(8, btnRect.top - hostRect.top);
+    menu.style.top = `${top}px`;
   },
 
   bindEvents() {
@@ -124,6 +147,14 @@ const CatValleyEnhanceModule = {
     }
 
     this.ensureMask();
+    const mask = document.getElementById(this.MASK_ID);
+    if (mask && mask.dataset.bound !== '1') {
+      mask.dataset.bound = '1';
+      mask.addEventListener('click', () => {
+        if (this.autoRunning) return;
+        this.closeSubmenu();
+      });
+    }
     if (!this._outsideCloseBound) {
       this._outsideCloseBound = true;
       document.addEventListener('click', (event) => {
@@ -157,6 +188,7 @@ const CatValleyEnhanceModule = {
       mask.classList.add('hidden');
       mask.setAttribute('aria-hidden', 'true');
     }
+    this.getHost()?.classList.remove('cat-valley-submenu-open');
     if (typeof EquipTooltipModule !== 'undefined') {
       EquipTooltipModule.unpin?.({ hide: true });
     }
@@ -166,7 +198,9 @@ const CatValleyEnhanceModule = {
     this.submenuOpen = true;
     const menu = this.ensureSubmenu();
     if (!menu) return;
+    this.positionSubmenu();
     menu.classList.remove('hidden');
+    this.getHost()?.classList.add('cat-valley-submenu-open');
     const mask = this.ensureMask();
     if (mask) {
       mask.classList.remove('hidden');
@@ -213,7 +247,7 @@ const CatValleyEnhanceModule = {
         const runningHere = this.autoRunning && this.autoTarget === target;
         btn.classList.toggle('is-running', runningHere);
         const base = this.SUB_ACTIONS.find((row) => row.id === action);
-        const labelEl = btn.querySelector('.inv-cat-valley-btn-label');
+        const labelEl = btn.querySelector('.ms-cat-valley-btn-label');
         if (labelEl && base) {
           labelEl.textContent = runningHere ? '停止自動' : base.label;
         }
@@ -264,12 +298,19 @@ const CatValleyEnhanceModule = {
     }
 
     if (isPotentialItem) {
+      const medalStarted = typeof isCatValleyMedalEnhanceStarted === 'function'
+        ? isCatValleyMedalEnhanceStarted(item)
+        : Boolean(item.medalEnhanceStarted) || ((Number(item.medalEnhanceLevel) || 0) > 0);
       const medalLv = typeof getMedalEnhanceLevel === 'function'
         ? getMedalEnhanceLevel(item)
         : (Number(item.medalEnhanceLevel) || 0);
       const medalMax = typeof CAT_VALLEY_MEDAL_ENHANCE_MAX === 'number'
         ? CAT_VALLEY_MEDAL_ENHANCE_MAX
         : 10;
+      if (!medalStarted) {
+        btn.title = `勳章強化（尚未開啟：首次＋0，再＋1～${medalMax}）`;
+        return;
+      }
       if (medalLv < medalMax) {
         btn.title = `勳章強化（${medalLv}/${medalMax}）`;
         return;
@@ -292,6 +333,10 @@ const CatValleyEnhanceModule = {
     const remain = getCatValleyRemainingUses(item);
     if (!usable) {
       btn.title = `${meta.label}已達上限（${level}/${meta.maxLevel}）`;
+      return;
+    }
+    if (meta.id === CAT_VALLEY_ENHANCE_TYPE.TOTEM && !isCatValleyTotemStarted(item)) {
+      btn.title = `${meta.label}（尚未開啟，可強化 ${remain} 次：首次開啟＋1～${meta.maxLevel}）`;
       return;
     }
     btn.title = `${meta.label}（${level}/${meta.maxLevel}，可再強化 ${remain} 次）`;
@@ -569,9 +614,12 @@ const CatValleyEnhanceModule = {
     const summary = formatCatValleyChangeSummary(result.changes);
     const label = meta?.label || '貓谷特殊強化';
     const maxLevel = meta?.maxLevel || result.level;
+    const levelText = meta?.id === CAT_VALLEY_ENHANCE_TYPE.TOTEM && result.level === 0
+      ? '首次開啟'
+      : `Lv.${result.level}/${maxLevel}`;
     if (typeof addLog === 'function') {
       addLog(
-        `✨ 【${item.name}】${label}：Lv.${result.level}/${maxLevel}`
+        `✨ 【${item.name}】${label}：${levelText}`
           + `${summary ? ` → ${summary}` : ''}`,
         'log-success'
       );
