@@ -2042,7 +2042,7 @@ function addLog(text, className = '') {
 }
 
 const LogPanel = {
-  open: false,
+  open: true,
 
   isOpen() {
     return !!this.open;
