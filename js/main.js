@@ -836,8 +836,9 @@ function loadEnchantItemHeld(itemId, savedState = null) {
   return true;
 }
 
-function unloadEquipFromSlot() {
-  if (!currentEnchantItem) return;
+function unloadEquipFromSlot(options = {}) {
+  if (!currentEnchantItem) return false;
+  const silent = !!options.silent;
 
   const itemName = currentEnchantItem.name;
   const itemId = currentEnchantItem.itemId || currentEnchantItem.id;
@@ -849,7 +850,7 @@ function unloadEquipFromSlot() {
   const bagIndex = findEmptyEquipBagSlot();
   if (bagIndex < 0) {
     addLog('[系統] 背包已滿，無法卸下強化中的裝備。', 'log-fail');
-    return;
+    return false;
   }
 
   playerInventoryEquip[bagIndex] = itemId;
@@ -862,7 +863,9 @@ function unloadEquipFromSlot() {
   const sfItemName = document.getElementById('sfItemName');
   if (sfItemName) sfItemName.innerText = '請放置裝備';
 
-  addLog(`[系統] 已將【${itemName}】放回背包（強化進度已保留）。`, 'log-fail');
+  if (!silent) {
+    addLog(`[系統] 已將【${itemName}】放回背包（強化進度已保留）。`, 'log-fail');
+  }
   currentEnchantItem = null;
 
   updateStatusPanel();
@@ -903,6 +906,7 @@ function unloadEquipFromSlot() {
   if (typeof SessionPersistenceModule !== 'undefined') {
     SessionPersistenceModule.scheduleSave();
   }
+  return true;
 }
 
 // ==========================================
@@ -956,6 +960,7 @@ const ENCHANT_TAB_BUTTON_PREFIXES = [
   'potential',
   'additionalPotential',
   'exceptional',
+  'catValley',
 ];
 
 const ENCHANT_TAB_BUTTON_STATES = [
@@ -966,7 +971,7 @@ const ENCHANT_TAB_BUTTON_STATES = [
   'disabled',
 ];
 
-/** 各分頁待機／道具欄／使用按鈕（不含特效幀、全螢幕彈窗） */
+/** 核心靜態清單；其餘現有 UI／全螢幕視窗／按鈕狀態由收集器補齊 */
 const ENCHANT_UI_CHROME_EXTRAS = [
   'images/common_backgrnd.png',
   'images/none_waitEquip.png',
@@ -1108,6 +1113,9 @@ function collectEssentialEnchantChromeUrls() {
     });
   });
 
+  // 涵蓋目前實際使用中的 UI、按鈕及所有狀態。
+  collectCurrentUiImageUrls().forEach((src) => urls.push(src));
+
   return [...new Set(urls.filter(Boolean))];
 }
 
@@ -1185,7 +1193,13 @@ function normalizePreloadUrl(url) {
   if (next.startsWith('url(')) {
     next = next.slice(4, -1).trim().replace(/^['"]|['"]$/g, '');
   }
-  if (next.startsWith('../')) next = next.replace(/^\.\.\//, '');
+  // CSS modules 從 css/modules 以 ../../images 引用；預載一律轉回頁面根目錄。
+  const imagePathIndex = next.toLowerCase().indexOf('images/');
+  if (imagePathIndex > 0 && !/^https?:\/\//i.test(next)) {
+    next = next.slice(imagePathIndex);
+  } else {
+    next = next.replace(/^(\.\.\/)+/, '');
+  }
   try {
     return new URL(next, window.location.href).href;
   } catch (_) {
@@ -1273,6 +1287,76 @@ function collectDomImageUrls() {
     const match = style.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
     if (match?.[2]) urls.add(match[2]);
   });
+  return [...urls];
+}
+
+/**
+ * 收集目前程式實際使用的 UI 圖片。
+ * CSS 可涵蓋 :hover / :active / :disabled / checked 等狀態；
+ * JS 設定物件則涵蓋全螢幕視窗與動態建立、尚未進 DOM 的介面。
+ * 不收 ITEM_DATABASE／特效幀，避免把裝備圖示與動畫誤算成 UI chrome。
+ */
+function collectCurrentUiImageUrls() {
+  const urls = new Set();
+  const add = (src) => {
+    if (typeof src !== 'string' || !/images\//i.test(src)) return;
+    if (!/\.(png|jpe?g|gif|webp)(?:$|\?)/i.test(src)) return;
+    urls.add(src);
+  };
+  const addDeep = (value) => collectDeepImageUrls(value).forEach(add);
+
+  collectStylesheetImageUrls().forEach(add);
+  collectDomImageUrls().forEach(add);
+
+  [
+    typeof EQUIP_TOOLTIP_ASSETS !== 'undefined' ? EQUIP_TOOLTIP_ASSETS : null,
+    typeof EQUIP_SET_TOOLTIP_ASSETS !== 'undefined' ? EQUIP_SET_TOOLTIP_ASSETS : null,
+    typeof POTENTIAL_CUBE_HELP_IMAGES !== 'undefined' ? POTENTIAL_CUBE_HELP_IMAGES : null,
+    typeof ADDPOT_IMAGES !== 'undefined' ? ADDPOT_IMAGES : null,
+    typeof ADDPOT_CUBE_HELP_IMAGES !== 'undefined' ? ADDPOT_CUBE_HELP_IMAGES : null,
+    typeof BONUS_STAT_UI !== 'undefined' ? BONUS_STAT_UI : null,
+    typeof BONUS_STAT_CHOICE_UI !== 'undefined' ? BONUS_STAT_CHOICE_UI : null,
+    typeof BONUS_STAT_CHOICE_CONFIRM_UI !== 'undefined' ? BONUS_STAT_CHOICE_CONFIRM_UI : null,
+    typeof MEMORIA_UI !== 'undefined' ? MEMORIA_UI : null,
+    typeof AP_MEMORIA_UI !== 'undefined' ? AP_MEMORIA_UI : null,
+    typeof UNI_UI !== 'undefined' ? UNI_UI : null,
+    typeof AP_UNI_UI !== 'undefined' ? AP_UNI_UI : null,
+    typeof HEXA_UI !== 'undefined' ? HEXA_UI : null,
+    typeof AP_HEXA_UI !== 'undefined' ? AP_HEXA_UI : null,
+    typeof AUTO_ENCHANT_COMMON_BUTTON !== 'undefined' ? AUTO_ENCHANT_COMMON_BUTTON : null,
+    typeof AUTO_ENCHANT_STAR_FORCE !== 'undefined' ? AUTO_ENCHANT_STAR_FORCE : null,
+    typeof AUTO_ENCHANT_POTENTIAL !== 'undefined' ? AUTO_ENCHANT_POTENTIAL : null,
+    typeof AUTO_ENCHANT_ADD_POTENTIAL !== 'undefined' ? AUTO_ENCHANT_ADD_POTENTIAL : null,
+    typeof AUTO_ENCHANT_BONUS_STAT !== 'undefined' ? AUTO_ENCHANT_BONUS_STAT : null,
+  ].forEach(addDeep);
+
+  // BONUS_STAT_UI 內的函式型資源無法由深層掃描取得。
+  if (typeof BONUS_STAT_UI !== 'undefined') {
+    for (let level = 0; level <= 40; level += 1) add(BONUS_STAT_UI.summaryLevel?.(level));
+    for (let index = 0; index <= 9; index += 1) add(BONUS_STAT_UI.statIcon?.(index));
+  }
+  if (typeof BONUS_STAT_CHOICE_UI !== 'undefined') {
+    for (let index = 0; index <= 9; index += 1) add(BONUS_STAT_CHOICE_UI.detailIcon?.(index));
+  }
+
+  // autoEnchant 設定多只保存 normal，實際 hover/pressed/disabled 由函式推導。
+  if (typeof autoEnchantButtonSrc === 'function') {
+    const autoConfigs = [
+      typeof AUTO_ENCHANT_COMMON_BUTTON !== 'undefined' ? AUTO_ENCHANT_COMMON_BUTTON : null,
+      typeof AUTO_ENCHANT_STAR_FORCE !== 'undefined' ? AUTO_ENCHANT_STAR_FORCE : null,
+      typeof AUTO_ENCHANT_POTENTIAL !== 'undefined' ? AUTO_ENCHANT_POTENTIAL : null,
+      typeof AUTO_ENCHANT_ADD_POTENTIAL !== 'undefined' ? AUTO_ENCHANT_ADD_POTENTIAL : null,
+      typeof AUTO_ENCHANT_BONUS_STAT !== 'undefined' ? AUTO_ENCHANT_BONUS_STAT : null,
+    ];
+    autoConfigs.forEach((cfg) => {
+      collectDeepImageUrls(cfg).forEach((src) => {
+        ['normal', 'mouseOver', 'pressed', 'disabled'].forEach((state) => {
+          add(autoEnchantButtonSrc(src, state));
+        });
+      });
+    });
+  }
+
   return [...urls];
 }
 
@@ -1594,7 +1678,7 @@ async function runEnchantBootPreload() {
     typeof getActiveCategory === 'function' ? getActiveCategory() : 'none'
   );
 
-  // 精準預載：各分頁 backgrnd + 側邊功能列五態 + 待機圖（不掃全 CSS，避免 429）
+  // 預載目前 UI chrome：CSS／DOM／JS UI 設定，以及按鈕的各種狀態；不含動畫特效幀。
   const chromeUrls = collectEssentialEnchantChromeUrls();
   const chromeUniqueCount = new Set(chromeUrls.map(normalizePreloadUrl).filter(Boolean)).size;
   const chromeTotal = Math.max(1, chromeUniqueCount);

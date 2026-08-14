@@ -12,12 +12,17 @@ const ETERNAL_SHOULDERS = ['01152212', '01152213', '01152214', '01152215', '0115
 const ETERNAL_GLOVES = ['01082760', '01082761', '01082762', '01082763', '01082764'];
 const ETERNAL_SHOES = ['01073629', '01073630', '01073631', '01073632', '01073633'];
 const ETERNAL_CAPES = ['01103433', '01103434', '01103435', '01103436', '01103437'];
-const ETERNAL_WEAPONS = [
-  '01212129', '01212145', '01213022', '01213054', '01214022', '01214050',
-  '01215024', '01215041', '01222122', '01222136', '01232122', '01232136',
-  '01242141', '01242163', '01254028', '01254029', '01262051', '01262066',
-  '01272040', '01272055', '01282040', '01282056',
-];
+
+/** 永恆套組武器：名稱含創世／命運，且為武器部位（含神之子 Wpsi） */
+function isEternalSetWeaponCandidate(row) {
+  const name = String(row?.name || row?.item?.name || '');
+  if (!name.includes('創世') && !name.includes('命運')) return false;
+  const item = row?.item;
+  if (!item) return false;
+  if (typeof EQUIP_TYPE !== 'undefined' && item.mainType === EQUIP_TYPE.WEAPON) return true;
+  const islot = item.islot || '';
+  return islot === 'Wp' || islot === 'Wpsi' || islot === 'Gw' || islot === 'Op';
+}
 
 const BLACK_SPELLBOOKS = ['01162080', '01162081', '01162082', '01162083'];
 const BLACK_MITRA = ['01190566', '01190567', '01190568', '01190569', '01190570'];
@@ -78,7 +83,7 @@ const EQUIP_SET_DEFS = {
       { slot: '上衣', name: '永恆鎧甲', itemIds: ETERNAL_COATS },
       { slot: '褲/裙', name: '永恆褲', itemIds: ETERNAL_PANTS },
       { slot: '肩膀裝飾', name: '永恆肩膀', itemIds: ETERNAL_SHOULDERS },
-      { slot: '武器', name: '可選擇創世或命運武器其一', itemIds: ETERNAL_WEAPONS, chooseOne: true },
+      { slot: '武器', name: '可選擇創世或命運武器其一', match: 'eternalWeapon', chooseOne: true },
       { slot: '手套', name: '永恆手套', itemIds: ETERNAL_GLOVES },
       { slot: '鞋子', name: '永恆鞋', itemIds: ETERNAL_SHOES },
       { slot: '披風', name: '永恆斗篷', itemIds: ETERNAL_CAPES },
@@ -127,6 +132,17 @@ function findWornForIds(wornList, itemIds) {
   return wornList.find((row) => idSet.has(String(row.itemId))) || null;
 }
 
+function findWornForPiece(wornList, piece) {
+  if (!piece) return null;
+  if (piece.match === 'eternalWeapon') {
+    return wornList.find((row) => isEternalSetWeaponCandidate(row)) || null;
+  }
+  if (typeof piece.match === 'function') {
+    return wornList.find((row) => piece.match(row)) || null;
+  }
+  return findWornForIds(wornList, piece.itemIds);
+}
+
 function wornListFromEntries(entries) {
   return (entries || getWornEquipEntries()).map((entry) => {
     const item = resolveWornItem(entry);
@@ -143,7 +159,7 @@ function wornListFromEntries(entries) {
 function snapshotSetFromWornList(def, wornList) {
   const groupFilled = Object.create(null);
   const rows = def.pieces.map((piece, index) => {
-    const worn = findWornForIds(wornList, piece.itemIds);
+    const worn = findWornForPiece(wornList, piece);
     const group = piece.group || `p${index}`;
     if (worn) groupFilled[group] = true;
     const lucky = !!(worn?.joker);

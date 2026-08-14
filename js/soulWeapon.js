@@ -161,7 +161,7 @@ const SoulWeaponModule = {
     if (typeof isAtlasOffHandWeapon === 'function' && isAtlasOffHandWeapon(item)) {
       return false;
     }
-    return item.mainType === 'weapon' || item.islot === 'Wp';
+    return item.mainType === 'weapon' || item.islot === 'Wp' || item.islot === 'Wpsi';
   },
 
   getMode() {

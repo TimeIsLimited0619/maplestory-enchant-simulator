@@ -4,6 +4,9 @@
  */
 const CharacterCombatPanel = (() => {
   const STORAGE_KEY = 'uci.characterCombat.v1';
+  /** 一次性清掉測試填爆的舊存檔（數值過大導致頁面打不開） */
+  const RESET_FLAG = 'uci.characterCombat.reset20260814';
+  const MAX_ABS_VALUE = 1e12;
 
   const FIELD_IDS = [
     'baseMain', 'percentMain', 'noApplyMain', 'skillBaseMain', 'skillPercentMain',
@@ -46,8 +49,31 @@ const CharacterCombatPanel = (() => {
     return CombatJobs.getJobStatLabelsByName(state.jobName);
   }
 
+  function sanitizeValues(raw) {
+    const out = {};
+    if (!raw || typeof raw !== 'object') return out;
+    Object.keys(raw).forEach((key) => {
+      if (!FIELD_IDS.includes(key)) return;
+      const text = String(raw[key] ?? '');
+      if (text === '') {
+        out[key] = '';
+        return;
+      }
+      const n = Number(text);
+      if (!Number.isFinite(n) || Math.abs(n) > MAX_ABS_VALUE) return;
+      out[key] = text;
+    });
+    return out;
+  }
+
   function load() {
     try {
+      // 清掉先前測試填太高、導致無法開啟的戰鬥力欄位存檔
+      if (!localStorage.getItem(RESET_FLAG)) {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.setItem(RESET_FLAG, '1');
+      }
+
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const data = JSON.parse(raw);
@@ -59,9 +85,11 @@ const CharacterCombatPanel = (() => {
         state.genesisFinalCheck = data.genesisFinalCheck;
       }
       if (data.values && typeof data.values === 'object') {
-        state.values = { ...data.values };
+        state.values = sanitizeValues(data.values);
       }
-    } catch (_) { /* ignore */ }
+    } catch (_) {
+      try { localStorage.removeItem(STORAGE_KEY); } catch (__) { /* ignore */ }
+    }
   }
 
   function save() {

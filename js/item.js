@@ -95,6 +95,7 @@ const ISLOT_TO_MAIN_TYPE = {
   Wp: EQUIP_TYPE.WEAPON,
   Gw: EQUIP_TYPE.WEAPON,
   Op: EQUIP_TYPE.WEAPON,
+  Wpsi: EQUIP_TYPE.WEAPON, // 神之子特殊武器（行為同 Wp，可穿 11／37）
   ohp: EQUIP_TYPE.offHandWeapon,
   Ma: EQUIP_TYPE.ARMOR,
   Si: EQUIP_TYPE.offHandWeapon,
@@ -245,6 +246,7 @@ function isCapeGroupPotentialEquip(item) {
 const ISLOT_TO_SUB_TYPE = {
   Wp: 'weapon',
   Gw: 'twoHandWeapon',
+  Wpsi: 'weapon', // 神之子特殊武器：其餘規則同 Wp
   Ma: 'coat',
   MaPn: 'longcoat',
   Si: 'shield',
@@ -1957,8 +1959,8 @@ const ITEM_DATABASE = {
 
 '01214022': buildEquipFromWzInfo('01214022', '創世龍息射手', {
     wzPart: 'Weapon',
-    islot: 'WpSi',
-    vslot: 'WpSi',
+    islot: 'Wp',
+    vslot: 'Wp',
     reqJob: 4,
     reqSpecJob: 63,
     reqLevel: 200,
@@ -2700,7 +2702,88 @@ const ITEM_DATABASE = {
     unsyntesizable: 1
   }),
 
-  '01662306': buildEquipFromWzInfo('01662306', 'CHANGE露希妲機器人', {
+  '01562012': buildEquipFromWzInfo('01562012', '命運琉', {
+    wzPart: 'Weapon',
+    islot: 'Wpsi',
+    vslot: 'Wpsi',
+    reqJob: 1,
+    reqSpecJob: 101,
+    reqLevel: 250,
+    incSTR: 190,
+    incDEX: 190,
+    incPAD: 375,
+    incPDD: 290,
+    tuc: 9,
+    attackSpeed: 8,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 886,
+    sfx: 'swordZB',
+    afterImage: 'swordZB',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    onlyUpgrade: [
+      204937, 204938, 204939, 20494, 20497, 20499,
+      26440, 26441, 26443, 20482, 20483, 20495,
+      20487, 25360, 50645, 2049370, 2049371, 2049372,
+      2049373, 2049374, 2049375, 2049376, 2049377, 2049378,
+      2049379, 2049380, 2049381, 2049382, 2049383, 2049384,
+      2049385, 2049386, 2049387, 2049388, 2049389, 2049390,
+      2049391, 2049392, 2049393, 2049394, 2049395, 2049396,
+      2049397, 2049398, 2049399
+    ],
+    onlyUpgradeThousand: [2590, 2591],
+    cash: 0,
+    exceptToadsHammer: 1,
+    jokerToSetItem: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01572012': buildEquipFromWzInfo('01572012', '命運琉', {
+    wzPart: 'Weapon',
+    islot: 'Wpsi',
+    vslot: 'Wpsi',
+    reqJob: 1,
+    reqSpecJob: 101,
+    reqLevel: 250,
+    incSTR: 190,
+    incDEX: 190,
+    incPAD: 370,
+    tuc: 9,
+    attackSpeed: 6,
+    imdR: 20,
+    bdR: 30,
+    setItemID: 886,
+    sfx: 'swordZL',
+    afterImage: 'swordZL',
+    exceptUpgrade: 1,
+    tradeBlock: 1,
+    notSale: 1,
+    onlyUpgrade: [
+      204937, 204938, 204939, 20494, 20497, 20499,
+      26440, 26441, 26443, 20482, 20483, 20495,
+      20487, 25360, 50645, 2049370, 2049371, 2049372,
+      2049373, 2049374, 2049375, 2049376, 2049377, 2049378,
+      2049379, 2049380, 2049381, 2049382, 2049383, 2049384,
+      2049385, 2049386, 2049387, 2049388, 2049389, 2049390,
+      2049391, 2049392, 2049393, 2049394, 2049395, 2049396,
+      2049397, 2049398, 2049399
+    ],
+    onlyUpgradeThousand: [2590, 2591],
+    cash: 0,
+    exceptToadsHammer: 1,
+    jokerToSetItem: 1,
+    onlyEquip: 1,
+    price: 1,
+    undecomposable: 1,
+    unsyntesizable: 1
+  }),
+
+'01662306': buildEquipFromWzInfo('01662306', 'CHANGE露希妲機器人', {
     wzPart: 'Android',
     islot: 'An',
     vslot: 'An',
@@ -2903,6 +2986,8 @@ playerInventory[86] = '01272055';
 playerInventory[87] = '01282040';
 playerInventory[88] = '01662308';
 playerInventory[89] = '01662306';
+playerInventory[90] = '01572012';
+playerInventory[91] = '01562012';
 
 let currentEnchantItem = null;
 

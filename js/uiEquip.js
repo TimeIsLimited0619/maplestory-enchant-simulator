@@ -36,6 +36,7 @@ const UiEquipModule = (() => {
     Sr: ['9'],
     ohp: ['10'], Si: ['10'],
     Wp: ['11'], Gw: ['11'], Op: ['11'],
+    Wpsi: ['11', '37'], // 神之子特殊武器：主武 11 或神之子輔助 37
     Ri: ['12', '13', '15', '16'],
     Pe: ['17', '36'],
     Md: ['21'], Me: ['21'],
@@ -709,7 +710,12 @@ const UiEquipModule = (() => {
   }
 
   function setEnchantOpen(next) {
-    enchantOpen = !!next;
+    const wantOpen = !!next;
+    // 關閉強化頁時自動卸下強化槽裝備（進度寫回背包）
+    if (enchantOpen && !wantOpen && typeof unloadEquipFromSlot === 'function') {
+      unloadEquipFromSlot({ silent: true });
+    }
+    enchantOpen = wantOpen;
     const wb = $('enchantWorkbench');
     const main = $('mainContentPanel');
     const sidebar = document.querySelector('#pageEnhance .ms-sidebar');
