@@ -14,7 +14,7 @@ const CharacterCombatPanel = (() => {
     'baseSubtwo', 'percentSubtwo', 'noApplySubtwo', 'skillBaseSubtwo', 'skillPercentSubtwo',
     'atk', 'percentAtk', 'noApplyAtk', 'skillAtk', 'skillPercentAtk',
     'dmg', 'skillDmg', 'bossDmg', 'skillBossDmg', 'critDmg', 'skillCritDmg',
-    'famFinal', 'adjXenonStar', 'adjXenonPowerCoefficient',
+    'famFinal', 'skillFinal', 'adjXenonStar', 'adjXenonPowerCoefficient',
     'adjDAHP', 'adjDASpStar', 'adjDAPowerCoefficient', 'ruinFinal',
   ];
 
@@ -23,7 +23,6 @@ const CharacterCombatPanel = (() => {
   const state = {
     jobName: '英雄',
     includeEquipDelta: true,
-    genesisFinalCheck: false,
     values: {},
     /** 專屬武器鎖定時不給改下拉；由裝備欄同步，不寫入 localStorage */
     jobLockedByWeapon: false,
@@ -81,9 +80,6 @@ const CharacterCombatPanel = (() => {
       if (typeof data.includeEquipDelta === 'boolean') {
         state.includeEquipDelta = data.includeEquipDelta;
       }
-      if (typeof data.genesisFinalCheck === 'boolean') {
-        state.genesisFinalCheck = data.genesisFinalCheck;
-      }
       if (data.values && typeof data.values === 'object') {
         state.values = sanitizeValues(data.values);
       }
@@ -97,7 +93,6 @@ const CharacterCombatPanel = (() => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         jobName: state.jobName,
         includeEquipDelta: state.includeEquipDelta,
-        genesisFinalCheck: state.genesisFinalCheck,
         values: state.values,
       }));
     } catch (_) { /* ignore */ }
@@ -136,7 +131,7 @@ const CharacterCombatPanel = (() => {
     CombatPower.setCharacterInputs(buildFields(), {
       jobCategory: job.category,
       jobName: job.name,
-      genesisFinalChecked: !!state.genesisFinalCheck,
+      genesisFinalChecked: false,
       useBuff: false,
       xenonPowerCoefficientRaw: state.values.adjXenonPowerCoefficient || '',
       daPowerCoefficientRaw: state.values.adjDAPowerCoefficient || '',
@@ -225,10 +220,6 @@ const CharacterCombatPanel = (() => {
           <input type="checkbox" id="ccpIncludeEquip" ${state.includeEquipDelta ? 'checked' : ''}>
           自動加總身上裝備
         </label>
-        <label class="ccp-check">
-          <input type="checkbox" id="ccpGenesis" ${state.genesisFinalCheck ? 'checked' : ''}>
-          創世 10% 終傷
-        </label>
       </div>
       <p class="ccp-hint">欄位對齊 MapleCombat。勾選「自動加總」時請填<strong>不含目前身上裝備</strong>的數值；取消勾選則視為完整面板（含裝備）。</p>
       <div class="ccp-scroll">
@@ -254,9 +245,10 @@ const CharacterCombatPanel = (() => {
           <thead><tr><th></th><th>數值</th><th>技能.消耗</th></tr></thead>
           <tbody>
             <tr><th>傷害</th><td>${inputCell('dmg')}</td><td>${inputCell('skillDmg')}</td></tr>
-            <tr><th>B傷</th><td>${inputCell('bossDmg')}</td><td>${inputCell('skillBossDmg')}</td></tr>
-            <tr><th>爆傷</th><td>${inputCell('critDmg')}</td><td>${inputCell('skillCritDmg')}</td></tr>
-            <tr><th>萌獸終傷</th><td colspan="2">${inputCell('famFinal')}</td></tr>
+            <tr><th>Boss傷害</th><td>${inputCell('bossDmg')}</td><td>${inputCell('skillBossDmg')}</td></tr>
+            <tr><th>爆擊傷害</th><td>${inputCell('critDmg')}</td><td>${inputCell('skillCritDmg')}</td></tr>
+            <tr><th>終傷(萌獸)</th><td colspan="2">${inputCell('famFinal')}</td></tr>
+            <tr><th>終傷(技能)</th><td colspan="2">${inputCell('skillFinal')}</td></tr>
           </tbody>
         </table>
         ${showXenon ? `
@@ -296,10 +288,6 @@ const CharacterCombatPanel = (() => {
     });
     $('ccpIncludeEquip')?.addEventListener('change', (e) => {
       state.includeEquipDelta = !!e.target.checked;
-      notifyRefresh();
-    });
-    $('ccpGenesis')?.addEventListener('change', (e) => {
-      state.genesisFinalCheck = !!e.target.checked;
       notifyRefresh();
     });
 

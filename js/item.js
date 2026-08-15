@@ -612,6 +612,29 @@ const ITEM_DATABASE = {
     tradeAvailable: 2
   }),
 
+  '01022913': buildEquipFromWzInfo('01022913', '飢渴的血色冤魂', {
+    wzPart: 'Accessory',
+    islot: 'Ay',
+    vslot: 'Ay',
+    reqLevel: 250,
+    incSTR: 20,
+    incDEX: 20,
+    incINT: 20,
+    incLUK: 20,
+    incPAD: 5,
+    incMAD: 5,
+    incPDD: 450,
+    tuc: 5,
+    setItemID: 1055,
+    notSale: 1,
+    bossReward: 1,
+    cash: 0,
+    equipTradeBlock: 1,
+    exItem: 1,
+    price: 1,
+    tradeAvailable: 2
+  }),
+
 '01032316': buildEquipFromWzInfo('01032316', '指揮官力量耳環', {
     wzPart: 'Accessory',
     islot: 'Ae',
@@ -2988,6 +3011,7 @@ playerInventory[88] = '01662308';
 playerInventory[89] = '01662306';
 playerInventory[90] = '01572012';
 playerInventory[91] = '01562012';
+playerInventory[92] = '01022913';
 
 let currentEnchantItem = null;
 

@@ -247,7 +247,7 @@ const UiCharacterInfo = (() => {
     };
     push('裝備', sumAdditiveStat(snapshot || {}, '最終傷害'));
     push('萌獸', combat?.fields?.famFinal);
-    if (combat?.ctx?.genesisFinalChecked) push('創世', 10);
+    push('技能', combat?.fields?.skillFinal);
     push('毀滅盾牌', combat?.fields?.ruinFinal);
     return sources;
   }
@@ -500,6 +500,9 @@ const UiCharacterInfo = (() => {
       } else {
         ap.textContent = formatPower(power);
       }
+    }
+    if (typeof CombatEfficiencyPanel !== 'undefined') {
+      CombatEfficiencyPanel.refresh?.();
     }
   }
 

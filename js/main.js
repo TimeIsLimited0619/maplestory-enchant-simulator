@@ -553,6 +553,11 @@ function handleGlobalEscapeKey() {
   // 可 ESC 關閉的視窗：依目前 z-index 關閉置頂者
   const escTargets = [
     {
+      id: 'cepRoot',
+      isOpen: () => typeof CombatEfficiencyPanel !== 'undefined' && CombatEfficiencyPanel.isOpen?.(),
+      close: () => CombatEfficiencyPanel.setOpen(false),
+    },
+    {
       id: 'equipStatPanel',
       isOpen: () => typeof EquipStatPanel !== 'undefined' && EquipStatPanel.isOpen?.(),
       close: () => EquipStatPanel.setOpen(false),

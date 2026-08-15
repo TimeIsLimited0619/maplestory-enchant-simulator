@@ -216,9 +216,9 @@ const CombatPower = (() => {
     const rawDmgSum = 1 + (damage + bossDamage) / 100;
     const rawCritSum = 1.35 + critDamage / 100;
 
-    const genesisMult = ctx.genesisFinalChecked ? 1.1 : 1.0;
     const ruinMult =
       currentJob === 'da' || ctx.jobName === '惡魔殺手' ? 1 + getVal('ruinFinal') / 100 : 1;
+    const skillFinalMult = 1 + getVal('skillFinal') / 100;
     const equipmentFamMultiplierFactor = delta.__eqFamFinalMultiplierFactor ?? 1;
     const famMult =
       resolveFamMult(ctx.famFinalSources, getVal('famFinal')) * equipmentFamMultiplierFactor;
@@ -268,7 +268,7 @@ const CombatPower = (() => {
       },
       rawDmgSum,
       rawCritSum,
-      finalMult: genesisMult * famMult * ruinMult,
+      finalMult: famMult * ruinMult * skillFinalMult,
       equivalentMain,
     };
   }

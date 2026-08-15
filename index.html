@@ -32,6 +32,7 @@
   <link rel="stylesheet" href="css/modules/20-character-combat-panel.css?v=20260814wtype1">
   <link rel="stylesheet" href="css/modules/21-item-request.css?v=20260814irq8">
   <link rel="stylesheet" href="css/modules/22-log-cost-panels.css?v=20260814cost1">
+  <link rel="stylesheet" href="css/modules/23-combat-efficiency-panel.css?v=20260815eff2">
 </head>
 <body class="enchant-boot-loading">
 
@@ -138,7 +139,8 @@
       <button type="button" class="view-mode-btn" id="btnViewLog" title="開關 Log">Log</button>
       <button type="button" class="view-mode-btn" id="btnViewCost" title="開關成本統計">成本</button>
       <button type="button" class="view-mode-btn" id="btnViewCharacter" title="開關角色資訊">角色</button>
-      <button type="button" class="view-mode-btn" id="btnViewCombat" title="開關戰鬥力數值">戰力</button>
+      <button type="button" class="view-mode-btn" id="btnViewCombat" title="開關戰鬥力數值">數值</button>
+      <button type="button" class="view-mode-btn" id="btnViewEfficiency" title="開關數值換算表">效益</button>
       <button type="button" class="view-mode-btn" id="btnViewDetail" title="開關身上屬性明細">明細</button>
     </div>
 
@@ -1928,7 +1930,7 @@
   <script src="js/item.js?v=20260814wpsi1"></script>
   <script src="js/sessionPersistence.js?v=20260814req1"></script>
   <script src="js/equipTooltipData.js?v=20260814heart1"></script>
-  <script src="js/equipSetData.js?v=20260814wpsi2"></script>
+  <script src="js/equipSetData.js?v=20260815boss6b"></script>
   <script src="js/inventory.js?v=20260814closed1"></script>
   <script src="js/itemRequestPanel.js?v=20260814req2"></script>
   <script src="js/uiEquip.js?v=20260814wpsi1"></script>
@@ -2094,9 +2096,10 @@
   <script src="js/formatPower.js?v=20260813uci3"></script>
   <script src="js/combatJobs.js?v=20260814wtype1"></script>
   <script src="js/weaponTypeMap.js?v=20260814panel1"></script>
-  <script src="js/combatPower.js?v=20260814cp1"></script>
-  <script src="js/characterCombatPanel.js?v=20260814ccpReset1"></script>
-  <script src="js/uiCharacterInfo.js?v=20260814comma2"></script>
+  <script src="js/combatPower.js?v=20260815skillFinal2"></script>
+  <script src="js/characterCombatPanel.js?v=20260815skillFinal2"></script>
+  <script src="js/uiCharacterInfo.js?v=20260815skillFinal2"></script>
+  <script src="js/combatEfficiencyPanel.js?v=20260815eff2"></script>
   <script src="js/costTracker.js?v=20260814log2"></script>
   <script src="js/main.js?v=20260815uiPreload1"></script>
 </body>
