@@ -212,27 +212,29 @@ const UiCharacterInfo = (() => {
 
   /**
    * 戰力面板結算值（主／副／攻／傷／B傷／爆傷）
+   * 一律取未扣技能.消耗的加總值（panel），與遊戲角色面板一致；
+   * 戰鬥力另走 CombatPower 公式（扣技能.消耗）。
    * 回傳 number；不適用則回 null 交給裝備路徑
    */
   function readCombatPanelValue(snapshot, slot, combat) {
     if (!combat?.resolved) return null;
-    const { resolved, labels, fields } = combat;
+    const { resolved, labels } = combat;
     const key = slot.key;
     const mainKey = displayStatKey(labels.main);
     const subKey = displayStatKey(labels.sub);
     const sub2Key = labels.secondSub ? displayStatKey(labels.secondSub) : '';
 
-    if (key === mainKey) return Number(resolved.main?.total) || 0;
-    if (key === subKey) return Number(resolved.sub?.total) || 0;
-    if (sub2Key && key === sub2Key) return Number(resolved.subtwo?.total) || 0;
+    if (key === mainKey) return Number(resolved.main?.panel) || 0;
+    if (key === subKey) return Number(resolved.sub?.panel) || 0;
+    if (sub2Key && key === sub2Key) return Number(resolved.subtwo?.panel) || 0;
 
     const useMad = labels.main === 'INT';
-    if (key === '攻擊力' && !useMad) return Number(resolved.attack?.total) || 0;
-    if (key === '魔法攻擊力' && useMad) return Number(resolved.attack?.total) || 0;
+    if (key === '攻擊力' && !useMad) return Number(resolved.attack?.panel) || 0;
+    if (key === '魔法攻擊力' && useMad) return Number(resolved.attack?.panel) || 0;
 
-    if (key === '傷害') return Number(resolved.damage) || 0;
-    if (key === 'BOSS怪物傷害') return Number(resolved.bossDamage) || 0;
-    if (key === '爆擊傷害') return Number(resolved.critDamage) || 0;
+    if (key === '傷害') return Number(resolved.damageDetail?.panel) || 0;
+    if (key === 'BOSS怪物傷害') return Number(resolved.bossDamageDetail?.panel) || 0;
+    if (key === '爆擊傷害') return Number(resolved.critDamageDetail?.panel) || 0;
 
     return null;
   }
@@ -247,7 +249,15 @@ const UiCharacterInfo = (() => {
     };
     push('裝備', sumAdditiveStat(snapshot || {}, '最終傷害'));
     push('萌獸', combat?.fields?.famFinal);
-    push('技能', combat?.fields?.skillFinal);
+    const skillFinal = Number(combat?.fields?.skillFinal) || 0;
+    if (combat?.ctx?.genesisFinalChecked) {
+      // 輸入的技能終傷已包含創世 10%；拆成兩個獨立倍率，避免面板重複計算。
+      const skillWithoutGenesis = ((1 + skillFinal / 100) / 1.1 - 1) * 100;
+      push('技能', skillWithoutGenesis);
+      push('創世武器', 10);
+    } else {
+      push('技能', skillFinal);
+    }
     push('毀滅盾牌', combat?.fields?.ruinFinal);
     return sources;
   }
@@ -273,25 +283,25 @@ const UiCharacterInfo = (() => {
     if (!combat?.resolved) return 0;
     const { resolved, ctx } = combat;
     const jobCat = ctx?.jobCategory || 'normal';
-    const subtwo = Number(resolved.subtwo?.total) || 0;
+    // 面板顯示用：一律取未扣技能.消耗的加總值
+    const mainPanel = Number(resolved.main?.panel) || 0;
+    const subPanel = Number(resolved.sub?.panel) || 0;
+    const subtwo = Number(resolved.subtwo?.panel) || 0;
     let statPart = 0;
     if (jobCat === 'xenon') {
       // 傑諾：三屬等權
-      statPart = (Number(resolved.main?.total) || 0)
-        + (Number(resolved.sub?.total) || 0)
-        + subtwo;
+      statPart = mainPanel + subPanel + subtwo;
     } else if (jobCat === 'da') {
       // 惡復：等效主屬（HP 換算）+ 副屬
-      statPart = (Number(resolved.equivalentMain) || 0)
-        + (Number(resolved.sub?.total) || 0);
+      const baseHP = Number(combat?.fields?.adjDAHP) || 0;
+      const equivalentMain = baseHP / 3.5 + ((mainPanel - baseHP) / 3.5) * 0.8;
+      statPart = equivalentMain + subPanel;
     } else {
-      statPart = 4 * (Number(resolved.main?.total) || 0)
-        + (Number(resolved.sub?.total) || 0)
-        + subtwo;
+      statPart = 4 * mainPanel + subPanel + subtwo;
     }
 
-    const atk = Number(resolved.attack?.total) || 0;
-    const dmgPct = Number(resolved.damage) || 0;
+    const atk = Number(resolved.attack?.panel) || 0;
+    const dmgPct = Number(resolved.damageDetail?.panel) || 0;
     const fdMult = finalDamageMultiplier(collectFinalDamageSources(snapshot, combat));
     let weaponMult = 1.2;
     if (typeof WeaponTypeMap !== 'undefined'
@@ -299,7 +309,11 @@ const UiCharacterInfo = (() => {
       && typeof UiEquipModule !== 'undefined') {
       weaponMult = WeaponTypeMap.getEquippedWeaponMultiplier(
         (slotId) => UiEquipModule.getWornEntry?.(slotId),
+        ctx?.jobName || '',
       );
+    } else if (typeof WeaponTypeMap !== 'undefined'
+      && typeof WeaponTypeMap.getWeaponMultiplierByJobName === 'function') {
+      weaponMult = WeaponTypeMap.getWeaponMultiplierByJobName(ctx?.jobName || '');
     }
 
     const value = weaponMult * statPart * (atk / 100) * (1 + dmgPct / 100) * fdMult;

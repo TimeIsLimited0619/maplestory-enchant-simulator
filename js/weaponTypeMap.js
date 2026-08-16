@@ -106,6 +106,64 @@ const WeaponTypeMap = (() => {
 
   const DEFAULT_WEAPON_MULTIPLIER = 1.20;
 
+  /**
+   * 無穿戴武器時：依戰鬥力面板職業取該職典型武器係數。
+   * 專屬職用專武；共用職用常見主武器。
+   */
+  const JOB_DEFAULT_WEAPON_TYPE = {
+    英雄: '雙手劍',
+    聖騎士: '單手劍',
+    黑騎士: '槍',
+    '大魔導士（冰、雷）': '長杖',
+    '大魔導士（火、毒）': '長杖',
+    主教: '長杖',
+    箭神: '弓',
+    神射手: '弩',
+    開拓者: '古代之弓',
+    夜使者: '拳套',
+    暗影神偷: '短劍',
+    影武者: '短劍',
+    槍神: '火槍',
+    拳霸: '指虎',
+    重砲指揮官: '加農砲',
+    聖魂劍士: '雙手劍',
+    烈焰巫師: '長杖',
+    破風使者: '弓',
+    暗夜行者: '拳套',
+    閃雷悍將: '指虎',
+    米哈逸: '單手劍',
+    狂狼勇士: '矛',
+    龍魔導士: '長杖',
+    夜光: '閃亮克魯',
+    精靈遊俠: '雙弩槍',
+    幻影俠盜: '手杖',
+    隱月: '指虎',
+    爆拳槍神: '重拳槍',
+    煉獄巫師: '長杖',
+    狂豹獵人: '弩',
+    機甲戰神: '火槍',
+    惡魔殺手: '單手斧',
+    惡魔復仇者: '魔劍',
+    傑諾: '能量劍',
+    凱撒: '雙手劍',
+    凱殷: '龍息射手',
+    卡蒂娜: '鎖鏈',
+    天使破壞者: '靈魂射手',
+    阿戴爾: '調節器',
+    伊利恩: '魔法護腕',
+    卡莉: '環刃',
+    亞克: '指虎',
+    蓮: '長劍',
+    菈菈: '長杖',
+    虎影: '仙扇',
+    凱內西斯: 'ESP限制器',
+    神之子: '琉',
+    劍豪: '太刀',
+    陰陽師: '陰陽扇',
+    琳恩: '記憶長杖',
+    墨玄: '武拳',
+  };
+
   const byCode = Object.create(null);
 
   EXCLUSIVE_ROWS.forEach(([code, weaponType, jobName]) => {
@@ -181,16 +239,33 @@ const WeaponTypeMap = (() => {
     return shared;
   }
 
-  /** 目前裝備欄武器的表攻係數；無武器時回傳預設 1.20 */
-  function getEquippedWeaponMultiplier(getWornEntry) {
+  /** 依職業名稱取典型武器係數（無武器時的 fallback） */
+  function getWeaponMultiplierByJobName(jobName) {
+    if (!jobName) return DEFAULT_WEAPON_MULTIPLIER;
+    let resolvedName = jobName;
+    if (typeof CombatJobs !== 'undefined' && typeof CombatJobs.getJobByName === 'function') {
+      const job = CombatJobs.getJobByName(jobName);
+      if (job?.name) resolvedName = job.name;
+    }
+    const weaponType = JOB_DEFAULT_WEAPON_TYPE[resolvedName];
+    if (!weaponType) return DEFAULT_WEAPON_MULTIPLIER;
+    return WEAPON_MULTIPLIER_BY_TYPE[weaponType] ?? DEFAULT_WEAPON_MULTIPLIER;
+  }
+
+  /**
+   * 目前裝備欄武器的表攻係數。
+   * 無武器時改依 jobName（戰鬥力面板所選職業）取典型係數；再無則 1.20。
+   */
+  function getEquippedWeaponMultiplier(getWornEntry, jobName) {
     const info = resolveFromEquippedSlots(getWornEntry);
-    if (!info) return DEFAULT_WEAPON_MULTIPLIER;
-    return Number(info.weaponMultiplier) || DEFAULT_WEAPON_MULTIPLIER;
+    if (info) return Number(info.weaponMultiplier) || DEFAULT_WEAPON_MULTIPLIER;
+    return getWeaponMultiplierByJobName(jobName);
   }
 
   return {
     JOB_GROUP_REQ,
     WEAPON_MULTIPLIER_BY_TYPE,
+    JOB_DEFAULT_WEAPON_TYPE,
     DEFAULT_WEAPON_MULTIPLIER,
     byCode,
     padItemId,
@@ -199,6 +274,7 @@ const WeaponTypeMap = (() => {
     getByItemId,
     getTooltipLabels,
     resolveFromEquippedSlots,
+    getWeaponMultiplierByJobName,
     getEquippedWeaponMultiplier,
   };
 })();

@@ -23,7 +23,17 @@ const CharacterCombatPanel = (() => {
   const state = {
     jobName: '英雄',
     includeEquipDelta: true,
+    genesisFinalCheck: false,
     values: {},
+    weaponCorrection: {
+      auto: true,
+      setKey: 'genesis',
+      starCount: 0,
+      flameTier: 0,
+      scrollAtk: 0,
+      currentWeaponAtk: 0,
+      isZero: false,
+    },
     /** 專屬武器鎖定時不給改下拉；由裝備欄同步，不寫入 localStorage */
     jobLockedByWeapon: false,
     detectedWeaponType: '',
@@ -80,8 +90,23 @@ const CharacterCombatPanel = (() => {
       if (typeof data.includeEquipDelta === 'boolean') {
         state.includeEquipDelta = data.includeEquipDelta;
       }
+      if (typeof data.genesisFinalCheck === 'boolean') {
+        state.genesisFinalCheck = data.genesisFinalCheck;
+      }
       if (data.values && typeof data.values === 'object') {
         state.values = sanitizeValues(data.values);
+      }
+      if (data.weaponCorrection && typeof data.weaponCorrection === 'object') {
+        const saved = data.weaponCorrection;
+        state.weaponCorrection.auto = saved.auto !== false;
+        if (['fortune', 'genesis', 'arcane', 'absolab', 'fafnir'].includes(saved.setKey)) {
+          state.weaponCorrection.setKey = saved.setKey;
+        }
+        ['starCount', 'flameTier', 'scrollAtk', 'currentWeaponAtk'].forEach((key) => {
+          const value = Number(saved[key]);
+          if (Number.isFinite(value)) state.weaponCorrection[key] = value;
+        });
+        state.weaponCorrection.isZero = !!saved.isZero;
       }
     } catch (_) {
       try { localStorage.removeItem(STORAGE_KEY); } catch (__) { /* ignore */ }
@@ -93,7 +118,9 @@ const CharacterCombatPanel = (() => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         jobName: state.jobName,
         includeEquipDelta: state.includeEquipDelta,
+        genesisFinalCheck: state.genesisFinalCheck,
         values: state.values,
+        weaponCorrection: state.weaponCorrection,
       }));
     } catch (_) { /* ignore */ }
   }
@@ -125,13 +152,37 @@ const CharacterCombatPanel = (() => {
     return fields;
   }
 
+  function getWeaponCorrectionResult() {
+    if (typeof WeaponCorrection === 'undefined') return null;
+    const job = currentJob();
+    if (state.weaponCorrection.auto) {
+      return WeaponCorrection.inspectEquipped({
+        preferMagic: labels().main === 'INT',
+        jobName: job.name,
+      });
+    }
+    const input = {
+      setKey: state.weaponCorrection.setKey,
+      starCount: state.weaponCorrection.starCount,
+      flameTier: state.weaponCorrection.flameTier,
+      scrollAtk: state.weaponCorrection.scrollAtk,
+      currentWeaponAtk: state.weaponCorrection.currentWeaponAtk,
+      isZero: state.weaponCorrection.isZero || job.name === '神之子',
+    };
+    return { ...input, ...WeaponCorrection.calculate(input), manual: true };
+  }
+
   function syncToCombatPower() {
     if (typeof CombatPower === 'undefined') return;
     const job = currentJob();
-    CombatPower.setCharacterInputs(buildFields(), {
+    const fields = buildFields();
+    const weaponCorrection = getWeaponCorrectionResult();
+    fields.adjWeaponAtk = Number(weaponCorrection?.correction) || 0;
+    CombatPower.setCharacterInputs(fields, {
       jobCategory: job.category,
       jobName: job.name,
-      genesisFinalChecked: false,
+      weaponSet: weaponCorrection?.setKey || '',
+      genesisFinalChecked: !!state.genesisFinalCheck,
       useBuff: false,
       xenonPowerCoefficientRaw: state.values.adjXenonPowerCoefficient || '',
       daPowerCoefficientRaw: state.values.adjDAPowerCoefficient || '',
@@ -170,10 +221,19 @@ const CharacterCombatPanel = (() => {
     if (jobChanged) state.jobName = nextJob;
     state.jobLockedByWeapon = nextLocked;
     state.detectedWeaponType = nextType;
+    const equippedCorrection = typeof WeaponCorrection !== 'undefined'
+      ? WeaponCorrection.inspectEquipped({
+        preferMagic: labels().main === 'INT',
+        jobName: currentJob().name,
+      })
+      : null;
+    const nextGenesisChecked = equippedCorrection?.setKey === 'genesis';
+    const genesisChanged = nextGenesisChecked !== state.genesisFinalCheck;
+    state.genesisFinalCheck = nextGenesisChecked;
 
     if (!inited) return;
-    if (jobChanged) notifyRefresh();
-    if (jobChanged || lockChanged) render();
+    if (jobChanged || genesisChanged) notifyRefresh();
+    if (jobChanged || lockChanged || genesisChanged || state.weaponCorrection.auto) render();
   }
 
   function inputCell(id, placeholder) {
@@ -192,6 +252,81 @@ const CharacterCombatPanel = (() => {
     </tr>`;
   }
 
+  function formatSigned(value) {
+    const n = Number(value) || 0;
+    return n > 0 ? `+${n}` : String(n);
+  }
+
+  function renderWeaponCorrection(result) {
+    const auto = state.weaponCorrection.auto;
+    const setOptions = Object.entries(
+      typeof WeaponCorrection !== 'undefined' ? WeaponCorrection.DATABASE : {},
+    ).map(([key, row]) => (
+      `<option value="${key}" ${state.weaponCorrection.setKey === key ? 'selected' : ''}>${row.name}</option>`
+    )).join('');
+    let details = '';
+    if (auto) {
+      if (!result) {
+        details = '<div class="ccp-wc-empty">未穿著主武器，校正為 0。</div>';
+      } else if (result.error) {
+        details = `<div class="ccp-wc-empty">${result.itemName || '目前武器'}：${result.error}，校正為 0。</div>`;
+      } else {
+        details = `
+          <div class="ccp-wc-grid">
+            <span>武器</span><strong>${result.itemName}</strong>
+            <span>條件</span><strong>${result.setName}／${result.starCount}星／T${result.flameTier}／卷軸攻 ${formatSigned(result.scrollAtk)}</strong>
+            <span>目前武器總攻</span><strong>${result.currentWeaponAtk}</strong>
+            <span>基準弓總攻</span><strong>${result.targetTotal}</strong>
+            <span>戰力攻擊校正</span><strong class="${result.correction >= 0 ? 'is-positive' : 'is-negative'}">${formatSigned(result.correction)}</strong>
+          </div>`;
+      }
+    } else {
+      details = `
+        <div class="ccp-wc-manual">
+          <label>套裝
+            <select class="ccp-select" data-wc-field="setKey">${setOptions}</select>
+          </label>
+          <label>星力
+            <input class="ccp-input" type="number" min="0" max="25" step="1"
+              data-wc-field="starCount" value="${state.weaponCorrection.starCount}">
+          </label>
+          <label>星火階級
+            <input class="ccp-input" type="number" min="0" max="9" step="1"
+              data-wc-field="flameTier" value="${state.weaponCorrection.flameTier}">
+          </label>
+          <label>卷軸攻
+            <input class="ccp-input" type="number" step="any"
+              data-wc-field="scrollAtk" value="${state.weaponCorrection.scrollAtk}">
+          </label>
+          <label>目前武器總攻
+            <input class="ccp-input" type="number" min="0" step="any"
+              data-wc-field="currentWeaponAtk" value="${state.weaponCorrection.currentWeaponAtk}">
+          </label>
+          <label class="ccp-check">
+            <input type="checkbox" data-wc-field="isZero" ${state.weaponCorrection.isZero ? 'checked' : ''}>
+            神之子基準
+          </label>
+        </div>
+        <div class="ccp-wc-result">
+          基準弓總攻 <strong>${Number(result?.targetTotal) || 0}</strong>
+          ／ 戰力攻擊校正
+          <strong class="${(Number(result?.correction) || 0) >= 0 ? 'is-positive' : 'is-negative'}">${formatSigned(result?.correction)}</strong>
+        </div>`;
+    }
+    return `
+      <div class="ccp-job-extra ccp-weapon-correction">
+        <div class="ccp-extra-title">
+          <span>武器攻擊校正</span>
+          <label class="ccp-check">
+            <input type="checkbox" id="ccpWeaponCorrectionAuto" ${auto ? 'checked' : ''}>
+            自動依身上武器
+          </label>
+        </div>
+        ${details}
+        <div class="ccp-wc-hint">若發現戰鬥力數值有誤，可先調整「目前武器總攻」+1或-1來修正。</div>
+      </div>`;
+  }
+
   function render() {
     const body = $('ccpBody');
     if (!body) return;
@@ -201,6 +336,7 @@ const CharacterCombatPanel = (() => {
     const showXenon = job.category === 'xenon';
     const showDa = job.category === 'da';
     const showRuin = job.category === 'da' || job.name === '惡魔殺手';
+    const weaponCorrection = getWeaponCorrectionResult();
 
     const jobLocked = !!state.jobLockedByWeapon;
     const jobOpts = (typeof CombatJobs !== 'undefined' ? CombatJobs.jobOptions : [])
@@ -218,10 +354,14 @@ const CharacterCombatPanel = (() => {
         ${jobDetectNote}
         <label class="ccp-check">
           <input type="checkbox" id="ccpIncludeEquip" ${state.includeEquipDelta ? 'checked' : ''}>
-          自動加總身上裝備
+          套用模擬器裝備
+        </label>
+        <label class="ccp-check" title="依身上創世武器自動勾選，也可手動調整">
+          <input type="checkbox" id="ccpGenesisFinal" ${state.genesisFinalCheck ? 'checked' : ''}>
+          創世 10% 終傷
         </label>
       </div>
-      <p class="ccp-hint">欄位對齊 MapleCombat。勾選「自動加總」時請填<strong>不含目前身上裝備</strong>的數值；取消勾選則視為完整面板（含裝備）。</p>
+      <p class="ccp-hint">勾選「套用模擬器裝備」時請填<strong>不包含裝備道具</strong>的數值；取消勾選則視為完整面板（含裝備）。</p>
       <div class="ccp-scroll">
         <table class="ccp-table">
           <thead>
@@ -251,6 +391,7 @@ const CharacterCombatPanel = (() => {
             <tr><th>終傷(技能)</th><td colspan="2">${inputCell('skillFinal')}</td></tr>
           </tbody>
         </table>
+        ${renderWeaponCorrection(weaponCorrection)}
         ${showXenon ? `
           <div class="ccp-job-extra">
             <div class="ccp-extra-title">傑諾</div>
@@ -274,9 +415,26 @@ const CharacterCombatPanel = (() => {
             </label>
           </div>` : ''}
       </div>
+      <div class="ccp-footer">
+        <button type="button" id="ccpClearValues" class="ccp-clear-btn">清空數值</button>
+      </div>
     `;
 
     bindBodyEvents();
+  }
+
+  function clearValues() {
+    state.values = {};
+    state.weaponCorrection = {
+      ...state.weaponCorrection,
+      starCount: 0,
+      flameTier: 0,
+      scrollAtk: 0,
+      currentWeaponAtk: 0,
+      isZero: false,
+    };
+    notifyRefresh();
+    render();
   }
 
   function bindBodyEvents() {
@@ -290,6 +448,30 @@ const CharacterCombatPanel = (() => {
       state.includeEquipDelta = !!e.target.checked;
       notifyRefresh();
     });
+    $('ccpGenesisFinal')?.addEventListener('change', (e) => {
+      state.genesisFinalCheck = !!e.target.checked;
+      notifyRefresh();
+    });
+    $('ccpWeaponCorrectionAuto')?.addEventListener('change', (e) => {
+      state.weaponCorrection.auto = !!e.target.checked;
+      notifyRefresh();
+      render();
+    });
+
+    $('ccpBody')?.querySelectorAll('[data-wc-field]').forEach((el) => {
+      const key = el.getAttribute('data-wc-field');
+      el.addEventListener('change', () => {
+        if (key === 'isZero') {
+          state.weaponCorrection.isZero = !!el.checked;
+        } else if (key === 'setKey') {
+          state.weaponCorrection.setKey = el.value;
+        } else {
+          state.weaponCorrection[key] = Number(el.value) || 0;
+        }
+        notifyRefresh();
+        render();
+      });
+    });
 
     const body = $('ccpBody');
     body?.querySelectorAll('[data-field]').forEach((el) => {
@@ -300,6 +482,11 @@ const CharacterCombatPanel = (() => {
       };
       el.addEventListener('change', handler);
       el.addEventListener('input', handler);
+    });
+
+    $('ccpClearValues')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      clearValues();
     });
   }
 
@@ -363,7 +550,11 @@ const CharacterCombatPanel = (() => {
     isOpen: () => !!open,
     syncToCombatPower,
     syncFromEquippedWeapon,
-    getState: () => ({ ...state, values: { ...state.values } }),
+    getState: () => ({
+      ...state,
+      values: { ...state.values },
+      weaponCorrection: { ...state.weaponCorrection },
+    }),
   };
 })();
 

@@ -166,3 +166,106 @@
 .ccp-job-extra .ccp-input {
   width: 88px;
 }
+
+.ccp-weapon-correction {
+  display: block;
+}
+
+.ccp-weapon-correction .ccp-extra-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ccp-weapon-correction .ccp-extra-title .ccp-check {
+  color: #c5ced6;
+  font-weight: 400;
+}
+
+.ccp-wc-grid {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 4px 10px;
+  align-items: center;
+}
+
+.ccp-wc-grid > span {
+  color: #8a949c;
+}
+
+.ccp-wc-grid > strong {
+  overflow-wrap: anywhere;
+  color: #ddd;
+  font-weight: 500;
+}
+
+.ccp-wc-manual {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+}
+
+.ccp-wc-manual .ccp-select {
+  min-width: 92px;
+}
+
+.ccp-wc-manual .ccp-input {
+  width: 74px;
+}
+
+.ccp-wc-result {
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid #39434d;
+  color: #aeb8c2;
+}
+
+.ccp-wc-result strong,
+.ccp-wc-grid .is-positive {
+  color: #a6e37a;
+}
+
+.ccp-wc-result .is-negative,
+.ccp-wc-grid .is-negative {
+  color: #ff9b91;
+}
+
+.ccp-wc-empty {
+  color: #9aa5ae;
+}
+
+.ccp-wc-hint {
+  margin-top: 6px;
+  color: #747f88;
+  font-size: 11px;
+}
+
+.ccp-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ccp-clear-btn {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #d7dde3;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ccp-clear-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.ccp-clear-btn:active {
+  background: rgba(255, 255, 255, 0.16);
+}

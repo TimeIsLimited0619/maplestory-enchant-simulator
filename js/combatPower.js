@@ -218,7 +218,8 @@ const CombatPower = (() => {
 
     const ruinMult =
       currentJob === 'da' || ctx.jobName === '惡魔殺手' ? 1 + getVal('ruinFinal') / 100 : 1;
-    const skillFinalMult = 1 + getVal('skillFinal') / 100;
+    // 技能終傷不計戰鬥力；創世終傷是例外，勾選時獨立套用 10%。
+    const genesisMult = ctx.genesisFinalChecked ? 1.1 : 1;
     const equipmentFamMultiplierFactor = delta.__eqFamFinalMultiplierFactor ?? 1;
     const famMult =
       resolveFamMult(ctx.famFinalSources, getVal('famFinal')) * equipmentFamMultiplierFactor;
@@ -268,7 +269,8 @@ const CombatPower = (() => {
       },
       rawDmgSum,
       rawCritSum,
-      finalMult: famMult * ruinMult * skillFinalMult,
+      finalMult: famMult * ruinMult * genesisMult,
+      skillFinal: getVal('skillFinal'),
       equivalentMain,
     };
   }

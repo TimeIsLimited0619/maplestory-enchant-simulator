@@ -1221,13 +1221,27 @@ function formatMultiStatChangeLog(changes) {
 }
 
 function applyFixedScrollStats(item, stats) {
+  const statFields = {
+    STR: 'scrollStr',
+    DEX: 'scrollDex',
+    INT: 'scrollInt',
+    LUK: 'scrollLuk'
+  };
+
   (stats || []).forEach((line) => {
-    if (line.label.includes('攻擊力') && !line.label.includes('魔法')) {
-      item.scrollAtk = (item.scrollAtk || 0) + line.val;
-    } else if (line.label.includes('魔法攻擊力')) {
-      item.scrollMatk = (item.scrollMatk || 0) + line.val;
-    } else if (typeof line.val === 'number') {
-      item.scrollStat = (item.scrollStat || 0) + line.val;
+    const label = String(line.label || '').trim();
+    const val = Number(line.val);
+    if (!Number.isFinite(val)) return;
+
+    if (label === '攻擊力' || label === '物理攻擊力') {
+      item.scrollAtk = (item.scrollAtk || 0) + val;
+    } else if (label === '魔力' || label === '魔法攻擊力') {
+      item.scrollMatk = (item.scrollMatk || 0) + val;
+    } else if (statFields[label]) {
+      const field = statFields[label];
+      item[field] = (item[field] || 0) + val;
+    } else {
+      item.scrollStat = (item.scrollStat || 0) + val;
     }
   });
 }
