@@ -38,3 +38,6 @@ css/style.monolith.css
 
 # 本機雜項
 *.local
+
+# 未使用的圖片素材（本機保留，不上傳）
+_unused_images/
