@@ -18,7 +18,7 @@ const WeaponCorrection = (() => {
       flames: [0, 20, 39, 58, 84, 116, 153, 196, 225, 253],
     },
     arcane: {
-      name: '神秘',
+      name: '神祕',
       base: 276,
       stars16_24: [13, 13, 14, 14, 15, 16, 17, 34, 35],
       flames: [0, 17, 34, 50, 73, 101, 133, 170, 195, 219],
@@ -79,7 +79,7 @@ const WeaponCorrection = (() => {
     const name = String(item?.name || '');
     if (/命運|destiny/i.test(name)) return 'fortune';
     if (/創世|genesis/i.test(name)) return 'genesis';
-    if (/神秘冥界|神秘|arcane/i.test(name)) return 'arcane';
+    if (/神祕冥界|神秘冥界|神祕|神秘|arcane/i.test(name)) return 'arcane';
     if (/航海師|航海|absolab/i.test(name)) return 'absolab';
     if (/法弗納|深淵|fafnir/i.test(name)) return 'fafnir';
     return '';

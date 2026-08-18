@@ -1,9 +1,10 @@
 /**
- * 套裝效果提示框資料（光輝／漆黑／永恆）
- * 永恆 886–890 共用「永恆套組」，清單去職業名。
+ * 套裝效果提示框資料（光輝／漆黑／神祕冥界／永恆）
+ * 永恆 886–890 共用「永恆套組」，神祕冥界 617–621 共用「神祕冥界套裝」，清單去職業名。
  */
 
 const ETERNAL_SET_IDS = [886, 887, 888, 889, 890];
+const ARCANE_SET_IDS = [617, 618, 619, 620, 621];
 
 const ETERNAL_HATS = ['01005980', '01005981', '01005982', '01005983', '01005984'];
 const ETERNAL_COATS = ['01042433', '01042434', '01042435', '01042436', '01042437'];
@@ -13,7 +14,14 @@ const ETERNAL_GLOVES = ['01082760', '01082761', '01082762', '01082763', '0108276
 const ETERNAL_SHOES = ['01073629', '01073630', '01073631', '01073632', '01073633'];
 const ETERNAL_CAPES = ['01103433', '01103434', '01103435', '01103436', '01103437'];
 
-/** 永恆套組武器：名稱含創世／命運，且為武器部位（含神之子 Wpsi） */
+const ARCANE_HATS = ['01004808', '01004809', '01004810', '01004811', '01004812'];
+const ARCANE_OVERALLS = ['01053063', '01053064', '01053065', '01053066', '01053067'];
+const ARCANE_SHOULDERS = ['01152174', '01152175', '01152176', '01152177', '01152178'];
+const ARCANE_GLOVES = ['01082695', '01082696', '01082697', '01082698', '01082699'];
+const ARCANE_SHOES = ['01073158', '01073159', '01073160', '01073161', '01073162'];
+const ARCANE_CAPES = ['01102940', '01102941', '01102942', '01102943', '01102944'];
+
+/** 永恆／神祕冥界套組武器：名稱含創世／命運，且為武器部位（含神之子 Wpsi） */
 function isEternalSetWeaponCandidate(row) {
   const name = String(row?.name || row?.item?.name || '');
   if (!name.includes('創世') && !name.includes('命運')) return false;
@@ -100,12 +108,35 @@ const EQUIP_SET_DEFS = {
       8: ['攻擊力/魔力 +40', '攻擊Boss怪物時傷害 +15%'],
     },
   },
+  arcane: {
+    id: 'arcane',
+    name: '神祕冥界套裝',
+    setIds: ARCANE_SET_IDS,
+    pieces: [
+      { slot: '帽子', name: '神祕冥界頭盔', itemIds: ARCANE_HATS },
+      { slot: '套服', name: '神祕冥界套服', itemIds: ARCANE_OVERALLS },
+      { slot: '肩膀裝飾', name: '神祕冥界護肩', itemIds: ARCANE_SHOULDERS },
+      { slot: '武器', name: '可選擇創世或命運武器其一', match: 'eternalWeapon', chooseOne: true },
+      { slot: '手套', name: '神祕冥界手套', itemIds: ARCANE_GLOVES },
+      { slot: '鞋子', name: '神祕冥界鞋', itemIds: ARCANE_SHOES },
+      { slot: '披風', name: '神祕冥界斗篷', itemIds: ARCANE_CAPES },
+    ],
+    effects: {
+      2: ['攻擊力/魔力 +30', '攻擊Boss怪物時傷害 +10%'],
+      3: ['攻擊力/魔力 +30', '防禦力 +400', '無視怪物防禦率 +10%'],
+      4: ['全屬性 +50', '攻擊力/魔力 +35', '攻擊Boss怪物時傷害 +10%'],
+      5: ['最大HP/最大MP +2000', '攻擊力/魔力 +40', '攻擊Boss怪物時傷害 +10%'],
+      6: ['最大HP/最大MP +30%', '攻擊力/魔力 +30'],
+      7: ['攻擊力/魔力 +30', '無視怪物防禦率 +10%'],
+    },
+  },
 };
 
 function getEquipSetDef(setItemId) {
   const id = Number(setItemId) || 0;
   if (!id) return null;
   if (ETERNAL_SET_IDS.includes(id)) return EQUIP_SET_DEFS.eternal;
+  if (ARCANE_SET_IDS.includes(id)) return EQUIP_SET_DEFS.arcane;
   return EQUIP_SET_DEFS[id] || null;
 }
 

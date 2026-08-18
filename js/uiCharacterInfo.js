@@ -66,7 +66,7 @@ const UiCharacterInfo = (() => {
     }
     if (slot?.format === 'power') {
       if (typeof formatPower !== 'function') return formatWithCommas(v);
-      // 屬性攻擊力：億／萬後加空格（例：21億 1432萬 7596）
+      // 屬性攻擊力：億／萬後加空格（例：12億 0170萬 9742）
       return formatPower(v).replace(/億/g, '億 ').replace(/萬/g, '萬 ');
     }
     if (slot?.percent) {

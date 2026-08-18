@@ -13,6 +13,7 @@ const COST_TRACKER_CAT_VALLEY_MATERIALS = [
   { id: 'darkpcs', label: '每5漆黑粉塵', unitSize: 5 },
   { id: 'Nohimepcs', label: '每5濃姬粉塵', unitSize: 5 },
   { id: 'eternalpcs', label: '每10永恆粉塵', unitSize: 10 },
+  { id: 'arcanepcs', label: '每5神祕粉塵', unitSize: 5 },
 ];
 
 const CostTrackerModule = {
@@ -27,6 +28,7 @@ const CostTrackerModule = {
     darkpcs: 0,
     Nohimepcs: 0,
     eternalpcs: 0,
+    arcanepcs: 0,
     scrollGlory: 0,
     recoveryCard: 0,
     goldenHammer: 0,
@@ -60,6 +62,7 @@ const CostTrackerModule = {
       darkpcs: 0,
       Nohimepcs: 0,
       eternalpcs: 0,
+      arcanepcs: 0,
       scrollGlory: 0,
       recoveryCard: 0,
       goldenHammer: 0,

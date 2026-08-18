@@ -9,6 +9,7 @@ const CAT_VALLEY_ENHANCE_TYPE = {
   MITRA: 'mitra',
   OFFHAND: 'offhand',
   TOTEM: 'totem',
+  ARCANE: 'arcane',
 };
 
 const CAT_VALLEY_ENHANCE_META = {
@@ -38,6 +39,11 @@ const CAT_VALLEY_ENHANCE_META = {
     label: '圖騰強化',
     maxLevel: 25,
     totalUses: 26,
+  },
+  [CAT_VALLEY_ENHANCE_TYPE.ARCANE]: {
+    id: CAT_VALLEY_ENHANCE_TYPE.ARCANE,
+    label: '神祕強化',
+    maxLevel: 30,
   },
 };
 
@@ -77,6 +83,9 @@ const CAT_VALLEY_COST_TABLES = {
     { maxLevel: 9, doom: 15, Nohimepcs: 35, nekopow: 700 },
     { maxLevel: 10, doom: 20, Nohimepcs: 45, nekopow: 1000 },
   ],
+  [CAT_VALLEY_ENHANCE_TYPE.ARCANE]: [
+    { maxLevel: 30, arcanepcs: 15, nekopow: 15 },
+  ],
 };
 
 function getCatValleyEnhanceCostForLevel(type, targetLevel) {
@@ -84,7 +93,7 @@ function getCatValleyEnhanceCostForLevel(type, targetLevel) {
   if (!table?.length || !(targetLevel > 0)) return null;
   const tier = table.find((row) => targetLevel <= row.maxLevel) || table[table.length - 1];
   const cost = {};
-  ['snow', 'taichu', 'nekopow', 'doom', 'sun', 'darkpcs', 'Nohimepcs', 'eternalpcs'].forEach((key) => {
+  ['snow', 'taichu', 'nekopow', 'doom', 'sun', 'darkpcs', 'Nohimepcs', 'eternalpcs', 'arcanepcs'].forEach((key) => {
     const val = Number(tier[key]) || 0;
     if (val > 0) cost[key] = val;
   });
@@ -102,6 +111,16 @@ function trackCatValleyEnhanceCost(type, targetLevel) {
 
 function isCatValleyEternalItem(item) {
   return Boolean(item?.name && String(item.name).startsWith('永恆'));
+}
+
+/** 神祕冥界防具／飾品（不含武器） */
+function isCatValleyArcaneItem(item) {
+  const name = String(item?.name || '');
+  if (!name.startsWith('神祕冥界') && !name.startsWith('神秘冥界')) return false;
+  if (typeof EQUIP_TYPE !== 'undefined' && item.mainType === EQUIP_TYPE.WEAPON) return false;
+  const islot = item.islot || '';
+  if (islot === 'Wp' || islot === 'Wpsi' || islot === 'Gw' || islot === 'Op') return false;
+  return true;
 }
 
 function isCatValleyMitraItem(item) {
@@ -175,6 +194,7 @@ function getCatValleyEnhanceType(item) {
   if (isCatValleyTotemItem(item)) return CAT_VALLEY_ENHANCE_TYPE.TOTEM;
   if (isCatValleyMitraItem(item)) return CAT_VALLEY_ENHANCE_TYPE.MITRA;
   if (isCatValleyOffhandItem(item)) return CAT_VALLEY_ENHANCE_TYPE.OFFHAND;
+  if (isCatValleyArcaneItem(item)) return CAT_VALLEY_ENHANCE_TYPE.ARCANE;
 
   if (isCatValleyEternalItem(item)) {
     const islot = item.islot || '';
@@ -690,6 +710,9 @@ function applyCatValleyEnhanceOnce(item) {
     add('scrollMatk', 5, '魔法攻擊力');
     if (nextLevel === 5) add('scrollImdR', 5, '無視怪物防禦率');
     if (isFinal) add('scrollBdR', 10, 'BOSS怪物傷害');
+  } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.ARCANE) {
+    add('scrollStat', 8, '四屬');
+    add('scrollHp', 140, '最大HP');
   }
 
   item.catValleyLevel = nextLevel;

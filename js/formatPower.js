@@ -1,6 +1,7 @@
 /**
- * 戰鬥力顯示格式（對齊 MapleCombat src/core/format.ts formatPower）
- * 例：2114327596 →「21億1432萬7596」；去掉群組前導 0 段
+ * 戰鬥力／屬性攻擊力顯示格式
+ * 例：1201709742 →「12億0170萬9742」
+ * 較高單位存在時，萬／個位補滿四位；整段為 0 的前導單位不顯示
  */
 function formatPower(num) {
   const n = Number(num);
@@ -11,12 +12,18 @@ function formatPower(num) {
   const remaining = Math.floor(n % 10000);
 
   let result = '';
-  if (yi > 0) result += `${yi}億`;
-  if (wan > 0) result += `${wan}萬`;
-  if (remaining > 0 || (yi === 0 && wan === 0)) {
-    result += String(remaining);
+  if (yi > 0) {
+    result += `${yi}億`;
+    result += `${String(wan).padStart(4, '0')}萬`;
+    result += String(remaining).padStart(4, '0');
+    return result;
   }
-  return result;
+  if (wan > 0) {
+    result += `${wan}萬`;
+    result += String(remaining).padStart(4, '0');
+    return result;
+  }
+  return String(remaining);
 }
 
 if (typeof window !== 'undefined') {

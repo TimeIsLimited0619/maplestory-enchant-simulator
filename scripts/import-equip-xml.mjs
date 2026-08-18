@@ -1,16 +1,3 @@
-/**
- * 從 Character.*.img.xml 快速建檔至 js/item.js
- *
- * 用法：
- *   node scripts/import-equip-xml.mjs <xml 或資料夾...> [--write] [--inventory]
- *   node scripts/import-equip-xml.mjs weapon.xml --name 命運之劍 --icon icon.png --write --inventory
- *   node scripts/import-equip-xml.mjs *.xml --names names.txt --write --inventory
- *   node scripts/import-equip-xml.mjs C:\xmls --icon-dir C:\pngs --write --inventory
- *
- * names.txt 格式（每行）：
- *   01215041=命運之劍
- *   01215032 神秘冥界幽靈之劍
- */
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
