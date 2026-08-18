@@ -1124,6 +1124,26 @@ function collectEssentialEnchantChromeUrls() {
   return [...new Set(urls.filter(Boolean))];
 }
 
+/** 開頁阻擋層只等首屏（強化台待機／背包／裝備欄），全螢幕與 hover 圖改背景載入 */
+function collectCriticalChromeUrls() {
+  const urls = [];
+
+  Object.values(MAIN_PANEL_BG_BY_CATEGORY).forEach((src) => urls.push(src));
+  ENCHANT_UI_CHROME_EXTRAS.forEach((src) => urls.push(src));
+
+  ENCHANT_TAB_BUTTON_PREFIXES.forEach((prefix) => {
+    ENCHANT_TAB_BUTTON_STATES.forEach((state) => {
+      urls.push(`images/tabbutton/${prefix}_tab_${state}.png`);
+    });
+  });
+
+  collectStylesheetImageUrls({
+    hrefIncludes: ['02-sidebar', '03-main-panel', '04-inventory', '17-uiequip'],
+  }).forEach((src) => urls.push(src));
+
+  return [...new Set(urls.filter(Boolean))];
+}
+
 function ensureMainPanelBgStack() {
   const mainPanel = document.getElementById('mainContentPanel');
   const stack = document.getElementById('mainPanelBgStack');
@@ -1212,7 +1232,8 @@ function normalizePreloadUrl(url) {
   }
 }
 
-function preloadEnchantAsset(url) {
+function preloadEnchantAsset(url, options = {}) {
+  const decode = options.decode !== false;
   const absolute = normalizePreloadUrl(url);
   if (!absolute) return Promise.resolve(null);
 
@@ -1221,7 +1242,7 @@ function preloadEnchantAsset(url) {
     ? String(url)
     : null;
   if (relativeKey && typeof EnchantImagePreload !== 'undefined') {
-    const shared = EnchantImagePreload.preload(relativeKey);
+    const shared = EnchantImagePreload.preload(relativeKey, null, { decode });
     _enchantAssetPreloadCache.set(absolute, shared);
     return shared;
   }
@@ -1233,7 +1254,7 @@ function preloadEnchantAsset(url) {
     const img = new Image();
     img.decoding = 'async';
     img.onload = () => {
-      if (typeof img.decode === 'function') {
+      if (decode && typeof img.decode === 'function') {
         img.decode().then(() => resolve(img)).catch(() => resolve(img));
       } else {
         resolve(img);
@@ -1246,9 +1267,10 @@ function preloadEnchantAsset(url) {
   return p;
 }
 
-function collectStylesheetImageUrls() {
+function collectStylesheetImageUrls(opts = {}) {
   const urls = new Set();
   const urlRe = /url\(\s*(['"]?)([^'")]+)\1\s*\)/gi;
+  const needles = (opts.hrefIncludes || []).map((s) => String(s).toLowerCase());
 
   const harvestText = (text) => {
     if (!text) return;
@@ -1262,6 +1284,10 @@ function collectStylesheetImageUrls() {
   };
 
   Array.from(document.styleSheets || []).forEach((sheet) => {
+    if (needles.length) {
+      const href = String(sheet.href || '').toLowerCase();
+      if (!href || !needles.some((n) => href.includes(n))) return;
+    }
     let rules;
     try {
       rules = sheet.cssRules;
@@ -1471,6 +1497,7 @@ async function preloadUrlBatch(urls, {
   concurrency = 4,
   onProgress = null,
   statusText = '正在載入介面素材…',
+  decode = true,
 } = {}) {
   const list = [...new Set(urls.map(normalizePreloadUrl).filter(Boolean))];
   let done = 0;
@@ -1483,7 +1510,7 @@ async function preloadUrlBatch(urls, {
     while (cursor < list.length) {
       const index = cursor;
       cursor += 1;
-      await preloadEnchantAsset(list[index]);
+      await preloadEnchantAsset(list[index], { decode });
       done += 1;
       if (onProgress) onProgress(done, total, statusText);
     }
@@ -1683,15 +1710,16 @@ async function runEnchantBootPreload() {
     typeof getActiveCategory === 'function' ? getActiveCategory() : 'none'
   );
 
-  // 預載目前 UI chrome：CSS／DOM／JS UI 設定，以及按鈕的各種狀態；不含動畫特效幀。
-  const chromeUrls = collectEssentialEnchantChromeUrls();
+  // 開頁只等首屏 chrome；全螢幕／tooltip／hover 狀態改背景補齊。
+  const chromeUrls = collectCriticalChromeUrls();
   const chromeUniqueCount = new Set(chromeUrls.map(normalizePreloadUrl).filter(Boolean)).size;
   const chromeTotal = Math.max(1, chromeUniqueCount);
 
   updateEnchantBootProgress(0, chromeTotal, '正在載入介面素材…');
 
   await preloadUrlBatch(chromeUrls, {
-    concurrency: 3,
+    concurrency: 8,
+    decode: false,
     onProgress: (batchDone) => {
       updateEnchantBootProgress(
         batchDone,
@@ -1708,6 +1736,29 @@ async function runEnchantBootPreload() {
   await finishBootAndShowInfoCard();
 
   refreshEffectTestBars();
+  scheduleDeferredChromeWarm(chromeUrls);
+}
+
+function scheduleDeferredChromeWarm(criticalUrls) {
+  const criticalKeys = new Set(
+    (criticalUrls || []).map(normalizePreloadUrl).filter(Boolean)
+  );
+  const rest = collectEssentialEnchantChromeUrls().filter((src) => {
+    const key = normalizePreloadUrl(src);
+    return key && !criticalKeys.has(key);
+  });
+  if (!rest.length) return;
+
+  const run = () => {
+    preloadUrlBatch(rest, { concurrency: 4, decode: false })
+      .then(() => pinChromeImagesFromCache())
+      .catch(() => {});
+  };
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(run, { timeout: 1200 });
+  } else {
+    window.setTimeout(run, 0);
+  }
 }
 
 /**

@@ -4,11 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>楓之谷做裝模擬器 - 楓之谷 UI 樣式版</title>
-  
-  <!-- 第三方 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
+  <!-- 首屏關鍵圖：與 CSS／JS 解析並行下載 -->
+  <link rel="preload" as="image" href="images/common_backgrnd.png">
+  <link rel="preload" as="image" href="images/Enchant_none_0.png">
+  <link rel="preload" as="image" href="images/none_waitEquip.png">
+  <link rel="preload" as="image" href="images/iventory/inventory_bg.png">
+  <link rel="preload" as="image" href="images/UIEquip/main/main_backgrnd.png">
+  <link rel="preload" as="image" href="images/UIEquip/EquipTab/EquipTab.canvas_equip.png">
+
   <!-- 自訂 CSS（modules；file:// 勿用 @import） -->
   <link rel="stylesheet" href="css/modules/01-base.css?v=20260813wbClose3">
   <link rel="stylesheet" href="css/modules/02-sidebar.css?v=20260814catValley2">
@@ -47,7 +51,7 @@
     </div>
   </div>
 
-  <!-- 開頁說明卡：介面載入完成後顯示（特效繼續背景載入） -->
+  <!-- 開頁說明卡：首屏介面載入完成後顯示（其餘 UI／特效背景載入） -->
   <div id="msInfoCardOverlay" class="ms-info-card-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="msInfoCardTitle">
     <div class="ms-info-card-modal">
       <div class="ms-info-card-header">
@@ -1936,7 +1940,7 @@
   <script src="js/uiEquip.js?v=20260814wpsi1"></script>
   <script src="js/data.js"></script>
   <script src="js/modalAnimation.js"></script>
-  <script src="js/imagePreload.js?v=20260812pre1"></script>
+  <script src="js/imagePreload.js?v=20260818boot1"></script>
   <script src="js/scrollData.js?v=20260814medal1"></script>
   <script src="js/scrollEffectData.js"></script>
   <script src="js/scrollEffect.js"></script>
@@ -2102,6 +2106,6 @@
   <script src="js/uiCharacterInfo.js?v=20260817padWan1"></script>
   <script src="js/combatEfficiencyPanel.js?v=20260815eff2"></script>
   <script src="js/costTracker.js?v=20260818arcaneEnhance1"></script>
-  <script src="js/main.js?v=20260815uiPreload1"></script>
+  <script src="js/main.js?v=20260818boot1"></script>
 </body>
 </html>

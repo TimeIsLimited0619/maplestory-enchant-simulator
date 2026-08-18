@@ -23,9 +23,10 @@ const EnchantImagePreload = {
   /**
    * @param {string} url
    * @param {Map<string, Promise<HTMLImageElement|null>>} [localCache] 模組自有 Promise 快取（可選）
+   * @param {{ decode?: boolean }} [options] decode 預設 true（特效幀）；UI chrome 可關以加快開頁
    * @returns {Promise<HTMLImageElement|null>}
    */
-  preload(url, localCache = null) {
+  preload(url, localCache = null, options = null) {
     const key = this.normalize(url);
     if (!key) return Promise.resolve(null);
 
@@ -36,6 +37,7 @@ const EnchantImagePreload = {
       return shared;
     }
 
+    const wantDecode = options?.decode !== false;
     const p = new Promise((resolve) => {
       const img = new Image();
       img.decoding = 'async';
@@ -44,7 +46,7 @@ const EnchantImagePreload = {
         resolve(value);
       };
       img.onload = () => {
-        if (typeof img.decode === 'function') {
+        if (wantDecode && typeof img.decode === 'function') {
           img.decode().then(() => finish(img)).catch(() => finish(img));
         } else {
           finish(img);

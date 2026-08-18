@@ -188,7 +188,7 @@ body {
 }
 
 
-/* 開頁預載：僅在介面素材就緒前阻擋互動（特效改背景載入） */
+/* 開頁預載：僅在首屏介面素材就緒前阻擋互動（其餘 UI／特效改背景載入） */
 body.enchant-boot-loading #pageEnhance {
   pointer-events: none;
   user-select: none;
