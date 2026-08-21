@@ -623,13 +623,15 @@ const AutoEnchantBonusStatModule = {
         BonusStatModule.lastAtkPow = BonusStatModule.itemData.bonusStat.atkPow;
         const { after } = BonusStatModule.performRoll();
 
-        BonusStatModule.applyChoiceResult(after);
+        BonusStatModule.applyChoiceResult(after, { skipUi: true });
 
         if (this.matchesTargets(after)) {
           hit = true;
           break;
         }
       }
+      BonusStatModule.updateUI();
+      this.render();
       if (hit) return { attempts, targetHit: true };
       if (this.cancelled) break;
       await new Promise((resolve) => setTimeout(resolve, this.getLoopDelayMs()));
@@ -658,27 +660,33 @@ const AutoEnchantBonusStatModule = {
 
     while (!this.cancelled && attempts < maxRolls) {
       let hit = false;
+      let lastBefore = null;
+      let lastAfter = null;
       for (let i = 0; i < batch && !this.cancelled && attempts < maxRolls; i += 1) {
         BonusStatModule.payResetCost(1);
         attempts += 1;
 
         const { before, after } = BonusStatModule.performRoll(snapshot);
-
-        if (!overlayOpened) {
-          BonusStatChoiceModule.openAutoSession(before, after, 1, { fadeIn: true });
-          overlayOpened = true;
-        } else {
-          BonusStatChoiceModule.updateAutoSession(before, after, 1);
-        }
-        aeBsSyncChoiceAutoEnchantLayout?.();
+        lastBefore = before;
+        lastAfter = after;
 
         if (this.matchesTargets(after)) {
           this.lastChoiceStoppedForPick = true;
           this.choiceAutoSessionActive = true;
-          BonusStatChoiceModule.render?.();
           hit = true;
           break;
         }
+      }
+
+      if (lastAfter) {
+        if (!overlayOpened) {
+          BonusStatChoiceModule.openAutoSession(lastBefore, lastAfter, 1, { fadeIn: true });
+          overlayOpened = true;
+        } else {
+          BonusStatChoiceModule.updateAutoSession(lastBefore, lastAfter, 1);
+        }
+        aeBsSyncChoiceAutoEnchantLayout?.();
+        if (hit) BonusStatChoiceModule.render?.();
       }
 
       if (hit) {
@@ -704,6 +712,18 @@ const AutoEnchantBonusStatModule = {
     let attempts = 0;
     let targetHit = false;
     let stoppedForManualPick = false;
+
+    const logItem = aeSessionLogItemMeta(BonusStatModule.itemData);
+    aeSessionLogBegin({
+      module: '星火',
+      itemId: logItem.itemId,
+      itemName: logItem.itemName,
+      detail: {
+        tierMode: this.tierSelectMode,
+        overspeed: this.overspeedMode,
+        memorial: isMemorial,
+      },
+    });
 
     try {
       if (isMemorial) {
@@ -735,6 +755,7 @@ const AutoEnchantBonusStatModule = {
       BonusStatModule.updateResetButtonState?.();
       BonusStatChoiceModule.render?.();
       if (typeof updateStatusPanel === 'function') updateStatusPanel();
+      aePotFlushAutoEnchantSideUi?.();
       aeBsSyncChoiceAutoEnchantLayout?.();
     }
 
@@ -745,6 +766,18 @@ const AutoEnchantBonusStatModule = {
     } else if (isMemorial && attempts > 0) {
       addLog(`⚠️ 自動重設結束（共 ${attempts} 次）`, 'log-info');
     }
+
+    aeSessionLogEnd({
+      outcome: aeSessionLogResolveOutcome({
+        cancelled: this.cancelled,
+        targetHit,
+        stoppedForManualPick,
+      }),
+      attempts,
+      targetHit,
+      cancelled: this.cancelled,
+      detail: { memorial: isMemorial, tierMode: this.tierSelectMode },
+    });
   },
 
   applyButtonBg(el, buttonKey, state = 'normal') {

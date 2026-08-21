@@ -578,6 +578,11 @@ function handleGlobalEscapeKey() {
       close: () => CostTrackerModule.close(),
     },
     {
+      id: 'enchantToolsPanel',
+      isOpen: () => typeof EnchantToolsPanel !== 'undefined' && EnchantToolsPanel.isOpen,
+      close: () => EnchantToolsPanel.setOpen(false),
+    },
+    {
       id: 'logRoot',
       isOpen: () => typeof LogPanel !== 'undefined' && LogPanel.isOpen?.(),
       close: () => LogPanel.setOpen(false),
@@ -1814,6 +1819,7 @@ function collectAllEffectPreloadPlan() {
       ...mod.collectSpecUrls('try', STARFORCE_EFFECT.try, false),
       ...mod.collectSpecUrls('success', STARFORCE_EFFECT.success, true),
       ...mod.collectSpecUrls('fail', STARFORCE_EFFECT.fail, true),
+      ...mod.collectSpecUrls('destroy', STARFORCE_EFFECT.destroy, true),
     ]);
     addModuleUrls(mod, urls, () => { mod._preloadDone = true; });
   }
@@ -2467,6 +2473,26 @@ window.addEventListener('DOMContentLoaded', () => {
     SessionPersistenceModule.restoreEquippedItem();
     SessionPersistenceModule.bindAutoSave();
     SessionPersistenceModule.scheduleSave();
+  }
+
+  try {
+    const shareParams = new URLSearchParams(window.location.search);
+    const shareCode = shareParams.get('code') || shareParams.get('share');
+    if (shareCode && typeof importShareCode === 'function') {
+      importShareCode(shareCode, { applyAuto: true }).then((result) => {
+        addLog(`✅ 已從網址匯入分享碼：${result.itemName}`, 'log-success');
+        if (typeof EnchantToolsPanel !== 'undefined') {
+          EnchantToolsPanel.tab = 'share';
+          EnchantToolsPanel.setOpen(true);
+          const input = document.getElementById('etpShareCode');
+          if (input) input.value = shareCode;
+        }
+      }).catch((err) => {
+        addLog(`⚠️ 網址分享碼無效：${err?.message || err}`, 'log-fail');
+      });
+    }
+  } catch (shareErr) {
+    console.warn('[shareCode]', shareErr);
   }
 
   if (typeof calculateCost === 'function') calculateCost();

@@ -223,9 +223,10 @@ const BonusStatModule = {
     }
   },
 
-  applyChoiceResult(chosen) {
+  applyChoiceResult(chosen, opts = {}) {
     if (!chosen || !this.itemData) return;
     this.itemData.bonusStat = cloneBonusStatState(chosen);
+    if (opts.skipUi) return;
     this.updateUI();
     if (typeof updateStatusPanel === 'function') updateStatusPanel();
   },
@@ -523,6 +524,24 @@ const BonusStatModule = {
     });
 
     grid.dataset.tooltipReady = '1';
+    this.bindCatValleyRatesToggle();
+  },
+
+  bindCatValleyRatesToggle() {
+    const catValleyRatesCheck = document.getElementById('chkBonusStatCatValleyRates');
+    if (!catValleyRatesCheck || catValleyRatesCheck.dataset.bound === '1') return;
+    catValleyRatesCheck.dataset.bound = '1';
+    if (typeof isBonusStatCatValleyRatesEnabled === 'function') {
+      catValleyRatesCheck.checked = isBonusStatCatValleyRatesEnabled();
+    }
+    catValleyRatesCheck.addEventListener('change', () => {
+      if (typeof setBonusStatCatValleyRatesEnabled === 'function') {
+        setBonusStatCatValleyRatesEnabled(catValleyRatesCheck.checked);
+      }
+      if (typeof BonusStatInspectModule !== 'undefined' && BonusStatInspectModule.isOpen) {
+        BonusStatInspectModule.render();
+      }
+    });
   },
 
   showItemTooltip(slot, item) {
@@ -709,6 +728,12 @@ const BonusStatModule = {
 
     const bottomOptions = document.getElementById('bsBottomOptions');
     if (bottomOptions) bottomOptions.classList.remove('hidden');
+    const bottomOptionsLeft = document.getElementById('bsBottomOptionsLeft');
+    if (bottomOptionsLeft) bottomOptionsLeft.classList.remove('hidden');
+    const catValleyRatesCheck = document.getElementById('chkBonusStatCatValleyRates');
+    if (catValleyRatesCheck && typeof isBonusStatCatValleyRatesEnabled === 'function') {
+      catValleyRatesCheck.checked = isBonusStatCatValleyRatesEnabled();
+    }
 
     if (typeof AutoEnchantBonusStatModule !== 'undefined') {
       AutoEnchantBonusStatModule.syncAutoCheckbox();

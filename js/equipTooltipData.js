@@ -66,6 +66,9 @@ const EQUIP_TOOLTIP_ASSETS = {
     },
     bonusStatNumber(index) {
       const n = Math.max(0, Math.min(9, Math.floor(Number(index) || 0)));
+      if (typeof BONUS_STAT_UI !== 'undefined' && typeof BONUS_STAT_UI.statIcon === 'function') {
+        return BONUS_STAT_UI.statIcon(n);
+      }
       return `${EQUIP_TOOLTIP_BASE}/Equip.textIcon.bonusStat.number.${n}.png`;
     },
   },

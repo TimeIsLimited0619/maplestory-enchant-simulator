@@ -12,6 +12,7 @@ const EXCEPTIONAL_ELIGIBLE_ITEM_IDS = new Set([
   '01032316', // 指揮官力量耳環
   '01143471', // 不朽的遺產
   '01012911', // 傲慢的原罪
+  '01022913', // 飢渴的血色冤魂
 ]);
 
 const EXCEPTIONAL_DARK_SET_SLOTS = new Set(['Be', 'Ay', 'Af', 'Ae']);

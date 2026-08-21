@@ -254,16 +254,43 @@ const StarForceModule = {
   },
 
   getRates(star) {
-    return (typeof starRates !== 'undefined' && starRates[star])
+    const raw = (typeof starRates !== 'undefined' && starRates[star])
       ? starRates[star]
-      : { success: 30, keep: 70, drop: 0 };
+      : { success: 30, fail: 70, destroy: 0, safeguard: false };
+    const success = Number(raw.success) || 0;
+    const fail = Number(raw.fail ?? raw.keep) || 0;
+    const destroy = Number(raw.destroy ?? raw.drop) || 0;
+    return {
+      success,
+      fail,
+      destroy,
+      safeguard: Boolean(raw.safeguard),
+    };
   },
 
-  getMesoCost(star) {
+  isProtectDestroyEnabled() {
+    return Boolean(document.getElementById('chkProtectDestroy')?.checked);
+  },
+
+  bindProtectDestroyToggle() {
+    if (this._protectDestroyBound) return;
+    const el = document.getElementById('chkProtectDestroy');
+    if (!el) return;
+    this._protectDestroyBound = true;
+    el.addEventListener('change', () => this.updateUI());
+  },
+
+  getBaseMesoCost(star) {
     const reqLevel = this.itemData?.reqLevel || 200;
     const table = typeof starMesoCosts !== 'undefined' ? starMesoCosts[reqLevel] : null;
     if (!table || star < 0 || star >= table.length) return 0;
     return table[star];
+  },
+
+  getMesoCost(star) {
+    const base = this.getBaseMesoCost(star);
+    if (!base) return 0;
+    return this.isProtectDestroyEnabled() ? base : Math.floor(base / 2);
   },
 
   formatMeso(amount) {
@@ -408,6 +435,13 @@ const StarForceModule = {
     mesoEl?.classList.toggle('hidden', useScroll);
     itemEl?.classList.toggle('hidden', !useScroll);
     itemEl?.setAttribute('aria-hidden', useScroll ? 'false' : 'true');
+
+    const protectEl = document.querySelector('.sf-protect-destroy');
+    if (protectEl) {
+      const showProtect = hasEquip && !useScroll;
+      protectEl.classList.toggle('hidden', !showProtect);
+      protectEl.setAttribute('aria-hidden', showProtect ? 'false' : 'true');
+    }
 
     document.querySelector('#sfIdlePanel .sf-idle-lower')
       ?.classList.toggle('sf-idle-lower-item', useScroll && !hasEquip);
@@ -630,7 +664,6 @@ const StarForceModule = {
 
   rollEnhanceStar(options = {}) {
     const silent = options.silent === true;
-    const protectDestroyStars = options.protectDestroyStars;
     if (!this.itemData) return null;
 
     if (!canUseStarForce(this.itemData)) {
@@ -758,43 +791,31 @@ const StarForceModule = {
 
     const rates = this.getRates(this.currentStars);
     const roll = Math.random() * 100;
-    const isSafeCheckpoint = [10, 15, 20, 25].includes(this.currentStars);
-    const preventDrop = document.getElementById('chkPreventDrop')?.checked;
-    const consecutiveDrops = this.getStarConsecutiveDrops();
-    const guaranteedSuccess = consecutiveDrops >= 2;
+    const protectDestroy = this.isProtectDestroyEnabled();
 
     let outcome = 'keep';
-    if (guaranteedSuccess) outcome = 'success';
-    else if (roll < rates.success) outcome = 'success';
-    else if (roll < rates.success + rates.keep || isSafeCheckpoint) outcome = 'keep';
-    else if (preventDrop) outcome = 'keep';
-    else outcome = 'drop';
+    if (roll < rates.success) outcome = 'success';
+    else if (roll < rates.success + rates.fail) outcome = 'keep';
+    else outcome = 'destroy';
 
-    if (outcome === 'drop' && Array.isArray(protectDestroyStars) && protectDestroyStars.length) {
-      const nextStar = this.currentStars + 1;
-      if (protectDestroyStars.includes(nextStar)) outcome = 'keep';
+    if (outcome === 'destroy' && protectDestroy) {
+      outcome = 'keep';
     }
 
     return {
       outcome,
       animate: method === 'normal',
-      guaranteedSuccess,
       apply: () => {
         if (outcome === 'success') {
           this.currentStars++;
           this.setStarConsecutiveDrops(0);
           if (!silent) {
-            const msg = guaranteedSuccess
-              ? `✨ 星力成功升至 ★ ${this.currentStars}！（連續下滑保底）`
-              : `✨ 星力成功升至 ★ ${this.currentStars}！`;
-            addLog(msg, 'log-success');
+            addLog(`✨ 星力成功升至 ★ ${this.currentStars}！`, 'log-success');
           }
-        } else if (outcome === 'keep') {
-          if (!silent) addLog(`星力失敗，維持在 ★ ${this.currentStars}。`, 'log-fail');
-        } else {
-          this.currentStars = Math.max(0, this.currentStars - 1);
-          this.setStarConsecutiveDrops(consecutiveDrops + 1);
-          if (!silent) addLog(`星力失敗！下降至 ★ ${this.currentStars}。`, 'log-fail');
+        } else if (outcome === 'destroy') {
+          if (!silent) addLog(`星力強化失敗（破壞），維持在 ★ ${this.currentStars}。`, 'log-fail');
+        } else if (!silent) {
+          addLog(`星力失敗，維持在 ★ ${this.currentStars}。`, 'log-fail');
         }
         this.afterEnhanceUpdate();
       },
@@ -852,6 +873,8 @@ const StarForceModule = {
   },
 
   updateUI() {
+    this.bindProtectDestroyToggle();
+
     if (!this.itemData) {
       this.setPanelMode(this.selectedScrollId ? 'idle-scroll' : 'idle');
       this.renderCostArea();
@@ -893,15 +916,14 @@ const StarForceModule = {
     }
 
     if (this.currentStars >= maxStars) {
-      this.setRateDisplay(0, 100);
+      this.setRateDisplay(0, 100, 0);
     } else if (method === 'normal') {
       const rates = this.getRates(this.currentStars);
-      const failRate = 100 - rates.success;
-      this.setRateDisplay(rates.success, failRate);
+      this.setRateDisplay(rates.success, rates.fail, rates.destroy);
     } else if (method === 'scroll_set20_100' || method === 'scroll_under23_100' || method === 'scroll_24_100') {
-      this.setRateDisplay(100, 0);
+      this.setRateDisplay(100, 0, 0);
     } else if (method === 'scroll_under23_30' || method === 'scroll_25_30') {
-      this.setRateDisplay(30, 70);
+      this.setRateDisplay(30, 70, 0);
     }
 
     this.updateEnhanceButtonState();
@@ -910,12 +932,17 @@ const StarForceModule = {
     }
   },
 
-  setRateDisplay(successRate, failRate) {
+  setRateDisplay(successRate, failRate, destroyRate = 0) {
     const rs = document.getElementById('rateSuccess');
     const rf = document.getElementById('rateFail');
+    const rd = document.getElementById('rateDestroy');
     const fmt = (n) => `${Number(n).toFixed(Number(n) % 1 === 0 ? 0 : 2)}%`;
     if (rs) rs.textContent = fmt(successRate);
     if (rf) rf.textContent = fmt(failRate);
+    if (rd) {
+      rd.textContent = fmt(destroyRate);
+      rd.closest('.sf-prob-line--destroy')?.classList.toggle('is-hidden', !(destroyRate > 0));
+    }
   },
 
   syncMethodSelectWidth() {

@@ -172,6 +172,30 @@ const BONUS_STAT_ITEMS = [
     tooltipImage: `${BONUS_STAT_AWAKE_IMAGE_DIR}/awake_black_data.png`,
     tripleReset: true,
   },
+  {
+    id: 'eternalFlame',
+    name: '永遠的輪迴星火',
+    slotIndex: 2,
+    icon: `${BONUS_STAT_AWAKE_IMAGE_DIR}/02048769.info.icon.png`,
+    iconWidth: 32,
+    iconHeight: 32,
+    memorial: false,
+    starFireType: 'eternal',
+    helpImage: BONUS_STAT_UI.notMemorialHelp,
+    tooltipImage: `${BONUS_STAT_AWAKE_IMAGE_DIR}/2048769.png`,
+  },
+  {
+    id: 'powerfulFlame',
+    name: '強力的輪迴星火',
+    slotIndex: 3,
+    icon: `${BONUS_STAT_AWAKE_IMAGE_DIR}/02048770.info.icon.png`,
+    iconWidth: 32,
+    iconHeight: 32,
+    memorial: false,
+    starFireType: 'enhanced',
+    helpImage: BONUS_STAT_UI.notMemorialHelp,
+    tooltipImage: `${BONUS_STAT_AWAKE_IMAGE_DIR}/2048770.png`,
+  },
 ];
 
 /** 手動微調偏移（相對 XML / 現有基準；左/上為負值、下為正 yOffset） */
@@ -218,6 +242,8 @@ const DEFAULT_BONUS_STAT_ITEM_COUNT = 999;
 const playerBonusStatItemCounts = {
   randomReset: DEFAULT_BONUS_STAT_ITEM_COUNT,
   memorialReset: DEFAULT_BONUS_STAT_ITEM_COUNT,
+  eternalFlame: DEFAULT_BONUS_STAT_ITEM_COUNT,
+  powerfulFlame: DEFAULT_BONUS_STAT_ITEM_COUNT,
 };
 
 function getBonusStatItemById(id) {

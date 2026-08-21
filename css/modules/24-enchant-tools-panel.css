@@ -1,0 +1,215 @@
+/* 工具面板：洗裝紀錄 / 期望試算 / 分享碼 */
+.enchant-tools-root {
+  position: fixed;
+  z-index: 12008;
+  left: min(1020px, calc(100vw - 24px - 420px));
+  top: 56px;
+  width: min(420px, calc(100vw - 24px));
+  height: min(72vh, 640px);
+  display: flex;
+  flex-direction: column;
+  background: rgba(18, 18, 18, 0.96);
+  color: #ddd;
+  border: 1px solid #555;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+.enchant-tools-root.is-hidden {
+  display: none;
+}
+
+.enchant-tools-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #444;
+  background: #1f1f1f;
+  font-weight: 600;
+  cursor: move;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.enchant-tools-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #333;
+  flex-shrink: 0;
+}
+
+.enchant-tools-tab {
+  flex: 1;
+  padding: 6px 4px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background: #2a2a2a;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.enchant-tools-tab.is-active {
+  background: #3a4a3a;
+  border-color: #6a8;
+  color: #efe;
+}
+
+.enchant-tools-body {
+  flex: 1;
+  overflow: auto;
+  padding: 10px;
+}
+
+.etp-pane.is-hidden {
+  display: none;
+}
+
+.etp-muted {
+  color: #888;
+  margin: 0;
+}
+
+.etp-note {
+  margin: 8px 0 0;
+  color: #999;
+  font-size: 11px;
+}
+
+.etp-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.etp-table th,
+.etp-table td {
+  padding: 4px 6px;
+  border-bottom: 1px solid #333;
+  text-align: left;
+  vertical-align: top;
+}
+
+.etp-table th {
+  color: #aaa;
+  width: 42%;
+  font-weight: 500;
+}
+
+.etp-table--steps {
+  margin-top: 8px;
+  font-size: 11px;
+}
+
+.etp-table--steps th,
+.etp-table--steps td {
+  width: auto;
+  text-align: center;
+  padding: 3px 4px;
+}
+
+.etp-table--steps thead th {
+  color: #aaa;
+  font-weight: 500;
+}
+
+.etp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.etp-btn {
+  padding: 5px 10px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #333;
+  color: #eee;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.etp-btn:hover {
+  background: #444;
+}
+
+.etp-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.etp-log-item {
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 6px 8px;
+  background: #222;
+}
+
+.etp-log-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.etp-log-outcome {
+  font-weight: 600;
+}
+
+.etp-log-outcome--success { color: #8f8; }
+.etp-log-outcome--manual { color: #fd8; }
+.etp-log-outcome--cancel { color: #aaa; }
+.etp-log-outcome--fail { color: #f88; }
+
+.etp-log-meta {
+  color: #777;
+  font-size: 10px;
+}
+
+.etp-log-sub {
+  display: block;
+  color: #999;
+  margin-top: 2px;
+}
+
+.etp-share-code {
+  width: 100%;
+  min-height: 88px;
+  box-sizing: border-box;
+  margin: 8px 0;
+  padding: 8px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background: #111;
+  color: #ddd;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  resize: vertical;
+}
+
+.etp-share-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 6px 0;
+  color: #bbb;
+}
+
+.etp-share-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.etp-share-hint {
+  margin: 0 0 6px;
+  color: #aaa;
+}

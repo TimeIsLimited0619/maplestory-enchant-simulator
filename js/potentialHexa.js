@@ -97,7 +97,9 @@ Object.assign(PotentialModule, {
     this.hexaPreviewPotential = null;
     this.applyHexaSessionTitle(session);
     this.renderHexaOverlay();
-    if (typeof updateStatusPanel === 'function') updateStatusPanel();
+    if (typeof aePotIsAnyAutoEnchantRunning !== 'function' || !aePotIsAnyAutoEnchantRunning()) {
+      if (typeof updateStatusPanel === 'function') updateStatusPanel();
+    }
     aePotSyncHexaAutoEnchantLayout?.();
     return true;
   },

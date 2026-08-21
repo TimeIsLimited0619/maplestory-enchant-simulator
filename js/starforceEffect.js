@@ -1,5 +1,5 @@
 /**
- * 星力強化演出：try → success / fail（tier 1 共用；keep/drop 播 fail）
+ * 星力強化演出：try → success / fail / destroy（tier 1 共用；keep 播 fail）
  */
 const StarForceEffectModule = {
   hosts: {},
@@ -111,11 +111,14 @@ const StarForceEffectModule = {
     if (phase === 'try') return STARFORCE_EFFECT.try;
     if (phase === 'success') return STARFORCE_EFFECT.success;
     if (phase === 'fail') return STARFORCE_EFFECT.fail;
+    if (phase === 'destroy') return STARFORCE_EFFECT.destroy;
     return null;
   },
 
   outcomePhase(outcome) {
-    return outcome === 'success' ? 'success' : 'fail';
+    if (outcome === 'success') return 'success';
+    if (outcome === 'destroy') return 'destroy';
+    return 'fail';
   },
 
   assetPath(phase, layerKey, frameIndex) {
@@ -175,6 +178,7 @@ const StarForceEffectModule = {
       ...this.collectSpecUrls('try', STARFORCE_EFFECT.try, false),
       ...this.collectSpecUrls('success', STARFORCE_EFFECT.success, true),
       ...this.collectSpecUrls('fail', STARFORCE_EFFECT.fail, true),
+      ...this.collectSpecUrls('destroy', STARFORCE_EFFECT.destroy, true),
     ];
     await this.preloadUrls(urls);
     this._preloadDone = true;
@@ -595,6 +599,7 @@ const StarForceEffectModule = {
     const trySpec = this.getSpec('try');
     const successSpec = this.getSpec('success');
     const failSpec = this.getSpec('fail');
+    const destroySpec = this.getSpec('destroy');
 
     if (mode === 'try') {
       this.runPhases([
@@ -608,6 +613,14 @@ const StarForceEffectModule = {
       this.runPhases([
         { phase: 'try', spec: trySpec, showText: false },
         { phase: 'fail', spec: failSpec, showText: true, textAfterBody: true },
+      ]);
+      return;
+    }
+
+    if (mode === 'destroy') {
+      this.runPhases([
+        { phase: 'try', spec: trySpec, showText: false },
+        { phase: 'destroy', spec: destroySpec, showText: true, textAfterBody: true },
       ]);
       return;
     }

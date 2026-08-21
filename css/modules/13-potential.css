@@ -698,14 +698,10 @@
 }
 
 #panel-additionalPotential .pt-atk-box {
-  top: 172px; /* 150 + 22：戰鬥力增加量下移 */
+  top: 179px; /* 172 + 7 */
 }
 
 /* 待機改由主面板 .ap-idle-slot / .pt-idle-slot 單張圖顯示 */
-
-#panel-additionalPotential .pt-bottom-area {
-  bottom: 62px; 
-}
 
 .pt-active-panel {
   position: absolute;
@@ -720,7 +716,7 @@
 
 .pt-rank-box {
   position: absolute;
-  top: 18px;
+  top: 25px;
   left: 50%;
   transform: translateX(-50%);
   width: 396px;
@@ -733,7 +729,7 @@
 
 .pt-stat-box {
   position: absolute;
-  top: 44px;
+  top: 51px;
   left: 10px;
   width: 398px;
   height: 100px;
@@ -806,7 +802,7 @@
 
 .pt-atk-box {
   position: absolute;
-  top: 150px;
+  top: 157px;
   left: 10px;
   width: 398px;
   height: 43px;
@@ -857,7 +853,7 @@
 .pt-bottom-area {
   position: absolute;
   left: 10px;
-  bottom: 76px;
+  bottom: 62px;
   width: 398px;
   height: 170px;
   pointer-events: auto;
@@ -986,7 +982,7 @@
 .ap-meso-cost-row {
   position: absolute;
   left: 50%;
-  bottom: 45px; /* 確認鈕 bottom 3 + 高 35 + 間隔 7 */
+  bottom: 52px; /* 確認鈕 bottom 3 + 高 35 + 間隔 7 */
   transform: translateX(-50%);
   z-index: 3;
   pointer-events: none;
@@ -1027,8 +1023,8 @@
 
 .pt-btn-reset {
   position: absolute;
-  bottom: 3px;
-  left: 50%;
+  bottom: 10px;
+  left: calc(50% + 2px);
   transform: translateX(-50%);
   width: 129px;
   height: 35px;
@@ -1055,8 +1051,8 @@
 
 .pt-bottom-options {
   position: absolute;
-  bottom: 4px;
   right: 14px;
+  bottom: 12px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;

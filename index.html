@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>楓之谷做裝模擬器 - 楓之谷 UI 樣式版</title>
+  <script>
+    try {
+      if (localStorage.getItem('enchant.secret.v1') === '1') {
+        document.documentElement.classList.add('secret-unlocked');
+      }
+    } catch (e) {}
+  </script>
 
   <!-- 首屏關鍵圖：與 CSS／JS 解析並行下載 -->
   <link rel="preload" as="image" href="images/common_backgrnd.png">
@@ -14,28 +21,29 @@
   <link rel="preload" as="image" href="images/UIEquip/EquipTab/EquipTab.canvas_equip.png">
 
   <!-- 自訂 CSS（modules；file:// 勿用 @import） -->
-  <link rel="stylesheet" href="css/modules/01-base.css?v=20260813wbClose3">
+  <link rel="stylesheet" href="css/modules/01-base.css?v=20260821toolsMenu1">
   <link rel="stylesheet" href="css/modules/02-sidebar.css?v=20260814catValley2">
   <link rel="stylesheet" href="css/modules/03-main-panel.css?v=20260813rateLimit3">
   <link rel="stylesheet" href="css/modules/04-inventory.css?v=20260814catValley1">
   <link rel="stylesheet" href="css/modules/05-forms-modal.css?v=20260813wear3">
   <link rel="stylesheet" href="css/modules/06-starforce-extras.css?v=20260813wear3">
-  <link rel="stylesheet" href="css/modules/07-starforce.css?v=20260814log2">
+  <link rel="stylesheet" href="css/modules/07-starforce.css?v=20260820optAlign1">
   <link rel="stylesheet" href="css/modules/08-control-shared.css?v=20260813wear3">
-  <link rel="stylesheet" href="css/modules/09-hammer.css?v=20260814hmWait1">
-  <link rel="stylesheet" href="css/modules/10-soul-weapon.css?v=20260813wear3">
-  <link rel="stylesheet" href="css/modules/11-exceptional.css?v=20260813wear3">
-  <link rel="stylesheet" href="css/modules/12-scroll.css?v=20260813blur1">
-  <link rel="stylesheet" href="css/modules/13-potential.css?v=20260814ptWait4">
+  <link rel="stylesheet" href="css/modules/09-hammer.css?v=20260820optAlign1">
+  <link rel="stylesheet" href="css/modules/10-soul-weapon.css?v=20260820optAlign1">
+  <link rel="stylesheet" href="css/modules/11-exceptional.css?v=20260820optAlign1">
+  <link rel="stylesheet" href="css/modules/12-scroll.css?v=20260820optAlign1">
+  <link rel="stylesheet" href="css/modules/13-potential.css?v=20260820ptCube2">
   <link rel="stylesheet" href="css/modules/14-potential-inspect.css?v=20260814inspect1">
   <link rel="stylesheet" href="css/modules/15-equip-tooltip.css?v=20260814android1">
-  <link rel="stylesheet" href="css/modules/16-bonus-stat.css?v=20260813blur1">
+  <link rel="stylesheet" href="css/modules/16-bonus-stat.css?v=20260820btnAlign1">
   <link rel="stylesheet" href="css/modules/17-uiequip.css?v=20260814totem3">
   <link rel="stylesheet" href="css/modules/18-equip-stat-panel.css?v=20260814esp2">
   <link rel="stylesheet" href="css/modules/19-ui-character-info.css?v=20260814uciFd2">
   <link rel="stylesheet" href="css/modules/20-character-combat-panel.css?v=20260816clearValues1">
   <link rel="stylesheet" href="css/modules/21-item-request.css?v=20260814irq8">
   <link rel="stylesheet" href="css/modules/22-log-cost-panels.css?v=20260814cost1">
+  <link rel="stylesheet" href="css/modules/24-enchant-tools-panel.css?v=20260821expect2">
   <link rel="stylesheet" href="css/modules/23-combat-efficiency-panel.css?v=20260815eff2">
 </head>
 <body class="enchant-boot-loading">
@@ -71,7 +79,7 @@
           <ul class="ms-info-card-list">
             <li>
               <span></span>
-              <span><strong>成本統計：</strong>頂部選單「成本」可開啟成本統計；「Log」為獨立紀錄視窗。</span>
+              <span><strong>成本統計：</strong>頂部選單「成本」可開啟成本統計；「Log」為獨立紀錄視窗；「工具」含洗裝紀錄、期望試算與分享碼。</span>
             </li>
             <li>
               <span></span>
@@ -146,6 +154,7 @@
       <button type="button" class="view-mode-btn" id="btnViewCombat" title="開關戰鬥力數值">數值</button>
       <button type="button" class="view-mode-btn" id="btnViewEfficiency" title="開關數值換算表">效益</button>
       <button type="button" class="view-mode-btn" id="btnViewDetail" title="開關身上屬性明細">明細</button>
+      <button type="button" class="view-mode-btn ms-top-menu-tools" id="btnViewTools" title="洗裝紀錄、期望試算、分享碼">工具</button>
     </div>
 
     <div class="ms-container-3col">
@@ -161,7 +170,7 @@
           <button class="ms-tab-btn tab-potential" id="tabpotential" onclick="switchCategoryTab('potential', this)"></button>
           <button class="ms-tab-btn tab-additionalPotential" id="tabadditionalPotential" onclick="switchCategoryTab('additionalPotential', this)"></button>
           <button class="ms-tab-btn tab-exceptional" id="tabexceptional" onclick="switchCategoryTab('exceptional', this)"></button>
-          <button type="button" class="ms-tab-btn tab-catValley" id="catValleyBtn" aria-label="貓谷特殊強化" title="貓谷特殊強化"></button>
+          <button type="button" class="ms-tab-btn tab-catValley" id="catValleyBtn" aria-hidden="true" tabindex="-1"></button>
         </div>
 
         <!-- 隱藏的 Category Select (由左側按鈕連動) -->
@@ -374,17 +383,12 @@
       <div class="sf-prob-values">
         <div class="sf-prob-line">成功 <span id="rateSuccess">0%</span></div>
         <div class="sf-prob-line">失敗 <span id="rateFail">0%</span></div>
+        <div class="sf-prob-line sf-prob-line--destroy">破壞 <span id="rateDestroy">0%</span></div>
       </div>
     </div>
 
     <!-- 右下角選項（僅已放置裝備時顯示） -->
     <div class="sf-bottom-options">
-      <label class="sf-auto-label" for="chkPreventDrop">
-        <input type="checkbox" id="chkPreventDrop" class="sf-auto-toggle-input">
-        <span class="sf-auto-toggle" aria-hidden="true"></span>
-        防止下滑
-      </label>
-
       <label class="sf-auto-label" for="chkAutoEnhance">
         <input type="checkbox" id="chkAutoEnhance" class="sf-auto-toggle-input">
         <span class="sf-auto-toggle" aria-hidden="true"></span>
@@ -413,6 +417,11 @@
           <span id="mesoCostDisplay" class="sf-cost-value">0 楓幣</span>
         </div>
       </div>
+
+      <label class="sf-protect-destroy" for="chkProtectDestroy">
+        <input type="checkbox" id="chkProtectDestroy" class="sf-protect-destroy-input">
+        <span class="sf-protect-destroy-toggle" aria-hidden="true"></span>
+      </label>
 
       <div id="sfCostItem" class="sf-cost-item hidden" aria-hidden="true">
         <img id="sfCostItemIcon" class="sf-cost-item-icon" alt="" draggable="false">
@@ -550,10 +559,10 @@
       </label>
     </div>
 
-    <!-- 貓谷機率（左下角） -->
+    <!-- 卷軸額外機率（左下角；未解鎖時隱藏） -->
     <div id="scBottomOptionsLeft" class="sc-bottom-options sc-bottom-options-left hidden">
-      <label class="sc-auto-label" for="chkScrollCatValleyRates" title="開啟：榮耀／命運等骰值使用貓谷 T+2 循環機率；關閉：正服機率">
-        <input type="checkbox" id="chkScrollCatValleyRates" class="sc-auto-toggle-input" checked>
+      <label class="sc-auto-label" for="chkScrollCatValleyRates" title="開啟：改用進階骰值循環機率；關閉：正服機率">
+        <input type="checkbox" id="chkScrollCatValleyRates" class="sc-auto-toggle-input">
         <span class="sc-auto-toggle" aria-hidden="true"></span>
         貓谷機率
       </label>
@@ -1065,6 +1074,8 @@
         <div id="bsItemGrid" class="bs-item-grid">
           <button type="button" class="bs-item-slot" data-slot-index="0"></button>
           <button type="button" class="bs-item-slot" data-slot-index="1"></button>
+          <button type="button" class="bs-item-slot" data-slot-index="2"></button>
+          <button type="button" class="bs-item-slot" data-slot-index="3"></button>
         </div>
       </div>
     </div>
@@ -1101,6 +1112,14 @@
       disabled
       onclick="BonusStatModule.handleResetClick('triple')"
     ></button>
+
+    <div id="bsBottomOptionsLeft" class="bs-bottom-options bs-bottom-options-left hidden">
+      <label class="bs-auto-label" for="chkBonusStatCatValleyRates" title="開啟：使用進階星火機率；關閉：正服機率">
+        <input type="checkbox" id="chkBonusStatCatValleyRates" class="bs-auto-toggle-input">
+        <span class="bs-auto-toggle" aria-hidden="true"></span>
+        貓谷機率
+      </label>
+    </div>
 
     <div id="bsBottomOptions" class="bs-bottom-options hidden">
       <label class="bs-auto-label" for="chkBonusStatAuto">
@@ -1933,24 +1952,24 @@
   <!-- JavaScript 載入 (順序：資料庫 -> 數據配置 -> 互動邏輯) -->
   <script src="js/item.js?v=20260814wpsi1"></script>
   <script src="js/sessionPersistence.js?v=20260814req1"></script>
-  <script src="js/equipTooltipData.js?v=20260818arcane1"></script>
+  <script src="js/equipTooltipData.js?v=20260820tools1"></script>
   <script src="js/equipSetData.js?v=20260818arcane1"></script>
   <script src="js/inventory.js?v=20260814closed1"></script>
   <script src="js/itemRequestPanel.js?v=20260814req2"></script>
   <script src="js/uiEquip.js?v=20260814wpsi1"></script>
-  <script src="js/data.js"></script>
+  <script src="js/data.js?v=20260820sfRate1"></script>
   <script src="js/modalAnimation.js"></script>
   <script src="js/imagePreload.js?v=20260818boot1"></script>
-  <script src="js/scrollData.js?v=20260814medal1"></script>
+  <script src="js/scrollData.js?v=20260820secret1"></script>
   <script src="js/scrollEffectData.js"></script>
   <script src="js/scrollEffect.js"></script>
-  <script src="js/starforceEffectData.js"></script>
-  <script src="js/starforceEffect.js"></script>
+  <script src="js/starforceEffectData.js?v=20260820destroy2"></script>
+  <script src="js/starforceEffect.js?v=20260820destroy1"></script>
   <script src="js/starforceScrollData.js"></script>
   <script src="js/potentialScrollData.js?v=20260814lock1"></script>
-  <script src="js/starforce.js"></script>
-  <script src="js/autoEnchantData.js?v=20260813blur1"></script>
-  <script src="js/autoEnchantStarForce.js"></script>
+  <script src="js/starforce.js?v=20260820sfRate1"></script>
+  <script src="js/autoEnchantData.js?v=20260820overspeed1"></script>
+  <script src="js/autoEnchantStarForce.js?v=20260820sfRate1"></script>
   <script src="js/scroll.js?v=20260813batch10"></script>
   <script src="js/hammerEffectData.js"></script>
   <script src="js/hammerEffect.js"></script>
@@ -1962,8 +1981,9 @@
   <script src="js/exceptionalEffectData.js"></script>
   <script src="js/exceptionalEffect.js"></script>
   <script src="js/exceptional.js"></script>
-  <script src="js/catValleyEnhanceData.js?v=20260818arcaneName1"></script>
-  <script src="js/catValleyEnhance.js?v=20260814medal1"></script>
+  <script src="js/catValleyUnlock.js?v=20260820secret3"></script>
+  <script src="js/catValleyEnhanceData.js?v=20260820secret1"></script>
+  <script src="js/catValleyEnhance.js?v=20260820secret1"></script>
   <script src="js/cubeRates/event8421.js"></script>
   <script src="js/cubeRates/event8422.js"></script>
   <script src="js/cubeRates/event8630.js"></script>
@@ -1983,25 +2003,25 @@
   <script src="js/potentialEffectData.js"></script>
   <script src="js/potentialEffect.js"></script>
   <script src="js/potential.js?v=20260814ptWait3"></script>
-  <script src="js/potentialHexa.js"></script>
+  <script src="js/potentialHexa.js?v=20260820overspeed1"></script>
   <script src="js/potentialUni.js"></script>
-  <script src="js/potentialMemoria.js?v=20260812q"></script>
-  <script src="js/autoEnchantPotential.js?v=20260812aeSpeed1"></script>
+  <script src="js/potentialMemoria.js?v=20260820overspeed1"></script>
+  <script src="js/autoEnchantPotential.js?v=20260820tools1"></script>
   <script src="js/addPotentialData.js?v=20260813ba1"></script>
   <script src="js/addPotential.js?v=20260814ptWait3"></script>
-  <script src="js/addPotentialHexa.js"></script>
+  <script src="js/addPotentialHexa.js?v=20260820overspeed1"></script>
   <script src="js/addPotentialUni.js"></script>
-  <script src="js/addPotentialMemoria.js?v=20260812r"></script>
-  <script src="js/autoEnchantAddPotential.js?v=20260812aeSpeed1"></script>
+  <script src="js/addPotentialMemoria.js?v=20260820overspeed1"></script>
+  <script src="js/autoEnchantAddPotential.js?v=20260820tools1"></script>
   <script src="js/potentialMemoriaChoiceEffectData.js?v=20260812s"></script>
   <script src="js/potentialMemoriaChoiceEffect.js?v=20260812s"></script>
-  <script src="js/bonusStatValues.js?v=20260813noWatkOnMatk"></script>
-  <script src="js/bonusStatData.js?v=20260813matkBase1"></script>
+  <script src="js/bonusStatValues.js?v=20260820flame2"></script>
+  <script src="js/bonusStatData.js?v=20260820flame1"></script>
   <script src="js/bonusStatEffectData.js?v=20260811v"></script>
   <script src="js/bonusStatEffect.js?v=20260812r"></script>
-  <script src="js/bonusStat.js?v=20260811v"></script>
-  <script src="js/bonusStatChoice.js?v=20260811t"></script>
-  <script src="js/autoEnchantBonusStat.js?v=20260813bsMode1"></script>
+  <script src="js/bonusStat.js?v=20260820overspeed1"></script>
+  <script src="js/bonusStatChoice.js?v=20260820overspeed1"></script>
+  <script src="js/autoEnchantBonusStat.js?v=20260820tools1"></script>
   <script src="js/bonusStatChoiceEffectData.js?v=20260812f"></script>
   <script src="js/bonusStatChoiceEffect.js?v=20260812h"></script>
 
@@ -2084,6 +2104,49 @@
     </div>
   </div>
 
+  <!-- 工具：洗裝紀錄 / 期望試算 / 分享碼 -->
+  <div id="enchantToolsPanel" class="enchant-tools-root is-hidden" aria-hidden="true" role="dialog" aria-labelledby="enchantToolsTitle">
+    <div class="enchant-tools-header">
+      <span id="enchantToolsTitle">工具</span>
+      <button type="button" id="enchantToolsClose" class="panel-wb-close panel-wb-close--inline" aria-label="關閉工具面板" title="關閉"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="enchant-tools-tabs">
+      <button type="button" class="enchant-tools-tab is-active" data-etp-tab="log">洗裝紀錄</button>
+      <button type="button" class="enchant-tools-tab" data-etp-tab="expect">期望試算</button>
+      <button type="button" class="enchant-tools-tab" data-etp-tab="share">分享碼</button>
+    </div>
+    <div class="enchant-tools-body">
+      <div class="etp-pane" data-etp-pane="log">
+        <div class="etp-actions">
+          <button type="button" id="etpLogCopy" class="etp-btn">複製文字</button>
+          <button type="button" id="etpLogExport" class="etp-btn">匯出 CSV</button>
+          <button type="button" id="etpLogClear" class="etp-btn">清空</button>
+        </div>
+        <div id="etpLogList" class="etp-log-list"></div>
+      </div>
+      <div class="etp-pane is-hidden" data-etp-pane="expect">
+        <div class="etp-actions">
+          <button type="button" id="etpExpectRefresh" class="etp-btn">重新試算</button>
+        </div>
+        <div id="etpExpectBody"></div>
+      </div>
+      <div class="etp-pane is-hidden" data-etp-pane="share">
+        <p id="etpShareHint" class="etp-share-hint"></p>
+        <div class="etp-share-options">
+          <label><input type="checkbox" id="etpShareIncludeAuto" checked> 包含自動重設目標</label>
+          <label><input type="checkbox" id="etpShareIncludePrices"> 包含成本單價</label>
+          <label><input type="checkbox" id="etpShareApplyAuto" checked> 匯入時套用自動目標</label>
+        </div>
+        <textarea id="etpShareCode" class="etp-share-code" placeholder="MSS1-…" spellcheck="false"></textarea>
+        <div class="etp-actions">
+          <button type="button" id="etpShareGenerate" class="etp-btn">產生分享碼</button>
+          <button type="button" id="etpShareCopy" class="etp-btn">複製</button>
+          <button type="button" id="etpShareImport" class="etp-btn">匯入</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="equipStatPanel" class="equip-stat-panel is-hidden" aria-label="身上屬性驗證面板">
     <div class="equip-stat-panel-header">
       <span>模擬器裝備屬性（驗證明細）</span>
@@ -2092,10 +2155,10 @@
     <div id="equipStatPanelBody" class="equip-stat-panel-body"></div>
   </div>
 
-  <script src="js/bonusStatInspect.js?v=20260814inspect1"></script>
+  <script src="js/bonusStatInspect.js?v=20260820flame2"></script>
   <script src="js/potentialInspect.js?v=20260814inspect1"></script>
-  <script src="js/equipTooltip.js?v=20260814medal1"></script>
-  <script src="js/equipStatPanel.js?v=20260814esp3"></script>
+  <script src="js/equipTooltip.js?v=20260820secret2"></script>
+  <script src="js/equipStatPanel.js?v=20260820overspeed1"></script>
   <script src="js/panelDrag.js?v=20260813panelDrag1"></script>
   <script src="js/formatPower.js?v=20260817padWan1"></script>
   <script src="js/combatJobs.js?v=20260814wtype1"></script>
@@ -2103,9 +2166,13 @@
   <script src="js/weaponCorrection.js?v=20260818arcaneName1"></script>
   <script src="js/combatPower.js?v=20260816genesisFinal1"></script>
   <script src="js/characterCombatPanel.js?v=20260816clearValues1"></script>
-  <script src="js/uiCharacterInfo.js?v=20260817padWan1"></script>
-  <script src="js/combatEfficiencyPanel.js?v=20260815eff2"></script>
-  <script src="js/costTracker.js?v=20260818arcaneEnhance1"></script>
-  <script src="js/main.js?v=20260818boot1"></script>
+  <script src="js/uiCharacterInfo.js?v=20260820overspeed1"></script>
+  <script src="js/combatEfficiencyPanel.js?v=20260820overspeed1"></script>
+  <script src="js/costTracker.js?v=20260820overspeed1"></script>
+  <script src="js/autoSessionLog.js?v=20260820tools1"></script>
+  <script src="js/expectedCostCalc.js?v=20260821expect2"></script>
+  <script src="js/shareCode.js?v=20260820tools1"></script>
+  <script src="js/enchantToolsPanel.js?v=20260821expect2"></script>
+  <script src="js/main.js?v=20260820destroy1"></script>
 </body>
 </html>

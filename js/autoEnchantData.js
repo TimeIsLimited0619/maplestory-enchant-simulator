@@ -1422,21 +1422,14 @@ async function aePotRunHexaAutoEnchant(ctx) {
 
   while (isRunning() && !isCancelled() && attempts < maxRolls) {
     let hit = false;
+    let lastSession = null;
     for (let i = 0; i < stepsPerTick && isRunning() && !isCancelled() && attempts < maxRolls; i += 1) {
       consumeCube();
       attempts += 1;
 
       const session = rollSession();
       if (!session) continue;
-
-      if (!overlayOpened) {
-        openOverlayWithSession(cube, session, { fadeIn: true });
-        overlayOpened = true;
-      } else {
-        updateOverlaySession(session);
-      }
-      onProgress?.({ attempts, phase: 'roll' });
-      aePotSyncHexaAutoEnchantLayout?.();
+      lastSession = session;
 
       if (sessionReady(session)) {
         stoppedForManualPick = true;
@@ -1444,6 +1437,18 @@ async function aePotRunHexaAutoEnchant(ctx) {
         break;
       }
     }
+
+    if (lastSession) {
+      if (!overlayOpened) {
+        openOverlayWithSession(cube, lastSession, { fadeIn: true });
+        overlayOpened = true;
+      } else {
+        updateOverlaySession(lastSession);
+      }
+      onProgress?.({ attempts, phase: 'roll' });
+      aePotSyncHexaAutoEnchantLayout?.();
+    }
+
     if (hit || stoppedForManualPick) break;
 
     await delay();
@@ -1490,7 +1495,7 @@ const AUTO_ENCHANT_LOOP_DELAY_MS = 100;
 
 /** 超速模式 : 調整速度（每輪間隔 + 每輪步數） */
 const AUTO_ENCHANT_OVERSPEED_LOOP_DELAY_MS = 5;
-const AUTO_ENCHANT_OVERSPEED_BATCH_SIZE = 20;
+const AUTO_ENCHANT_OVERSPEED_BATCH_SIZE = 200;
 
 function aePotGetAutoEnchantLoopDelayMs(overspeedMode) {
   if (overspeedMode) {
@@ -1501,6 +1506,27 @@ function aePotGetAutoEnchantLoopDelayMs(overspeedMode) {
   return typeof AUTO_ENCHANT_LOOP_DELAY_MS === 'number'
     ? AUTO_ENCHANT_LOOP_DELAY_MS
     : 100;
+}
+
+function aePotIsAnyAutoEnchantRunning() {
+  return Boolean(
+    (typeof AutoEnchantPotentialModule !== 'undefined' && AutoEnchantPotentialModule.isRunning)
+    || (typeof AutoEnchantAddPotentialModule !== 'undefined' && AutoEnchantAddPotentialModule.isRunning)
+    || (typeof AutoEnchantBonusStatModule !== 'undefined' && AutoEnchantBonusStatModule.isRunning)
+    || (typeof CatValleyEnhanceModule !== 'undefined' && CatValleyEnhanceModule.autoRunning)
+    || (typeof ScrollModule !== 'undefined' && ScrollModule.autoRunning)
+    || (typeof StarForceModule !== 'undefined' && StarForceModule.autoRunning)
+  );
+}
+
+function aePotFlushAutoEnchantSideUi() {
+  if (typeof CostTrackerModule !== 'undefined') {
+    CostTrackerModule.refreshCostDisplay?.();
+    if (CostTrackerModule.isOpen) CostTrackerModule.render?.();
+  }
+  if (typeof SessionPersistenceModule !== 'undefined') {
+    SessionPersistenceModule.scheduleSave();
+  }
 }
 
 function aePotGetAutoEnchantBatchSize(overspeedMode) {
@@ -1630,7 +1656,6 @@ async function aePotRunUnionAutoEnchant(ctx) {
       reselectUses += 1;
       steps += 1;
       const selectedLine = aePotPickUnionLineIndex();
-      onProgress?.({ cubeUses, reselectUses, resetUses, badLineIndex: selectedLine, phase: 'reselect' });
       const latest = getPotential();
       if (shouldStop(latest)) {
         workLineIndex = -1;
@@ -1641,6 +1666,7 @@ async function aePotRunUnionAutoEnchant(ctx) {
         break;
       }
     }
+    onProgress?.({ cubeUses, reselectUses, resetUses, badLineIndex: workLineIndex, phase: 'reselect' });
     if (workLineIndex < 0) {
       if (shouldStop(getPotential())) break;
       await delay();

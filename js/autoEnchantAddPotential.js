@@ -442,22 +442,26 @@ const AutoEnchantAddPotentialModule = {
     await this.start();
   },
 
-  applyRollSilent(rolled) {
+  applyRollSilent(rolled, opts = {}) {
     const { mirrorCopied, ...potential } = rolled;
     AddPotentialModule.itemData.additionalPotential = potential;
     AddPotentialModule.syncAddPotOverallRank(potential);
     AddPotentialModule.lastAtkPow = potential.atkPow;
-    AddPotentialModule.updateUI();
-    if (typeof updateStatusPanel === 'function') updateStatusPanel();
+    if (!opts.skipUi) {
+      AddPotentialModule.updateUI();
+      if (typeof updateStatusPanel === 'function') updateStatusPanel();
+    }
     return mirrorCopied;
   },
 
-  applyPotentialSilent(potential) {
+  applyPotentialSilent(potential, opts = {}) {
     AddPotentialModule.itemData.additionalPotential = potential;
     AddPotentialModule.syncAddPotOverallRank(potential);
     AddPotentialModule.lastAtkPow = potential.atkPow;
-    AddPotentialModule.updateUI();
-    if (typeof updateStatusPanel === 'function') updateStatusPanel();
+    if (!opts.skipUi) {
+      AddPotentialModule.updateUI();
+      if (typeof updateStatusPanel === 'function') updateStatusPanel();
+    }
   },
 
   async delayLoop() {
@@ -483,15 +487,16 @@ const AutoEnchantAddPotentialModule = {
           AddPotentialModule.itemData.additionalPotential,
           AddPotentialModule.itemData
         );
-        this.applyRollSilent(rolled);
+        this.applyRollSilent(rolled, { skipUi: true });
         attempts += 1;
-        this.render();
         if (this.shouldStopSuccess(AddPotentialModule.itemData.additionalPotential)) {
           hit = true;
           break;
         }
         if (attempts > 50000) break;
       }
+      AddPotentialModule.updateUI();
+      this.render();
       if (hit || attempts > 50000) break;
       await this.delayLoop();
     }
@@ -542,7 +547,7 @@ const AutoEnchantAddPotentialModule = {
     const result = await aePotRunUnionAutoEnchant({
       getItem: () => AddPotentialModule.itemData,
       getPotential: () => AddPotentialModule.itemData?.additionalPotential,
-      setPotential: (potential) => this.applyPotentialSilent(potential),
+      setPotential: (potential) => this.applyPotentialSilent(potential, { skipUi: true }),
       consumeCube: () => consumePlayerAddPotCube(cube.id),
       rateKey,
       eventId,
@@ -552,7 +557,10 @@ const AutoEnchantAddPotentialModule = {
       isCancelled: () => this.cancelled,
       loopDelayMs: this.getLoopDelayMs(),
       batchSize: this.getBatchSize(),
-      onProgress: () => this.render(),
+      onProgress: () => {
+        AddPotentialModule.updateUI?.();
+        this.render();
+      },
     });
     this.lastUniReselectUses = result.reselectUses;
     this.lastUniResetUses = result.resetUses;
@@ -578,38 +586,40 @@ const AutoEnchantAddPotentialModule = {
     while (!this.cancelled && attempts < maxRolls) {
       let hit = false;
       let stoppedRankUp = false;
+      let lastAfter = null;
       for (let i = 0; i < batch && !this.cancelled && attempts < maxRolls; i += 1) {
         consumePlayerAddPotCube(cube.id);
         attempts += 1;
 
         const rolled = rerollAddPotential(cube, snapshot, AddPotentialModule.itemData);
-        const after = AddPotentialModule.cloneMemoriaPotential(rolled);
+        lastAfter = AddPotentialModule.cloneMemoriaPotential(rolled);
 
-        if (!overlayOpened) {
-          AddPotentialModule.openMemoriaAutoSession(snapshot, after, cube, { fadeIn: true });
-          overlayOpened = true;
-        } else {
-          AddPotentialModule.updateMemoriaAutoSession(snapshot, after);
-        }
-        aePotSyncMemoriaAutoEnchantLayout?.();
-
-        const rankUp = AddPotentialModule.isMemoriaRankUp(snapshot, after);
+        const rankUp = AddPotentialModule.isMemoriaRankUp(snapshot, lastAfter);
         if (rankUp) {
           this.lastRankUpStoppedForPick = true;
           this.lastChoiceStoppedForPick = true;
           this.choiceAutoSessionActive = true;
-          AddPotentialModule.renderMemoriaOverlay?.();
           stoppedRankUp = true;
           break;
         }
 
-        if (this.matchesTargets(after)) {
+        if (this.matchesTargets(lastAfter)) {
           this.lastChoiceStoppedForPick = true;
           this.choiceAutoSessionActive = true;
-          AddPotentialModule.renderMemoriaOverlay?.();
           hit = true;
           break;
         }
+      }
+
+      if (lastAfter) {
+        if (!overlayOpened) {
+          AddPotentialModule.openMemoriaAutoSession(snapshot, lastAfter, cube, { fadeIn: true });
+          overlayOpened = true;
+        } else {
+          AddPotentialModule.updateMemoriaAutoSession(snapshot, lastAfter);
+        }
+        aePotSyncMemoriaAutoEnchantLayout?.();
+        if (stoppedRankUp || hit) AddPotentialModule.renderMemoriaOverlay?.();
       }
 
       if (stoppedRankUp) {
@@ -650,6 +660,14 @@ const AutoEnchantAddPotentialModule = {
     }
     this.render();
 
+    const logItem = aeSessionLogItemMeta(AddPotentialModule.itemData);
+    aeSessionLogBegin({
+      module: '附加潛能',
+      itemId: logItem.itemId,
+      itemName: logItem.itemName,
+      detail: { cubeName: cube?.name, cubeId: cube?.id, overspeed: this.overspeedMode },
+    });
+
     try {
       if (isMemoria) {
         const result = await this.startMemoriaAuto();
@@ -675,6 +693,7 @@ const AutoEnchantAddPotentialModule = {
       AddPotentialModule.updateResetButtonState?.();
       AddPotentialModule.renderMemoriaOverlay?.();
       if (typeof updateStatusPanel === 'function') updateStatusPanel();
+      aePotFlushAutoEnchantSideUi?.();
       aePotSyncMemoriaAutoEnchantLayout?.();
     }
 
@@ -705,6 +724,21 @@ const AutoEnchantAddPotentialModule = {
     } else {
       addLog(`⚠️ 附加潛能自動重設結束（${attemptLabel}）`, 'log-info');
     }
+
+    aeSessionLogEnd({
+      outcome: aeSessionLogResolveOutcome({
+        cancelled: this.cancelled,
+        targetHit,
+        stoppedForManualPick,
+        stoppedForRankUp,
+        hexaReady,
+      }),
+      attempts,
+      targetHit,
+      cancelled: this.cancelled,
+      detail: { cubeName: cube?.name, uniReselect, uniReset },
+    });
+
     this.lastUniReselectUses = 0;
     this.lastUniResetUses = 0;
     this.lastHexaStoppedForPick = false;

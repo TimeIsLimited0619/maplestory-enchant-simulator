@@ -196,9 +196,11 @@ const UiCharacterInfo = (() => {
   }
 
   function setOpen(next) {
+    const wasOpen = open;
     open = !!next;
     const root = $('uciRoot');
     if (root) root.classList.toggle('is-hidden', !open);
+    if (open && !wasOpen) refresh();
     if (open && typeof PanelDrag !== 'undefined') {
       PanelDrag.bringFront(root);
     }
@@ -472,7 +474,7 @@ const UiCharacterInfo = (() => {
   };
 
   function refresh() {
-    if (!inited) return;
+    if (!inited || !open) return;
     let snapshot = null;
     try {
       if (typeof EquipStatPanel !== 'undefined' && typeof EquipStatPanel.buildSnapshot === 'function') {

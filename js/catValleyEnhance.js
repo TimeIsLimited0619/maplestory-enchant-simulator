@@ -1,6 +1,6 @@
 /**
- * 貓谷特殊強化 — 強化台側欄按鈕 UI（卓越下方）
- * 按鈕常駐顯示；可用時 normal，不可用時 disabled。
+ * 額外內容特殊強化 — 強化台側欄按鈕 UI（卓越下方）
+ * 預設隱藏；輸入密籍後才顯示。可用時 normal，不可用時 disabled。
  * 不朽的遺產／喵喵天使：點擊展開潛能操作子選單。
  */
 const CatValleyEnhanceModule = {
@@ -274,6 +274,21 @@ const CatValleyEnhanceModule = {
     const btn = this.ensureButton();
     if (!btn) return;
 
+    if (typeof isCatValleyContentUnlocked === 'function' && !isCatValleyContentUnlocked()) {
+      this.closeSubmenu();
+      btn.classList.add('hidden');
+      btn.disabled = true;
+      btn.removeAttribute('aria-label');
+      btn.removeAttribute('title');
+      btn.setAttribute('aria-hidden', 'true');
+      btn.tabIndex = -1;
+      return;
+    }
+
+    btn.removeAttribute('aria-hidden');
+    btn.tabIndex = 0;
+    if (!btn.getAttribute('aria-label')) btn.setAttribute('aria-label', '貓谷特殊強化');
+
     const item = this.getActiveItem();
     const usable = this.isUsable(item);
     const isPotentialItem = typeof isCatValleyPotentialItem === 'function'
@@ -546,6 +561,7 @@ const CatValleyEnhanceModule = {
   },
 
   handleClick() {
+    if (typeof isCatValleyContentUnlocked === 'function' && !isCatValleyContentUnlocked()) return;
     const item = this.getActiveItem();
     if (!item) {
       if (typeof addLog === 'function') {

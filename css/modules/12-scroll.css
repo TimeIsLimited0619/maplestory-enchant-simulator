@@ -106,6 +106,7 @@
   background: url('../../images/scroll/scroll.layer_waitEquip1.png') no-repeat center;
   background-size: 100% 100%;
   image-rendering: pixelated;
+  transform: translateY(5px);
 }
 
 .sc-active-panel {
@@ -254,7 +255,7 @@
 
 .sc-stat-box {
   position: absolute;
-  top: 52px;
+  top: 50px;
   left: 10px;
   width: 398px;
   height: 112px;
@@ -264,14 +265,15 @@
 
 .sc-stat-values {
   position: absolute;
-  top: 18px;
-  right: 18px;
-  bottom: 12px;
-  left: 18px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
+  justify-content: center;
+  align-items: center;  
   font-size: 12px;
   color: #a6c4e9;
   line-height: 1.35;
@@ -325,7 +327,7 @@
   pointer-events: auto;
   z-index: 2;
   /* 以 scroll.tab 分頁列為基準，下方 cost 區共用同一 top */
-  --sc-tab-top: 37px;
+  --sc-tab-top: 32px;
   --sc-tab-height: 23px;
   --sc-tab-gap: 3px;
   --sc-cost-top: calc(var(--sc-tab-top) + var(--sc-tab-height) + var(--sc-tab-gap));
@@ -749,8 +751,8 @@
 
 .sc-btn-use {
   position: absolute;
-  bottom: 3px;
-  left: 50%;
+  bottom: 10px;
+  left: calc(50% + 2px);
   transform: translateX(-50%);
   width: 129px;
   height: 35px;
@@ -849,8 +851,8 @@
 
 .sc-bottom-options {
   position: absolute;
-  bottom: 4px;
   right: 14px;
+  bottom: 12px;
   z-index: 10;
   display: flex;
   flex-direction: column;

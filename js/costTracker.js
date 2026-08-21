@@ -324,7 +324,7 @@ const CostTrackerModule = {
     } else if (Object.prototype.hasOwnProperty.call(this.usage, type)) {
       this.usage[type] = (this.usage[type] || 0) + n;
     }
-    if (!(typeof CatValleyEnhanceModule !== 'undefined' && CatValleyEnhanceModule.autoRunning)) {
+    if (!(typeof aePotIsAnyAutoEnchantRunning === 'function' && aePotIsAnyAutoEnchantRunning())) {
       this.refreshCostDisplay();
       if (this.isOpen) this.render();
       if (typeof SessionPersistenceModule !== 'undefined') {
@@ -728,7 +728,9 @@ const CostTrackerModule = {
 
     const groups = new Map();
     const priceDefs = this.getPriceDefs();
-    const catValleyDefs = priceDefs.filter((def) => def.group === '貓谷');
+    const catValleyDefs = (typeof isCatValleyContentUnlocked === 'function' && isCatValleyContentUnlocked())
+      ? priceDefs.filter((def) => def.group === '貓谷')
+      : [];
     const otherDefs = priceDefs.filter((def) => def.group !== '貓谷');
     const usageRows = [
       ...catValleyDefs.map((def) => ({

@@ -580,7 +580,7 @@ const EquipStatPanel = (() => {
   }
 
   function refresh() {
-    if (!inited) return;
+    if (!inited || !open) return;
     try {
       render(buildSnapshot());
     } catch (err) {
@@ -593,9 +593,11 @@ const EquipStatPanel = (() => {
   }
 
   function setOpen(next) {
+    const wasOpen = open;
     open = !!next;
     const panel = $('equipStatPanel');
     if (panel) panel.classList.toggle('is-hidden', !open);
+    if (open && !wasOpen) refresh();
     if (open && typeof PanelDrag !== 'undefined') {
       PanelDrag.bringFront(panel);
     }

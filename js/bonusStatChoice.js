@@ -131,7 +131,9 @@ const BonusStatChoiceModule = {
     this.closing = false;
     this.selectedSide = null;
     this.render();
-    if (typeof updateStatusPanel === 'function') updateStatusPanel();
+    if (typeof aePotIsAnyAutoEnchantRunning !== 'function' || !aePotIsAnyAutoEnchantRunning()) {
+      if (typeof updateStatusPanel === 'function') updateStatusPanel();
+    }
     this.syncAutoEnchantLayout();
   },
 

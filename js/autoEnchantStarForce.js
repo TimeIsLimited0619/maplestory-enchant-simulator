@@ -242,11 +242,23 @@ const AutoEnchantStarForceModule = {
     const startStars = StarForceModule.currentStars;
     const target = this.targetStar;
     const maxStar = this.getMaxStar();
-    const protectStars = this.getProtectDestroyStars();
+    const protectStars = [];
     let attempts = 0;
 
     this.startProgressAlert();
     this.render();
+
+    const logItem = aeSessionLogItemMeta(StarForceModule.itemData);
+    aeSessionLogBegin({
+      module: '星力',
+      itemId: logItem.itemId,
+      itemName: logItem.itemName,
+      detail: {
+        targetStar: target,
+        startStars,
+        protectDestroy: StarForceModule.isProtectDestroyEnabled?.(),
+      },
+    });
 
     try {
       while (
@@ -259,7 +271,6 @@ const AutoEnchantStarForceModule = {
         const prev = StarForceModule.currentStars;
         StarForceModule.enhanceStar({
           silent: true,
-          protectDestroyStars: protectStars,
         });
         attempts += 1;
         this.render();
@@ -292,6 +303,22 @@ const AutoEnchantStarForceModule = {
         'log-success'
       );
     }
+
+    const sfTargetHit = StarForceModule.currentStars >= target && !this.cancelled;
+    aeSessionLogEnd({
+      outcome: aeSessionLogResolveOutcome({
+        cancelled: this.cancelled,
+        targetHit: sfTargetHit,
+      }),
+      attempts,
+      targetHit: sfTargetHit,
+      cancelled: this.cancelled,
+      detail: {
+        startStars,
+        endStars: StarForceModule.currentStars,
+        targetStar: target,
+      },
+    });
   },
 
   applyButtonBg(el, buttonKey, state = 'normal') {

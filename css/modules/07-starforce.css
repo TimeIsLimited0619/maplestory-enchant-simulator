@@ -18,7 +18,7 @@
 /* 待機畫面下方面板 */
 .sf-idle-panel {
   position: absolute;
-  top: 0;
+  top: 6px;
   left: 10px;
   width: 398px;
   height: 424px;
@@ -66,15 +66,15 @@
 
 .sf-stars-area {
   position: absolute;
-  top: -3px;
+  top: 6px;
   left: 50%;
   transform: translateX(-50%);
   width: 286px;
-  min-height: 37px;
-  padding: 8px 10px;
+  height: 37px; /* 改為固定高度，避免被撐高 */
+  padding: 0 10px; /* 移除上下 padding，改用 flex 垂直置中 */
   box-sizing: border-box;
   background: url('../../images/starforce/starForce.layer_summaryBox.png') no-repeat center;
-  background-size: 100% 100%;
+  background-size: contain; /* 保障長寬比例不失真 */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -152,7 +152,7 @@
 
 .sf-transition {
   position: absolute;
-  top: 37px;
+  top: 46px; /* xml diffBox 282 */
   left: 50%;
   transform: translateX(-50%);
   width: 286px;
@@ -169,7 +169,7 @@
 #starAfterImg {
   position: relative;
   left: -5px;
-  top: -3px;
+  top: 0px;
 }
 
 .sf-diff-arrow {
@@ -208,7 +208,7 @@
 
 .sf-stat-box {
   position: absolute;
-  top: 66px;
+  top: 75px; /* xml statBox 311 */
   left: 10px;
   width: 398px;
   height: 150px;
@@ -273,7 +273,7 @@
 
 .sf-prob-box {
   position: absolute;
-  top: 220px;
+  top: 229px; /* xml probBox 465 */
   left: 10px;
   width: 398px;
   height: 70px;
@@ -301,11 +301,61 @@
 
 .sf-cost-area {
   position: absolute;
-  top: 296px;
+  top: 303px; /* xml costMesoBox 539 */
   left: 10px;
   width: 398px;
   min-height: 33px;
   z-index: 2;
+}
+
+.sf-protect-destroy {
+  position: relative;
+  display: block;
+  width: 195px;
+  height: 22px;
+  margin: 4px auto 0;
+  padding: 0;
+  box-sizing: border-box;
+  cursor: pointer;
+  user-select: none;
+  font-size: 12px;
+  color: #b8bec6;
+  background: url('../../images/starforce/starForce.button_protectDestroy.button.normal.0.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+
+.sf-protect-destroy-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.sf-protect-destroy-text {
+  line-height: 1;
+}
+
+.sf-protect-destroy-toggle {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  transform: translateY(-50%);
+  display: block;
+  width: 25px;
+  height: 13px;
+  background: url('../../images/starforce/starForce.button_protectDestroy.unchecked.png') no-repeat center;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+.sf-protect-destroy-input:checked ~ .sf-protect-destroy-toggle {
+  background-image: url('../../images/starforce/starForce.button_protectDestroy.checkedAndDisabled.png');
+}
+
+.sf-protect-destroy.hidden {
+  display: none;
 }
 
 .sf-cost-area.sf-cost-idle-scroll {
@@ -422,7 +472,7 @@
 
 .sf-btn-enhance {
   position: absolute;
-  bottom: 1px;
+  bottom: 10px;
   left: calc(50% + 2px);
   transform: translateX(-50%);
   width: 129px;
@@ -450,38 +500,26 @@
 
 .sf-bottom-options {
   position: absolute;
-  top: 409px;
-  right: 13px;
+  right: 14px;
+  bottom: 12px;
   z-index: 10;
-  display: grid;
-  grid-template-columns: auto;
-  column-gap: 5px;
-  row-gap: 3px;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   font-size: 12px;
   color: #b8bec6;
   pointer-events: auto;
 }
 
-.sf-bottom-options .sf-auto-label[for="chkPreventDrop"] {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.sf-bottom-options .sf-auto-label[for="chkAutoEnhance"] {
-  grid-column: 1;
-  grid-row: 2;
-}
-
-.sf-bottom-options .sf-auto-label[for="chkStarAnim"] {
-  grid-column: 1;
-  grid-row: 3;
+.sf-prob-line--destroy.is-hidden {
+  display: none;
 }
 
 .sf-auto-label {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   margin: 0;
   cursor: pointer;
   user-select: none;

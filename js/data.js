@@ -321,23 +321,39 @@ const starMesoCosts = {
   ]
 };
 
-// 3. 星力點擊機率表 (成功 / 維持 / 降星)
+// 3. 星力點擊機率表 (成功 / 失敗 / 破壞)
 const starRates = [
-  { success: 95, keep: 5, drop: 0 }, { success: 90, keep: 10, drop: 0 },
-  { success: 85, keep: 15, drop: 0 }, { success: 85, keep: 15, drop: 0 },
-  { success: 80, keep: 20, drop: 0 }, { success: 75, keep: 25, drop: 0 },
-  { success: 70, keep: 30, drop: 0 }, { success: 65, keep: 35, drop: 0 },
-  { success: 60, keep: 40, drop: 0 }, { success: 55, keep: 45, drop: 0 },
-  { success: 50, keep: 50, drop: 0 }, { success: 45, keep: 55, drop: 0 },
-  { success: 40, keep: 60, drop: 0 }, { success: 35, keep: 65, drop: 0 },
-  { success: 30, keep: 70, drop: 0 }, { success: 30, keep: 70, drop: 0 },
-  { success: 30, keep: 70, drop: 0 }, { success: 15, keep: 85, drop: 0 },
-  { success: 12, keep: 88, drop: 0 }, { success: 10, keep: 90, drop: 0 },
-  { success: 30, keep: 59.5, drop: 0 }, { success: 20, keep: 68.5, drop: 11.5 },
-  { success: 17.5, keep: 70.25, drop: 12.25 }, { success: 8.5, keep: 73.5, drop: 18 },
-  { success: 8.5, keep: 73.5, drop: 18 }, { success: 8, keep: 74, drop: 0 },
-  { success: 7, keep: 74.4, drop: 18.6 }, { success: 5, keep: 76, drop: 19 },
-  { success: 3, keep: 77.6, drop: 19.4 }, { success: 1, keep: 79.2, drop: 19.8 }
+  { success: 95, fail: 5, destroy: 0, safeguard: false },
+  { success: 90, fail: 10, destroy: 0, safeguard: false },
+  { success: 85, fail: 15, destroy: 0, safeguard: false },
+  { success: 85, fail: 15, destroy: 0, safeguard: false },
+  { success: 80, fail: 20, destroy: 0, safeguard: false },
+  { success: 75, fail: 25, destroy: 0, safeguard: false },
+  { success: 70, fail: 30, destroy: 0, safeguard: false },
+  { success: 65, fail: 35, destroy: 0, safeguard: false },
+  { success: 60, fail: 40, destroy: 0, safeguard: false },
+  { success: 55, fail: 45, destroy: 0, safeguard: false },
+  { success: 50, fail: 50, destroy: 0, safeguard: false },
+  { success: 45, fail: 55, destroy: 0, safeguard: false },
+  { success: 40, fail: 60, destroy: 0, safeguard: false },
+  { success: 35, fail: 65, destroy: 0, safeguard: false },
+  { success: 30, fail: 70, destroy: 0, safeguard: false },
+  { success: 30, fail: 67.9, destroy: 2.1, safeguard: true },
+  { success: 30, fail: 67.9, destroy: 2.1, safeguard: true },
+  { success: 30, fail: 67.9, destroy: 2.1, safeguard: true },
+  { success: 15, fail: 78.2, destroy: 6.8, safeguard: true },
+  { success: 15, fail: 78.2, destroy: 6.8, safeguard: false },
+  { success: 15, fail: 76.5, destroy: 8.5, safeguard: false },
+  { success: 30, fail: 59.5, destroy: 10.5, safeguard: false },
+  { success: 15, fail: 72.25, destroy: 12.75, safeguard: false },
+  { success: 15, fail: 68, destroy: 17, safeguard: false },
+  { success: 10, fail: 72, destroy: 18, safeguard: false },
+  { success: 10, fail: 72, destroy: 18, safeguard: false },
+  { success: 10, fail: 72, destroy: 18, safeguard: false },
+  { success: 7, fail: 74.4, destroy: 18.6, safeguard: false },
+  { success: 5, fail: 76, destroy: 19, safeguard: false },
+  { success: 3, fail: 77.6, destroy: 19.4, safeguard: false },
+  { success: 1, fail: 79.2, destroy: 19.8, safeguard: false },
 ];
 
 // 4. 鐵鎚種類與成功機率

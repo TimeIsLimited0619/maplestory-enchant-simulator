@@ -55,10 +55,10 @@
   display: none;
 }
 
-/* --- 星火控制台畫布（#panel-bonusStat，整體上移 126px） --- */
+/* --- 星火控制台畫布（#panel-bonusStat；y=0 對應主面板 y=118，子元素用 xmlY-118） --- */
 .ms-bonus-stat-canvas {
   position: absolute;
-  top: -8px;
+  top: 0;
   left: 0;
   width: 418px;
   height: 602px;
@@ -494,10 +494,10 @@
   pointer-events: none;
 }
 
-/* #btnBonusStatReset — button:confirm（xml y≈675，canvas top≈557） */
+/* #btnBonusStatReset — 對齊星力強化按鈕（bottom: 10 / center+2） */
 .bs-btn-reset {
   position: absolute;
-  top: 557px;
+  bottom: 10px;
   border: none;
   padding: 0;
   margin: 0;
@@ -529,7 +529,7 @@
 }
 
 .bs-btn-reset-main {
-  left: 211px;
+  left: calc(50% + 2px);
   transform: translateX(-50%);
   width: 129px;
   height: 35px;
@@ -578,6 +578,11 @@
   align-items: flex-start;
   gap: 4px;
   pointer-events: auto;
+}
+
+.bs-bottom-options-left {
+  right: auto;
+  left: 14px;
 }
 
 .bs-auto-label {

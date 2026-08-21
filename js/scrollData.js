@@ -178,10 +178,13 @@ const RANDOM_RATE_TABLES = {
  */
 const SCROLL_CAT_VALLEY_TIER_SHIFT = 2;
 
-/** true = 貓谷機率（T+2）；false = 正服機率 */
-let scrollUseCatValleyRates = true;
+/** true = 貓谷機率（T+2）；false = 正服機率。未解鎖密籍時一律視為正服。 */
+let scrollUseCatValleyRates = false;
 
 function isScrollCatValleyRatesEnabled() {
+  if (typeof isCatValleyContentUnlocked !== 'function' || !isCatValleyContentUnlocked()) {
+    return false;
+  }
   return scrollUseCatValleyRates !== false;
 }
 

@@ -2,8 +2,8 @@
  * 追加屬性（輪迴星火）機率表
  */
 const BONUS_STAT_INSPECT_STAR_FIRE_LABELS = {
-  enhanced: '楓幣（強化星火）',
-  eternal: '楓幣（永恆星火）',
+  enhanced: '強力的輪迴星火',
+  eternal: '永遠的輪迴星火',
   awakened: '覺醒的輪迴星火',
   blackAwakened: '覺醒的暗黑輪迴星火',
 };
@@ -56,6 +56,19 @@ const BonusStatInspectModule = {
 
   isAwakenedStarFireType(starFireType) {
     return starFireType === 'awakened' || starFireType === 'blackAwakened';
+  },
+
+  usesAwakenedIndependentTiers() {
+    return typeof bsUsesAwakenedIndependentTiers === 'function'
+      ? bsUsesAwakenedIndependentTiers()
+      : false;
+  },
+
+  getDisplayTierMax() {
+    if (typeof bsGetBonusStatDisplayTierMax === 'function') {
+      return bsGetBonusStatDisplayTierMax();
+    }
+    return this.usesAwakenedIndependentTiers() ? 9 : 7;
   },
 
   getStarFireTypeOptions() {
@@ -114,7 +127,9 @@ const BonusStatInspectModule = {
   },
 
   buildStarLevelRows(starFireType) {
-    const prob = BONUS_STAT_STAR_LEVEL_PROB?.[starFireType]
+    const prob = (typeof bsGetStarLevelProb === 'function'
+      ? bsGetStarLevelProb(starFireType)
+      : BONUS_STAT_STAR_LEVEL_PROB?.[starFireType])
       || BONUS_STAT_STAR_LEVEL_PROB?.enhanced
       || {};
     return this.normalizeProbRows(
@@ -172,9 +187,11 @@ const BonusStatInspectModule = {
 
   buildLineCountRows(item) {
     const isBoss = typeof bsIsBossGearItem === 'function' && bsIsBossGearItem(item);
-    const prob = isBoss
-      ? BONUS_STAT_LINE_COUNT_PROB?.boss
-      : BONUS_STAT_LINE_COUNT_PROB?.general;
+    const prob = typeof bsGetLineCountProb === 'function'
+      ? bsGetLineCountProb(isBoss)
+      : (isBoss
+        ? BONUS_STAT_LINE_COUNT_PROB?.boss
+        : BONUS_STAT_LINE_COUNT_PROB?.general);
     const rows = (prob || [])
       .map((rate, index) => ({
         count: index + 1,
@@ -204,7 +221,7 @@ const BonusStatInspectModule = {
     const values = [];
     let sampleLine = null;
 
-    for (let tier = 1; tier <= BONUS_STAT_STAR_LINE_TIERS; tier += 1) {
+    for (let tier = 1; tier <= this.getDisplayTierMax(); tier += 1) {
       const line = typeof bsResolveStatLine === 'function'
         ? bsResolveStatLine(statName, tier, item)
         : null;
@@ -270,32 +287,41 @@ const BonusStatInspectModule = {
       rateSum: available.length ? 1 : 0,
       rateSumText: `${rateSum.toFixed(4)}%`,
       poolType: typeof bsIsWeaponItem === 'function' && bsIsWeaponItem(item) ? '武器' : '防具',
-      sectionTitle: hasAllStatBias
+      sectionTitle: hasAllStatBias && typeof isBonusStatCatValleyRatesEnabled === 'function'
+        && isBonusStatCatValleyRatesEnabled()
         ? `詞條種類（全屬性% ${BONUS_STAT_ALLSTAT_PICK_RATE ?? 3}%，其餘均分）`
         : '詞條種類（等機率）',
     };
   },
 
   buildLineTierNote(starFireType) {
-    if (this.isAwakenedStarFireType(starFireType)) {
-      return '詞條階級：先抽基礎 T1~T5，再抽加值（覺醒／暗黑共用；最終 clamp 1~9）';
+    if (this.usesAwakenedIndependentTiers()) {
+      if (this.isAwakenedStarFireType(starFireType)) {
+        return '詞條階級：先抽基礎 T1~T5，再抽加值（覺醒／暗黑共用；最終 clamp 1~9）';
+      }
+      const sampleLevels = Object.keys(
+        (typeof bsGetStarLevelProb === 'function'
+          ? bsGetStarLevelProb(starFireType)
+          : BONUS_STAT_STAR_LEVEL_PROB?.[starFireType]) || {}
+      )
+        .map(Number)
+        .filter((level) => level >= 2)
+        .sort((a, b) => a - b);
+      if (!sampleLevels.length) return '';
+      return sampleLevels.map((level) => {
+        const maxTier = Math.min(
+          BONUS_STAT_STAR_LINE_TIERS,
+          Math.max(1, (level - 1) * 2)
+        );
+        const each = maxTier ? (100 / maxTier).toFixed(4) : '0';
+        return `星火${level}：每條詞條星火階 1~${maxTier}，各 ${each}%`;
+      }).join('\n');
     }
 
-    const sampleLevels = Object.keys(BONUS_STAT_STAR_LEVEL_PROB?.[starFireType] || {})
-      .map(Number)
-      .filter((level) => level >= 2)
-      .sort((a, b) => a - b);
-
-    if (!sampleLevels.length) return '';
-
-    return sampleLevels.map((level) => {
-      const maxTier = Math.min(
-        BONUS_STAT_STAR_LINE_TIERS,
-        Math.max(1, (level - 1) * 2)
-      );
-      const each = maxTier ? (100 / maxTier).toFixed(4) : '0';
-      return `星火${level}：每條詞條星火階 1~${maxTier}，各 ${each}%`;
-    }).join('\n');
+    if (this.isAwakenedStarFireType(starFireType)) {
+      return 'BOSS 套裝星火等級 +2 後再決定附加屬性等級（最高 7）。';
+    }
+    return '';
   },
 
   renderProbTableSection(title, rankClass, summary, columns, rows, mapRow) {
@@ -320,7 +346,7 @@ const BonusStatInspectModule = {
   },
 
   renderStarTierSections(starFireType) {
-    if (this.isAwakenedStarFireType(starFireType)) {
+    if (this.isAwakenedStarFireType(starFireType) && this.usesAwakenedIndependentTiers()) {
       const baseTier = this.buildAwakenedBaseTierRows();
       const bonus = this.buildAwakenedBonusRows();
       const finalTier = this.buildAwakenedFinalTierRows();
@@ -427,6 +453,9 @@ const BonusStatInspectModule = {
         `裝備：Lv.${item.reqLevel} ${item.name}${item.isBossGear ? ' · BOSS 套裝' : ''}`,
         `詞條池：${statPool.poolType}`,
         `星火：${typeLabel}`,
+        typeof isBonusStatCatValleyRatesEnabled === 'function' && isBonusStatCatValleyRatesEnabled()
+          ? '機率：貓谷'
+          : '機率：正服',
         tierNote,
       ].filter(Boolean).join('\n');
     }
@@ -452,7 +481,7 @@ const BonusStatInspectModule = {
         statPool.sectionTitle || '詞條種類（等機率）',
         'pt-inspect-rank-legendary',
         `機率合計 ${statPool.rateSumText}`,
-        ['詞條', '顯示', '機率', '數值範圍（星火1~9）'],
+        ['詞條', '顯示', '機率', `數值範圍（星火1~${this.getDisplayTierMax()}）`],
         statPool.rows,
         (row) => `
           <tr>

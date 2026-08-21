@@ -81,6 +81,7 @@ const CombatEfficiencyPanel = (() => {
       metric('dmg', '傷害', ['dmg'], '%'),
       metric('bossDmg', 'BOSS傷害', ['bossDmg'], '%'),
       metric('critDmg', '爆擊傷害', ['critDmg'], '%'),
+      metric('famFinal', '萌獸終傷', ['famFinal'], '%'),
     );
     return result;
   }
@@ -292,7 +293,7 @@ const CombatEfficiencyPanel = (() => {
   return {
     init,
     refresh() {
-      if (inited) render();
+      if (inited && open) render();
     },
     setOpen,
     toggle() { setOpen(!open); },

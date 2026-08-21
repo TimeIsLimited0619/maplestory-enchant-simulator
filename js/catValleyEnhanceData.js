@@ -226,6 +226,7 @@ function getCatValleyRemainingUses(item) {
 }
 
 function canUseCatValleyEnhance(item) {
+  if (typeof isCatValleyContentUnlocked !== 'function' || !isCatValleyContentUnlocked()) return false;
   if (isCatValleyPotentialItem(item)) return true;
   return getCatValleyRemainingUses(item) > 0;
 }
@@ -290,6 +291,9 @@ function canUseCatValleyPotentialMenu(item) {
  * @returns {{ ok: boolean, level: number, changes: Array, taichuCost: number, message?: string }}
  */
 function applyCatValleyMedalEnhanceOnce(item) {
+  if (typeof isCatValleyContentUnlocked !== 'function' || !isCatValleyContentUnlocked()) {
+    return { ok: false, level: 0, changes: [], taichuCost: 0, message: '未解鎖' };
+  }
   if (!isCatValleyPotentialItem(item)) {
     return { ok: false, level: 0, changes: [], taichuCost: 0, message: '此裝備無法使用勳章強化' };
   }
@@ -528,6 +532,9 @@ function trackCatValleyTaichuCost(amount) {
  * @param {'addMain'|'clearMain'|'addAdd'|'clearAdd'|'rerollAdd1'} action
  */
 function applyCatValleyPotentialAction(item, action) {
+  if (typeof isCatValleyContentUnlocked !== 'function' || !isCatValleyContentUnlocked()) {
+    return { ok: false, message: '未解鎖' };
+  }
   if (!isCatValleyPotentialItem(item)) {
     return { ok: false, message: '此裝備無法使用貓谷潛能功能' };
   }
@@ -652,6 +659,9 @@ function ensureCatValleyScrollFields(item) {
  * @returns {{ ok: boolean, type: string|null, level: number, changes: Array<{label:string,val:number,field?:string}> }}
  */
 function applyCatValleyEnhanceOnce(item) {
+  if (typeof isCatValleyContentUnlocked !== 'function' || !isCatValleyContentUnlocked()) {
+    return { ok: false, type: null, level: 0, changes: [] };
+  }
   ensureCatValleyScrollFields(item);
   const meta = getCatValleyEnhanceMeta(item);
   if (!meta) return { ok: false, type: null, level: getCatValleyLevel(item), changes: [] };

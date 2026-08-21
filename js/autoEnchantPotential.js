@@ -438,22 +438,26 @@ const AutoEnchantPotentialModule = {
     await this.start();
   },
 
-  applyRollSilent(rolled, cube) {
+  applyRollSilent(rolled, cube, opts = {}) {
     const { mirrorCopied, ...potential } = rolled;
     PotentialModule.itemData.potential = potential;
     PotentialModule.syncPotentialOverallRank(potential);
     PotentialModule.lastAtkPow = potential.atkPow;
-    PotentialModule.updateUI();
-    if (typeof updateStatusPanel === 'function') updateStatusPanel();
+    if (!opts.skipUi) {
+      PotentialModule.updateUI();
+      if (typeof updateStatusPanel === 'function') updateStatusPanel();
+    }
     return mirrorCopied;
   },
 
-  applyPotentialSilent(potential) {
+  applyPotentialSilent(potential, opts = {}) {
     PotentialModule.itemData.potential = potential;
     PotentialModule.syncPotentialOverallRank(potential);
     PotentialModule.lastAtkPow = potential.atkPow;
-    PotentialModule.updateUI();
-    if (typeof updateStatusPanel === 'function') updateStatusPanel();
+    if (!opts.skipUi) {
+      PotentialModule.updateUI();
+      if (typeof updateStatusPanel === 'function') updateStatusPanel();
+    }
   },
 
   async delayLoop() {
@@ -474,15 +478,16 @@ const AutoEnchantPotentialModule = {
         if (!PotentialModule.itemData || !this.isRollableCube(cube)) break;
         consumePlayerCube(cube.id);
         const rolled = rerollPotential(cube, PotentialModule.itemData.potential, PotentialModule.itemData);
-        this.applyRollSilent(rolled, cube);
+        this.applyRollSilent(rolled, cube, { skipUi: true });
         attempts += 1;
-        this.render();
         if (this.shouldStopSuccess(PotentialModule.itemData.potential)) {
           hit = true;
           break;
         }
         if (attempts > 50000) break;
       }
+      PotentialModule.updateUI();
+      this.render();
       if (hit || attempts > 50000) break;
       await this.delayLoop();
     }
@@ -532,7 +537,7 @@ const AutoEnchantPotentialModule = {
     const result = await aePotRunUnionAutoEnchant({
       getItem: () => PotentialModule.itemData,
       getPotential: () => PotentialModule.itemData?.potential,
-      setPotential: (potential) => this.applyPotentialSilent(potential),
+      setPotential: (potential) => this.applyPotentialSilent(potential, { skipUi: true }),
       consumeCube: () => consumePlayerCube(cube.id),
       rateKey,
       groups: this.groupTargets,
@@ -541,7 +546,10 @@ const AutoEnchantPotentialModule = {
       isCancelled: () => this.cancelled,
       loopDelayMs: this.getLoopDelayMs(),
       batchSize: this.getBatchSize(),
-      onProgress: () => this.render(),
+      onProgress: () => {
+        PotentialModule.updateUI?.();
+        this.render();
+      },
     });
     this.lastUniReselectUses = result.reselectUses;
     this.lastUniResetUses = result.resetUses;
@@ -567,38 +575,40 @@ const AutoEnchantPotentialModule = {
     while (!this.cancelled && attempts < maxRolls) {
       let hit = false;
       let stoppedRankUp = false;
+      let lastAfter = null;
       for (let i = 0; i < batch && !this.cancelled && attempts < maxRolls; i += 1) {
         consumePlayerCube(cube.id);
         attempts += 1;
 
         const rolled = rerollPotential(cube, snapshot, PotentialModule.itemData);
-        const after = PotentialModule.cloneMemoriaPotential(rolled);
+        lastAfter = PotentialModule.cloneMemoriaPotential(rolled);
 
-        if (!overlayOpened) {
-          PotentialModule.openMemoriaAutoSession(snapshot, after, cube, { fadeIn: true });
-          overlayOpened = true;
-        } else {
-          PotentialModule.updateMemoriaAutoSession(snapshot, after);
-        }
-        aePotSyncMemoriaAutoEnchantLayout?.();
-
-        const rankUp = PotentialModule.isMemoriaRankUp(snapshot, after);
+        const rankUp = PotentialModule.isMemoriaRankUp(snapshot, lastAfter);
         if (rankUp) {
           this.lastRankUpStoppedForPick = true;
           this.lastChoiceStoppedForPick = true;
           this.choiceAutoSessionActive = true;
-          PotentialModule.renderMemoriaOverlay?.();
           stoppedRankUp = true;
           break;
         }
 
-        if (this.matchesTargets(after)) {
+        if (this.matchesTargets(lastAfter)) {
           this.lastChoiceStoppedForPick = true;
           this.choiceAutoSessionActive = true;
-          PotentialModule.renderMemoriaOverlay?.();
           hit = true;
           break;
         }
+      }
+
+      if (lastAfter) {
+        if (!overlayOpened) {
+          PotentialModule.openMemoriaAutoSession(snapshot, lastAfter, cube, { fadeIn: true });
+          overlayOpened = true;
+        } else {
+          PotentialModule.updateMemoriaAutoSession(snapshot, lastAfter);
+        }
+        aePotSyncMemoriaAutoEnchantLayout?.();
+        if (stoppedRankUp || hit) PotentialModule.renderMemoriaOverlay?.();
       }
 
       if (stoppedRankUp) {
@@ -639,6 +649,14 @@ const AutoEnchantPotentialModule = {
     }
     this.render();
 
+    const logItem = aeSessionLogItemMeta(PotentialModule.itemData);
+    aeSessionLogBegin({
+      module: '潛能',
+      itemId: logItem.itemId,
+      itemName: logItem.itemName,
+      detail: { cubeName: cube?.name, cubeId: cube?.id, overspeed: this.overspeedMode },
+    });
+
     try {
       if (isMemoria) {
         const result = await this.startMemoriaAuto();
@@ -664,6 +682,7 @@ const AutoEnchantPotentialModule = {
       PotentialModule.updateResetButtonState?.();
       PotentialModule.renderMemoriaOverlay?.();
       if (typeof updateStatusPanel === 'function') updateStatusPanel();
+      aePotFlushAutoEnchantSideUi?.();
       aePotSyncMemoriaAutoEnchantLayout?.();
     }
 
@@ -694,6 +713,21 @@ const AutoEnchantPotentialModule = {
     } else {
       addLog(`⚠️ 自動重設結束（${attemptLabel}）`, 'log-info');
     }
+
+    aeSessionLogEnd({
+      outcome: aeSessionLogResolveOutcome({
+        cancelled: this.cancelled,
+        targetHit,
+        stoppedForManualPick,
+        stoppedForRankUp,
+        hexaReady,
+      }),
+      attempts,
+      targetHit,
+      cancelled: this.cancelled,
+      detail: { cubeName: cube?.name, uniReselect, uniReset },
+    });
+
     this.lastUniReselectUses = 0;
     this.lastUniResetUses = 0;
     this.lastHexaStoppedForPick = false;

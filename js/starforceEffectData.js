@@ -1106,6 +1106,55 @@ const STARFORCE_EFFECT = {
         }
       ]
     }
+  },
+  "destroy": {
+    "anchor": {
+      "x": 209,
+      "y": 114
+    },
+    "layers": {
+      "itemIcon/back": [
+        { "i": 0, "o": null, "d": 60, "hasImg": false, "outlink": null },
+        { "i": 1, "o": null, "d": 60, "hasImg": false, "outlink": null },
+        { "i": 2, "o": null, "d": 60, "hasImg": false, "outlink": null },
+        { "i": 3, "o": null, "d": 60, "hasImg": false, "outlink": null },
+        { "i": 4, "o": null, "d": 60, "hasImg": false, "outlink": null },
+        { "i": 5, "o": null, "d": 60, "hasImg": false, "outlink": null },
+        { "i": 6, "o": null, "d": 60, "hasImg": false, "outlink": null },
+        { "i": 7, "o": null, "d": 60, "hasImg": false, "outlink": null },
+        { "i": 8, "o": null, "d": 60, "hasImg": false, "outlink": null },
+        { "i": 9, "o": null, "d": 60, "hasImg": false, "outlink": null },
+        { "i": 10, "o": null, "d": 60, "hasImg": false, "outlink": null },
+        { "i": 11, "o": null, "d": 60, "hasImg": false, "outlink": null }
+      ],
+      "itemIcon/front": [
+        { "i": 0, "o": { "x": 129, "y": 142 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/itemIcon/front/0" },
+        { "i": 1, "o": { "x": 166, "y": 166 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/itemIcon/front/1" },
+        { "i": 2, "o": { "x": 163, "y": 165 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/itemIcon/front/2" },
+        { "i": 3, "o": { "x": 159, "y": 166 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/itemIcon/front/3" },
+        { "i": 4, "o": { "x": 163, "y": 167 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/itemIcon/front/4" },
+        { "i": 5, "o": { "x": 166, "y": 150 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/itemIcon/front/5" },
+        { "i": 6, "o": { "x": 163, "y": 163 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/itemIcon/front/6" },
+        { "i": 7, "o": { "x": 167, "y": 164 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/itemIcon/front/7" },
+        { "i": 8, "o": { "x": 163, "y": 159 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/itemIcon/front/8" },
+        { "i": 9, "o": { "x": 158, "y": 146 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/itemIcon/front/9" },
+        { "i": 10, "o": { "x": 162, "y": 148 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/itemIcon/front/10" },
+        { "i": 11, "o": { "x": 161, "y": 155 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/itemIcon/front/11" }
+      ],
+      "textScreen": [
+        { "i": 0, "o": { "x": 257, "y": 163 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/textScreen/0" },
+        { "i": 1, "o": { "x": 247, "y": 163 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/textScreen/1" },
+        { "i": 2, "o": { "x": 238, "y": 162 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/textScreen/2" },
+        { "i": 3, "o": { "x": 229, "y": 160 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/textScreen/3" },
+        { "i": 4, "o": { "x": 223, "y": 159 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/textScreen/4" },
+        { "i": 5, "o": { "x": 220, "y": 159 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/textScreen/5" },
+        { "i": 6, "o": { "x": 214, "y": 157 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/textScreen/6" },
+        { "i": 7, "o": { "x": 211, "y": 156 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/textScreen/7" },
+        { "i": 8, "o": { "x": 209, "y": 156 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/textScreen/8" },
+        { "i": 9, "o": { "x": 208, "y": 154 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/textScreen/9" },
+        { "i": 10, "o": { "x": 208, "y": 141 }, "d": 60, "hasImg": true, "outlink": "UI/_Canvas/Enchant.img/effect/starForce/0/destroy/textScreen/10" }
+      ]
+    }
   }
 };
 

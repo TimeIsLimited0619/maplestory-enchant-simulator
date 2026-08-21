@@ -199,7 +199,9 @@ Object.assign(AddPotentialModule, {
     this.memoriaClosing = false;
     this.memoriaSelectedSide = null;
     this.renderMemoriaOverlay();
-    if (typeof updateStatusPanel === 'function') updateStatusPanel();
+    if (typeof aePotIsAnyAutoEnchantRunning !== 'function' || !aePotIsAnyAutoEnchantRunning()) {
+      if (typeof updateStatusPanel === 'function') updateStatusPanel();
+    }
     this.syncMemoriaAutoEnchantLayout();
   },
 
