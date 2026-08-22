@@ -547,6 +547,8 @@ html:not(.secret-unlocked) #catValleySubmenu,
 html:not(.secret-unlocked) #catValleyMask,
 html:not(.secret-unlocked) #scBottomOptionsLeft,
 html:not(.secret-unlocked) #bsBottomOptionsLeft,
+html:not(.secret-unlocked) #sfBottomOptionsLeft,
+html:not(.secret-unlocked) #hmBottomOptionsLeft,
 html:not(.secret-unlocked) #invCatValleyBtn,
 html:not(.secret-unlocked) #invCatValleySubmenu,
 html:not(.secret-unlocked) #invCatValleyMask {

@@ -1,6 +1,70 @@
 /**
  * StarForceModule - 星力獨立邏輯與 UI 渲染
  */
+
+/** 光輝 Boss 套裝飾品（星力卷軸特殊規則） */
+const STARFORCE_RADIANT_ACCESSORY_IDS = new Set([
+  '01113341', '01122447', '01143471', '01113360', '01012911', '01022913',
+]);
+
+const STARFORCE_NEW_ETERNAL_23_SCROLL_MESO = 2500000000;
+const STARFORCE_RADIANT_23_SCROLL_MESO = 5000000000;
+
+let starForceUseCatValleyRates = true;
+
+function isStarForceCatValleyRatesEnabled() {
+  if (typeof isCatValleyContentUnlocked !== 'function' || !isCatValleyContentUnlocked()) {
+    return false;
+  }
+  return starForceUseCatValleyRates === true;
+}
+
+function setStarForceCatValleyRatesEnabled(enabled) {
+  starForceUseCatValleyRates = Boolean(enabled);
+}
+
+function normalizeStarForceItemId(item) {
+  return String(item?.itemId || item?.id || '').replace(/^0+/, '').padStart(8, '0');
+}
+
+function isStarForceRadiantAccessoryItem(item) {
+  if (!item) return false;
+  return STARFORCE_RADIANT_ACCESSORY_IDS.has(normalizeStarForceItemId(item));
+}
+
+function isStarForceNewEternalItem(item) {
+  return typeof getCatValleyEnhanceType === 'function'
+    && typeof CAT_VALLEY_ENHANCE_TYPE !== 'undefined'
+    && getCatValleyEnhanceType(item) === CAT_VALLEY_ENHANCE_TYPE.NEW_ETERNAL;
+}
+
+function isStarForceOldEternalItem(item) {
+  return typeof getCatValleyEnhanceType === 'function'
+    && typeof CAT_VALLEY_ENHANCE_TYPE !== 'undefined'
+    && getCatValleyEnhanceType(item) === CAT_VALLEY_ENHANCE_TYPE.OLD_ETERNAL;
+}
+
+function isStarForceEternalGearItem(item) {
+  return isStarForceNewEternalItem(item) || isStarForceOldEternalItem(item);
+}
+
+/** 新舊永恆／光輝飾品：23 星卷降機率、24/25 卷額外消耗 4 張 23星100% */
+function isStarForceSpecialScrollGear(item) {
+  return isStarForceEternalGearItem(item) || isStarForceRadiantAccessoryItem(item);
+}
+
+/**
+ * 貓谷星力：失敗後的星數（from = 當前星，強化 from→from+1）
+ * 20／25 保底不降；21–24 必降 1；26 不降；27 起失敗降 1（含 27→28 掉回 26）。
+ */
+function getStarForceFailDestStar(fromStar, catValley = isStarForceCatValleyRatesEnabled()) {
+  const star = Math.max(0, Number(fromStar) || 0);
+  if (!catValley) return star;
+  if (star === 20 || star === 25 || star === 26) return star;
+  if ((star >= 21 && star <= 24) || star >= 27) return Math.max(0, star - 1);
+  return star;
+}
+
 const StarForceModule = {
   currentStars: 0,
   itemData: null,
@@ -269,7 +333,23 @@ const StarForceModule = {
   },
 
   isProtectDestroyEnabled() {
+    if (typeof isStarForceCatValleyRatesEnabled === 'function' && isStarForceCatValleyRatesEnabled()) {
+      return true;
+    }
     return Boolean(document.getElementById('chkProtectDestroy')?.checked);
+  },
+
+  syncProtectDestroyLock() {
+    const el = document.getElementById('chkProtectDestroy');
+    const wrap = document.querySelector('.sf-protect-destroy');
+    const locked = typeof isStarForceCatValleyRatesEnabled === 'function'
+      && isStarForceCatValleyRatesEnabled();
+    if (el) {
+      if (locked) el.checked = true;
+      el.disabled = locked;
+    }
+    wrap?.classList.toggle('is-locked', locked);
+    wrap?.setAttribute('title', locked ? '貓谷機率開啟時鎖定防止破壞' : '');
   },
 
   bindProtectDestroyToggle() {
@@ -278,6 +358,31 @@ const StarForceModule = {
     if (!el) return;
     this._protectDestroyBound = true;
     el.addEventListener('change', () => this.updateUI());
+    this.bindCatValleyRatesToggle();
+  },
+
+  bindCatValleyRatesToggle() {
+    if (this._catValleyRatesBound) return;
+    const el = document.getElementById('chkStarForceCatValleyRates');
+    if (!el) return;
+    this._catValleyRatesBound = true;
+    el.addEventListener('change', () => {
+      if (typeof setStarForceCatValleyRatesEnabled === 'function') {
+        setStarForceCatValleyRatesEnabled(el.checked);
+      }
+      this.syncProtectDestroyLock();
+      this.updateUI();
+    });
+  },
+
+  syncCatValleyRatesUi() {
+    const wrap = document.getElementById('sfBottomOptionsLeft');
+    wrap?.classList.remove('hidden');
+    const el = document.getElementById('chkStarForceCatValleyRates');
+    if (el && typeof isStarForceCatValleyRatesEnabled === 'function') {
+      el.checked = isStarForceCatValleyRatesEnabled();
+    }
+    this.syncProtectDestroyLock();
   },
 
   getBaseMesoCost(star) {
@@ -291,6 +396,20 @@ const StarForceModule = {
     const base = this.getBaseMesoCost(star);
     if (!base) return 0;
     return this.isProtectDestroyEnabled() ? base : Math.floor(base / 2);
+  },
+
+  getStar23ScrollExtraMeso(item = this.itemData) {
+    if (isStarForceNewEternalItem(item)) return STARFORCE_NEW_ETERNAL_23_SCROLL_MESO;
+    if (isStarForceRadiantAccessoryItem(item)) return STARFORCE_RADIANT_23_SCROLL_MESO;
+    return 0;
+  },
+
+  getStarScrollSuccessChance(method, item = this.itemData) {
+    const special = isStarForceSpecialScrollGear(item);
+    if (method === 'scroll_under23_100') return special ? 25 : 100;
+    if (method === 'scroll_under23_30') return special ? 7.5 : 30;
+    if (method === 'scroll_25_30') return 30;
+    return 100;
   },
 
   formatMeso(amount) {
@@ -441,6 +560,7 @@ const StarForceModule = {
       const showProtect = hasEquip && !useScroll;
       protectEl.classList.toggle('hidden', !showProtect);
       protectEl.setAttribute('aria-hidden', showProtect ? 'false' : 'true');
+      this.syncProtectDestroyLock();
     }
 
     document.querySelector('#sfIdlePanel .sf-idle-lower')
@@ -689,6 +809,8 @@ const StarForceModule = {
           || (typeof isAtlasOffHandWeapon === 'function' && isAtlasOffHandWeapon(this.itemData)))) ||
       (this.itemData.reqLevel === 250 &&
         (this.itemData.mainType === EQUIP_TYPE.ARMOR || this.itemData.mainType === EQUIP_TYPE.ACCESSORY));
+    const extra23OnHighScroll = isSpecialRequire || isStarForceSpecialScrollGear(this.itemData);
+    const extra23ScrollMeso = this.getStar23ScrollExtraMeso();
 
     if (method === 'scroll_set20_100') {
       if (this.currentStars >= 20) {
@@ -717,8 +839,9 @@ const StarForceModule = {
         return null;
       }
       const fromStars = this.currentStars;
-      const chance = method === 'scroll_under23_100' ? 100 : 30;
+      const chance = this.getStarScrollSuccessChance(method);
       const success = Math.random() * 100 < chance;
+      const extraMeso = extra23ScrollMeso;
       return {
         outcome: success ? 'success' : 'keep',
         animate: true,
@@ -729,11 +852,15 @@ const StarForceModule = {
           this.consumeSelectedScroll();
           if (method === 'scroll_under23_100') this.getStatsCount().scroll23_100++;
           else this.getStatsCount().scroll23_30++;
+          if (extraMeso > 0) this.getStatsCount().mesoSpent += extraMeso;
           if (success) {
             this.currentStars++;
-            if (!silent) addLog(`✨ [追加一星卷] 成功升至 ★ ${this.currentStars}！`, 'log-success');
+            if (!silent) {
+              const mesoNote = extraMeso > 0 ? `，另消耗 ${this.formatMeso(extraMeso)}` : '';
+              addLog(`✨ [追加一星卷] 成功升至 ★ ${this.currentStars}！（成功率 ${chance}%${mesoNote}）`, 'log-success');
+            }
           } else if (!silent) {
-            addLog(`[追加一星卷] 失敗，星力維持在 ★ ${this.currentStars}。`, 'log-fail');
+            addLog(`[追加一星卷] 失敗，星力維持在 ★ ${this.currentStars}。（成功率 ${chance}%）`, 'log-fail');
           }
           this.afterEnhanceUpdate();
         },
@@ -752,7 +879,7 @@ const StarForceModule = {
         apply: () => {
           this.consumeSelectedScroll();
           this.getStatsCount().scroll24++;
-          if (isSpecialRequire) this.getStatsCount().scroll23_100 += 4;
+          if (extra23OnHighScroll) this.getStatsCount().scroll23_100 += 4;
           this.currentStars = 24;
           if (!silent) addLog('✨ [★ 24卷] 成功升至 ★ 24！', 'log-success');
           this.afterEnhanceUpdate();
@@ -773,7 +900,7 @@ const StarForceModule = {
         apply: () => {
           this.consumeSelectedScroll();
           this.getStatsCount().scroll25++;
-          if (isSpecialRequire) this.getStatsCount().scroll23_100 += 4;
+          if (extra23OnHighScroll) this.getStatsCount().scroll23_100 += 4;
           if (success) {
             this.currentStars = 25;
             if (!silent) addLog('✨ [★ 25卷] 成功升至 ★ 25！', 'log-success');
@@ -792,6 +919,9 @@ const StarForceModule = {
     const rates = this.getRates(this.currentStars);
     const roll = Math.random() * 100;
     const protectDestroy = this.isProtectDestroyEnabled();
+    const catValley = typeof isStarForceCatValleyRatesEnabled === 'function'
+      && isStarForceCatValleyRatesEnabled();
+    const fromStar = this.currentStars;
 
     let outcome = 'keep';
     if (roll < rates.success) outcome = 'success';
@@ -802,8 +932,15 @@ const StarForceModule = {
       outcome = 'keep';
     }
 
+    const failDest = typeof getStarForceFailDestStar === 'function'
+      ? getStarForceFailDestStar(fromStar, catValley)
+      : fromStar;
+    if (outcome !== 'success' && failDest !== fromStar) {
+      outcome = 'drop';
+    }
+
     return {
-      outcome,
+      outcome: outcome === 'drop' ? 'keep' : outcome,
       animate: method === 'normal',
       apply: () => {
         if (outcome === 'success') {
@@ -811,6 +948,11 @@ const StarForceModule = {
           this.setStarConsecutiveDrops(0);
           if (!silent) {
             addLog(`✨ 星力成功升至 ★ ${this.currentStars}！`, 'log-success');
+          }
+        } else if (outcome === 'drop') {
+          this.currentStars = failDest;
+          if (!silent) {
+            addLog(`星力強化失敗，下降至 ★ ${this.currentStars}。`, 'log-fail');
           }
         } else if (outcome === 'destroy') {
           if (!silent) addLog(`星力強化失敗（破壞），維持在 ★ ${this.currentStars}。`, 'log-fail');
@@ -874,6 +1016,7 @@ const StarForceModule = {
 
   updateUI() {
     this.bindProtectDestroyToggle();
+    this.syncCatValleyRatesUi();
 
     if (!this.itemData) {
       this.setPanelMode(this.selectedScrollId ? 'idle-scroll' : 'idle');
@@ -919,10 +1062,16 @@ const StarForceModule = {
       this.setRateDisplay(0, 100, 0);
     } else if (method === 'normal') {
       const rates = this.getRates(this.currentStars);
-      this.setRateDisplay(rates.success, rates.fail, rates.destroy);
-    } else if (method === 'scroll_set20_100' || method === 'scroll_under23_100' || method === 'scroll_24_100') {
+      const protectDestroy = this.isProtectDestroyEnabled();
+      const failRate = protectDestroy ? rates.fail + rates.destroy : rates.fail;
+      const destroyRate = protectDestroy ? 0 : rates.destroy;
+      this.setRateDisplay(rates.success, failRate, destroyRate);
+    } else if (method === 'scroll_set20_100' || method === 'scroll_24_100') {
       this.setRateDisplay(100, 0, 0);
-    } else if (method === 'scroll_under23_30' || method === 'scroll_25_30') {
+    } else if (method === 'scroll_under23_100' || method === 'scroll_under23_30') {
+      const chance = this.getStarScrollSuccessChance(method);
+      this.setRateDisplay(chance, 100 - chance, 0);
+    } else if (method === 'scroll_25_30') {
       this.setRateDisplay(30, 70, 0);
     }
 

@@ -402,6 +402,11 @@
   pointer-events: auto;
 }
 
+.hm-bottom-options-left {
+  right: auto;
+  left: 14px;
+}
+
 .hm-auto-label {
   display: inline-flex;
   align-items: center;

@@ -83,7 +83,7 @@ const BONUS_STAT_STAR_LEVEL_PROB_OFFICIAL_BLACK = {
   6: 0.5,
 };
 
-let bonusStatUseCatValleyRates = false;
+let bonusStatUseCatValleyRates = true;
 
 function isBonusStatCatValleyRatesEnabled() {
   if (typeof isCatValleyContentUnlocked !== 'function' || !isCatValleyContentUnlocked()) {

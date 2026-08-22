@@ -93,7 +93,7 @@ function getCatValleyEnhanceCostForLevel(type, targetLevel) {
   if (!table?.length || !(targetLevel > 0)) return null;
   const tier = table.find((row) => targetLevel <= row.maxLevel) || table[table.length - 1];
   const cost = {};
-  ['snow', 'taichu', 'nekopow', 'doom', 'sun', 'darkpcs', 'Nohimepcs', 'eternalpcs', 'arcanepcs'].forEach((key) => {
+  ['snow', 'taichu', 'saint', 'meowcoin', 'nekopow', 'doom', 'sun', 'darkpcs', 'Nohimepcs', 'eternalpcs', 'arcanepcs'].forEach((key) => {
     const val = Number(tier[key]) || 0;
     if (val > 0) cost[key] = val;
   });
@@ -111,6 +111,166 @@ function trackCatValleyEnhanceCost(type, targetLevel) {
 
 function isCatValleyEternalItem(item) {
   return Boolean(item?.name && String(item.name).startsWith('永恆'));
+}
+
+function isCatValleyEternalShoulderItem(item) {
+  if (!isCatValleyEternalItem(item)) return false;
+  const islot = item.islot || '';
+  return islot === 'Sh' || item.subType === 'shoulder';
+}
+
+function isCatValleyImmortalHeritageItem(item) {
+  if (!item) return false;
+  const id = normalizeCatValleyItemId(item);
+  if (id === '01143471') return true;
+  return String(item.name || '') === '不朽的遺產';
+}
+
+function isBonusStatCatValleyCostActive() {
+  return typeof isBonusStatCatValleyRatesEnabled === 'function' && isBonusStatCatValleyRatesEnabled();
+}
+
+function getBonusStatCatValleyExtraMaterials(item) {
+  if (!isBonusStatCatValleyCostActive() || !item) return null;
+  const type = typeof getCatValleyEnhanceType === 'function' ? getCatValleyEnhanceType(item) : null;
+  const isNewEternal = typeof CAT_VALLEY_ENHANCE_TYPE !== 'undefined'
+    && type === CAT_VALLEY_ENHANCE_TYPE.NEW_ETERNAL;
+  if (isCatValleyEternalShoulderItem(item) || isNewEternal) {
+    return { awakened: 3, saint: 1 };
+  }
+  if (isCatValleyImmortalHeritageItem(item)) {
+    return { awakened: 3, taichu: 10 };
+  }
+  return null;
+}
+
+/** 附加能力貓谷耗材：每次星火重設（道具分頁） */
+function trackBonusStatCatValleyCost(item, count = 1) {
+  const extra = getBonusStatCatValleyExtraMaterials(item);
+  if (!extra) return;
+  const n = Math.max(1, Number(count) || 1);
+  if (extra.awakened > 0 && typeof trackCostEvent === 'function') {
+    trackCostEvent('bonusStatItem:randomReset', extra.awakened * n);
+  }
+  if (extra.saint > 0 && typeof trackCostUsage === 'function') {
+    trackCostUsage('saint', null, extra.saint * n);
+  }
+  if (extra.taichu > 0 && typeof trackCostUsage === 'function') {
+    trackCostUsage('taichu', null, extra.taichu * n);
+  }
+}
+
+const CAT_VALLEY_RADIANT_ACCESSORY_IDS = new Set([
+  '01113341', '01122447', '01143471', '01113360', '01012911', '01022913',
+]);
+
+function normalizeCatValleyItemId(item) {
+  return String(item?.itemId || item?.id || '').replace(/^0+/, '').padStart(8, '0');
+}
+
+function isCatValleyRadiantAccessoryItem(item) {
+  if (!item) return false;
+  return CAT_VALLEY_RADIANT_ACCESSORY_IDS.has(normalizeCatValleyItemId(item));
+}
+
+function isGenesisOrDestinyWeaponItem(item) {
+  if (!item) return false;
+  const name = String(item.name || '');
+  if (!name.includes('創世') && !name.includes('命運')) return false;
+  if (typeof EQUIP_TYPE !== 'undefined' && item.mainType === EQUIP_TYPE.WEAPON) return true;
+  const islot = item.islot || '';
+  return islot === 'Wp' || islot === 'Wpsi' || islot === 'Gw' || islot === 'Op';
+}
+
+function isCatValleyEternalOrRadiantGearItem(item) {
+  if (typeof getCatValleyEnhanceType === 'function' && typeof CAT_VALLEY_ENHANCE_TYPE !== 'undefined') {
+    const type = getCatValleyEnhanceType(item);
+    if (type === CAT_VALLEY_ENHANCE_TYPE.OLD_ETERNAL || type === CAT_VALLEY_ENHANCE_TYPE.NEW_ETERNAL) {
+      return true;
+    }
+  }
+  return isCatValleyRadiantAccessoryItem(item);
+}
+
+function isScrollCatValleyCostActive() {
+  return typeof isScrollCatValleyRatesEnabled === 'function' && isScrollCatValleyRatesEnabled();
+}
+
+let hammerUseCatValleyRates = true;
+
+function isHammerCatValleyRatesEnabled() {
+  if (typeof isCatValleyContentUnlocked !== 'function' || !isCatValleyContentUnlocked()) {
+    return false;
+  }
+  return hammerUseCatValleyRates === true;
+}
+
+function setHammerCatValleyRatesEnabled(enabled) {
+  hammerUseCatValleyRates = Boolean(enabled);
+}
+
+const HAMMER_PLATINUM_SUCCESS_SAINT = [10, 20, 30, 40, 50];
+
+/**
+ * 白金鐵鎚貓谷耗材（創世／命運武器）
+ * - 失敗：1 聖者
+ * - 成功：依本次成功前已成功次數 10／20／30／40／50 聖者
+ */
+function trackHammerCatValleyCost(item, options = {}) {
+  if (!isHammerCatValleyRatesEnabled() || !item) return;
+  if (options.hammerId !== 'platinum') return;
+  if (typeof isGenesisOrDestinyWeaponItem !== 'function' || !isGenesisOrDestinyWeaponItem(item)) return;
+  if (typeof trackCostUsage !== 'function') return;
+
+  if (!options.success) {
+    trackCostUsage('saint', null, 1);
+    return;
+  }
+
+  const used = Math.max(0, Number(options.successIndex) || 0);
+  const amount = HAMMER_PLATINUM_SUCCESS_SAINT[used]
+    ?? HAMMER_PLATINUM_SUCCESS_SAINT[HAMMER_PLATINUM_SUCCESS_SAINT.length - 1];
+  if (amount > 0) trackCostUsage('saint', null, amount);
+}
+
+function isBlackScrollType(scroll) {
+  return typeof SCROLL_TYPE !== 'undefined' && scroll?.scrollType === SCROLL_TYPE.BLACK;
+}
+
+/**
+ * 卷軸貓谷耗材
+ * - recoveryDiscard：恢復卡保次數／不套用
+ * - scrollUse：實際消耗卷軸次數（未用恢復卡）或黑捲每次使用
+ * - scrollApply：恢復卡彈窗／自動強化選擇套用
+ */
+function trackScrollCatValleyCost(kind, item, scroll, options = {}) {
+  if (!isScrollCatValleyCostActive() || !item) return;
+  const usedRecovery = options.usedRecovery === true;
+  const isGD = isGenesisOrDestinyWeaponItem(item);
+  const isER = isCatValleyEternalOrRadiantGearItem(item);
+  if (!isGD && !isER) return;
+
+  if (kind === 'recoveryDiscard') {
+    if (isGD && typeof trackCostUsage === 'function') trackCostUsage('saint', null, 1);
+    if (isER && typeof trackCostUsage === 'function') trackCostUsage('taichu', null, 1);
+    return;
+  }
+
+  if (kind === 'scrollUse') {
+    if (!isGD) return;
+    if (isBlackScrollType(scroll)) {
+      trackCostUsage('saint', null, 20);
+    } else if (!usedRecovery) {
+      trackCostUsage('saint', null, 30);
+    }
+    return;
+  }
+
+  if (kind === 'scrollApply') {
+    if (isBlackScrollType(scroll)) return;
+    if (isGD && usedRecovery) trackCostUsage('saint', null, 30);
+    if (isER && usedRecovery) trackCostUsage('meowcoin', null, 200);
+  }
 }
 
 /** 神祕冥界防具／飾品（不含武器） */

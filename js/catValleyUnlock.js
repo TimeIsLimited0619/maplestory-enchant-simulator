@@ -62,7 +62,23 @@ const CatValleyUnlock = (() => {
     }, 1400);
   }
 
+  function enableCatValleyRatesDefaults() {
+    if (typeof setScrollCatValleyRatesEnabled === 'function') {
+      setScrollCatValleyRatesEnabled(true);
+    }
+    if (typeof setStarForceCatValleyRatesEnabled === 'function') {
+      setStarForceCatValleyRatesEnabled(true);
+    }
+    if (typeof setBonusStatCatValleyRatesEnabled === 'function') {
+      setBonusStatCatValleyRatesEnabled(true);
+    }
+    if (typeof setHammerCatValleyRatesEnabled === 'function') {
+      setHammerCatValleyRatesEnabled(true);
+    }
+  }
+
   function refreshDependents() {
+    if (unlocked) enableCatValleyRatesDefaults();
     if (typeof CatValleyEnhanceModule !== 'undefined') {
       if (!unlocked) CatValleyEnhanceModule.closeSubmenu?.();
       CatValleyEnhanceModule.updateButton?.();
@@ -73,12 +89,27 @@ const CatValleyUnlock = (() => {
     if (ratesCheck && typeof isScrollCatValleyRatesEnabled === 'function') {
       ratesCheck.checked = isScrollCatValleyRatesEnabled();
     }
+    const starRatesCheck = document.getElementById('chkStarForceCatValleyRates');
+    if (starRatesCheck && typeof isStarForceCatValleyRatesEnabled === 'function') {
+      starRatesCheck.checked = isStarForceCatValleyRatesEnabled();
+    }
+    if (typeof StarForceModule !== 'undefined') {
+      StarForceModule.syncCatValleyRatesUi?.();
+      StarForceModule.updateUI?.();
+    }
     const bonusRatesCheck = document.getElementById('chkBonusStatCatValleyRates');
     if (bonusRatesCheck && typeof isBonusStatCatValleyRatesEnabled === 'function') {
       bonusRatesCheck.checked = isBonusStatCatValleyRatesEnabled();
     }
     if (typeof BonusStatInspectModule !== 'undefined' && BonusStatInspectModule.isOpen) {
       BonusStatInspectModule.render?.();
+    }
+    const hammerRatesCheck = document.getElementById('chkHammerCatValleyRates');
+    if (hammerRatesCheck && typeof isHammerCatValleyRatesEnabled === 'function') {
+      hammerRatesCheck.checked = isHammerCatValleyRatesEnabled();
+    }
+    if (typeof HammerModule !== 'undefined') {
+      HammerModule.syncCatValleyRatesUi?.();
     }
   }
 

@@ -58,7 +58,7 @@ const ExpectedCostCalc = {
     return { success, fail, destroy };
   },
 
-  /** 星力：每星幾何分布（失敗／破壞皆維持星數重試） */
+  /** 星力：幾何／含貓谷降星的馬可夫期望 */
   calcStarForce(item, fromStar, toStar) {
     if (!item || toStar <= fromStar) {
       return { ok: false, reason: '目標星力需大於目前星力' };
@@ -66,34 +66,63 @@ const ExpectedCostCalc = {
 
     const maxStar = item.maxStar || 30;
     const target = Math.min(toStar, maxStar);
+    const catValley = typeof isStarForceCatValleyRatesEnabled === 'function'
+      && isStarForceCatValleyRatesEnabled();
     const protectDestroy = typeof StarForceModule !== 'undefined'
       ? StarForceModule.isProtectDestroyEnabled?.()
       : false;
     const rateOpts = { protectDestroy };
 
-    let totalAttempts = 0;
-    let totalMeso = 0;
-    let expectedDestroyHits = 0;
-    const steps = [];
+    const failDest = (star) => (typeof getStarForceFailDestStar === 'function'
+      ? getStarForceFailDestStar(star, catValley)
+      : star);
 
+    const mesoOf = (star) => (typeof StarForceModule !== 'undefined'
+      ? StarForceModule.getMesoCost(star)
+      : 0);
+
+    const E = new Array(target + 1).fill(0);
+    const M = new Array(target + 1).fill(0);
+    const D = new Array(target + 1).fill(0);
+
+    for (let iter = 0; iter < 80; iter += 1) {
+      for (let star = 0; star < target; star += 1) {
+        const rates = this.getStarOutcomeRates(star, rateOpts);
+        const p = Math.max(rates.success, 1e-9);
+        const q = 1 - p;
+        const nextE = star + 1 >= target ? 0 : E[star + 1];
+        const nextM = star + 1 >= target ? 0 : M[star + 1];
+        const nextD = star + 1 >= target ? 0 : D[star + 1];
+        const dest = Math.max(0, Math.min(target, failDest(star)));
+        const destE = dest >= target ? 0 : E[dest];
+        const destM = dest >= target ? 0 : M[dest];
+        const destD = dest >= target ? 0 : D[dest];
+        const meso = mesoOf(star);
+        const destroyHit = protectDestroy ? 0 : rates.destroy;
+
+        if (dest === star) {
+          E[star] = (1 + p * nextE) / p;
+          M[star] = (meso + p * nextM) / p;
+          D[star] = (destroyHit + p * nextD) / p;
+        } else {
+          E[star] = 1 + p * nextE + q * destE;
+          M[star] = meso + p * nextM + q * destM;
+          D[star] = destroyHit + p * nextD + q * destD;
+        }
+      }
+    }
+
+    const steps = [];
     for (let star = fromStar; star < target; star += 1) {
       const rates = this.getStarOutcomeRates(star, rateOpts);
-      const p = Math.max(rates.success, 0.0001);
-      const attempts = 1 / p;
-      const mesoPerTry = typeof StarForceModule !== 'undefined'
-        ? StarForceModule.getMesoCost(star)
-        : 0;
-      const destroyPerTry = protectDestroy ? 0 : rates.destroy;
-
-      totalAttempts += attempts;
-      totalMeso += attempts * mesoPerTry;
-      expectedDestroyHits += attempts * destroyPerTry;
+      const dest = failDest(star);
       steps.push({
         star,
         successPct: (rates.success * 100).toFixed(2),
         destroyPct: (rates.destroy * 100).toFixed(2),
-        expectedAttempts: attempts,
-        mesoPerTry,
+        expectedAttempts: dest === star ? 1 / Math.max(rates.success, 1e-9) : E[star] - (star + 1 >= target ? 0 : E[star + 1]),
+        mesoPerTry: mesoOf(star),
+        failDest: dest,
       });
     }
 
@@ -106,16 +135,19 @@ const ExpectedCostCalc = {
       module: 'starForce',
       fromStar,
       toStar: target,
-      expectedAttempts: totalAttempts,
-      expectedMeso: totalMeso,
-      expectedItemCost: totalAttempts * cubePrice,
-      expectedDestroyHits,
+      expectedAttempts: E[fromStar],
+      expectedMeso: M[fromStar],
+      expectedItemCost: E[fromStar] * cubePrice,
+      expectedDestroyHits: D[fromStar],
       protectDestroy,
+      catValley,
       steps,
       method: 'analytic',
-      note: protectDestroy
-        ? '依目前「防止破壞」勾選：破壞率併入失敗、楓幣為全額。失敗／破壞皆維持星數。'
-        : '未勾防止破壞時楓幣為半價；破壞仍維持星數（與本模擬器一致）。若日後改為降星／毀裝，需另行建模。',
+      note: catValley
+        ? '貓谷機率：防止破壞鎖定開啟。21–24 與 27 星以上失敗降 1 星（20／25 保底、26 失敗不降）。期望已含降星重洗。'
+        : (protectDestroy
+          ? '依目前「防止破壞」勾選：破壞率併入失敗、楓幣為全額。失敗／破壞皆維持星數。'
+          : '未勾防止破壞時楓幣為半價；破壞仍維持星數（與本模擬器一致）。'),
     };
   },
 
@@ -395,6 +427,21 @@ const ExpectedCostCalc = {
     }
     if (typeof getBonusStatMesoCost === 'function' && BonusStatModule?.costTab === 'meso') {
       expectedMeso = getBonusStatMesoCost(item.bonusStat.level) * expectedRolls;
+    }
+    if (selectedItem && typeof CostTrackerModule !== 'undefined' && BonusStatModule?.costTab === 'item') {
+      const extra = typeof getBonusStatCatValleyExtraMaterials === 'function'
+        ? getBonusStatCatValleyExtraMaterials(item)
+        : null;
+      if (extra) {
+        const awakenedPrice = parseFloat(CostTrackerModule.prices?.['bonusStatItem:randomReset']) || 0;
+        const saintPrice = parseFloat(CostTrackerModule.prices?.saint) || 0;
+        const taichuPrice = parseFloat(CostTrackerModule.prices?.taichu) || 0;
+        expectedItemCost += expectedRolls * (
+          (Number(extra.awakened) || 0) * awakenedPrice
+          + (Number(extra.saint) || 0) * saintPrice
+          + (Number(extra.taichu) || 0) * taichuPrice
+        );
+      }
     }
 
     let note = `以實際星火洗鍊抽樣 ${estimate.sims.toLocaleString()} 次（類型：${estimate.starFireType}），每次洗鍊獨立，幾何分布期望準確。`;

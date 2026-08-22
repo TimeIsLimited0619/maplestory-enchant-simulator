@@ -132,6 +132,9 @@ const BonusStatModule = {
     if (typeof trackCostEvent === 'function') {
       trackCostEvent(`bonusStatItem:${item.id}`, count);
     }
+    if (typeof trackBonusStatCatValleyCost === 'function') {
+      trackBonusStatCatValleyCost(this.itemData, count);
+    }
     return true;
   },
 

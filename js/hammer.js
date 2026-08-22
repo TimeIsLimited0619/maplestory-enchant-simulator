@@ -356,6 +356,7 @@ const HammerModule = {
   updateUI() {
     if (!this.itemData) {
       this.setPanelMode('idle');
+      this.syncCatValleyRatesUi();
       return;
     }
 
@@ -364,6 +365,7 @@ const HammerModule = {
       : hasBaseUpgradeSlots(this.itemData))) {
       this.selectedHammer = null;
       this.setPanelMode('blocked');
+      this.syncCatValleyRatesUi();
       return;
     }
 
@@ -372,7 +374,17 @@ const HammerModule = {
     this.renderSummary();
     this.renderStatAndRate();
     this.renderMaterialGrid();
+    this.syncCatValleyRatesUi();
     this.updateUseButtonState();
+  },
+
+  syncCatValleyRatesUi() {
+    const wrap = document.getElementById('hmBottomOptionsLeft');
+    wrap?.classList.remove('hidden');
+    const el = document.getElementById('chkHammerCatValleyRates');
+    if (el && typeof isHammerCatValleyRatesEnabled === 'function') {
+      el.checked = isHammerCatValleyRatesEnabled();
+    }
   },
 
   handleUseClick() {
@@ -450,6 +462,14 @@ const HammerModule = {
       }
     } else if (!silent) {
       addLog(`🔨 ${type.name} 失敗。(機率 ${rate}%) 次數未扣除`, 'log-fail');
+    }
+
+    if (typeof trackHammerCatValleyCost === 'function') {
+      trackHammerCatValleyCost(this.itemData, {
+        hammerId,
+        success,
+        successIndex: used,
+      });
     }
 
     if (!preserveSelection && this.getRemainingUses(hammerId) <= 0) {
@@ -573,5 +593,16 @@ window.addEventListener('DOMContentLoaded', () => {
   const autoCheck = document.getElementById('chkHammerAutoEnhance');
   if (autoCheck) {
     autoCheck.addEventListener('change', () => HammerModule.updateUseButtonState());
+  }
+  const catValleyRatesCheck = document.getElementById('chkHammerCatValleyRates');
+  if (catValleyRatesCheck) {
+    if (typeof isHammerCatValleyRatesEnabled === 'function') {
+      catValleyRatesCheck.checked = isHammerCatValleyRatesEnabled();
+    }
+    catValleyRatesCheck.addEventListener('change', () => {
+      if (typeof setHammerCatValleyRatesEnabled === 'function') {
+        setHammerCatValleyRatesEnabled(catValleyRatesCheck.checked);
+      }
+    });
   }
 });

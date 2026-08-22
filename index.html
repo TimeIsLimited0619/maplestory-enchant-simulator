@@ -21,15 +21,15 @@
   <link rel="preload" as="image" href="images/UIEquip/EquipTab/EquipTab.canvas_equip.png">
 
   <!-- 自訂 CSS（modules；file:// 勿用 @import） -->
-  <link rel="stylesheet" href="css/modules/01-base.css?v=20260821toolsMenu1">
+  <link rel="stylesheet" href="css/modules/01-base.css?v=20260822hmCat1">
   <link rel="stylesheet" href="css/modules/02-sidebar.css?v=20260814catValley2">
   <link rel="stylesheet" href="css/modules/03-main-panel.css?v=20260813rateLimit3">
   <link rel="stylesheet" href="css/modules/04-inventory.css?v=20260814catValley1">
   <link rel="stylesheet" href="css/modules/05-forms-modal.css?v=20260813wear3">
   <link rel="stylesheet" href="css/modules/06-starforce-extras.css?v=20260813wear3">
-  <link rel="stylesheet" href="css/modules/07-starforce.css?v=20260820optAlign1">
+  <link rel="stylesheet" href="css/modules/07-starforce.css?v=20260822sfCat1">
   <link rel="stylesheet" href="css/modules/08-control-shared.css?v=20260813wear3">
-  <link rel="stylesheet" href="css/modules/09-hammer.css?v=20260820optAlign1">
+  <link rel="stylesheet" href="css/modules/09-hammer.css?v=20260822hmCat1">
   <link rel="stylesheet" href="css/modules/10-soul-weapon.css?v=20260820optAlign1">
   <link rel="stylesheet" href="css/modules/11-exceptional.css?v=20260820optAlign1">
   <link rel="stylesheet" href="css/modules/12-scroll.css?v=20260820optAlign1">
@@ -404,6 +404,14 @@
 
     </div><!-- /sfActivePanel -->
 
+    <div id="sfBottomOptionsLeft" class="sf-bottom-options sf-bottom-options-left hidden">
+      <label class="sf-auto-label" for="chkStarForceCatValleyRates" title="開啟：21–24 與 27 星以上失敗降 1 星、20／25 保底、26 不降；並鎖定防止破壞。新舊永恆／光輝飾品另套用星力卷軸規則。">
+        <input type="checkbox" id="chkStarForceCatValleyRates" class="sf-auto-toggle-input">
+        <span class="sf-auto-toggle" aria-hidden="true"></span>
+        貓谷機率
+      </label>
+    </div>
+
     <!-- 使用費用：楓幣 / 卷軸（待機選卷 / 強化中共用） -->
     <div id="sfCostArea" class="sf-cost-area hidden" aria-hidden="true">
       <div id="sfCostMeso" class="sf-cost-box sf-cost-meso">
@@ -637,6 +645,14 @@
       </div>
 
     </div><!-- /hmActivePanel -->
+
+    <div id="hmBottomOptionsLeft" class="hm-bottom-options hm-bottom-options-left hidden">
+      <label class="hm-auto-label" for="chkHammerCatValleyRates" title="開啟：創世／命運武器白槌失敗消耗 1 聖者，成功依已成功次數消耗 10／20／30／40／50 聖者；關閉：不計貓谷耗材">
+        <input type="checkbox" id="chkHammerCatValleyRates" class="hm-auto-toggle-input">
+        <span class="hm-auto-toggle" aria-hidden="true"></span>
+        貓谷機率
+      </label>
+    </div>
 
     <!-- 使用按鈕 -->
     <button
@@ -1960,20 +1976,20 @@
   <script src="js/data.js?v=20260820sfRate1"></script>
   <script src="js/modalAnimation.js"></script>
   <script src="js/imagePreload.js?v=20260818boot1"></script>
-  <script src="js/scrollData.js?v=20260820secret1"></script>
+  <script src="js/scrollData.js?v=20260822sfCatOn1"></script>
   <script src="js/scrollEffectData.js"></script>
   <script src="js/scrollEffect.js"></script>
   <script src="js/starforceEffectData.js?v=20260820destroy2"></script>
   <script src="js/starforceEffect.js?v=20260820destroy1"></script>
   <script src="js/starforceScrollData.js"></script>
   <script src="js/potentialScrollData.js?v=20260814lock1"></script>
-  <script src="js/starforce.js?v=20260820sfRate1"></script>
-  <script src="js/autoEnchantData.js?v=20260820overspeed1"></script>
+  <script src="js/starforce.js?v=20260822sfCatOn1"></script>
+  <script src="js/autoEnchantData.js?v=20260822costLive1"></script>
   <script src="js/autoEnchantStarForce.js?v=20260820sfRate1"></script>
-  <script src="js/scroll.js?v=20260813batch10"></script>
+  <script src="js/scroll.js?v=20260822scCat1"></script>
   <script src="js/hammerEffectData.js"></script>
   <script src="js/hammerEffect.js"></script>
-  <script src="js/hammer.js?v=20260814lock1"></script>
+  <script src="js/hammer.js?v=20260822hmCat1"></script>
   <script src="js/soulWeaponEffectData.js"></script>
   <script src="js/soulWeaponEffect.js"></script>
   <script src="js/soulWeapon.js?v=20260814wpsi1"></script>
@@ -1981,8 +1997,8 @@
   <script src="js/exceptionalEffectData.js"></script>
   <script src="js/exceptionalEffect.js"></script>
   <script src="js/exceptional.js"></script>
-  <script src="js/catValleyUnlock.js?v=20260820secret3"></script>
-  <script src="js/catValleyEnhanceData.js?v=20260820secret1"></script>
+  <script src="js/catValleyUnlock.js?v=20260822hmCat1"></script>
+  <script src="js/catValleyEnhanceData.js?v=20260822hmCat1"></script>
   <script src="js/catValleyEnhance.js?v=20260820secret1"></script>
   <script src="js/cubeRates/event8421.js"></script>
   <script src="js/cubeRates/event8422.js"></script>
@@ -2015,11 +2031,11 @@
   <script src="js/autoEnchantAddPotential.js?v=20260820tools1"></script>
   <script src="js/potentialMemoriaChoiceEffectData.js?v=20260812s"></script>
   <script src="js/potentialMemoriaChoiceEffect.js?v=20260812s"></script>
-  <script src="js/bonusStatValues.js?v=20260820flame2"></script>
+  <script src="js/bonusStatValues.js?v=20260822sfCatOn1"></script>
   <script src="js/bonusStatData.js?v=20260820flame1"></script>
   <script src="js/bonusStatEffectData.js?v=20260811v"></script>
   <script src="js/bonusStatEffect.js?v=20260812r"></script>
-  <script src="js/bonusStat.js?v=20260820overspeed1"></script>
+  <script src="js/bonusStat.js?v=20260822bsCat1"></script>
   <script src="js/bonusStatChoice.js?v=20260820overspeed1"></script>
   <script src="js/autoEnchantBonusStat.js?v=20260820tools1"></script>
   <script src="js/bonusStatChoiceEffectData.js?v=20260812f"></script>
@@ -2082,7 +2098,7 @@
       <h3 id="costTrackerTitle" class="cost-tracker-title">成本統計</h3>
       <button type="button" id="costTrackerClose" class="panel-wb-close panel-wb-close--inline" aria-label="關閉成本統計" title="關閉"><span aria-hidden="true">×</span></button>
     </div>
-    <p class="cost-tracker-hint">單價會自動儲存；楓幣花費以實際消耗計入。重新整理會重置進度，請用匯出／匯入保存。</p>
+    <p class="cost-tracker-hint">單價會寫入瀏覽器耐久儲存，重新整理後仍保留。使用次數與楓幣花費請用匯出／匯入保存完整進度。</p>
     <div id="costTrackerBody" class="cost-tracker-body"></div>
     <div class="cost-tracker-footer">
       <div class="cost-tracker-total-row">
@@ -2168,11 +2184,11 @@
   <script src="js/characterCombatPanel.js?v=20260816clearValues1"></script>
   <script src="js/uiCharacterInfo.js?v=20260820overspeed1"></script>
   <script src="js/combatEfficiencyPanel.js?v=20260820overspeed1"></script>
-  <script src="js/costTracker.js?v=20260820overspeed1"></script>
+  <script src="js/costTracker.js?v=20260822scCat1"></script>
   <script src="js/autoSessionLog.js?v=20260820tools1"></script>
-  <script src="js/expectedCostCalc.js?v=20260821expect2"></script>
+  <script src="js/expectedCostCalc.js?v=20260822bsCat1"></script>
   <script src="js/shareCode.js?v=20260820tools1"></script>
   <script src="js/enchantToolsPanel.js?v=20260821expect2"></script>
-  <script src="js/main.js?v=20260820destroy1"></script>
+  <script src="js/main.js?v=20260822costLive1"></script>
 </body>
 </html>

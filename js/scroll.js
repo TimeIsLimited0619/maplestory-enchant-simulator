@@ -660,6 +660,9 @@ const ScrollModule = {
             } else {
               incrementScrollUsedCountOnly(this.itemData, false);
               this.itemData.scrollFailUses = (this.itemData.scrollFailUses || 0) + 1;
+              if (typeof trackScrollCatValleyCost === 'function') {
+                trackScrollCatValleyCost('scrollUse', this.itemData, scroll, { usedRecovery: false });
+              }
               stopBatch = true;
               break;
             }
@@ -686,6 +689,9 @@ const ScrollModule = {
             consumeRecoveryCard();
             recoveryUsed++;
             succeeded = true;
+            if (typeof trackScrollCatValleyCost === 'function') {
+              trackScrollCatValleyCost('scrollApply', this.itemData, scroll, { usedRecovery: true });
+            }
 
             this.renderRecoveryCard();
             this.updateUI();
@@ -705,6 +711,9 @@ const ScrollModule = {
           // B：成功未達標 → 消耗恢復卡、不套用 → 繼續
           consumeRecoveryCard();
           recoveryUsed++;
+          if (typeof trackScrollCatValleyCost === 'function') {
+            trackScrollCatValleyCost('recoveryDiscard', this.itemData, scroll);
+          }
           if (attempts > 10000) {
             stopBatch = true;
             break;
@@ -1115,7 +1124,11 @@ const ScrollModule = {
   tryConsumeRecoveryCardOnFail() {
     if (!this.needsRecoveryCardForUse()) return false;
     if (!this.recoveryCardChecked) return false;
-    return consumeRecoveryCard();
+    if (!consumeRecoveryCard()) return false;
+    if (typeof trackScrollCatValleyCost === 'function') {
+      trackScrollCatValleyCost('recoveryDiscard', this.itemData, this.getSelectedScroll());
+    }
+    return true;
   },
 
   getSelectedRestoreScroll() {
@@ -1667,6 +1680,9 @@ const ScrollModule = {
         } else {
           incrementScrollUsedCount(this.itemData, false);
           this.itemData.scrollFailUses = (this.itemData.scrollFailUses || 0) + 1;
+          if (typeof trackScrollCatValleyCost === 'function') {
+            trackScrollCatValleyCost('scrollUse', this.itemData, scroll, { usedRecovery: false });
+          }
           addLog(`📜 ${scroll.name} 失敗。`, 'log-fail');
         }
         this.renderRecoveryCard();
@@ -1701,6 +1717,9 @@ const ScrollModule = {
       }
 
       incrementScrollUsedCount(this.itemData);
+      if (typeof trackScrollCatValleyCost === 'function') {
+        trackScrollCatValleyCost('scrollUse', this.itemData, scroll, { usedRecovery: false });
+      }
       this.updateUI();
       updateStatusPanel();
     };
@@ -1791,6 +1810,9 @@ function confirmScrollResult(apply) {
         addLog(`📜 ${scrollName} 成功！${statText}`, 'log-success');
       }
       incrementScrollUsedCount(currentEnchantItem);
+      if (typeof trackScrollCatValleyCost === 'function') {
+        trackScrollCatValleyCost('scrollApply', currentEnchantItem, scroll, { usedRecovery: true });
+      }
       ScrollModule.renderRecoveryCard();
       updateStatusPanel();
       ScrollModule.updateUI();
@@ -1803,6 +1825,9 @@ function confirmScrollResult(apply) {
     }
   } else {
     trackScrollGloryCost();
+    if (typeof trackScrollCatValleyCost === 'function') {
+      trackScrollCatValleyCost('recoveryDiscard', currentEnchantItem, scroll);
+    }
     addLog(`📜 ${scrollName}：已取消套用卷軸，升級次數保留。恢復卡已消耗。`, 'log-info');
     ScrollModule.renderRecoveryCard();
     updateStatusPanel();

@@ -2,11 +2,15 @@
  * 成本計數器：使用次數統計 + 自訂單價 + 總成本（localStorage／匯出存檔）
  */
 const COST_TRACKER_PRICE_UNIT_YI = 100000000;
+/** 單價／輸入單位獨立耐久儲存（與使用次數／楓幣統計分開，重整後仍保留） */
+const COST_TRACKER_PRICES_KEY = 'mss-cost-prices-v1';
 
 /** 貓谷素材：單價單位（例如每 100 喵力） */
 const COST_TRACKER_CAT_VALLEY_MATERIALS = [
   { id: 'snow', label: '雪花', unitSize: 1 },
   { id: 'taichu', label: '太初', unitSize: 1 },
+  { id: 'saint', label: '聖者', unitSize: 1 },
+  { id: 'meowcoin', label: '喵喵幣', unitSize: 1 },
   { id: 'nekopow', label: '每100喵力', unitSize: 100 },
   { id: 'doom', label: '厄運', unitSize: 1 },
   { id: 'sun', label: '太陽', unitSize: 1 },
@@ -22,6 +26,8 @@ const CostTrackerModule = {
   usage: {
     snow: 0,
     taichu: 0,
+    saint: 0,
+    meowcoin: 0,
     nekopow: 0,
     doom: 0,
     sun: 0,
@@ -56,6 +62,8 @@ const CostTrackerModule = {
     return {
       snow: 0,
       taichu: 0,
+      saint: 0,
+      meowcoin: 0,
       nekopow: 0,
       doom: 0,
       sun: 0,
@@ -230,7 +238,8 @@ const CostTrackerModule = {
   },
 
   getSavePayload() {
-    this.capturePricesFromForm();
+    if (this.isOpen) this.capturePricesFromForm();
+    this.persistPricesToStorage();
     return {
       usage: JSON.parse(JSON.stringify(this.usage)),
       prices: { ...this.prices },
@@ -261,13 +270,9 @@ const CostTrackerModule = {
       }
     }
 
-    this.prices = {};
     this.seedCubeUsageKeys();
-    if (data.prices && typeof data.prices === 'object') {
-      Object.assign(this.prices, data.prices);
-    }
-
-    this.priceUnitMode = data.priceUnitMode === 'yi' ? 'yi' : 'normal';
+    this.mergeIncomingPrices(data.prices, data.priceUnitMode);
+    this.persistPricesToStorage();
     this.starStats = {
       ...this.createEmptyStarStats(),
       ...(data.starStats && typeof data.starStats === 'object' ? data.starStats : {})
@@ -325,11 +330,55 @@ const CostTrackerModule = {
       this.usage[type] = (this.usage[type] || 0) + n;
     }
     if (!(typeof aePotIsAnyAutoEnchantRunning === 'function' && aePotIsAnyAutoEnchantRunning())) {
-      this.refreshCostDisplay();
-      if (this.isOpen) this.render();
       if (typeof SessionPersistenceModule !== 'undefined') {
         SessionPersistenceModule.scheduleSave();
       }
+    }
+    this.scheduleLiveRefresh();
+  },
+
+  readStoredPricePayload() {
+    try {
+      const raw = localStorage.getItem(COST_TRACKER_PRICES_KEY);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (!data || typeof data !== 'object') return null;
+      return data;
+    } catch (err) {
+      console.warn('[CostTracker] 讀取單價儲存失敗:', err);
+      return null;
+    }
+  },
+
+  persistPricesToStorage() {
+    try {
+      localStorage.setItem(COST_TRACKER_PRICES_KEY, JSON.stringify({
+        prices: { ...this.prices },
+        priceUnitMode: this.priceUnitMode === 'yi' ? 'yi' : 'normal',
+      }));
+    } catch (err) {
+      console.warn('[CostTracker] 寫入單價儲存失敗:', err);
+    }
+  },
+
+  pricesHaveValue(prices) {
+    if (!prices || typeof prices !== 'object') return false;
+    return Object.values(prices).some((value) => (parseFloat(value) || 0) > 0);
+  },
+
+  mergeIncomingPrices(prices, priceUnitMode) {
+    if (prices && typeof prices === 'object') {
+      if (this.pricesHaveValue(prices) || !this.pricesHaveValue(this.prices)) {
+        Object.assign(this.prices, prices);
+      } else {
+        Object.entries(prices).forEach(([id, value]) => {
+          const next = parseFloat(value) || 0;
+          if (next > 0 || this.prices[id] == null) this.prices[id] = next;
+        });
+      }
+    }
+    if (priceUnitMode === 'yi' || priceUnitMode === 'normal') {
+      this.priceUnitMode = priceUnitMode;
     }
   },
 
@@ -338,9 +387,17 @@ const CostTrackerModule = {
     this.getPriceDefs().forEach((def) => {
       if (this.prices[def.id] == null) this.prices[def.id] = 0;
     });
+    const stored = this.readStoredPricePayload();
+    if (stored?.prices && typeof stored.prices === 'object') {
+      Object.assign(this.prices, stored.prices);
+    }
+    if (stored?.priceUnitMode === 'yi' || stored?.priceUnitMode === 'normal') {
+      this.priceUnitMode = stored.priceUnitMode;
+    }
   },
 
   savePrices() {
+    this.persistPricesToStorage();
     if (typeof SessionPersistenceModule !== 'undefined') {
       SessionPersistenceModule.scheduleSave();
     }
@@ -441,7 +498,12 @@ const CostTrackerModule = {
   },
 
   loadUnitMode() {
-    this.priceUnitMode = 'normal';
+    const stored = this.readStoredPricePayload();
+    if (stored?.priceUnitMode === 'yi' || stored?.priceUnitMode === 'normal') {
+      this.priceUnitMode = stored.priceUnitMode;
+      return;
+    }
+    this.priceUnitMode = this.priceUnitMode === 'yi' ? 'yi' : 'normal';
   },
 
   saveUnitMode() {
@@ -557,8 +619,61 @@ const CostTrackerModule = {
     return Math.floor(total);
   },
 
+  scheduleLiveRefresh() {
+    if (this._liveRaf) return;
+    const raf = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame.bind(window)
+      : (fn) => setTimeout(fn, 16);
+    this._liveRaf = raf(() => {
+      this._liveRaf = 0;
+      this.refreshCostDisplay();
+    });
+  },
+
+  patchOpenPanel() {
+    if (!this.isOpen) return;
+    const body = document.getElementById('costTrackerBody');
+    if (!body) return;
+    const rows = body.querySelectorAll('tr[data-usage-id]');
+    if (!rows.length) {
+      this.render();
+      return;
+    }
+
+    rows.forEach((tr) => {
+      const id = tr.dataset.usageId;
+      if (!id) return;
+      const count = this.getUsageCount(id);
+      const countEl = tr.querySelector('.cost-tracker-count');
+      if (countEl) countEl.textContent = this.formatCount(id, count);
+
+      const input = tr.querySelector('[data-price-id]');
+      const storedPrice = input
+        ? this.fromDisplayPrice(input.value)
+        : (parseFloat(this.prices[id]) || 0);
+      const subtotal = this.getLineSubtotal(id, count, storedPrice);
+      const subEl = tr.querySelector('.cost-tracker-sub');
+      if (!subEl) return;
+      if (id === 'mesoSpent' || id === 'bonusStatMeso' || id === 'addPotentialMeso') {
+        subEl.textContent = this.formatSubtotal(subtotal);
+      } else if (input) {
+        subEl.textContent = this.formatSubtotal(subtotal);
+      } else {
+        subEl.textContent = subtotal.toLocaleString();
+      }
+    });
+
+    const totalEl = document.getElementById('costTrackerTotal');
+    if (totalEl) {
+      totalEl.textContent = this.formatTotalCost(this.getTotalCost());
+    }
+  },
+
   refreshCostDisplay() {
-    if (typeof calculateCost === 'function') calculateCost();
+    const total = this.getTotalCost();
+    const display = document.getElementById('totalCostDisplay');
+    if (display) display.innerText = total.toLocaleString();
+    this.patchOpenPanel();
   },
 
   resetAll() {
@@ -720,7 +835,7 @@ const CostTrackerModule = {
 
   render() {
     // 重繪前先熱存表單，避免使用次數更新時蓋掉未按「儲存單價」的輸入
-    this.capturePricesFromForm();
+    if (this.isOpen) this.capturePricesFromForm();
 
     const body = document.getElementById('costTrackerBody');
     const totalEl = document.getElementById('costTrackerTotal');
@@ -770,7 +885,7 @@ const CostTrackerModule = {
         const displayPrice = this.toDisplayPrice(storedPrice);
         const priceStep = this.isYiMode() ? '0.01' : '1';
 
-        html += '<tr>';
+        html += `<tr data-usage-id="${row.id}">`;
         html += `<td class="cost-tracker-name">${row.label}</td>`;
         html += `<td class="cost-tracker-count">${this.formatCount(row.id, count)}</td>`;
         if (row.price) {

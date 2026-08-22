@@ -512,6 +512,16 @@
   pointer-events: auto;
 }
 
+.sf-bottom-options-left {
+  right: auto;
+  left: 14px;
+}
+
+.sf-protect-destroy.is-locked {
+  opacity: 0.85;
+  pointer-events: none;
+}
+
 .sf-prob-line--destroy.is-hidden {
   display: none;
 }

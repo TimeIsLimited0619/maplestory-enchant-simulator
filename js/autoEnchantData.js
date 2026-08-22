@@ -1522,7 +1522,6 @@ function aePotIsAnyAutoEnchantRunning() {
 function aePotFlushAutoEnchantSideUi() {
   if (typeof CostTrackerModule !== 'undefined') {
     CostTrackerModule.refreshCostDisplay?.();
-    if (CostTrackerModule.isOpen) CostTrackerModule.render?.();
   }
   if (typeof SessionPersistenceModule !== 'undefined') {
     SessionPersistenceModule.scheduleSave();

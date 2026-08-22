@@ -2277,9 +2277,7 @@ function resetTotalCost() {
 
 function calculateCost() {
   if (typeof CostTrackerModule !== 'undefined') {
-    const total = CostTrackerModule.getTotalCost();
-    const display = document.getElementById('totalCostDisplay');
-    if (display) display.innerText = total.toLocaleString();
+    CostTrackerModule.refreshCostDisplay();
     return;
   }
 
