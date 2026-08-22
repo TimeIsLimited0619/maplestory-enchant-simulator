@@ -5699,8 +5699,8 @@ playerInventory[169] = '01592022';
 let currentEnchantItem = null;
 
 /**
- * 預設背包裝備順序（必須放在 currentEnchantItem 之後，避免 import --inventory 打亂）
- * 僅收 playerInventory 明確指定的格子；其餘裝備改由「物品清單」取得。
+ * 預設裝備 ID 清單（物品清單／匯入用）
+ * 首次開啟背包為空；裝備請從物品清單取得。
  */
 function buildDefaultPlayerInventoryEquipIds() {
   const ids = [];
@@ -5723,8 +5723,5 @@ const DEFAULT_PLAYER_INVENTORY_EQUIP_IDS = Object.freeze(buildDefaultPlayerInven
 
 (function applyInitialDefaultEquipInventory() {
   const next = new Array(INVENTORY_SLOT_COUNT).fill(null);
-  DEFAULT_PLAYER_INVENTORY_EQUIP_IDS.forEach((id, index) => {
-    if (index < INVENTORY_SLOT_COUNT) next[index] = id;
-  });
   playerInventoryEquip.splice(0, playerInventoryEquip.length, ...next);
 })();
