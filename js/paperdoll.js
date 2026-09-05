@@ -754,22 +754,97 @@ const Paperdoll = (() => {
       layer.className = 'paperdoll-layers';
       host.insertBefore(layer, host.firstChild);
     }
-    layer.replaceChildren();
-    laid.placed.forEach((p) => {
-      const img = document.createElement('img');
-      img.src = p.src;
-      img.alt = '';
-      img.draggable = false;
-      img.style.left = `${p.left}px`;
-      img.style.top = `${p.top}px`;
-      img.style.zIndex = String(zIndexFor(p.z));
-      layer.appendChild(img);
-    });
+    syncLayerImages(layer, laid.placed);
     if (instructionMode && prevTransform) {
       layer.style.transform = prevTransform;
     } else if (!instructionMode) {
       layer.style.transform = '';
     }
+    ensureHostReady(host, laid.placed);
+  }
+
+  /** 重用同 z 層 img，避免每幀 replaceChildren 造成裝備閃爍／重複請求 */
+  function syncLayerImages(layer, placed) {
+    if (!layer) return;
+    const wanted = Array.isArray(placed) ? placed : [];
+    const byZ = new Map();
+    Array.from(layer.children).forEach((node) => {
+      if (!(node instanceof HTMLImageElement)) return;
+      const z = node.dataset.z || '';
+      if (z) byZ.set(z, node);
+    });
+    const keep = new Set();
+    wanted.forEach((p, i) => {
+      const z = String(p.z || '');
+      keep.add(z);
+      let img = byZ.get(z);
+      if (!img) {
+        img = document.createElement('img');
+        img.alt = '';
+        img.draggable = false;
+        img.dataset.z = z;
+        byZ.set(z, img);
+      }
+      const left = `${p.left}px`;
+      const top = `${p.top}px`;
+      const zi = String(zIndexFor(p.z));
+      if (img.style.left !== left) img.style.left = left;
+      if (img.style.top !== top) img.style.top = top;
+      if (img.style.zIndex !== zi) img.style.zIndex = zi;
+      const src = p.src || '';
+      if (img.dataset.src !== src) {
+        img.dataset.src = src;
+        if (src) img.src = src;
+        else img.removeAttribute('src');
+      }
+      const at = layer.children[i];
+      if (at !== img) layer.insertBefore(img, at || null);
+    });
+    byZ.forEach((img, z) => {
+      if (!keep.has(z)) img.remove();
+    });
+  }
+
+  function ensureHostReady(host, placed) {
+    if (!host || host.dataset.paperdollReady === '1') return;
+    const urls = (placed || []).map((p) => p.src).filter(Boolean);
+    host.classList.add('is-paperdoll-loading');
+    const finish = () => {
+      host.classList.remove('is-paperdoll-loading');
+      host.dataset.paperdollReady = '1';
+    };
+    if (!urls.length) {
+      finish();
+      return;
+    }
+    if (typeof EnchantImagePreload !== 'undefined' && EnchantImagePreload.preloadMany) {
+      EnchantImagePreload.preloadMany(urls).then(finish).catch(finish);
+      return;
+    }
+    Promise.all(urls.map((url) => new Promise((resolve) => {
+      const probe = new Image();
+      probe.onload = () => resolve();
+      probe.onerror = () => resolve();
+      probe.src = url;
+    }))).then(finish).catch(finish);
+  }
+
+  /** 預熱目前外觀動作幀（進放置模式／換裝前） */
+  function preloadCurrentLook(actions) {
+    const list = (Array.isArray(actions) && actions.length) ? actions : ['stand1'];
+    const urls = [];
+    list.forEach((action) => {
+      const count = Math.max(1, frameCount(action));
+      for (let fi = 0; fi < count; fi += 1) {
+        collectPieces(action, fi).forEach((p) => {
+          if (p?.src) urls.push(p.src);
+        });
+      }
+    });
+    if (typeof EnchantImagePreload !== 'undefined' && EnchantImagePreload.preloadMany) {
+      return EnchantImagePreload.preloadMany(urls);
+    }
+    return Promise.resolve(urls);
   }
 
   /** 紙娃娃內不可見標記；經 transform 後用 getBoundingClientRect 取螢幕座標 */
@@ -903,12 +978,24 @@ const Paperdoll = (() => {
 
   function mount(host) {
     if (!host) return;
+    const first = !hosts.has(host);
     host.classList.add('paperdoll-stage');
     hosts.add(host);
     const s = animOf(host);
     s.action = resolveAction(host);
     s.lastDelay = frameDelay(s.action, 0);
-    renderHost(host);
+    if (first) {
+      // 首次掛載：先預熱再顯示，避免半透明空層
+      delete host.dataset.paperdollReady;
+      host.classList.add('is-paperdoll-loading');
+      const action = s.action || 'stand1';
+      preloadCurrentLook([action, 'stand1']).finally(() => {
+        if (!hosts.has(host)) return;
+        renderHost(host);
+      });
+    } else {
+      renderHost(host);
+    }
     if (!raf) raf = requestAnimationFrame(tick);
   }
 
@@ -982,6 +1069,7 @@ const Paperdoll = (() => {
     initNav,
     mount,
     refresh,
+    preloadCurrentLook,
     playHuntSwing,
     playHuntAction: playHuntSwing,
     resolveHuntAction,

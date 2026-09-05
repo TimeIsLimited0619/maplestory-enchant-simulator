@@ -63,6 +63,11 @@
   position: relative;
   pointer-events: none;
   image-rendering: pixelated;
+  transition: opacity 0.12s ease;
+}
+
+.paperdoll-stage.is-paperdoll-loading {
+  opacity: 0;
 }
 
 .paperdoll-stage img {

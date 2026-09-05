@@ -275,9 +275,17 @@ const IdleMobAnim = (() => {
   /** 預載幀，減少 attack 換幀時 decode 空窗 */
   function preloadFrame(id, action, frame) {
     const url = frameUrl(id, action, frame);
-    if (!url || !frameMeta(id, action, frame)) return;
-    const probe = new Image();
-    probe.src = url;
+    if (!url || !frameMeta(id, action, frame)) return Promise.resolve(null);
+    if (typeof EnchantImagePreload !== 'undefined' && EnchantImagePreload.preload) {
+      return EnchantImagePreload.preload(url);
+    }
+    return new Promise((resolve) => {
+      const probe = new Image();
+      const done = () => resolve(probe);
+      probe.addEventListener('load', done, { once: true });
+      probe.addEventListener('error', () => resolve(null), { once: true });
+      probe.src = url;
+    });
   }
 
   function clearSprite(img, id) {
@@ -380,8 +388,11 @@ const IdleMobAnim = (() => {
       applyOrigin(img, { updateActor: wantActor });
     };
 
-    // 已是目標圖：只同步 origin
-    if (img.dataset.src === url && img.complete && img.naturalWidth) {
+    // 已是目標圖或共用快取已有：只同步 origin／立刻 commit
+    const cached = typeof EnchantImagePreload !== 'undefined'
+      ? EnchantImagePreload.getImage?.(url)
+      : null;
+    if ((img.dataset.src === url && img.complete && img.naturalWidth) || cached) {
       commit();
     } else {
       // 解碼完再同時換 src＋origin，避免「舊圖＋新錨點」閃一下
@@ -917,12 +928,23 @@ const IdleMobAnim = (() => {
   function preloadAction(iconId, action) {
     const id = pad(iconId);
     const resolved = resolveAction(id, action || 'stand');
-    if (!resolved) return;
+    if (!resolved) return Promise.resolve();
     const range = actionRange(id, resolved);
-    if (!range) return;
+    if (!range) return Promise.resolve();
+    const tasks = [];
     for (let f = range.min; f <= range.max; f += 1) {
-      preloadFrame(id, resolved, f);
+      tasks.push(preloadFrame(id, resolved, f));
     }
+    const fx = effectActionFor(id, resolved);
+    if (fx && fx !== resolved) {
+      const fxRange = actionRange(id, fx);
+      if (fxRange) {
+        for (let f = fxRange.min; f <= fxRange.max; f += 1) {
+          tasks.push(preloadFrame(id, fx, f));
+        }
+      }
+    }
+    return Promise.all(tasks);
   }
 
   function isSticker() {

@@ -493,6 +493,9 @@ const IdleHunt = (() => {
 
   function preloadImageUrl(url) {
     if (!url) return Promise.resolve();
+    if (typeof EnchantImagePreload !== 'undefined' && EnchantImagePreload.preload) {
+      return EnchantImagePreload.preload(url);
+    }
     return new Promise((resolve) => {
       const img = new Image();
       const done = () => resolve();
@@ -502,20 +505,65 @@ const IdleHunt = (() => {
     });
   }
 
+  function collectZoneMobIconIds(zone) {
+    const ids = new Set();
+    if (typeof IdleZones === 'undefined') return ids;
+    const cfg = IdleZones.configFor(zone);
+    if (cfg?.mobIcon) ids.add(String(cfg.mobIcon));
+    if (cfg?.bossIcon) ids.add(String(cfg.bossIcon));
+    return ids;
+  }
+
+  function preloadMobIconActions(iconId) {
+    if (!iconId || typeof IdleMobAnim === 'undefined') return Promise.resolve();
+    const actions = ['stand', 'move', 'regen', 'hit1', 'die1'];
+    return Promise.all(actions.map((action) => {
+      const p = IdleMobAnim.preloadAction?.(iconId, action);
+      return p && typeof p.then === 'function' ? p : Promise.resolve();
+    }));
+  }
+
   function preloadZoneAssets(zone) {
     const tasks = [];
     if (typeof IdleZones !== 'undefined') {
       tasks.push(preloadImageUrl(IdleZones.mapUrl(zone)));
-      const cfg = IdleZones.configFor(zone);
-      ['mobIcon', 'bossIcon'].forEach((key) => {
-        const iconId = cfg?.[key];
-        if (!iconId || typeof IdleMobAnim === 'undefined') return;
-        ['stand', 'move', 'regen'].forEach((action) => {
-          IdleMobAnim.preloadAction?.(iconId, action);
-        });
+      collectZoneMobIconIds(zone).forEach((iconId) => {
+        tasks.push(preloadMobIconActions(iconId));
       });
     }
     return Promise.all(tasks);
+  }
+
+  /** 轉場淡出前：立刻綁定可見怪並等到本體圖就緒 */
+  function ensureVisibleMobSpritesReady() {
+    const stage = $('idleHuntField')?.querySelector('.idle-hunt-stage');
+    if (!stage || typeof IdleMobAnim === 'undefined') return Promise.resolve();
+    const waits = [];
+    state.queue.slice(0, VISIBLE_QUEUE_LEN).forEach((mob) => {
+      const el = stage.querySelector(`.idle-actor--mob[data-uid="${mob.uid}"]`);
+      if (!el || el.classList.contains('is-dying')) return;
+      bindMobSprite(el, mob, el.classList.contains('is-moving') ? 'move' : 'stand');
+      const img = el.querySelector('.idle-actor-sprite:not(.idle-actor-sprite--effect)');
+      if (!img) return;
+      if (img.complete && img.naturalWidth) return;
+      const url = img.dataset.src || img.getAttribute('src') || '';
+      if (url && typeof EnchantImagePreload !== 'undefined' && EnchantImagePreload.preload) {
+        waits.push(EnchantImagePreload.preload(url).then(() => {
+          if (!img.isConnected) return;
+          if (img.dataset.src === url && (!img.complete || !img.naturalWidth)) {
+            img.src = url;
+          }
+        }));
+        return;
+      }
+      waits.push(new Promise((resolve) => {
+        const done = () => resolve();
+        img.addEventListener('load', done, { once: true });
+        img.addEventListener('error', done, { once: true });
+        window.setTimeout(done, 600);
+      }));
+    });
+    return Promise.all(waits);
   }
 
   async function waitMobIntroAnim(el, mob, kind) {
@@ -592,6 +640,9 @@ const IdleHunt = (() => {
     const startAfter = opts.forceStart === true ? true : wasRunning;
     if (wasRunning) stop(false);
     ensureFieldFx();
+    const nextZone = IdleZones?.get?.(nextId);
+    // 過圖黑幕期間並行預載下一張地圖＋怪物幀
+    const preloadP = preloadZoneAssets(nextZone);
     await fadeField(1, MAP_FADE_MS);
     if (seq !== transitionSeq) return false;
 
@@ -604,7 +655,7 @@ const IdleHunt = (() => {
     state.dying = [];
     state.queue = [];
     clearFieldDrops(true);
-    await preloadZoneAssets(IdleZones?.get?.(nextId));
+    await preloadP;
     if (seq !== transitionSeq) return false;
 
     const stage = $('idleHuntField')?.querySelector('.idle-hunt-stage');
@@ -613,6 +664,8 @@ const IdleHunt = (() => {
     save();
     render();
     if (typeof UiIdleGmDrops !== 'undefined') UiIdleGmDrops.syncHuntZone?.(nextId);
+    await ensureVisibleMobSpritesReady();
+    if (seq !== transitionSeq) return false;
 
     await fadeField(0, MAP_FADE_MS);
     if (seq !== transitionSeq) return false;
@@ -2457,6 +2510,8 @@ const IdleHunt = (() => {
         el = stage.querySelector(`.idle-actor--mob[data-uid="${mob.uid}"]`);
         applyMobStackZ(el, mob, i, false);
         el.dataset.queueSlot = String(i);
+        // 立刻綁定 stand，避免過圖淡出後仍空白一幀
+        bindMobSprite(el, mob, 'stand');
         requestAnimationFrame(() => {
           if (!el?.isConnected || el.dataset.introLock) return;
           runMobEnterFromRight(el, mob, point, entryPoint, { delayMs: stagger });
@@ -3775,6 +3830,8 @@ const IdleHunt = (() => {
       if (typeof LevelUpEffect !== 'undefined') LevelUpEffect.warmUp?.();
       if (typeof DamageNumber !== 'undefined') DamageNumber.warmUp?.();
       try { SkillEffectPlayer.warmUpCombatLoadout?.(); } catch (_) { /* ignore */ }
+      try { Paperdoll.preloadCurrentLook?.(['stand1']); } catch (_) { /* ignore */ }
+      try { preloadZoneAssets(currentZone()); } catch (_) { /* ignore */ }
       maybeShowJobLinePicker();
       // 關閉面板時若正在死亡，重開時補回復活彈窗
       if (isPlayerDead() && !state.dungeon && !deathFxPending && !deathModalOpen) {
@@ -4120,10 +4177,33 @@ const IdleHunt = (() => {
     fieldTransition = { kind: 'dungeonEnter', seq };
     if (state.running) stop(false);
     ensureFieldFx();
+    const preloadP = (() => {
+      const map = run?.map || {};
+      const ids = new Set();
+      if (map.mobIcon) ids.add(String(map.mobIcon));
+      if (map.bossIcon) ids.add(String(map.bossIcon));
+      (Array.isArray(map.mobs) ? map.mobs : []).forEach((row) => {
+        const id = row?.icon || row?.mobIcon;
+        if (id) ids.add(String(id));
+      });
+      const tasks = [...ids].map((id) => preloadMobIconActions(id));
+      if (map.fieldArt || map.mapUrl) tasks.push(preloadImageUrl(map.fieldArt || map.mapUrl));
+      return Promise.all(tasks);
+    })();
     await fadeField(1, MAP_FADE_MS);
     if (seq !== transitionSeq) return false;
 
     beginDungeonSync(run);
+    await preloadP;
+    if (seq !== transitionSeq) {
+      if (state.dungeon === run) endDungeonSync();
+      return false;
+    }
+    await ensureVisibleMobSpritesReady();
+    if (seq !== transitionSeq) {
+      if (state.dungeon === run) endDungeonSync();
+      return false;
+    }
 
     await fadeField(0, MAP_FADE_MS);
     if (seq !== transitionSeq) {
