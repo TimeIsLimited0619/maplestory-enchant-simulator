@@ -90,12 +90,23 @@ let playerAddPotCubeCounts = {
 };
 
 function getPlayerAddPotCubeCount(cubeId) {
-  const count = playerAddPotCubeCounts[cubeId];
-  if (!count || count <= 0) {
+  const count = Number(playerAddPotCubeCounts[cubeId]) || 0;
+  if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+    return Math.max(0, count);
+  }
+  if (count <= 0) {
     playerAddPotCubeCounts[cubeId] = DEFAULT_CUBE_COUNT;
     return DEFAULT_CUBE_COUNT;
   }
   return count;
+}
+
+function grantPlayerAddPotCube(cubeId, amount = 1) {
+  if (!cubeId || amount <= 0) return 0;
+  const add = Math.floor(amount);
+  const current = Number(playerAddPotCubeCounts[cubeId]) || 0;
+  playerAddPotCubeCounts[cubeId] = current + add;
+  return add;
 }
 
 /** 附加方塊每次使用楓幣：200 等 80 萬、250 等 125 萬 */
@@ -107,16 +118,28 @@ function getAddPotentialCubeMesoCost(item) {
 
 function consumePlayerAddPotCube(cubeId) {
   const count = getPlayerAddPotCubeCount(cubeId);
-  playerAddPotCubeCounts[cubeId] = count - 1;
-  if (playerAddPotCubeCounts[cubeId] <= 0) {
-    playerAddPotCubeCounts[cubeId] = DEFAULT_CUBE_COUNT;
-  }
-  trackCostUsage('addCube', cubeId);
+  if (count <= 0) return false;
   const item = (typeof AddPotentialModule !== 'undefined' && AddPotentialModule.itemData)
     || (typeof currentEnchantItem !== 'undefined' ? currentEnchantItem : null);
   const meso = getAddPotentialCubeMesoCost(item);
+  if (meso > 0 && typeof trySpendIdleMeso === 'function' && !trySpendIdleMeso(meso)) {
+    return false;
+  }
+  playerAddPotCubeCounts[cubeId] = count - 1;
+  const idle = typeof isIdlePlayMode === 'function' && isIdlePlayMode();
+  if (!idle && playerAddPotCubeCounts[cubeId] <= 0) {
+    playerAddPotCubeCounts[cubeId] = DEFAULT_CUBE_COUNT;
+  }
+  trackCostUsage('addCube', cubeId);
   if (meso > 0 && typeof trackCostEvent === 'function') {
     trackCostEvent('addPotentialMeso', meso);
+  }
+  if (typeof InventoryModule !== 'undefined') {
+    InventoryModule.render?.();
+    InventoryModule.updateSlotCount?.();
+  }
+  if (typeof AddPotentialModule !== 'undefined') {
+    AddPotentialModule.renderMesoCost?.();
   }
   return true;
 }

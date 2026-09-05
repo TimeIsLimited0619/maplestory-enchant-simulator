@@ -10,7 +10,8 @@ const TAB_BUTTON_IDS = {
   bonusStat: 'tabbonusStat',
   potential: 'tabpotential',
   additionalPotential: 'tabadditionalPotential',
-  exceptional: 'tabexceptional'
+  exceptional: 'tabexceptional',
+  catValley: 'catValleyBtn',
 };
 
 /** 左側占位分頁：可點擊但不切換畫面 */
@@ -43,7 +44,9 @@ function isCategoryAvailable(category, item = currentEnchantItem) {
   switch (category) {
     case 'star':
       return canUseStarForce(item)
-        && getCurrentStarCount(item) < (item.maxStar || 30);
+        && getCurrentStarCount(item) < (typeof getItemStarForceMaxStar === 'function'
+          ? getItemStarForceMaxStar(item)
+          : (item.maxStar || 30));
     case 'hammer':
       return (typeof canUseHammerEnhancement === 'function'
         ? canUseHammerEnhancement(item)
@@ -73,6 +76,10 @@ function isCategoryAvailable(category, item = currentEnchantItem) {
       return typeof canUseAdditionalPotentialEnhancement === 'function'
         ? canUseAdditionalPotentialEnhancement(item)
         : (typeof isMedalItem === 'function' ? !isMedalItem(item) : true);
+    case 'catValley':
+      return typeof canUseCatValleyEnhance === 'function'
+        ? canUseCatValleyEnhance(item)
+        : false;
     default:
       return true;
   }
@@ -553,6 +560,16 @@ function handleGlobalEscapeKey() {
   // 可 ESC 關閉的視窗：依目前 z-index 關閉置頂者
   const escTargets = [
     {
+      id: 'toadsHammerRoot',
+      isOpen: () => typeof UiToadsHammer !== 'undefined' && UiToadsHammer.isOpen?.(),
+      close: () => UiToadsHammer.closeByEsc?.() || UiToadsHammer.setOpen(false),
+    },
+    {
+      id: 'npcShopRoot',
+      isOpen: () => typeof UiNpcShop !== 'undefined' && UiNpcShop.isOpen?.(),
+      close: () => UiNpcShop.closeByEsc?.() || UiNpcShop.setOpen(false),
+    },
+    {
       id: 'cepRoot',
       isOpen: () => typeof CombatEfficiencyPanel !== 'undefined' && CombatEfficiencyPanel.isOpen?.(),
       close: () => CombatEfficiencyPanel.setOpen(false),
@@ -576,6 +593,31 @@ function handleGlobalEscapeKey() {
       id: 'costTrackerOverlay',
       isOpen: () => typeof CostTrackerModule !== 'undefined' && !!CostTrackerModule.isOpen,
       close: () => CostTrackerModule.close(),
+    },
+    {
+      id: 'equipCraftPanel',
+      isOpen: () => typeof EquipCraftPanel !== 'undefined' && EquipCraftPanel.isOpen?.(),
+      close: () => EquipCraftPanel.setOpen(false),
+    },
+    {
+      id: 'idleDungeonRoot',
+      isOpen: () => typeof IdleDungeon !== 'undefined' && IdleDungeon.isOpen?.(),
+      close: () => IdleDungeon.setOpen(false),
+    },
+    {
+      id: 'idleBossRoot',
+      isOpen: () => typeof IdleBoss !== 'undefined' && IdleBoss.isOpen?.(),
+      close: () => IdleBoss.setOpen(false),
+    },
+    {
+      id: 'idleBossArena',
+      isOpen: () => typeof IdleBoss !== 'undefined' && IdleBoss.isArenaOpen?.(),
+      close: () => IdleBoss.setArenaOpen?.(false),
+    },
+    {
+      id: 'disassemblePanel',
+      isOpen: () => typeof DisassemblePanel !== 'undefined' && DisassemblePanel.isOpen?.(),
+      close: () => DisassemblePanel.setOpen(false),
     },
     {
       id: 'enchantToolsPanel',
@@ -698,39 +740,7 @@ function syncPlayerInventoryAlias() {
   }
 }
 
-function loadEquipToSlot(itemId, slotIndex) {
-  if (typeof EquipTooltipModule !== 'undefined') {
-    EquipTooltipModule.hide(true);
-  }
-  if (currentEnchantItem) {
-    unloadEquipFromSlot();
-  }
-
-  // 與裝備欄互斥：身上有同一 itemId 則先卸回背包
-  // 注意：不可用 indexOf(itemId) 重找格位——同 ID 多件時會抓到剛卸下的那件
-  if (typeof UiEquipModule !== 'undefined' && UiEquipModule.isItemWorn?.(itemId)) {
-    UiEquipModule.unequipItemId(itemId, { refreshUi: false });
-    if (!Number.isInteger(slotIndex) || slotIndex < 0 || !playerInventoryEquip[slotIndex]) {
-      return;
-    }
-  }
-
-  const itemData = ITEM_DATABASE[itemId];
-  if (!itemData) return;
-  if (!Number.isInteger(slotIndex) || slotIndex < 0 || !playerInventoryEquip[slotIndex]) {
-    // 允許已不在背包的還原路徑改走 loadEnchantItemHeld
-    return;
-  }
-
-  // 先讀取背包進度，再真正移出背包
-  currentEnchantItem = loadEnchantStateForSlot(itemId, slotIndex);
-  if (!currentEnchantItem) return;
-
-  playerInventoryEquip[slotIndex] = null;
-  playerInventoryState[slotIndex] = null;
-  syncPlayerInventoryAlias();
-  currentEnchantItem.slotIndex = -1;
-
+function presentEnchantedEquip(itemData) {
   const dropZone = document.getElementById('equipDropZone');
   if (dropZone) {
     dropZone.innerHTML = `
@@ -739,17 +749,20 @@ function loadEquipToSlot(itemId, slotIndex) {
            id="enchantedEquipImg"
            title="雙擊卸下裝備">
     `;
-
     const equipImg = document.getElementById('enchantedEquipImg');
     if (equipImg) {
       equipImg.ondblclick = () => unloadEquipFromSlot();
     }
   }
-
   const sfItemName = document.getElementById('sfItemName');
   if (sfItemName) sfItemName.innerText = itemData.name;
+}
 
-  addLog(`[系統] 已成功載入【${itemData.name}】！`, 'log-success');
+function afterEnchantEquipLoaded(itemData, { log = true } = {}) {
+  presentEnchantedEquip(itemData);
+  if (log) {
+    addLog(`[系統] 已成功載入【${itemData.name}】！`, 'log-success');
+  }
   updateStatusPanel();
   updateActiveModuleEquip();
   updateNoneWaitEquipVisibility();
@@ -764,6 +777,82 @@ function loadEquipToSlot(itemId, slotIndex) {
   if (typeof SessionPersistenceModule !== 'undefined') {
     SessionPersistenceModule.scheduleSave();
   }
+}
+
+function mergeEnchantFromSaved(itemData, saved, slotIndex) {
+  const fresh = createEnchantState(itemData, slotIndex);
+  if (!saved) return fresh;
+  const cloned = cloneEnchantState(saved);
+  return {
+    ...fresh,
+    ...cloned,
+    slotIndex,
+    itemId: itemData.itemId || itemData.id,
+    id: itemData.id || itemData.itemId,
+    name: itemData.name,
+    icon: itemData.icon,
+    mainType: itemData.mainType,
+    subType: itemData.subType,
+    islot: itemData.islot,
+    vslot: itemData.vslot,
+    reqLevel: itemData.reqLevel,
+    reqJob: itemData.reqJob,
+    reqJob2: itemData.reqJob2,
+    reqSpecJob: itemData.reqSpecJob,
+    weaponTier: itemData.weaponTier,
+    atlas: itemData.atlas,
+    baseStats: itemData.baseStats,
+    wz: itemData.wz,
+    potential: saved.potential
+      ? cloneEnchantState({ potential: saved.potential }).potential
+      : fresh.potential,
+    additionalPotential: saved.additionalPotential
+      ? cloneEnchantState({ additionalPotential: saved.additionalPotential }).additionalPotential
+      : fresh.additionalPotential,
+  };
+}
+
+function loadEquipToSlot(itemId, slotIndex) {
+  if (typeof EquipTooltipModule !== 'undefined') {
+    EquipTooltipModule.hide(true);
+  }
+  if (currentEnchantItem) {
+    if (!unloadEquipFromSlot()) return;
+  }
+
+  // 裝備欄穿著為獨立實體（itemId+state），與背包同 ID 的另一件無關，不可卸下
+  const itemData = ITEM_DATABASE[itemId];
+  if (!itemData) return;
+  if (!Number.isInteger(slotIndex) || slotIndex < 0 || !playerInventoryEquip[slotIndex]) {
+    return;
+  }
+
+  currentEnchantItem = loadEnchantStateForSlot(itemId, slotIndex);
+  if (!currentEnchantItem) return;
+
+  playerInventoryEquip[slotIndex] = null;
+  playerInventoryState[slotIndex] = null;
+  syncPlayerInventoryAlias();
+  currentEnchantItem.slotIndex = -1;
+
+  afterEnchantEquipLoaded(itemData);
+}
+
+/** 從裝備欄身體槽放入強化台（呼叫端已清空該槽；強化槽應已空） */
+function loadEquipFromWearEntry(entry) {
+  if (!entry?.itemId) return false;
+  if (typeof EquipTooltipModule !== 'undefined') {
+    EquipTooltipModule.hide(true);
+  }
+  if (currentEnchantItem) {
+    if (!unloadEquipFromSlot()) return false;
+  }
+  const itemData = ITEM_DATABASE[entry.itemId];
+  if (!itemData) return false;
+
+  currentEnchantItem = mergeEnchantFromSaved(itemData, entry.state, -1);
+  afterEnchantEquipLoaded(itemData);
+  return true;
 }
 
 /** 從存檔還原強化槽（物品已不在背包，或需先從背包取出） */
@@ -958,6 +1047,7 @@ const MAIN_PANEL_BG_BY_CATEGORY = {
   additionalPotential: 'images/additionalPotentail/additionalPotential.backgrnd.png',
   bonusStat: 'images/bonusStat/bonusStat_backgrnd.png',
   exceptional: 'images/exceptional/exceptional_backgrnd.png',
+  catValley: 'images/catvalley/catvalley_backgrnd.png',
 };
 
 /** 側邊功能列：normal / mouseOver / pressed / checked / disabled */
@@ -998,6 +1088,11 @@ const ENCHANT_UI_CHROME_EXTRAS = [
   'images/additionalPotentail/layer_waitEquip.png',
   'images/bonusStat/bonusStat_layer_waitEquip.png',
   'images/exceptional/exceptional_layer_waitEquip.png',
+
+  // 貓谷特殊強化
+  'images/catvalley/catvalley_backgrnd.png',
+  'images/catvalley/catvalley.layer_statBox.png',
+  'images/catvalley/catvalley.layer_costBox.png',
 
   // 星力：花費欄 + 強化按鈕
   'images/starforce/starForce.layer_costMesoBox.png',
@@ -2037,6 +2132,13 @@ function switchCategory() {
   }
 
   if (
+    activeCat !== 'catValley'
+    && typeof CatValleyEnhanceModule !== 'undefined'
+  ) {
+    CatValleyEnhanceModule.closeSubmenu?.();
+  }
+
+  if (
     activeCat !== 'star'
     && typeof StarForceModule !== 'undefined'
     && StarForceModule.selectedScrollId
@@ -2058,6 +2160,7 @@ function switchCategory() {
     mainPanel.classList.toggle('additionalPotential-active', activeCat === 'additionalPotential');
     mainPanel.classList.toggle('bonusStat-active', activeCat === 'bonusStat');
     mainPanel.classList.toggle('exceptional-active', activeCat === 'exceptional');
+    mainPanel.classList.toggle('catValley-active', activeCat === 'catValley');
   }
 
   syncMainPanelIdleState();
@@ -2134,6 +2237,8 @@ function updateActiveModuleEquip() {
     } else {
       ExceptionalModule.resetState();
     }
+  } else if (cat === 'catValley' && typeof CatValleyEnhanceModule !== 'undefined') {
+    CatValleyEnhanceModule.updatePanel?.();
   }
 
   syncMainPanelIdleState();
@@ -2302,7 +2407,8 @@ function calculateCost() {
 window.addEventListener('DOMContentLoaded', () => {
   initEnchantWorkbenchClose();
   if (typeof seedStarForceScrollConsumeInventory === 'function'
-    && !(typeof SessionPersistenceModule !== 'undefined' && SessionPersistenceModule.hasSavedSession())) {
+    && !(typeof SessionPersistenceModule !== 'undefined' && SessionPersistenceModule.hasSavedSession())
+    && !(typeof isIdlePlayMode === 'function' && isIdlePlayMode())) {
     seedStarForceScrollConsumeInventory();
   }
   if (typeof ensurePotentialScrollConsumeInventory === 'function') {
@@ -2322,6 +2428,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (typeof SessionPersistenceModule !== 'undefined'
     && typeof SessionPersistenceModule.restoreUiEquipState === 'function') {
     SessionPersistenceModule.restoreUiEquipState();
+    SessionPersistenceModule.grantIdleStarterIfNeeded?.();
   }
   if (typeof EquipTooltipModule !== 'undefined') {
     EquipTooltipModule.init();
@@ -2381,7 +2488,17 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     PanelDrag.enable(document.getElementById('inventoryPanel'), {
       handle: '#inventoryDragHandle',
-      ignoreSelector: '.inv-size-btn, .inv-tab, .inv-sort-btn, .panel-wb-close',
+      ignoreSelector: [
+        '.inv-size-btn',
+        '.inv-tab',
+        '.inv-tool-btn',
+        '.inv-close-btn',
+        '.inv-meso-btn',
+        '.inv-action-btn',
+        '.inv-footer-btn',
+        '.inv-slot-expand-btn',
+        'button',
+      ].join(', '),
       storageKey: 'ui.drag.inventoryPanel',
       title: '拖曳背包',
     });

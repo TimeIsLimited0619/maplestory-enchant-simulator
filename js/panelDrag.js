@@ -51,6 +51,7 @@ const PanelDrag = (() => {
     el.style.right = 'auto';
     el.style.bottom = 'auto';
     el.style.margin = '0';
+    el.style.transform = 'none';
     applyPos(el, rect.left, rect.top, grid);
     el.dataset.panelDragPinned = '1';
     el.classList.add('is-panel-drag-pinned');
@@ -86,6 +87,7 @@ const PanelDrag = (() => {
       el.style.right = 'auto';
       el.style.bottom = 'auto';
       el.style.margin = '0';
+      el.style.transform = 'none';
       applyPos(el, left, top, grid);
       el.dataset.panelDragPinned = '1';
       el.classList.add('is-panel-drag-pinned');

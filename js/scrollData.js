@@ -4,6 +4,7 @@
 
 const SCROLL_TAB = {
   SPECIAL: 'special',
+  NORMAL: 'normal',
   TRACE: 'trace'
 };
 
@@ -22,7 +23,8 @@ const SCROLL_EQUIP_TARGET = {
   WEAPON: 'weapon',
   ACCESSORY: 'accessory',
   ONE_HAND_WEAPON: 'one_hand_weapon',
-  TWO_HAND_WEAPON: 'two_hand_weapon'
+  TWO_HAND_WEAPON: 'two_hand_weapon',
+  NON_WEAPON: 'non_weapon'
 };
 
 /** 專用卷軸欄：總共 5 排 × 9 格，可視 2 排，滾輪捲動（格距對齊星火背包） */
@@ -97,13 +99,43 @@ const SCROLL_DETAIL_IMAGE_DIR = 'images/scrolldata';
 const RECOVERY_CARD = {
   id: 'recovery_card',
   name: '恢復卡',
-  icon: 'images/scroll/scroll.costScroll.switchSpecialScroll.icon.returnConsume.png',
+  icon: 'images/scrolldata/02539011.png',
   switchChecked: 'images/scroll/scroll.costScroll.switchSpecialScroll.checked.0.png',
   switchPressed: 'images/scroll/scroll.costScroll.switchSpecialScroll.pressed.0.png'
 };
 
-const DEFAULT_RECOVERY_CARD_COUNT = 99;
+const DEFAULT_RECOVERY_CARD_COUNT = 0;
 let playerRecoveryCardCount = DEFAULT_RECOVERY_CARD_COUNT;
+
+function isIdleRecoveryCardMode() {
+  return typeof isIdlePlayMode === 'function' && isIdlePlayMode();
+}
+
+function getHeldRecoveryCardCount() {
+  if (!isIdleRecoveryCardMode()) return Number.POSITIVE_INFINITY;
+  return Math.max(0, Math.floor(Number(playerRecoveryCardCount) || 0));
+}
+
+function grantRecoveryCard(amount = 1) {
+  const add = Math.floor(Number(amount) || 0);
+  if (add <= 0) return 0;
+  playerRecoveryCardCount = Math.max(0, Math.floor(Number(playerRecoveryCardCount) || 0)) + add;
+  if (typeof ensureRecoveryCardConsumeInventory === 'function') {
+    ensureRecoveryCardConsumeInventory();
+  }
+  if (typeof SessionPersistenceModule !== 'undefined') SessionPersistenceModule.scheduleSave();
+  return add;
+}
+
+function ensureRecoveryCardConsumeInventory() {
+  if (typeof InventoryModule === 'undefined' || typeof InventoryModule.ensureConsumeSlot !== 'function') return;
+  if (typeof CONSUME_ITEM_TYPE === 'undefined') return;
+  if (Math.max(0, Math.floor(Number(playerRecoveryCardCount) || 0)) <= 0) return;
+  InventoryModule.ensureConsumeSlot(
+    (entry) => entry && entry.type === CONSUME_ITEM_TYPE.RECOVERY_CARD,
+    () => ({ type: CONSUME_ITEM_TYPE.RECOVERY_CARD, itemId: RECOVERY_CARD.id }),
+  );
+}
 
 // ==========================================
 // 3. 隨機骰值卷軸機率表
@@ -957,6 +989,162 @@ const SCROLL_DATABASE = {
     ]
   }
 }
+
+// ==========================================
+// 4b. 普通卷軸（固定屬性 + 成功率）
+// ==========================================
+// 複製一段 registerNormalScrollFamily({...}) 即可自行加系列。
+// 必填：idPrefix, name, slotStart, equipTarget
+// icon：共用圖示；iconByRate 可依 100/70/30/10 各設一張
+// stats：四種機率共用；statsByRate 可覆寫單一機率的數值
+// price：系列共用賣價；priceByRate 可依成功率各設賣價（商店賣出用）
+// equipTarget 只分兩種：WEAPON（單雙手皆可）／ NON_WEAPON（武器以外）
+// 舊寫法 ONE_HAND_WEAPON / TWO_HAND_WEAPON 會自動當成武器；ARMOR / ACCESSORY 當成武器以外
+// slotStart：普通分頁格子起點，每系列佔 4 格（預設 100 / 70 / 30 / 15）
+// 下一系列請用 slotStart: 4、8、12… 避免重疊
+// stats.label 可用：攻擊力、魔力、STR、DEX、INT、LUK、HP、MP、防禦力、移動速度、跳躍力
+
+const NORMAL_SCROLL_SUCCESS_RATES = [100, 70, 30, 15];
+
+function resolveNormalEquipTarget(target) {
+  if (target === SCROLL_EQUIP_TARGET.NON_WEAPON
+    || target === SCROLL_EQUIP_TARGET.ARMOR
+    || target === SCROLL_EQUIP_TARGET.ACCESSORY) {
+    return SCROLL_EQUIP_TARGET.NON_WEAPON;
+  }
+  return SCROLL_EQUIP_TARGET.WEAPON;
+}
+
+function registerNormalScrollFamily(spec) {
+  if (!spec?.idPrefix || !spec.name) return;
+  const rates = Array.isArray(spec.rates) && spec.rates.length
+    ? spec.rates
+    : NORMAL_SCROLL_SUCCESS_RATES;
+  const slotStart = Math.max(0, Math.floor(Number(spec.slotStart) || 0));
+  const equipTarget = resolveNormalEquipTarget(spec.equipTarget);
+
+  rates.forEach((rate, index) => {
+    const rateNum = Number(rate);
+    const id = `${spec.idPrefix}_${rateNum}`;
+    const stats = (spec.statsByRate && spec.statsByRate[rateNum])
+      || spec.stats
+      || [];
+    const icon = (spec.iconByRate && spec.iconByRate[rateNum])
+      || spec.icon
+      || 'images/scroll/glory.png';
+    const size = spec.iconSizeByRate && spec.iconSizeByRate[rateNum];
+    const priceRaw = (spec.priceByRate && spec.priceByRate[rateNum] != null)
+      ? spec.priceByRate[rateNum]
+      : spec.price;
+    const price = Math.max(0, Math.floor(Number(priceRaw) || 0));
+    SCROLL_DATABASE[id] = {
+      id,
+      slotIndex: slotStart + index,
+      name: `${spec.name}${rateNum}%`,
+      tab: SCROLL_TAB.NORMAL,
+      scrollType: SCROLL_TYPE.FIXED,
+      equipTarget,
+      rate: rateNum,
+      icon,
+      iconWidth: size?.w || spec.iconWidth,
+      iconHeight: size?.h || spec.iconHeight,
+      stats: stats.map((line) => ({ ...line })),
+      desc: spec.desc || '',
+      ...(price > 0 ? { price } : {}),
+    };
+  });
+}
+
+// —— 範本：武器／武器以外（改這裡或往下再貼一段）——
+registerNormalScrollFamily({
+  idPrefix: 'scroll_normal_weapon_atk',
+  name: '武器攻擊力(力量)卷軸',
+  slotStart: 0,
+  equipTarget: SCROLL_EQUIP_TARGET.WEAPON,
+  icon: 'images/scroll/100.png',
+  iconByRate: {
+    100: 'images/scroll/100.png',
+    70: 'images/scroll/70.png',
+    30: 'images/scroll/30.png',
+    15: 'images/scroll/15.png',
+  },
+  statsByRate: {
+    100: [{ label: '攻擊力', val: 3 }, { label: 'STR', val: 1 }],
+    70: [{ label: '攻擊力', val: 5 }, { label: 'STR', val: 2 }],
+    30: [{ label: '攻擊力', val: 7 }, { label: 'STR', val: 3 }],
+    15: [{ label: '攻擊力', val: 9 }, { label: 'STR', val: 4 }],
+  },
+  priceByRate: {
+    100: 1000,
+    70: 4000,
+    30: 16000,
+    15: 64000,
+  },
+});
+
+registerNormalScrollFamily({
+  idPrefix: 'scroll_normal_weapon_matk',
+  name: '武器魔力(智慧)卷軸',
+  slotStart: 4,
+  equipTarget: SCROLL_EQUIP_TARGET.WEAPON,
+  icon: 'images/scroll/100.png',
+  iconByRate: {
+    100: 'images/scroll/100.png',
+    70: 'images/scroll/70.png',
+    30: 'images/scroll/30.png',
+    15: 'images/scroll/15.png',
+  },
+  statsByRate: {
+    100: [{ label: '魔法攻擊力', val: 3 }, { label: 'INT', val: 1 }],
+    70: [{ label: '魔法攻擊力', val: 5 }, { label: 'INT', val: 2 }],
+    30: [{ label: '魔法攻擊力', val: 7 }, { label: 'INT', val: 3 }],
+    15: [{ label: '魔法攻擊力', val: 9 }, { label: 'INT', val: 4 }],
+  },
+  priceByRate: {
+    100: 1000,
+    70: 4000,
+    30: 16000,
+    15: 64000,
+  },
+});
+
+registerNormalScrollFamily({
+  idPrefix: 'scroll_normal_non_weapon_str',
+  name: '力量卷軸',
+  slotStart: 8,
+  equipTarget: SCROLL_EQUIP_TARGET.NON_WEAPON,
+  icon: 'images/scroll/100.png',
+  iconByRate: {
+    100: 'images/scroll/100.png',
+    70: 'images/scroll/70.png',
+    30: 'images/scroll/30.png',
+    15: 'images/scroll/15.png',
+  },
+  statsByRate: {
+    100: [{ label: 'STR', val: 3 }, { label: '最大HP', val: 30 }, { label: '防禦力', val: 10 }],
+    70: [{ label: 'STR', val: 4 }, { label: '最大HP', val: 70 }, { label: '防禦力', val: 20 }],
+    30: [{ label: 'STR', val: 7 }, { label: '最大HP', val: 120 }, { label: '防禦力', val: 40 }],
+    15: [{ label: 'STR', val: 10 }, { label: '最大HP', val: 170 }, { label: '防禦力', val: 80 }],
+  },
+  priceByRate: {
+    100: 500,
+    70: 2000,
+    30: 8000,
+    15: 32000,
+  },
+});
+
+/*
+registerNormalScrollFamily({
+  idPrefix: 'scroll_normal_non_weapon_str',
+  name: '裝備力量卷軸',
+  slotStart: 8,
+  equipTarget: SCROLL_EQUIP_TARGET.NON_WEAPON,
+  icon: 'images/scroll/100.png',
+  stats: [{ label: 'STR', val: 1 }],
+});
+*/
+
 // ==========================================
 // 5. 咒文的痕跡種類
 // ==========================================
@@ -1006,10 +1194,85 @@ function getScrollDetailImagePath(scroll) {
   return `${SCROLL_DETAIL_IMAGE_DIR}/${key}.png`;
 }
 
-function getScrollItemBySlot(slotIndex) {
+function getScrollItemBySlot(slotIndex, tab = SCROLL_TAB.SPECIAL) {
   return Object.values(SCROLL_DATABASE).find(
-    item => item.tab === SCROLL_TAB.SPECIAL && item.slotIndex === slotIndex
+    item => item.tab === tab && item.slotIndex === slotIndex
   ) || null;
+}
+
+const playerGloryScrollInventory = {};
+
+function getSpecialScrollCatalog() {
+  return Object.values(SCROLL_DATABASE).filter((item) => item.tab === SCROLL_TAB.SPECIAL);
+}
+
+function getNormalScrollCatalog() {
+  return Object.values(SCROLL_DATABASE).filter((item) => item.tab === SCROLL_TAB.NORMAL);
+}
+
+function getScrollCatalogByTab(tab) {
+  return tab === SCROLL_TAB.NORMAL ? getNormalScrollCatalog() : getSpecialScrollCatalog();
+}
+
+function getPlayerGloryScrollCount(scrollId) {
+  return Math.max(0, Number(playerGloryScrollInventory[scrollId]) || 0);
+}
+
+function grantGloryScroll(scrollId, amount = 1) {
+  if (!scrollId || amount <= 0) return 0;
+  const add = Math.floor(amount);
+  playerGloryScrollInventory[scrollId] = getPlayerGloryScrollCount(scrollId) + add;
+  return add;
+}
+
+function consumeGloryScroll(scrollId, amount = 1) {
+  if (!scrollId || amount <= 0) return false;
+  const current = getPlayerGloryScrollCount(scrollId);
+  if (current < amount) return false;
+  playerGloryScrollInventory[scrollId] = current - amount;
+  if (typeof InventoryModule !== 'undefined') {
+    InventoryModule.render?.();
+    InventoryModule.updateSlotCount?.();
+  }
+  return true;
+}
+
+function getCombinedScrollCatalog() {
+  return [...getSpecialScrollCatalog(), ...getNormalScrollCatalog()];
+}
+
+function listOwnedGloryScrolls() {
+  return getCombinedScrollCatalog().filter((item) => getPlayerGloryScrollCount(item.id) > 0);
+}
+
+function listIdleVisibleCatalogScrolls(item) {
+  const owned = listOwnedGloryScrolls();
+  if (!item) return owned;
+  return owned.filter((scroll) => (
+    typeof getScrollEquipError !== 'function' || !getScrollEquipError(scroll, item)
+  ));
+}
+
+function listIdleVisibleGloryScrolls(item) {
+  return listIdleVisibleCatalogScrolls(item);
+}
+
+function getActiveScrollCatalogTab() {
+  if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+    return SCROLL_TAB.SPECIAL;
+  }
+  if (typeof ScrollModule !== 'undefined' && ScrollModule.selectedTab === SCROLL_TAB.NORMAL) {
+    return SCROLL_TAB.NORMAL;
+  }
+  return SCROLL_TAB.SPECIAL;
+}
+
+function getScrollItemForUiSlot(slotIndex, item, tab) {
+  if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+    return listIdleVisibleCatalogScrolls(item)[slotIndex] || null;
+  }
+  const catalogTab = tab || getActiveScrollCatalogTab();
+  return getScrollItemBySlot(slotIndex, catalogTab);
 }
 
 function getScrollByType(scrollType) {
@@ -1030,6 +1293,7 @@ function isMultiStatRollScroll(scroll) {
 
 function scrollRequiresRecoveryCard(scroll) {
   if (!scroll) return false;
+  if (scroll.tab === SCROLL_TAB.NORMAL || scroll.scrollType === SCROLL_TYPE.FIXED) return false;
   return scroll.scrollType !== SCROLL_TYPE.BLACK;
 }
 
@@ -1076,6 +1340,10 @@ function isOneHandWeaponItem(item) {
     && !isOffHandWeaponItem(item);
 }
 
+function canUseNormalWeaponScroll(item) {
+  return item?.mainType === EQUIP_TYPE.WEAPON || canOffHandUseWeaponScroll(item);
+}
+
 function getScrollEquipError(scroll, item) {
   if (!scroll || !item) return null;
 
@@ -1092,8 +1360,16 @@ function getScrollEquipError(scroll, item) {
 
   if (!scroll.equipTarget) return null;
 
-  // 機器心臟（Heart / Tm）可使用任何部位卷軸
-  if (!(typeof isHeartItem === 'function' ? isHeartItem(item) : item?.islot === 'Tm')) {
+  const isHeart = typeof isHeartItem === 'function' ? isHeartItem(item) : item?.islot === 'Tm';
+
+  if (scroll.tab === SCROLL_TAB.NORMAL && !isHeart) {
+    if (scroll.equipTarget === SCROLL_EQUIP_TARGET.WEAPON && !canUseNormalWeaponScroll(item)) {
+      return '此卷軸僅限武器使用。';
+    }
+    if (scroll.equipTarget === SCROLL_EQUIP_TARGET.NON_WEAPON && canUseNormalWeaponScroll(item)) {
+      return '此卷軸僅限武器以外的裝備使用。';
+    }
+  } else if (!isHeart) {
     if (scroll.equipTarget === SCROLL_EQUIP_TARGET.ARMOR && item.mainType !== EQUIP_TYPE.ARMOR) {
       return '此卷軸僅限防具使用。';
     }
@@ -1224,11 +1500,18 @@ function formatMultiStatChangeLog(changes) {
 }
 
 function applyFixedScrollStats(item, stats) {
-  const statFields = {
+  const labelFields = {
     STR: 'scrollStr',
     DEX: 'scrollDex',
     INT: 'scrollInt',
-    LUK: 'scrollLuk'
+    LUK: 'scrollLuk',
+    HP: 'scrollHp',
+    MP: 'scrollMp',
+    最大HP: 'scrollHp',
+    最大MP: 'scrollMp',
+    防禦力: 'scrollDef',
+    移動速度: 'scrollSpeed',
+    跳躍力: 'scrollJump',
   };
 
   (stats || []).forEach((line) => {
@@ -1236,17 +1519,157 @@ function applyFixedScrollStats(item, stats) {
     const val = Number(line.val);
     if (!Number.isFinite(val)) return;
 
-    if (label === '攻擊力' || label === '物理攻擊力') {
-      item.scrollAtk = (item.scrollAtk || 0) + val;
-    } else if (label === '魔力' || label === '魔法攻擊力') {
-      item.scrollMatk = (item.scrollMatk || 0) + val;
-    } else if (statFields[label]) {
-      const field = statFields[label];
-      item[field] = (item[field] || 0) + val;
-    } else {
-      item.scrollStat = (item.scrollStat || 0) + val;
+    let field = line.field || null;
+    if (!field) {
+      if (label === '攻擊力' || label === '物理攻擊力') field = 'scrollAtk';
+      else if (label === '魔力' || label === '魔法攻擊力') field = 'scrollMatk';
+      else if (labelFields[label]) field = labelFields[label];
+      else field = 'scrollStat';
     }
+    item[field] = (item[field] || 0) + val;
   });
+}
+
+function formatFixedScrollStats(stats) {
+  const parts = (stats || [])
+    .filter((line) => line && Number.isFinite(Number(line.val)))
+    .map((line) => `${line.label || line.field} +${Number(line.val)}`);
+  return parts.length ? parts.join('、') : '';
+}
+
+function escapeScrollTipText(text) {
+  return String(text || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function getScrollEquipTargetPhrase(scroll) {
+  switch (scroll?.equipTarget) {
+    case SCROLL_EQUIP_TARGET.WEAPON: return '武器';
+    case SCROLL_EQUIP_TARGET.NON_WEAPON: return '裝備';
+    case SCROLL_EQUIP_TARGET.ARMOR: return '防具';
+    case SCROLL_EQUIP_TARGET.ACCESSORY: return '飾品';
+    case SCROLL_EQUIP_TARGET.ONE_HAND_WEAPON: return '單手武器';
+    case SCROLL_EQUIP_TARGET.TWO_HAND_WEAPON: return '雙手武器';
+    default: return '裝備';
+  }
+}
+
+function getScrollBonusKindLabel(scroll) {
+  if (isChaosScroll(scroll)) return '隨機屬性';
+  const labels = [];
+  if (scroll?.randomRoll?.statLabel) labels.push(scroll.randomRoll.statLabel);
+  (scroll?.multiStatRoll?.stats || []).forEach((line) => {
+    if (line?.label) labels.push(line.label);
+  });
+  (scroll?.stats || []).forEach((line) => {
+    if (line?.label) labels.push(line.label);
+  });
+  const joined = labels.join(' ');
+  if (joined.includes('魔力') || joined.includes('魔法攻擊')) return '魔力';
+  if (joined.includes('攻擊力')) return '攻擊力';
+  if (labels.length === 1) return labels[0];
+  return '屬性';
+}
+
+function getScrollTooltipDesc(scroll) {
+  if (scroll?.desc) return String(scroll.desc);
+  const place = getScrollEquipTargetPhrase(scroll);
+  if (isChaosScroll(scroll)) return `${place}上追加隨機增減屬性。`;
+  const kind = getScrollBonusKindLabel(scroll);
+  return `使用在${place}上增加${kind}。`;
+}
+
+function formatScrollTipStatLine(label, val) {
+  const name = String(label || '屬性');
+  if (val == null || val === '') return name;
+  const text = String(val);
+  if (text.startsWith('+') || text.startsWith('-')) return `${name}${text}`;
+  return `${name}+${text}`;
+}
+
+function getScrollTooltipStatLines(scroll) {
+  if (!scroll) return [];
+  const rate = Number(scroll.rate);
+  const lines = [Number.isFinite(rate) ? `成功率${rate}%` : '成功率—'];
+
+  if (isChaosScroll(scroll) && typeof getChaosStatRange === 'function') {
+    const range = getChaosStatRange();
+    lines.push(`屬性${range.min >= 0 ? '+' : ''}${range.min}~${range.max >= 0 ? '+' : ''}${range.max}`);
+    return lines;
+  }
+
+  if (typeof isMultiStatRollScroll === 'function' && isMultiStatRollScroll(scroll)
+    && typeof getMultiStatRollRange === 'function') {
+    const range = getMultiStatRollRange(scroll);
+    (scroll.multiStatRoll.stats || []).forEach((line) => {
+      lines.push(formatScrollTipStatLine(line.label, `${range.min}~+${range.max}`));
+    });
+    return lines;
+  }
+
+  if (typeof isRandomRollScroll === 'function' && isRandomRollScroll(scroll)
+    && typeof getRandomStatRange === 'function') {
+    const range = getRandomStatRange(scroll);
+    lines.push(formatScrollTipStatLine(scroll.randomRoll.statLabel || '屬性', `${range.min}~+${range.max}`));
+    return lines;
+  }
+
+  (scroll.stats || []).forEach((line) => {
+    if (!line || !Number.isFinite(Number(line.val))) return;
+    lines.push(formatScrollTipStatLine(line.label || line.field, Number(line.val)));
+  });
+  return lines;
+}
+
+function buildScrollTooltipHtml(scroll) {
+  const assets = (typeof EQUIP_TOOLTIP_ASSETS !== 'undefined' && EQUIP_TOOLTIP_ASSETS) || {};
+  const frame = assets.equipFrame || {};
+  const itemIcon = assets.itemIcon || {};
+  const line = frame.line || (assets.frame && assets.frame.dotline) || '';
+  const topBg = frame.top ? ` style="background-image:url('${frame.top}')"` : '';
+  const midBg = frame.mid ? ` style="background-image:url('${frame.mid}')"` : '';
+  const btmBg = frame.btm ? ` style="background-image:url('${frame.btm}')"` : '';
+  const lineStyle = line ? ` style="background-image:url('${line}')"` : '';
+  const baseSrc = itemIcon.base || '';
+  const shadeSrc = itemIcon.shade || '';
+  const safeName = escapeScrollTipText(scroll?.name || '卷軸');
+  const iconSrc = escapeScrollTipText(scroll?.icon || '');
+  const desc = escapeScrollTipText(getScrollTooltipDesc(scroll)).replace(/\n/g, '<br>');
+  const statsHtml = getScrollTooltipStatLines(scroll)
+    .map((text) => `<div class="sc-scroll-tip-stat">${escapeScrollTipText(text)}</div>`)
+    .join('');
+
+  return `
+    <div class="eq-tooltip-frame inv-etc-frame">
+      <div class="eq-tooltip-frame-top"${topBg}></div>
+      <div class="eq-tooltip-mid-wrap">
+        <div class="eq-tooltip-frame-mid"${midBg}></div>
+        <div class="eq-tooltip-body">
+          <div class="eq-tooltip-content">
+            <div class="eq-tip-name-row">
+              <div class="eq-tip-name">${safeName}</div>
+            </div>
+            <div class="eq-tip-dotline"${lineStyle}></div>
+            <div class="inv-etc-main">
+              <div class="eq-tip-icon-wrap">
+                ${baseSrc ? `<img class="eq-tip-icon-base" src="${baseSrc}" alt="">` : ''}
+                ${shadeSrc ? `<img class="eq-tip-icon-shade" src="${shadeSrc}" alt="">` : ''}
+                ${iconSrc ? `<img class="eq-tip-icon" src="${iconSrc}" alt="">` : ''}
+              </div>
+              <div class="sc-scroll-tip-copy">
+                <div class="inv-etc-desc">${desc}</div>
+                <div class="sc-scroll-tip-stats">${statsHtml}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="eq-tooltip-frame-btm"${btmBg}></div>
+    </div>
+  `;
 }
 
 function resetScrollBonusFields(item) {
@@ -1359,17 +1782,26 @@ function applyGloryScrollBonus(item, scroll, val) {
 }
 
 function consumeRecoveryCard() {
-  if (playerRecoveryCardCount <= 0) {
-    playerRecoveryCardCount = DEFAULT_RECOVERY_CARD_COUNT;
+  if (!isIdleRecoveryCardMode()) {
+    if (typeof trackCostUsage === 'function') trackCostUsage('recoveryCard');
+    return true;
   }
-  if (playerRecoveryCardCount <= 0) return false;
-  playerRecoveryCardCount -= 1;
-  trackCostUsage('recoveryCard');
-  if (playerRecoveryCardCount <= 0) {
-    playerRecoveryCardCount = DEFAULT_RECOVERY_CARD_COUNT;
+  const current = Math.max(0, Math.floor(Number(playerRecoveryCardCount) || 0));
+  if (current <= 0) return false;
+  playerRecoveryCardCount = current - 1;
+  if (typeof trackCostUsage === 'function') trackCostUsage('recoveryCard');
+  if (typeof InventoryModule !== 'undefined') {
+    InventoryModule.render?.();
+    InventoryModule.updateSlotCount?.();
   }
+  if (typeof ScrollModule !== 'undefined') {
+    ScrollModule.renderRecoveryCard?.();
+  }
+  if (typeof SessionPersistenceModule !== 'undefined') SessionPersistenceModule.scheduleSave();
   return true;
 }
+
+const SPELL_TRACE_ETC_ID = 'spell_trace';
 
 const RESTORE_SCROLLS = [
   {
@@ -1378,6 +1810,7 @@ const RESTORE_SCROLLS = [
     icon: 'images/scroll/recover.png',
     rate: 100,
     restoreType: 'recover',
+    cost: 500,
     effectLabel: '星力、卷軸強化初始化'
   },
   {
@@ -1386,6 +1819,7 @@ const RESTORE_SCROLLS = [
     icon: 'images/scroll/whiterecover.png',
     rate: 100,
     restoreType: 'white',
+    cost: 1000,
     effectLabel: '恢復因卷軸應用失敗所消耗的卷軸剩餘次數'
   },
   {
@@ -1394,9 +1828,37 @@ const RESTORE_SCROLLS = [
     icon: 'images/scroll/arkrecover.png',
     rate: 100,
     restoreType: 'ark',
+    cost: 20000,
     effectLabel: '卷軸強化初始化'
   }
 ];
+
+function getSpellTraceCostAmount(amount) {
+  return Math.max(0, Math.floor(Number(amount) || 0));
+}
+
+function canAffordSpellTrace(amount) {
+  if (typeof isIdlePlayMode !== 'function' || !isIdlePlayMode()) return true;
+  const need = getSpellTraceCostAmount(amount);
+  if (!need) return true;
+  if (typeof idleCanAffordEtcMap === 'function') {
+    return idleCanAffordEtcMap({ [SPELL_TRACE_ETC_ID]: need });
+  }
+  if (typeof InventoryModule === 'undefined' || typeof InventoryModule.countEtc !== 'function') return false;
+  return InventoryModule.countEtc(SPELL_TRACE_ETC_ID) >= need;
+}
+
+function consumeSpellTrace(amount) {
+  if (typeof isIdlePlayMode !== 'function' || !isIdlePlayMode()) return true;
+  const need = getSpellTraceCostAmount(amount);
+  if (!need) return true;
+  if (typeof idleSpendEtcMap === 'function') {
+    return idleSpendEtcMap({ [SPELL_TRACE_ETC_ID]: need });
+  }
+  if (!canAffordSpellTrace(need)) return false;
+  if (typeof InventoryModule === 'undefined' || typeof InventoryModule.takeEtc !== 'function') return false;
+  return InventoryModule.takeEtc(SPELL_TRACE_ETC_ID, need);
+}
 
 function getRestoreScrollById(restoreId) {
   return RESTORE_SCROLLS.find(item => item.id === restoreId) || null;

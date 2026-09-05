@@ -107,6 +107,120 @@ const WeaponTypeMap = (() => {
   const DEFAULT_WEAPON_MULTIPLIER = 1.20;
 
   /**
+   * 普攻紙娃娃動作池（依武器類型；每次普攻從池內隨機抽一個有幀的動作）
+   * 對齊 MapleStory：單手 swingO1/O2/O3、雙手 swingT1/T2/T3、弓弩 shoot 等
+   */
+  const BASIC_ATTACK_ACTIONS_BY_TYPE = {
+    單手劍: ['swingO1', 'swingO2', 'swingO3', 'swingOF', 'stabO1', 'stabO2'],
+    單手斧: ['swingO1', 'swingO2', 'swingO3', 'swingOF'],
+    單手棍: ['swingO1', 'swingO2', 'swingO3', 'swingOF'],
+    雙手劍: ['swingT1', 'swingT2', 'swingT3', 'swingTF', 'stabT1', 'stabT2'],
+    雙手斧: ['swingT1', 'swingT2', 'swingT3', 'swingTF'],
+    雙手棍: ['swingT1', 'swingT2', 'swingT3', 'swingTF'],
+    槍: ['stabT1', 'stabT2', 'stabTF', 'swingT1'],
+    矛: ['stabT1', 'stabT2', 'stabTF', 'swingT1'],
+    弓: ['shoot1', 'shootF', 'swingT1'],
+    弩: ['shoot2', 'shootF', 'swingT1'],
+    短劍: ['stabO1', 'stabO2', 'stabOF', 'swingO1'],
+    拳套: ['swingO1', 'swingO2', 'stabO1'],
+    短杖: ['swingO1', 'swingO2', 'swingO3'],
+    長杖: ['swingO1', 'swingO2', 'swingO3'],
+    指虎: ['swingP1', 'swingP2', 'swingPF'],
+    火槍: ['shoot1', 'shootF'],
+    手杖: ['swingO1', 'swingO2', 'stabO1'],
+    雙弩槍: ['shoot1', 'shootF'],
+    加農砲: ['shoot1', 'shootF', 'swingT1'],
+    閃亮克魯: ['swingO1', 'swingO2'],
+    調節器: ['swingO1', 'swingO2'],
+    龍息射手: ['shoot1', 'shootF'],
+    長劍: ['swingT1', 'swingT2', 'stabT1'],
+    靈魂射手: ['shoot1', 'shootF'],
+    魔劍: ['swingO1', 'swingO2', 'stabO1'],
+    能量劍: ['swingO1', 'swingO2', 'stabO1'],
+    記憶長杖: ['swingO1', 'swingO2', 'swingO3'],
+    陰陽扇: ['swingO1', 'swingO2'],
+    ESP限制器: ['swingO1', 'swingO2'],
+    鎖鏈: ['swingO1', 'stabO1', 'stabO2'],
+    魔法護腕: ['swingO1', 'swingO2'],
+    仙扇: ['swingO1', 'swingO2'],
+    武拳: ['swingT1', 'swingT2', 'stabT1'],
+    環刃: ['swingO1', 'swingO2', 'stabO1'],
+    太刀: ['swingT1', 'swingT2', 'stabT1'],
+    琉: ['swingT1', 'swingT2'],
+    璃: ['swingT1', 'swingT2'],
+    重拳槍: ['shoot1', 'shootF'],
+    古代之弓: ['shoot1', 'shootF'],
+  };
+
+  const DEFAULT_BASIC_ATTACK_ACTIONS = ['swingT1', 'swingO1', 'swingT2', 'stabT1'];
+
+  /**
+   * WZ `attackSpeed`：數字越「小」越快（約 2～9；6＝普通）。
+   * 匯入裝備常缺此欄，依武器類型補預設。
+   * 面板階段 Stage = 10 − wzAttackSpeed（數字越「大」越快）。
+   */
+  const DEFAULT_WZ_ATTACK_SPEED_BY_TYPE = {
+    單手劍: 5,
+    單手斧: 6,
+    單手棍: 5,
+    雙手劍: 6,
+    雙手斧: 7,
+    雙手棍: 6,
+    槍: 6,
+    矛: 8,
+    弓: 6,
+    弩: 6,
+    短劍: 4,
+    拳套: 4,
+    短杖: 6,
+    長杖: 8,
+    指虎: 5,
+    火槍: 5,
+    手杖: 5,
+    雙弩槍: 6,
+    加農砲: 8,
+    閃亮克魯: 6,
+    調節器: 4,
+    龍息射手: 6,
+    長劍: 5,
+    靈魂射手: 5,
+    魔劍: 6,
+    能量劍: 6,
+    記憶長杖: 6,
+    陰陽扇: 6,
+    ESP限制器: 6,
+    鎖鏈: 5,
+    魔法護腕: 6,
+    仙扇: 6,
+    武拳: 5,
+    環刃: 4,
+    太刀: 5,
+    琉: 6,
+    璃: 6,
+    重拳槍: 6,
+    古代之弓: 6,
+  };
+
+  /** 無資料時的預設 WZ attackSpeed（普通） */
+  const DEFAULT_WZ_ATTACK_SPEED = 6;
+  /** 面板階段上下限（Stage 越大越快） */
+  const ATTACK_SPEED_STAGE_MIN = 1;
+  const ATTACK_SPEED_STAGE_MAX = 8;
+  /** 客戶端動作 delay 對齊 30ms 幀 */
+  const DELAY_FRAME_MS = 30;
+  /**
+   * 普通攻擊的技能基礎 delay（未乘攻速係數）。
+   * 最終 WZ＝6（面板 4 階／普通）時倍率為 1。
+   */
+  const BASIC_ATTACK_BASE_DELAY_MS = 360;
+
+  // 舊名相容（值皆為 WZ）
+  const DEFAULT_ATTACK_SPEED_BY_TYPE = DEFAULT_WZ_ATTACK_SPEED_BY_TYPE;
+  const DEFAULT_ATTACK_SPEED_STAGE = DEFAULT_WZ_ATTACK_SPEED;
+  /** @deprecated 舊邏輯把「階段」當 WZ；保留給少數舊呼叫 */
+  const ATTACK_SPEED_STAGE_CAP = 2;
+
+  /**
    * 無穿戴武器時：依戰鬥力面板職業取該職典型武器係數。
    * 專屬職用專武；共用職用常見主武器。
    */
@@ -208,7 +322,14 @@ const WeaponTypeMap = (() => {
   }
 
   function getByItemId(itemId) {
-    return getByTypeCode(typeCodeFromItemId(itemId));
+    const four = typeCodeFromItemId(itemId);
+    if (!four) return null;
+    if (byCode[four]) return byCode[four];
+    // 早期武器 id 常為 0130xxxx → 種類碼 1300，對到 1302 那一列
+    if (/^1[3-5]/.test(four)) {
+      return byCode[`${four.slice(0, 3)}2`] || null;
+    }
+    return null;
   }
 
   /** tooltip 用：分類＝武器類型；職業＝專屬職名或五大職業 */
@@ -262,11 +383,234 @@ const WeaponTypeMap = (() => {
     return getWeaponMultiplierByJobName(jobName);
   }
 
+  function resolveJobNameForWeapon(jobName) {
+    if (!jobName) return '';
+    if (typeof CombatJobs !== 'undefined' && typeof CombatJobs.getJobByName === 'function') {
+      const job = CombatJobs.getJobByName(jobName);
+      if (job?.name) return job.name;
+    }
+    return String(jobName);
+  }
+
+  /** 依穿戴武器（或職業預設武器）回傳普攻動作候選 */
+  function getBasicAttackActions(getWornEntry, jobName) {
+    const info = resolveFromEquippedSlots(getWornEntry);
+    const resolvedJob = resolveJobNameForWeapon(jobName);
+    const weaponType = info?.weaponType
+      || JOB_DEFAULT_WEAPON_TYPE[resolvedJob]
+      || '';
+    const list = BASIC_ATTACK_ACTIONS_BY_TYPE[weaponType];
+    return Array.isArray(list) && list.length
+      ? list.slice()
+      : DEFAULT_BASIC_ATTACK_ACTIONS.slice();
+  }
+
+  function clampWzAttackSpeed(value) {
+    const n = Math.round(Number(value) || 0);
+    if (n < 2 || n > 9) return 0;
+    return n;
+  }
+
+  function clampAttackSpeedStage(value) {
+    const n = Math.round(Number(value) || 0);
+    if (!Number.isFinite(n)) return ATTACK_SPEED_STAGE_MIN;
+    return Math.min(ATTACK_SPEED_STAGE_MAX, Math.max(ATTACK_SPEED_STAGE_MIN, n));
+  }
+
+  /**
+   * WZ attackSpeed → 面板／顯示用階段。
+   * @param {number} baseWzAttackSpeed 武器等基礎 WZ（越小越快）
+   * @param {number} [speedModifiers=0] 技能／Buff 對 WZ 的加減（加速為負，例 -2）
+   * @returns {number} 面板階段 1～8（越大越快）
+   */
+  function calculateAttackSpeedStage(baseWzAttackSpeed, speedModifiers = 0) {
+    const base = Number(baseWzAttackSpeed);
+    const mod = Number(speedModifiers) || 0;
+    const finalWzSpeed = (Number.isFinite(base) ? base : DEFAULT_WZ_ATTACK_SPEED) + mod;
+    const stage = 10 - finalWzSpeed;
+    return clampAttackSpeedStage(stage);
+  }
+
+  /** 面板階段 → 對應 WZ（供 delay 公式） */
+  function wzAttackSpeedFromStage(stage) {
+    return 10 - clampAttackSpeedStage(stage);
+  }
+
+  /**
+   * 最終 WZ（已套 modifiers，並依面板上下限回推）。
+   * delay 公式用此值：base × (10 + finalWz) / 16
+   */
+  function getFinalWzAttackSpeed(baseWzAttackSpeed, speedModifiers = 0) {
+    return wzAttackSpeedFromStage(
+      calculateAttackSpeedStage(baseWzAttackSpeed, speedModifiers),
+    );
+  }
+
+  /**
+   * @deprecated 舊 API：把「加速階數」當正數從 WZ 扣。
+   * 請改用 calculateAttackSpeedStage(wz, speedModifiers)。
+   */
+  function getEffectiveAttackSpeedStage(weaponBaseSpeed, speedBuffSum) {
+    const buffs = Math.max(0, Math.round(Number(speedBuffSum) || 0));
+    return calculateAttackSpeedStage(weaponBaseSpeed, -buffs);
+  }
+
+  /**
+   * 目前對 WZ attackSpeed 的 modifiers 總和（加速為負）。
+   * 來源：SkillModifiers.speedModifiers、戰鬥力面板手動加速。
+   */
+  function getSpeedModifiers() {
+    let n = 0;
+    if (typeof CharacterCombatPanel !== 'undefined'
+      && typeof CharacterCombatPanel.getAttackSpeedBuffSum === 'function') {
+      // 面板若回傳「加速階段數」（正），轉成 WZ modifiers（負）
+      const panel = Number(CharacterCombatPanel.getAttackSpeedBuffSum());
+      if (Number.isFinite(panel) && panel !== 0) n -= Math.round(Math.abs(panel));
+    }
+    if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
+      const mods = SkillModifiers.getTotals();
+      const fromSkill = Number(mods.speedModifiers != null ? mods.speedModifiers : 0);
+      if (Number.isFinite(fromSkill) && fromSkill !== 0) {
+        n += Math.round(fromSkill);
+      } else {
+        // 相容舊 speedStages（正＝加速階數）
+        const legacy = Number(mods.speedStages) || 0;
+        if (legacy > 0) n -= Math.round(legacy);
+      }
+    }
+    return n;
+  }
+
+  /** @deprecated 正數「加速階數」；請改 getSpeedModifiers（負向 WZ） */
+  function getSpeedBuffSum() {
+    return Math.max(0, -getSpeedModifiers());
+  }
+
+  /**
+   * 技能／普攻實際動作 delay（ms）。
+   * multiplier = (10 + finalWzAttackSpeed) / 16，再 ceil 到 30ms。
+   * @param {number} baseDelay
+   * @param {number} baseWzAttackSpeed 武器基礎 WZ
+   * @param {number} [speedModifiers=0] WZ modifiers（加速為負）
+   */
+  function calculateActionDelayMs(baseDelay, baseWzAttackSpeed, speedModifiers = 0) {
+    const base = Number(baseDelay);
+    if (!Number.isFinite(base) || base <= 0) return DELAY_FRAME_MS;
+    const finalWz = getFinalWzAttackSpeed(baseWzAttackSpeed, speedModifiers);
+    const theoretical = base * ((10 + finalWz) / 16);
+    return DELAY_FRAME_MS * Math.ceil(theoretical / DELAY_FRAME_MS);
+  }
+
+  function getDefaultWzAttackSpeedForType(weaponType) {
+    if (!weaponType) return DEFAULT_WZ_ATTACK_SPEED;
+    return DEFAULT_WZ_ATTACK_SPEED_BY_TYPE[weaponType] || DEFAULT_WZ_ATTACK_SPEED;
+  }
+
+  function getDefaultAttackSpeedForType(weaponType) {
+    return getDefaultWzAttackSpeedForType(weaponType);
+  }
+
+  function getDefaultWzAttackSpeedForItemId(itemId) {
+    const info = getByItemId(itemId);
+    return getDefaultWzAttackSpeedForType(info?.weaponType);
+  }
+
+  function getDefaultAttackSpeedForItemId(itemId) {
+    return getDefaultWzAttackSpeedForItemId(itemId);
+  }
+
+  function getDefaultWzAttackSpeedForJobName(jobName) {
+    if (!jobName) return DEFAULT_WZ_ATTACK_SPEED;
+    let resolvedName = jobName;
+    if (typeof CombatJobs !== 'undefined' && typeof CombatJobs.getJobByName === 'function') {
+      const job = CombatJobs.getJobByName(jobName);
+      if (job?.name) resolvedName = job.name;
+    }
+    return getDefaultWzAttackSpeedForType(JOB_DEFAULT_WEAPON_TYPE[resolvedName]);
+  }
+
+  function getDefaultAttackSpeedForJobName(jobName) {
+    return getDefaultWzAttackSpeedForJobName(jobName);
+  }
+
+  /** 讀裝備 WZ attackSpeed；缺則依武器種類補預設並寫回 item.wz */
+  function resolveWzAttackSpeed(item) {
+    if (!item) return DEFAULT_WZ_ATTACK_SPEED;
+    const existing = clampWzAttackSpeed(item.wz?.attackSpeed);
+    if (existing) return existing;
+    const isWeapon = item.mainType === 'WEAPON'
+      || item.islot === 'Wp'
+      || item.islot === 'Gw'
+      || item.islot === 'Wpsi'
+      || item.islot === 'WpSi';
+    if (!isWeapon) return 0;
+    const wz = getDefaultWzAttackSpeedForItemId(item.itemId || item.id);
+    if (item.wz && typeof item.wz === 'object') item.wz.attackSpeed = wz;
+    return wz;
+  }
+
+  /** @deprecated 名稱易誤解；回傳 WZ，請改 resolveWzAttackSpeed */
+  function resolveAttackSpeedStage(item) {
+    return resolveWzAttackSpeed(item);
+  }
+
+  function getEquippedWzAttackSpeed(getWornEntry, jobName) {
+    if (typeof getWornEntry === 'function') {
+      const resolved = resolveFromEquippedSlots(getWornEntry);
+      const slotId = resolved?.slotId || '11';
+      const entry = getWornEntry(slotId) || getWornEntry('11') || getWornEntry('37');
+      const itemId = entry?.itemId;
+      if (itemId && typeof ITEM_DATABASE !== 'undefined') {
+        const item = ITEM_DATABASE[itemId];
+        if (item) return resolveWzAttackSpeed(item);
+      }
+      if (itemId) return getDefaultWzAttackSpeedForItemId(itemId);
+    }
+    return getDefaultWzAttackSpeedForJobName(jobName);
+  }
+
+  /** 裝備＋技能後的面板攻速階段（1～8，越大越快） */
+  function getEquippedAttackSpeedStage(getWornEntry, jobName, speedModifiers) {
+    const wz = getEquippedWzAttackSpeed(getWornEntry, jobName);
+    const mod = speedModifiers != null ? speedModifiers : getSpeedModifiers();
+    return calculateAttackSpeedStage(wz, mod);
+  }
+
+  /** @param {number} stage 面板階段（已換算）。普攻 baseDelay。 */
+  function getAttackDelayMs(stage, baseDelay) {
+    const base = Number(baseDelay) > 0 ? Number(baseDelay) : BASIC_ATTACK_BASE_DELAY_MS;
+    const wz = wzAttackSpeedFromStage(stage);
+    return calculateActionDelayMs(base, wz, 0);
+  }
+
+  /** 相對普通（WZ6／面板 4 階）的秒傷倍率：階段越大打越快 */
+  function getAttackSpeedDpsFactor(stage, baseDelay) {
+    const base = Number(baseDelay) > 0 ? Number(baseDelay) : BASIC_ATTACK_BASE_DELAY_MS;
+    const refStage = calculateAttackSpeedStage(DEFAULT_WZ_ATTACK_SPEED, 0);
+    const ref = getAttackDelayMs(refStage, base);
+    return ref / getAttackDelayMs(stage, base);
+  }
+
+  const ATTACK_DELAY_MS_BY_STAGE = {};
+  for (let s = ATTACK_SPEED_STAGE_MIN; s <= ATTACK_SPEED_STAGE_MAX; s += 1) {
+    ATTACK_DELAY_MS_BY_STAGE[s] = getAttackDelayMs(s, BASIC_ATTACK_BASE_DELAY_MS);
+  }
+
   return {
     JOB_GROUP_REQ,
     WEAPON_MULTIPLIER_BY_TYPE,
     JOB_DEFAULT_WEAPON_TYPE,
     DEFAULT_WEAPON_MULTIPLIER,
+    DEFAULT_WZ_ATTACK_SPEED_BY_TYPE,
+    DEFAULT_WZ_ATTACK_SPEED,
+    DEFAULT_ATTACK_SPEED_BY_TYPE,
+    DEFAULT_ATTACK_SPEED_STAGE,
+    ATTACK_SPEED_STAGE_MIN,
+    ATTACK_SPEED_STAGE_MAX,
+    ATTACK_SPEED_STAGE_CAP,
+    DELAY_FRAME_MS,
+    BASIC_ATTACK_BASE_DELAY_MS,
+    ATTACK_DELAY_MS_BY_STAGE,
     byCode,
     padItemId,
     typeCodeFromItemId,
@@ -276,6 +620,28 @@ const WeaponTypeMap = (() => {
     resolveFromEquippedSlots,
     getWeaponMultiplierByJobName,
     getEquippedWeaponMultiplier,
+    getBasicAttackActions,
+    BASIC_ATTACK_ACTIONS_BY_TYPE,
+    DEFAULT_BASIC_ATTACK_ACTIONS,
+    calculateAttackSpeedStage,
+    wzAttackSpeedFromStage,
+    getFinalWzAttackSpeed,
+    getDefaultWzAttackSpeedForType,
+    getDefaultAttackSpeedForType,
+    getDefaultWzAttackSpeedForItemId,
+    getDefaultAttackSpeedForItemId,
+    getDefaultWzAttackSpeedForJobName,
+    getDefaultAttackSpeedForJobName,
+    resolveWzAttackSpeed,
+    resolveAttackSpeedStage,
+    getEquippedWzAttackSpeed,
+    getEquippedAttackSpeedStage,
+    getEffectiveAttackSpeedStage,
+    getSpeedModifiers,
+    getSpeedBuffSum,
+    calculateActionDelayMs,
+    getAttackDelayMs,
+    getAttackSpeedDpsFactor,
   };
 })();
 

@@ -84,7 +84,14 @@ const CAT_VALLEY_COST_TABLES = {
     { maxLevel: 10, doom: 20, Nohimepcs: 45, nekopow: 1000 },
   ],
   [CAT_VALLEY_ENHANCE_TYPE.ARCANE]: [
-    { maxLevel: 30, arcanepcs: 15, nekopow: 15 },
+    { maxLevel: 30, arcanepcs: 15, arcanecoin: 15, nekopow: 15 },
+  ],
+  [CAT_VALLEY_ENHANCE_TYPE.TOTEM]: [
+    { maxLevel: 5, taichu: 200, saint: 200, nekopow: 500 },
+    { maxLevel: 10, taichu: 300, saint: 300, nekopow: 700 },
+    { maxLevel: 15, taichu: 400, saint: 400, nekopow: 1000 },
+    { maxLevel: 20, taichu: 500, saint: 500, nekopow: 1500 },
+    { maxLevel: 25, taichu: 600, saint: 600, nekopow: 2000 },
   ],
 };
 
@@ -93,11 +100,34 @@ function getCatValleyEnhanceCostForLevel(type, targetLevel) {
   if (!table?.length || !(targetLevel > 0)) return null;
   const tier = table.find((row) => targetLevel <= row.maxLevel) || table[table.length - 1];
   const cost = {};
-  ['snow', 'taichu', 'saint', 'meowcoin', 'nekopow', 'doom', 'sun', 'darkpcs', 'Nohimepcs', 'eternalpcs', 'arcanepcs'].forEach((key) => {
-    const val = Number(tier[key]) || 0;
-    if (val > 0) cost[key] = val;
+  Object.entries(tier).forEach(([key, val]) => {
+    if (key === 'maxLevel') return;
+    const n = Number(val) || 0;
+    if (n > 0) cost[key] = n;
   });
   return cost;
+}
+
+function idleCanAffordEtcMap(cost) {
+  if (typeof isIdlePlayMode !== 'function' || !isIdlePlayMode()) return true;
+  if (!cost) return true;
+  if (typeof InventoryModule === 'undefined' || typeof InventoryModule.countEtc !== 'function') return false;
+  return Object.entries(cost).every(([id, amt]) => {
+    const n = Math.max(0, Math.floor(Number(amt) || 0));
+    if (!n) return true;
+    return InventoryModule.countEtc(id) >= n;
+  });
+}
+
+function idleSpendEtcMap(cost) {
+  if (typeof isIdlePlayMode !== 'function' || !isIdlePlayMode()) return true;
+  if (!cost) return true;
+  if (!idleCanAffordEtcMap(cost)) return false;
+  Object.entries(cost).forEach(([id, amt]) => {
+    const n = Math.max(0, Math.floor(Number(amt) || 0));
+    if (n > 0) InventoryModule.takeEtc(id, n);
+  });
+  return true;
 }
 
 function trackCatValleyEnhanceCost(type, targetLevel) {
@@ -470,6 +500,18 @@ function applyCatValleyMedalEnhanceOnce(item) {
   const started = isCatValleyMedalEnhanceStarted(item);
   const levelBefore = started ? getMedalEnhanceLevel(item) : -1;
   const nextLevel = levelBefore + 1;
+  const taichuCost = getCatValleyMedalEnhanceTaichuCost(nextLevel);
+  if (taichuCost > 0 && typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+    if (!idleCanAffordEtcMap({ taichu: taichuCost })) {
+      return {
+        ok: false,
+        level: Math.max(0, getMedalEnhanceLevel(item)),
+        changes: [],
+        taichuCost: 0,
+        message: '太初不足',
+      };
+    }
+  }
   const bonus = CAT_VALLEY_MEDAL_ENHANCE_TABLE[nextLevel] || {};
   const changes = [];
   const add = (field, val, label) => {
@@ -497,8 +539,12 @@ function applyCatValleyMedalEnhanceOnce(item) {
 
   item.medalEnhanceLevel = nextLevel;
   item.medalEnhanceStarted = true;
-  const taichuCost = getCatValleyMedalEnhanceTaichuCost(nextLevel);
-  if (taichuCost > 0) trackCatValleyTaichuCost(taichuCost);
+  if (taichuCost > 0) {
+    if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+      idleSpendEtcMap({ taichu: taichuCost });
+    }
+    trackCatValleyTaichuCost(taichuCost);
+  }
 
   const levelText = nextLevel === 0
     ? '首次開啟（+0）'
@@ -704,6 +750,13 @@ function applyCatValleyPotentialAction(item, action) {
     if (pot.lines.length >= 3) {
       return { ok: false, message: '主要潛能已滿三排' };
     }
+    if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+      const need = CAT_VALLEY_POTENTIAL_COST.addMainTaichu;
+      if (!idleCanAffordEtcMap({ taichu: need })) {
+        return { ok: false, message: '太初不足' };
+      }
+      idleSpendEtcMap({ taichu: need });
+    }
     const used = new Set(pot.lines.map((line) => line.label));
     const line = rollCatValleyPotentialAddLine(item, 'main', used);
     pot.lines.push(line);
@@ -733,6 +786,20 @@ function applyCatValleyPotentialAction(item, action) {
       return { ok: false, message: '附加潛能已滿三排' };
     }
     const nextIndex = pot.lines.length; // 0,1,2
+    if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+      if (nextIndex === 0) {
+        const meso = CAT_VALLEY_POTENTIAL_COST.addAddLine1Meso;
+        if (typeof trySpendIdleMeso === 'function' && !trySpendIdleMeso(meso)) {
+          return { ok: false, message: '楓幣不足' };
+        }
+      } else {
+        const need = CAT_VALLEY_POTENTIAL_COST.addAddLine23Taichu;
+        if (!idleCanAffordEtcMap({ taichu: need })) {
+          return { ok: false, message: '太初不足' };
+        }
+        idleSpendEtcMap({ taichu: need });
+      }
+    }
     const used = new Set(pot.lines.map((line) => line.label));
     const line = rollCatValleyPotentialAddLine(item, 'add', used);
     pot.lines.push(line);
@@ -765,6 +832,12 @@ function applyCatValleyPotentialAction(item, action) {
     const pot = ensureCatValleyPotentialState(item, 'add');
     if (!pot.lines.length) {
       return { ok: false, message: '尚無第一排附加潛能可重骰' };
+    }
+    if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+      const meso = CAT_VALLEY_POTENTIAL_COST.rerollAdd1Meso;
+      if (typeof trySpendIdleMeso === 'function' && !trySpendIdleMeso(meso)) {
+        return { ok: false, message: '楓幣不足' };
+      }
     }
     const used = new Set(pot.lines.slice(1).map((line) => line.label));
     pot.lines[0] = rollCatValleyPotentialLine(used);
@@ -835,57 +908,26 @@ function applyCatValleyEnhanceOnce(item) {
   }
 
   const nextLevel = levelBefore + 1;
-  const isFinal = nextLevel >= meta.maxLevel;
-  const changes = [];
+  const cost = getCatValleyEnhanceCostForLevel(meta.id, nextLevel);
+  if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()
+    && cost && !idleCanAffordEtcMap(cost)) {
+    return { ok: false, type: meta.id, level: Math.max(0, levelBefore), changes: [], message: '素材不足' };
+  }
+  const changes = computeCatValleyEnhanceChanges(item, nextLevel, meta);
 
-  const add = (field, val, label) => {
-    if (!val) return;
-    item[field] = (item[field] || 0) + val;
-    changes.push({ field, val, label });
-  };
+  changes.forEach((change) => {
+    if (!change?.field || !change.val) return;
+    item[change.field] = (item[change.field] || 0) + change.val;
+  });
 
   if (isTotem) {
-    const bonus = CAT_VALLEY_TOTEM_ENHANCE_TABLE[nextLevel] || {};
-    if (bonus.imdR) add('scrollImdR', bonus.imdR, '無視怪物防禦率');
-    if (bonus.bdR) add('scrollBdR', bonus.bdR, 'BOSS怪物傷害');
-    if (bonus.damR) add('scrollDamR', bonus.damR, '傷害');
-    if (bonus.allStatR) add('scrollAllStatR', bonus.allStatR, '全屬性');
     item.catValleyTotemStarted = true;
-  } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.OLD_ETERNAL) {
-    add('scrollStat', 12, '四屬');
-    add('scrollHp', 210, '最大HP');
-    if (nextLevel === 5 || nextLevel === 15) add('scrollImdR', 5, '無視怪物防禦率');
-    if (nextLevel === 10) add('scrollAllStatR', 5, '全屬性');
-    if (isFinal) add('scrollDamR', 5, '傷害');
-  } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.NEW_ETERNAL) {
-    getCatValleyNewEternalPrimaryKeys(item).forEach((key) => {
-      const field = CAT_VALLEY_PRIMARY_SCROLL_FIELDS[key];
-      add(field, 16, key.toUpperCase());
-    });
-    add('scrollHp', 210, '最大HP');
-    if (nextLevel === 5 || nextLevel === 15) add('scrollImdR', 5, '無視怪物防禦率');
-    if (nextLevel === 10) add('scrollAllStatR', 5, '全屬性');
-    if (isFinal) add('scrollDamR', 5, '傷害');
-  } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.MITRA) {
-    add('scrollStat', 8, '四屬');
-    add('scrollHp', 140, '最大HP');
-    add('scrollAtk', 2, '攻擊力');
-    add('scrollMatk', 2, '魔法攻擊力');
-    if (nextLevel === 10) add('scrollBdR', 10, 'BOSS怪物傷害');
-    if (isFinal) add('scrollDamR', 10, '傷害');
-  } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.OFFHAND) {
-    add('scrollStat', 3, '四屬');
-    add('scrollHp', 54, '最大HP');
-    add('scrollAtk', 5, '攻擊力');
-    add('scrollMatk', 5, '魔法攻擊力');
-    if (nextLevel === 5) add('scrollImdR', 5, '無視怪物防禦率');
-    if (isFinal) add('scrollBdR', 10, 'BOSS怪物傷害');
-  } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.ARCANE) {
-    add('scrollStat', 8, '四屬');
-    add('scrollHp', 140, '最大HP');
   }
 
   item.catValleyLevel = nextLevel;
+  if (typeof isIdlePlayMode === 'function' && isIdlePlayMode() && cost) {
+    idleSpendEtcMap(cost);
+  }
   return { ok: true, type: meta.id, level: nextLevel, changes };
 }
 
@@ -930,4 +972,163 @@ function formatCatValleyChangeSummary(changes) {
       return `${label} +${val}${isPct ? '%' : ''}`;
     })
     .join('、');
+}
+
+const CAT_VALLEY_COST_LABELS = {
+  snow: '永恆的雪花',
+  eternalpcs: '永恆粉塵',
+  nekopow: '喵喵之力',
+  doom: '去除厄運的符咒',
+  sun: '太陽火花',
+  darkpcs: '漆黑粉塵',
+  Nohimepcs: '濃姬粉塵',
+  arcanepcs: '神祕粉塵',
+  arcanecoin: '神秘強化幣',
+  taichu: '太初之力',
+  meowcoin: '喵喵幣',
+  saint: '聖者之石',
+  awakened: '覺醒的輪迴星火',
+};
+
+function formatCatValleyCostEntries(cost) {
+  if (!cost) return [];
+  return Object.entries(cost)
+    .filter(([, amt]) => Math.max(0, Number(amt) || 0) > 0)
+    .map(([id, amt]) => {
+      const amount = Math.max(0, Math.floor(Number(amt) || 0));
+      const label = CAT_VALLEY_COST_LABELS[id] || id;
+      return { id, amount, label, text: `${label} ×${amount}` };
+    });
+}
+
+function computeCatValleyEnhanceChanges(item, nextLevel, meta) {
+  if (!item || !meta || !(nextLevel >= 0)) return [];
+  const isTotem = meta.id === CAT_VALLEY_ENHANCE_TYPE.TOTEM;
+  const isFinal = nextLevel >= meta.maxLevel;
+  const changes = [];
+  const add = (field, val, label) => {
+    if (!val) return;
+    changes.push({ field, val, label });
+  };
+
+  if (isTotem) {
+    const bonus = CAT_VALLEY_TOTEM_ENHANCE_TABLE[nextLevel] || {};
+    if (bonus.imdR) add('scrollImdR', bonus.imdR, '無視怪物防禦率');
+    if (bonus.bdR) add('scrollBdR', bonus.bdR, 'BOSS怪物傷害');
+    if (bonus.damR) add('scrollDamR', bonus.damR, '傷害');
+    if (bonus.allStatR) add('scrollAllStatR', bonus.allStatR, '全屬性');
+  } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.OLD_ETERNAL) {
+    add('scrollStat', 12, '四屬');
+    add('scrollHp', 210, '最大HP');
+    if (nextLevel === 5 || nextLevel === 15) add('scrollImdR', 5, '無視怪物防禦率');
+    if (nextLevel === 10) add('scrollAllStatR', 5, '全屬性');
+    if (isFinal) add('scrollDamR', 5, '傷害');
+  } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.NEW_ETERNAL) {
+    getCatValleyNewEternalPrimaryKeys(item).forEach((key) => {
+      const field = CAT_VALLEY_PRIMARY_SCROLL_FIELDS[key];
+      add(field, 16, key.toUpperCase());
+    });
+    add('scrollHp', 210, '最大HP');
+    if (nextLevel === 5 || nextLevel === 15) add('scrollImdR', 5, '無視怪物防禦率');
+    if (nextLevel === 10) add('scrollAllStatR', 5, '全屬性');
+    if (isFinal) add('scrollDamR', 5, '傷害');
+  } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.MITRA) {
+    add('scrollStat', 8, '四屬');
+    add('scrollHp', 140, '最大HP');
+    add('scrollAtk', 2, '攻擊力');
+    add('scrollMatk', 2, '魔法攻擊力');
+    if (nextLevel === 10) add('scrollBdR', 10, 'BOSS怪物傷害');
+    if (isFinal) add('scrollDamR', 10, '傷害');
+  } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.OFFHAND) {
+    add('scrollStat', 3, '四屬');
+    add('scrollHp', 54, '最大HP');
+    add('scrollAtk', 5, '攻擊力');
+    add('scrollMatk', 5, '魔法攻擊力');
+    if (nextLevel === 5) add('scrollImdR', 5, '無視怪物防禦率');
+    if (isFinal) add('scrollBdR', 10, 'BOSS怪物傷害');
+  } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.ARCANE) {
+    add('scrollStat', 8, '四屬');
+    add('scrollHp', 140, '最大HP');
+  }
+  return changes;
+}
+
+function computeCatValleyMedalEnhanceChanges(nextLevel) {
+  const bonus = CAT_VALLEY_MEDAL_ENHANCE_TABLE[nextLevel] || {};
+  const changes = [];
+  const add = (field, val, label) => {
+    if (!val) return;
+    changes.push({ field, val, label });
+  };
+  if (nextLevel === 0) {
+    if (bonus.bdR) add('scrollBdR', bonus.bdR, 'BOSS怪物傷害');
+    if (bonus.damR) add('scrollDamR', bonus.damR, '傷害');
+    if (bonus.imdR) add('scrollImdR', bonus.imdR, '無視怪物防禦率');
+  } else {
+    add('scrollStat', 10, '四屬');
+    add('scrollAtk', 10, '攻擊力');
+    add('scrollMatk', 10, '魔法攻擊力');
+    add('scrollHp', 1000, '最大HP');
+    add('scrollMp', 1000, '最大MP');
+    if (bonus.bdR) add('scrollBdR', bonus.bdR, 'BOSS怪物傷害');
+    if (bonus.imdR) add('scrollImdR', bonus.imdR, '無視怪物防禦率');
+    if (bonus.damR) add('scrollDamR', bonus.damR, '傷害');
+    if (bonus.allStatR) add('scrollAllStatR', bonus.allStatR, '全屬性');
+  }
+  return changes;
+}
+
+/**
+ * 預覽下一次貓谷強化（不修改裝備）。
+ * @returns {{ ok: boolean, mode?: 'enhance'|'medal', label?: string, level?: number, maxLevel?: number, changes?: Array, cost?: object, message?: string }}
+ */
+function previewCatValleyEnhanceOnce(item) {
+  if (!item) return { ok: false, message: '請先放入裝備' };
+  if (typeof isCatValleyContentUnlocked !== 'function' || !isCatValleyContentUnlocked()) {
+    return { ok: false, message: '未解鎖' };
+  }
+
+  if (isCatValleyPotentialItem(item)) {
+    if (!canUseCatValleyMedalEnhance(item)) {
+      return { ok: false, message: '勳章強化已達上限' };
+    }
+    const started = isCatValleyMedalEnhanceStarted(item);
+    const levelBefore = started ? getMedalEnhanceLevel(item) : -1;
+    const nextLevel = levelBefore + 1;
+    const taichuCost = getCatValleyMedalEnhanceTaichuCost(nextLevel);
+    const cost = taichuCost > 0 ? { taichu: taichuCost } : {};
+    return {
+      ok: true,
+      mode: 'medal',
+      label: '勳章強化',
+      level: nextLevel,
+      maxLevel: CAT_VALLEY_MEDAL_ENHANCE_MAX,
+      changes: computeCatValleyMedalEnhanceChanges(nextLevel),
+      cost,
+    };
+  }
+
+  const meta = getCatValleyEnhanceMeta(item);
+  if (!meta) return { ok: false, message: '此裝備無法使用貓谷特殊強化' };
+
+  const isTotem = meta.id === CAT_VALLEY_ENHANCE_TYPE.TOTEM;
+  const levelBefore = isTotem && !isCatValleyTotemStarted(item)
+    ? -1
+    : getCatValleyLevel(item);
+  if (levelBefore >= meta.maxLevel) {
+    return { ok: false, message: '已達上限', maxed: true };
+  }
+
+  const nextLevel = levelBefore + 1;
+  const cost = getCatValleyEnhanceCostForLevel(meta.id, nextLevel) || {};
+  return {
+    ok: true,
+    mode: 'enhance',
+    type: meta.id,
+    label: meta.label,
+    level: nextLevel,
+    maxLevel: meta.maxLevel,
+    changes: computeCatValleyEnhanceChanges(item, nextLevel, meta),
+    cost,
+  };
 }

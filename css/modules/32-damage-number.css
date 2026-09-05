@@ -1,0 +1,39 @@
+.idle-damage-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  /* 掛在 idle-hunt-damage-fx（z=110）；各數字 z-index 仍依怪物前後排序 */
+  pointer-events: none;
+  overflow: visible;
+}
+
+.idle-damage-pop {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  transform-origin: center bottom;
+  will-change: transform, opacity;
+  pointer-events: none;
+  line-height: 0;
+}
+
+.idle-damage-glyph {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.idle-damage-pop--status {
+  line-height: 0;
+}

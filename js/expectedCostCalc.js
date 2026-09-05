@@ -64,7 +64,9 @@ const ExpectedCostCalc = {
       return { ok: false, reason: '目標星力需大於目前星力' };
     }
 
-    const maxStar = item.maxStar || 30;
+    const maxStar = typeof getItemStarForceMaxStar === 'function'
+      ? getItemStarForceMaxStar(item)
+      : (item.maxStar || 30);
     const target = Math.min(toStar, maxStar);
     const catValley = typeof isStarForceCatValleyRatesEnabled === 'function'
       && isStarForceCatValleyRatesEnabled();

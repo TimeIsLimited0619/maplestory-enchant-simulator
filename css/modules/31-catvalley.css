@@ -1,0 +1,199 @@
+/* ==========================================
+   貓谷特殊強化面板
+   ========================================== */
+
+/* 主面板：裝備 icon／名稱對齊星力 */
+.ms-main-content.catValley-active {
+  background-image: url('../../images/catvalley/catvalley_backgrnd.png');
+}
+
+.ms-main-content.catValley-active .ms-equip-area {
+  height: 118px;
+}
+
+.ms-main-content.catValley-active .ms-drop-zone {
+  top: 88px;
+  width: 56px;
+  height: 48px;
+}
+
+.ms-main-content.catValley-active .ms-drop-zone img {
+  transform: scale(2);
+  transform-origin: center center;
+}
+
+.ms-main-content.catValley-active .ms-drop-zone img:hover {
+  transform: scale(2.15);
+}
+
+.ms-main-content.catValley-active .sf-item-name {
+  display: block;
+  top: 183px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  max-width: 280px;
+  min-width: 0;
+  padding: 0 12px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 400;
+  color: #e8e8e8;
+  text-align: center;
+}
+
+.ms-catvalley-canvas {
+  position: absolute;
+  top: 118px;
+  left: 0;
+  width: 418px;
+  bottom: 0;
+  pointer-events: none;
+  --cv-stat-color: #BBDDDD;
+  --cv-summary-w: 286px;
+  --cv-summary-h: 37px;
+  --cv-layer-w: 398px;
+  --cv-layer-h: 150px;
+  --cv-layer-left: 10px;
+  --cv-summary-top: 26px;
+  --cv-stat-top: 75px;
+  --cv-layer-gap: 4px;
+  --cv-cost-top: calc(var(--cv-stat-top) + var(--cv-layer-h) + var(--cv-layer-gap));
+}
+
+.ms-catvalley-canvas > * {
+  pointer-events: auto;
+}
+
+.cv-active-panel {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cv-active-panel > * {
+  pointer-events: auto;
+}
+
+/* starForce.layer_summaryBox — 強化說明 */
+.cv-summary-area {
+  position: absolute;
+  top: var(--cv-summary-top);
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--cv-summary-w);
+  height: var(--cv-summary-h);
+  padding: 0 10px;
+  box-sizing: border-box;
+  background: url('../../images/starforce/starForce.layer_summaryBox.png') no-repeat center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cv-level-summary {
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #d8ecec;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+/* catvalley.layer_statBox — 398×150 */
+.cv-stat-box {
+  position: absolute;
+  top: var(--cv-stat-top);
+  left: var(--cv-layer-left);
+  width: var(--cv-layer-w);
+  height: var(--cv-layer-h);
+  background: url('../../images/catvalley/catvalley.layer_statBox.png') no-repeat 0 0;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+.cv-stat-values {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 20px;
+  box-sizing: border-box;
+  font-size: 12px;
+  color: var(--cv-stat-color);
+  line-height: 1.5;
+  text-align: center;
+  -webkit-font-smoothing: antialiased;
+}
+
+.cv-stat-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cv-stat-empty {
+  color: var(--cv-stat-color);
+  font-size: 12px;
+}
+
+/* catvalley.layer_costBox — 398×150 */
+.cv-cost-box {
+  position: absolute;
+  top: var(--cv-cost-top);
+  left: var(--cv-layer-left);
+  width: var(--cv-layer-w);
+  height: var(--cv-layer-h);
+  background: url('../../images/catvalley/catvalley.layer_costBox.png') no-repeat 0 0;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+.cv-cost-values {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 12px 16px;
+  box-sizing: border-box;
+  font-size: 12px;
+  color: #c8d8d8;
+  line-height: 1.3;
+}
+
+.cv-cost-left,
+.cv-cost-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.cv-cost-left {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.cv-cost-right {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.cv-btn-enhance {
+  position: absolute;
+  bottom: 10px;
+  left: calc(50% + 2px);
+  transform: translateX(-50%);
+}

@@ -39,7 +39,9 @@ function usage() {
   --inventory          寫入時追加到背包下一格空位
   --name <名稱>        單一 XML 時指定顯示名稱（預設用 ID）
   --icon <png>         複製圖片到 images/equip/{ID}.png（僅單一 XML）
-  --icon-dir <資料夾>  批次複製 {itemId}.png
+  --icon-raw <png>     複製圖片到 images/equipRaw/{ID}.png（僅單一 XML）
+  --icon-dir <資料夾>  批次複製 {itemId}.png → images/equip/
+  --icon-raw-dir <資料夾> 批次複製 {itemId}.png → images/equipRaw/
   --names <檔案>       名稱對照表（01215041=命運之劍 或空白分隔）
 
 範例:
@@ -53,6 +55,8 @@ function parseArgs(argv) {
   let singleName = null;
   let iconPath = null;
   let iconDir = null;
+  let iconRawPath = null;
+  let iconRawDir = null;
   let write = false;
   let inventory = false;
 
@@ -63,12 +67,14 @@ function parseArgs(argv) {
     else if (arg === '--name') singleName = argv[++i];
     else if (arg === '--icon') iconPath = argv[++i];
     else if (arg === '--icon-dir') iconDir = argv[++i];
+    else if (arg === '--icon-raw') iconRawPath = argv[++i];
+    else if (arg === '--icon-raw-dir') iconRawDir = argv[++i];
     else if (arg === '--names') namesFile = argv[++i];
     else if (arg === '--help' || arg === '-h') return { help: true };
     else if (!arg.startsWith('-')) files.push(stripQuotes(arg));
   }
 
-  return { files, namesFile, singleName, iconPath, iconDir, write, inventory };
+  return { files, namesFile, singleName, iconPath, iconDir, iconRawPath, iconRawDir, write, inventory };
 }
 
 function stripQuotes(value) {
@@ -116,16 +122,16 @@ function expandXmlInputs(inputs) {
   return out;
 }
 
-function copyEquipIcon(itemId, srcPath) {
+function copyEquipIcon(itemId, srcPath, folderName = 'equip') {
   const iconSrc = path.resolve(stripQuotes(srcPath));
   if (!fs.existsSync(iconSrc) || !fs.statSync(iconSrc).isFile()) {
     throw new Error(`找不到圖片：${iconSrc}`);
   }
-  const equipDir = path.join(ROOT, 'images', 'equip');
+  const equipDir = path.join(ROOT, 'images', folderName);
   fs.mkdirSync(equipDir, { recursive: true });
   const dest = path.join(equipDir, `${itemId}.png`);
   fs.copyFileSync(iconSrc, dest);
-  console.log(`已複製圖片 → images/equip/${itemId}.png`);
+  console.log(`已複製圖片 → images/${folderName}/${itemId}.png`);
 }
 
 function loadNamesMap(filePath) {
@@ -226,7 +232,18 @@ function parseInfoFromBlock(block) {
 
 function detectWzPart(filePath) {
   const m = filePath.replace(/\\/g, '/').match(/Character\.([A-Za-z]+)\./);
-  return m ? m[1] : '';
+  if (m) return m[1];
+  const known = new Set([
+    'Weapon', 'Coat', 'Longcoat', 'Cap', 'Pants', 'Shoes', 'Glove', 'Cape',
+    'Shield', 'Ring', 'Pendant', 'Accessory', 'Belt', 'Badge', 'Pocket',
+    'Totem', 'Shoulder', 'Heart', 'Android', 'Medal', 'Emblem', 'Earrings',
+  ]);
+  const parts = filePath.replace(/\\/g, '/').split('/');
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const name = parts[i].replace(/\.wz$/i, '');
+    if (known.has(name)) return name;
+  }
+  return '';
 }
 
 function parseEquipXml(filePath) {
@@ -408,7 +425,7 @@ function main() {
       if (xmlFiles.length !== 1) {
         throw new Error('--icon 僅支援單一 XML，批次請用 --icon-dir');
       }
-      copyEquipIcon(ids[0], args.iconPath);
+      copyEquipIcon(ids[0], args.iconPath, 'equip');
     }
     if (args.iconDir) {
       const dir = path.resolve(stripQuotes(args.iconDir));
@@ -417,8 +434,25 @@ function main() {
       }
       ids.forEach((id) => {
         const src = path.join(dir, `${id}.png`);
-        if (fs.existsSync(src)) copyEquipIcon(id, src);
+        if (fs.existsSync(src)) copyEquipIcon(id, src, 'equip');
         else console.warn(`略過圖片（找不到 ${id}.png）`);
+      });
+    }
+    if (args.iconRawPath) {
+      if (xmlFiles.length !== 1) {
+        throw new Error('--icon-raw 僅支援單一 XML，批次請用 --icon-raw-dir');
+      }
+      copyEquipIcon(ids[0], args.iconRawPath, 'equipRaw');
+    }
+    if (args.iconRawDir) {
+      const dir = path.resolve(stripQuotes(args.iconRawDir));
+      if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
+        throw new Error(`找不到 iconRaw 資料夾：${dir}`);
+      }
+      ids.forEach((id) => {
+        const src = path.join(dir, `${id}.png`);
+        if (fs.existsSync(src)) copyEquipIcon(id, src, 'equipRaw');
+        else console.warn(`略過 iconRaw（找不到 ${id}.png）`);
       });
     }
   } catch (err) {
@@ -433,4 +467,17 @@ function main() {
   console.log(`\n已寫入 ${ITEM_JS}${args.inventory ? '（含背包）' : ''}`);
 }
 
-main();
+export {
+  ROOT,
+  ITEM_JS,
+  parseEquipXml,
+  formatEntry,
+  mergeDatabase,
+  normalizeItemId,
+  isXmlFileName,
+  copyEquipIcon,
+};
+
+const isDirectRun = process.argv[1]
+  && path.normalize(fileURLToPath(import.meta.url)) === path.normalize(path.resolve(process.argv[1]));
+if (isDirectRun) main();

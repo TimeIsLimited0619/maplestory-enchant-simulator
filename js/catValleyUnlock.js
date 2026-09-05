@@ -66,9 +66,7 @@ const CatValleyUnlock = (() => {
     if (typeof setScrollCatValleyRatesEnabled === 'function') {
       setScrollCatValleyRatesEnabled(true);
     }
-    if (typeof setStarForceCatValleyRatesEnabled === 'function') {
-      setStarForceCatValleyRatesEnabled(true);
-    }
+    // 星力「貓谷機率」預設關閉，不在解鎖時強制開啟
     if (typeof setBonusStatCatValleyRatesEnabled === 'function') {
       setBonusStatCatValleyRatesEnabled(true);
     }

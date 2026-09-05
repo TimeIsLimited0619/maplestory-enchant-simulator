@@ -1,0 +1,741 @@
+/* NPC 商店 — 座標對照 UI.UINpcShop.img.xml */
+
+.npc-shop {
+  position: fixed;
+  inset: 0;
+  z-index: 100040;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.npc-shop.hidden {
+  display: none;
+}
+
+.npc-shop-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+}
+
+.npc-shop-shell {
+  position: relative;
+  display: flex;
+  gap: 1px; /* Inventory/Normal/pos npcshop_space_x */
+  align-items: flex-start;
+  pointer-events: auto;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.55));
+}
+
+/* 頂部標題／紙娃娃／楓幣區可拖；分頁與列表在把手下方 */
+.npc-shop-drag-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100px;
+  z-index: 4;
+  cursor: move;
+  pointer-events: auto;
+}
+
+/* —— Shop 左欄 380×681 —— */
+.npc-shop-left {
+  position: relative;
+  width: 380px;
+  height: 681px;
+  background: url('../../images/npcshop/Shop__backgrnd.png') no-repeat 0 0;
+  background-size: 380px 681px;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+/* Shop/pos vector:title = 139,55 */
+.npc-shop-title {
+  position: absolute;
+  left: 139px;
+  top: 55px;
+  max-width: 220px;
+  color: #becbd9;
+  font-size: 14px;
+  line-height: 1;
+  font-family: "PMingLiU", "MingLiU", "SimSun", sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+/* Shop/tab:npc lt 11,103 — 固定座標，間距 72 */
+.npc-shop-tabs {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 380px;
+  height: 125px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.npc-shop-tab {
+  position: absolute;
+  top: 103px;
+  width: 70px;
+  height: 22px;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  color: #bec7d4;
+  font-size: 12px;
+  line-height: 22px;
+  text-align: center;
+  font-family: "PMingLiU", "MingLiU", "SimSun", sans-serif;
+  background: url('../../images/npcshop/Shop__tab_npc__normal__0.png') no-repeat 0 0;
+  background-size: 70px 22px;
+  image-rendering: pixelated;
+}
+
+.npc-shop-tab.is-on {
+  color: #ffffff;
+  text-shadow: 0 1px 0 #07779b;
+  background-image: url('../../images/npcshop/Shop__tab_npc__selected__0.png');
+}
+
+.npc-shop-tab[data-x="11"] { left: 11px; }
+.npc-shop-tab[data-x="83"] { left: 83px; }
+.npc-shop-tab[data-x="155"] { left: 155px; }
+.npc-shop-tab[data-x="227"] { left: 227px; }
+.npc-shop-tab[data-x="299"] { left: 299px; }
+
+/* Shop/pos itemList_LT 20,141；scroll length 495；spaceY 5 */
+.npc-shop-list {
+  position: absolute;
+  left: 20px;
+  top: 141px;
+  width: 336px;
+  height: 495px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  scrollbar-width: thin;
+}
+
+.npc-shop-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.npc-shop-list::-webkit-scrollbar-thumb {
+  background: #4a5a6a;
+}
+
+.npc-shop-row,
+.npc-shop-inv-row {
+  position: relative;
+  width: 336px;
+  height: 45px;
+  min-height: 45px;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-align: left;
+  color: #000000;
+  font-size: 12px;
+  font-family: "Dotum", "PMingLiU", "MingLiU", "SimSun", sans-serif;
+  background: url('../../images/npcshop/Shop__itemList__back__normal.png') no-repeat 0 0;
+  background-size: 336px 45px;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.npc-shop-row.is-selected,
+.npc-shop-inv-row.is-selected {
+  background-image: url('../../images/npcshop/Shop__itemList__back__selected.png');
+}
+
+/* itemList/pos — 與背包相同：原始尺寸，不強制縮放 */
+.npc-shop-row-icon {
+  position: absolute;
+  left: 7px;
+  top: 7px;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  object-fit: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.npc-shop-row-name {
+  position: absolute;
+  left: 56px;
+  top: 6px;
+  width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.npc-shop-row-price {
+  position: absolute;
+  left: 72px;
+  top: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+.npc-shop-row-meso-icon {
+  position: absolute;
+  left: 55px;
+  top: 27px;
+  width: 12px;
+  height: 12px;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.npc-shop-row-price img {
+  display: none;
+}
+
+/* Shop/pos tip 187,655 */
+.npc-shop-hint {
+  position: absolute;
+  left: 187px;
+  top: 655px;
+  transform: translateX(-50%);
+  max-width: 340px;
+  color: #bed0d3;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+  font-family: "PMingLiU", "MingLiU", "SimSun", sans-serif;
+  pointer-events: none;
+}
+
+/* —— Inventory 右欄 324×681 —— */
+.npc-shop-right {
+  position: relative;
+  width: 324px;
+  height: 681px;
+  background: url('../../images/npcshop/Inventory__Normal__backgrnd.png') no-repeat 0 0;
+  background-size: 324px 681px;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+/* button:close origin → (295, 2)；Quest 27×27 */
+.npc-shop-close {
+  position: absolute;
+  left: 295px;
+  top: 2px;
+  width: 27px;
+  height: 27px;
+  z-index: 6;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: transparent;
+  font-size: 0;
+  background: url('../../images/npcshop/Inventory__Normal__button_close__normal__0.png') no-repeat 0 0;
+  background-size: 27px 27px;
+  image-rendering: pixelated;
+}
+
+.npc-shop-close:hover {
+  background-image: url('../../images/npcshop/Inventory__Normal__button_close__mouseOver__0.png');
+  filter: none;
+}
+
+.npc-shop-close:active {
+  background-image: url('../../images/npcshop/Inventory__Normal__button_close__pressed__0.png');
+}
+
+/* avatarPreview_LT(18,8)–RB(98,88)；腳底對齊 avatarPreview(58,88) */
+.npc-shop-avatar,
+.paperdoll-stage--shop {
+  position: absolute;
+  left: 18px;
+  top: 8px;
+  width: 80px;
+  height: 80px;
+  overflow: hidden;
+  pointer-events: none;
+  image-rendering: pixelated;
+  z-index: 1;
+}
+
+.paperdoll-stage--shop .paperdoll-layers {
+  position: absolute;
+  inset: 0;
+}
+
+.paperdoll-stage--shop .paperdoll-layers img {
+  position: absolute;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.paperdoll-stage--shop .paperdoll-hit-anchor {
+  display: none;
+}
+
+/* layer:meso at (106,66) */
+.npc-shop-meso-layer {
+  position: absolute;
+  left: 106px;
+  top: 66px;
+  pointer-events: none;
+  image-rendering: pixelated;
+  z-index: 2;
+}
+
+/* meso_icon 115,71 / meso 數字與 icon 同列（vector:meso.y 在 CSS 會偏低） */
+.npc-shop-meso {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 324px;
+  height: 100px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.npc-shop-meso img {
+  position: absolute;
+  left: 115px;
+  top: 71px;
+  width: 12px;
+  height: 12px;
+  image-rendering: pixelated;
+}
+
+.npc-shop-meso span {
+  position: absolute;
+  right: 31px; /* 324 - vector:meso.x(293) */
+  top: 70px;
+  width: 160px;
+  height: 14px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 14px;
+  text-align: right;
+  white-space: nowrap;
+  font-family: "PMingLiU", "MingLiU", "SimSun", sans-serif;
+}
+
+.npc-shop-inv-tabs {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 324px;
+  height: 125px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* 素材已含圖示／文字，勿再疊 label */
+.npc-shop-inv-tab {
+  position: absolute;
+  top: 103px;
+  width: 74px;
+  height: 22px;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
+  background: url('../../images/npcshop/Inventory__Normal__tab_inventory__normal__0.png') no-repeat 0 0;
+  background-size: 74px 22px;
+  image-rendering: pixelated;
+}
+
+.npc-shop-inv-tab.is-on {
+  background-image: url('../../images/npcshop/Inventory__Normal__tab_inventory__selected__0.png');
+}
+
+.npc-shop-inv-tab[data-x="11"] { left: 11px; }
+.npc-shop-inv-tab[data-x="87"] { left: 87px; }
+.npc-shop-inv-tab[data-x="163"] { left: 163px; }
+.npc-shop-inv-tab.is-on[data-tab-idx="0"] {
+  background-image: url('../../images/npcshop/Inventory__Normal__tab_inventory__selected__0.png');
+}
+.npc-shop-inv-tab:not(.is-on)[data-tab-idx="0"] {
+  background-image: url('../../images/npcshop/Inventory__Normal__tab_inventory__normal__0.png');
+}
+.npc-shop-inv-tab.is-on[data-tab-idx="1"] {
+  background-image: url('../../images/npcshop/Inventory__Normal__tab_inventory__selected__1.png');
+}
+.npc-shop-inv-tab:not(.is-on)[data-tab-idx="1"] {
+  background-image: url('../../images/npcshop/Inventory__Normal__tab_inventory__normal__1.png');
+}
+.npc-shop-inv-tab.is-on[data-tab-idx="2"] {
+  background-image: url('../../images/npcshop/Inventory__Normal__tab_inventory__selected__2.png');
+}
+.npc-shop-inv-tab:not(.is-on)[data-tab-idx="2"] {
+  background-image: url('../../images/npcshop/Inventory__Normal__tab_inventory__normal__2.png');
+}
+
+.npc-shop-inv-list {
+  position: absolute;
+  left: 20px;
+  top: 141px;
+  width: 280px;
+  height: 495px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  scrollbar-width: thin;
+}
+
+.npc-shop-inv-row {
+  width: 280px;
+  background-image: url('../../images/npcshop/Inventory__Normal__itemList__back__normal.png');
+  background-size: 280px 45px;
+}
+
+.npc-shop-inv-row.is-selected {
+  background-image: url('../../images/npcshop/Inventory__Normal__canvas_selected.png');
+}
+
+.npc-shop-inv-row .npc-shop-row-name {
+  width: 200px;
+}
+
+.npc-shop-empty {
+  color: #c2d6de;
+  font-size: 12px;
+  padding: 12px 4px;
+  font-family: "PMingLiU", "MingLiU", "SimSun", sans-serif;
+}
+
+/* —— popup/Buy：掛在 shell 內，需高於拖曳把手／分頁／關閉鈕 —— */
+.npc-shop-buy-popup,
+.npc-shop-sell-popup {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.npc-shop-buy-popup.hidden,
+.npc-shop-sell-popup.hidden {
+  display: none;
+}
+
+.npc-shop-buy-card,
+.npc-shop-sell-card {
+  position: relative;
+  width: 392px;
+  display: flex;
+  flex-direction: column;
+  image-rendering: pixelated;
+  font-family: "PMingLiU", "MingLiU", "SimSun", sans-serif;
+}
+
+.npc-shop-buy-top {
+  position: relative;
+  width: 392px;
+  height: 159px;
+  background: url('../../images/npcshop/popup__Buy__top__canvas_backgrnd.png') no-repeat 0 0;
+  background-size: 392px 159px;
+  image-rendering: pixelated;
+}
+
+.npc-shop-sell-top {
+  position: relative;
+  width: 392px;
+  height: 159px;
+  background: url('../../images/npcshop/popupsell/popup__Sell__top__canvas_backgrnd.png') no-repeat 0 0;
+  background-size: 392px 159px;
+  image-rendering: pixelated;
+}
+
+.npc-shop-buy-name,
+.npc-shop-sell-name {
+  position: absolute;
+  left: 196px;
+  top: 150px;
+  transform: translate(-50%, -100%);
+  width: 300px;
+  text-align: center;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.npc-shop-buy-icon,
+.npc-shop-sell-icon {
+  position: absolute;
+  left: 182px;
+  top: 86px;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  object-fit: none;
+  image-rendering: pixelated;
+  pointer-events: auto;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.npc-shop-buy-icon-hit,
+.npc-shop-sell-icon-hit {
+  position: absolute;
+  left: 170px;
+  top: 76px;
+  width: 52px;
+  height: 52px;
+  z-index: 3;
+  background: transparent;
+  cursor: default;
+}
+
+.npc-shop-buy-unit-line,
+.npc-shop-sell-unit-line {
+  position: absolute;
+  left: 198px;
+  top: 20px;
+  transform: translateX(-50%);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.npc-shop-buy-mid {
+  position: relative;
+  width: 392px;
+  height: 116px;
+  background: url('../../images/npcshop/popup__Buy__mid_buyForMeso__canvas_backgrnd.png') no-repeat 0 0;
+  background-size: 392px 116px;
+}
+
+.npc-shop-sell-mid {
+  position: relative;
+  width: 392px;
+  height: 116px;
+  background: url('../../images/npcshop/popupsell/popup__Sell__mid_SellForMeso__canvas_backgrnd.png') no-repeat 0 0;
+  background-size: 392px 116px;
+}
+
+.npc-shop-buy-mid-point-icon,
+.npc-shop-sell-mid-point-icon {
+  position: absolute;
+  left: 42px;
+  top: 84px;
+  width: 12px;
+  height: 12px;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.npc-shop-buy-mid-point-name,
+.npc-shop-sell-mid-point-name {
+  position: absolute;
+  left: 56px;
+  top: 83px;
+  color: #bcfefc;
+  font-size: 12px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.npc-shop-buy-total,
+.npc-shop-sell-total {
+  position: absolute;
+  left: 0;
+  top: 83px;
+  width: 342px;
+  text-align: right;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* edit:Count lt 152,44 rb 197,57 — 僅數字，無框／無底 */
+.npc-shop-buy-qty-input,
+.npc-shop-sell-qty-input {
+  position: absolute;
+  left: 152px;
+  top: 44px;
+  width: 45px; /* 197 - 152 */
+  height: 13px; /* 57 - 44 */
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+  background-color: transparent;
+  color: #777777;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 13px;
+  text-align: center;
+  font-family: "Dotum", "PMingLiU", sans-serif;
+  color-scheme: only light;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.npc-shop-buy-qty-input::-webkit-outer-spin-button,
+.npc-shop-buy-qty-input::-webkit-inner-spin-button,
+.npc-shop-sell-qty-input::-webkit-outer-spin-button,
+.npc-shop-sell-qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.npc-shop-buy-qty-input:focus,
+.npc-shop-sell-qty-input:focus {
+  outline: none;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* Plus 207,39 / Minus 231,39 — 23×23 */
+.npc-shop-buy-plus,
+.npc-shop-buy-minus,
+.npc-shop-sell-plus,
+.npc-shop-sell-minus {
+  position: absolute;
+  top: 39px;
+  width: 23px;
+  height: 23px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: transparent;
+  font-size: 0;
+  image-rendering: pixelated;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 23px 23px;
+}
+
+.npc-shop-buy-plus,
+.npc-shop-sell-plus {
+  left: 207px;
+  background-image: url('../../images/npcshop/popup__Buy__mid_buyForMeso__button_Plus__normal__0.png');
+}
+.npc-shop-buy-plus:hover,
+.npc-shop-sell-plus:hover {
+  background-image: url('../../images/npcshop/popup__Buy__mid_buyForMeso__button_Plus__mouseOver__0.png');
+}
+.npc-shop-buy-plus:active,
+.npc-shop-sell-plus:active {
+  background-image: url('../../images/npcshop/popup__Buy__mid_buyForMeso__button_Plus__pressed__0.png');
+}
+
+.npc-shop-buy-minus,
+.npc-shop-sell-minus {
+  left: 231px;
+  background-image: url('../../images/npcshop/popup__Buy__mid_buyForMeso__button_Minus__normal__0.png');
+}
+.npc-shop-buy-minus:hover,
+.npc-shop-sell-minus:hover {
+  background-image: url('../../images/npcshop/popup__Buy__mid_buyForMeso__button_Minus__mouseOver__0.png');
+}
+.npc-shop-buy-minus:active,
+.npc-shop-sell-minus:active {
+  background-image: url('../../images/npcshop/popup__Buy__mid_buyForMeso__button_Minus__pressed__0.png');
+}
+
+.npc-shop-buy-bottom {
+  position: relative;
+  width: 392px;
+  height: 111px;
+  background: url('../../images/npcshop/popup__Buy__bottom__canvas_bottom.png') no-repeat 0 0;
+  background-size: 392px 111px;
+  image-rendering: pixelated;
+}
+
+.npc-shop-sell-bottom {
+  position: relative;
+  width: 392px;
+  height: 111px;
+  background: url('../../images/npcshop/popupsell/popup__Sell__bottom__canvas_bottom.png') no-repeat 0 0;
+  background-size: 392px 111px;
+  image-rendering: pixelated;
+}
+
+/* Yes 111,62 / No 199,62 — 83×26（圖內已有文字） */
+.npc-shop-buy-yes,
+.npc-shop-buy-no,
+.npc-shop-sell-yes,
+.npc-shop-sell-no {
+  position: absolute;
+  top: 62px;
+  width: 83px;
+  height: 26px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: transparent;
+  font-size: 0;
+  image-rendering: pixelated;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 83px 26px;
+}
+
+.npc-shop-buy-yes,
+.npc-shop-sell-yes {
+  left: 111px;
+  background-image: url('../../images/npcshop/popup__Buy__bottom__button_Yes__normal__0.png');
+}
+.npc-shop-buy-yes:hover,
+.npc-shop-sell-yes:hover {
+  background-image: url('../../images/npcshop/popup__Buy__bottom__button_Yes__mouseOver__0.png');
+}
+.npc-shop-buy-yes:active,
+.npc-shop-sell-yes:active {
+  background-image: url('../../images/npcshop/popup__Buy__bottom__button_Yes__pressed__0.png');
+}
+
+.npc-shop-buy-no,
+.npc-shop-sell-no {
+  left: 199px;
+  background-image: url('../../images/npcshop/popup__Buy__bottom__button_No__normal__0.png');
+}
+.npc-shop-buy-no:hover,
+.npc-shop-sell-no:hover {
+  background-image: url('../../images/npcshop/popup__Buy__bottom__button_No__mouseOver__0.png');
+}
+.npc-shop-buy-no:active,
+.npc-shop-sell-no:active {
+  background-image: url('../../images/npcshop/popup__Buy__bottom__button_No__pressed__0.png');
+}

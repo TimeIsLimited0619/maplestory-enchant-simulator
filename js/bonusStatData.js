@@ -274,19 +274,37 @@ function getBonusStatItemTooltipPath(item) {
 }
 
 function getPlayerBonusStatItemCount(itemId) {
-  if (playerBonusStatItemCounts[itemId] == null) {
-    playerBonusStatItemCounts[itemId] = DEFAULT_BONUS_STAT_ITEM_COUNT;
+  const count = Number(playerBonusStatItemCounts[itemId]) || 0;
+  if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+    return Math.max(0, count);
   }
-  return playerBonusStatItemCounts[itemId];
+  if (count <= 0) {
+    playerBonusStatItemCounts[itemId] = DEFAULT_BONUS_STAT_ITEM_COUNT;
+    return DEFAULT_BONUS_STAT_ITEM_COUNT;
+  }
+  return count;
+}
+
+function grantPlayerBonusStatItem(itemId, amount = 1) {
+  if (!itemId || amount <= 0) return 0;
+  const add = Math.floor(amount);
+  playerBonusStatItemCounts[itemId] = getPlayerBonusStatItemCount(itemId) + add;
+  return add;
 }
 
 function consumePlayerBonusStatItem(itemId, amount = 1) {
-  let count = getPlayerBonusStatItemCount(itemId);
-  count = Math.max(0, count - amount);
-  if (count === 0) {
-    count = DEFAULT_BONUS_STAT_ITEM_COUNT;
+  const need = Math.max(1, Math.floor(Number(amount) || 1));
+  const count = getPlayerBonusStatItemCount(itemId);
+  const idle = typeof isIdlePlayMode === 'function' && isIdlePlayMode();
+  if (idle && count < need) return false;
+  let next = Math.max(0, count - need);
+  if (!idle && next <= 0) next = DEFAULT_BONUS_STAT_ITEM_COUNT;
+  playerBonusStatItemCounts[itemId] = next;
+  if (typeof InventoryModule !== 'undefined') {
+    InventoryModule.render?.();
+    InventoryModule.updateSlotCount?.();
   }
-  playerBonusStatItemCounts[itemId] = count;
+  if (typeof BonusStatModule !== 'undefined') BonusStatModule.renderItemGrid?.();
   return true;
 }
 

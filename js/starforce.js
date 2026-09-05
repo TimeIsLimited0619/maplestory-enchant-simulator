@@ -10,7 +10,7 @@ const STARFORCE_RADIANT_ACCESSORY_IDS = new Set([
 const STARFORCE_NEW_ETERNAL_23_SCROLL_MESO = 2500000000;
 const STARFORCE_RADIANT_23_SCROLL_MESO = 5000000000;
 
-let starForceUseCatValleyRates = true;
+let starForceUseCatValleyRates = false;
 
 function isStarForceCatValleyRatesEnabled() {
   if (typeof isCatValleyContentUnlocked !== 'function' || !isCatValleyContentUnlocked()) {
@@ -73,6 +73,13 @@ const StarForceModule = {
   autoCancelHandler: null,
   AUTO_ENHANCE_DELAY_MS: 8,
 
+  getMaxStar() {
+    if (typeof getItemStarForceMaxStar === 'function') {
+      return getItemStarForceMaxStar(this.itemData);
+    }
+    return this.itemData ? (this.itemData.maxStar || 30) : 30;
+  },
+
   /** 星力強化統計改由 CostTrackerModule 保存，避免切換分頁時被 resetState 清空 */
   getStatsCount() {
     if (typeof CostTrackerModule !== 'undefined') {
@@ -97,8 +104,9 @@ const StarForceModule = {
   costItemEventsBound: false,
 
   loadEquip(item) {
-    this.currentStars = item.star ?? 0;
+    if (typeof applyStarForceItemRules === 'function') applyStarForceItemRules(item);
     this.itemData = item;
+    this.currentStars = Math.min(item.star ?? 0, this.getMaxStar());
     this.setStarConsecutiveDrops(item.starConsecutiveDrops ?? 0);
     this.updateUI();
   },
@@ -144,7 +152,7 @@ const StarForceModule = {
     const btn = document.getElementById('btnStarEnhance');
     if (!btn) return;
 
-    const maxStar = this.itemData ? (this.itemData.maxStar || 30) : 30;
+    const maxStar = this.getMaxStar();
     const canEnhance = Boolean(this.itemData && canUseStarForce(this.itemData));
     const effectPlaying = typeof StarForceEffectModule !== 'undefined'
       && StarForceEffectModule.isPlaying();
@@ -152,7 +160,13 @@ const StarForceModule = {
       || this.autoRunning
       || effectPlaying
       || this.currentStars >= maxStar
-      || !this.ensureSelectedScrollAvailable(true);
+      || !this.ensureSelectedScrollAvailable(true)
+      || (
+        typeof isIdlePlayMode === 'function' && isIdlePlayMode()
+        && this.getSelectedMethod() === 'normal'
+        && typeof getIdleHeldMeso === 'function'
+        && getIdleHeldMeso() < this.getMesoCost(this.currentStars)
+      );
     btn.disabled = shouldDisable;
     if (!shouldDisable) {
       btn.removeAttribute('aria-busy');
@@ -253,7 +267,7 @@ const StarForceModule = {
     const target = typeof AutoEnchantStarForceModule !== 'undefined'
       ? AutoEnchantStarForceModule.targetStar
       : parseInt(document.getElementById('autoStarTarget')?.value, 10);
-    const maxStar = this.itemData.maxStar || 30;
+    const maxStar = this.getMaxStar();
 
     if (!target || target <= this.currentStars) {
       return addLog('⚠️ 目標星數必須高於目前星力！', 'log-fail');
@@ -386,6 +400,9 @@ const StarForceModule = {
   },
 
   getBaseMesoCost(star) {
+    if (typeof getStarForceAttemptMeso === 'function' && this.itemData) {
+      return getStarForceAttemptMeso(this.itemData, star) * 2;
+    }
     const reqLevel = this.itemData?.reqLevel || 200;
     const table = typeof starMesoCosts !== 'undefined' ? starMesoCosts[reqLevel] : null;
     if (!table || star < 0 || star >= table.length) return 0;
@@ -594,7 +611,7 @@ const StarForceModule = {
     const starImgContainer = document.getElementById('starImgContainer');
     if (!starImgContainer) return;
 
-    const maxStars = this.itemData ? (this.itemData.maxStar || 30) : 30;
+    const maxStars = this.getMaxStar();
     starImgContainer.innerHTML = '';
 
     const groupCount = Math.ceil(maxStars / 5);
@@ -662,7 +679,7 @@ const StarForceModule = {
       return;
     }
 
-    const maxStars = this.itemData.maxStar || 30;
+    const maxStars = this.getMaxStar();
 
     if (starBeforeImg && starAfterImg) {
       const diffPanel = document.getElementById('statsDiffPanel');
@@ -791,7 +808,7 @@ const StarForceModule = {
       return null;
     }
 
-    const maxStar = this.itemData.maxStar || 30;
+    const maxStar = this.getMaxStar();
     if (this.currentStars >= maxStar) {
       if (!silent) addLog(`已達到最高 ★ ${maxStar} 星！`, 'log-success');
       return null;
@@ -842,6 +859,11 @@ const StarForceModule = {
       const chance = this.getStarScrollSuccessChance(method);
       const success = Math.random() * 100 < chance;
       const extraMeso = extra23ScrollMeso;
+      if (extraMeso > 0 && typeof isIdlePlayMode === 'function' && isIdlePlayMode()
+        && typeof getIdleHeldMeso === 'function' && getIdleHeldMeso() < extraMeso) {
+        if (!silent) addLog('⚠️ 楓幣不足，無法進行強化。', 'log-fail');
+        return null;
+      }
       return {
         outcome: success ? 'success' : 'keep',
         animate: true,
@@ -852,7 +874,10 @@ const StarForceModule = {
           this.consumeSelectedScroll();
           if (method === 'scroll_under23_100') this.getStatsCount().scroll23_100++;
           else this.getStatsCount().scroll23_30++;
-          if (extraMeso > 0) this.getStatsCount().mesoSpent += extraMeso;
+          if (extraMeso > 0) {
+            if (typeof trySpendIdleMeso === 'function') trySpendIdleMeso(extraMeso);
+            this.getStatsCount().mesoSpent += extraMeso;
+          }
           if (success) {
             this.currentStars++;
             if (!silent) {
@@ -914,6 +939,9 @@ const StarForceModule = {
 
     this.getStatsCount().starNormal++;
     const mesoCost = this.getMesoCost(this.currentStars);
+    if (typeof trySpendIdleMeso === 'function' && !trySpendIdleMeso(mesoCost)) {
+      return null;
+    }
     this.getStatsCount().mesoSpent += mesoCost;
 
     const rates = this.getRates(this.currentStars);
@@ -989,7 +1017,7 @@ const StarForceModule = {
 
     if (this.autoRunning) return;
 
-    const maxStars = this.itemData ? (this.itemData.maxStar || 30) : 30;
+    const maxStars = this.getMaxStar();
     const minTarget = Math.min(this.currentStars + 1, maxStars);
     const prevTarget = select.value;
 
@@ -1032,7 +1060,7 @@ const StarForceModule = {
 
     this.setPanelMode('active');
 
-    const maxStars = this.itemData ? (this.itemData.maxStar || 30) : 30;
+    const maxStars = this.getMaxStar();
 
     this.renderStarsGrid();
     this.renderStatDiff();

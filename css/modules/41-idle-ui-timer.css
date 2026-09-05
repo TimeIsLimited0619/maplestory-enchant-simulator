@@ -1,0 +1,33 @@
+/* MapleStory UI.Timer（images/UItimer，原始尺寸）
+   backgrnd 216×56；數字原點 y=41 → top = y - height */
+
+.idle-ui-timer {
+  position: relative;
+  width: 216px;
+  height: 56px;
+  flex-shrink: 0;
+  overflow: visible;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.idle-ui-timer[hidden] {
+  display: none;
+}
+
+.idle-ui-timer__bg {
+  display: block;
+  width: 216px;
+  height: 56px;
+  image-rendering: pixelated;
+}
+
+.idle-ui-timer__digit {
+  position: absolute;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+}

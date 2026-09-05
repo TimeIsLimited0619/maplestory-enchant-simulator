@@ -43,3 +43,8 @@ import-equip/
 
 # 未使用的圖片素材（本機保留，不上傳）
 _unused_images/
+
+# HaRepacker 匯出的 WZ XML（只留資料夾說明，本體不上傳）
+wz-xml/**/*.xml
+wz-xml/**/*.img
+!wz-xml/README.txt

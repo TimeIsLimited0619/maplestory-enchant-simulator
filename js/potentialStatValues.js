@@ -92,6 +92,20 @@ function parseEmbeddedPercentStat(statName, internalRank, context) {
   const eventId = context.eventId || 8421;
 
   if (eventId === 8421
+    && typeof parseNormalWeapon71150MainEmbeddedStat === 'function'
+    && typeof isNormalWeapon71150MainPotentialContext === 'function'
+    && isNormalWeapon71150MainPotentialContext(context)) {
+    const normal71150 = parseNormalWeapon71150MainEmbeddedStat(statName, internalRank);
+    if (normal71150) return normal71150;
+    return {
+      label: typeof formatPotentialBossDamageLabel === 'function'
+        ? formatPotentialBossDamageLabel(match[1])
+        : match[1],
+      value: `${Number(match[2])}%`,
+    };
+  }
+
+  if (eventId === 8421
     && typeof parseNormalWeapon151200MainEmbeddedStat === 'function'
     && typeof isNormalWeapon151200MainPotentialContext === 'function'
     && isNormalWeapon151200MainPotentialContext(context)) {
@@ -128,6 +142,11 @@ function parseWeaponPotentialStat(statName, internalRank, context = {}) {
     if (destinyStat) return destinyStat;
   }
 
+  if (typeof parseNormalWeapon71150MainPotentialStat === 'function') {
+    const normal71150Stat = parseNormalWeapon71150MainPotentialStat(statName, internalRank, context);
+    if (normal71150Stat) return normal71150Stat;
+  }
+
   if (typeof parseNormalWeapon151200MainPotentialStat === 'function') {
     const normal151200Stat = parseNormalWeapon151200MainPotentialStat(statName, internalRank, context);
     if (normal151200Stat) return normal151200Stat;
@@ -136,14 +155,35 @@ function parseWeaponPotentialStat(statName, internalRank, context = {}) {
   const eventId = context.eventId || 8421;
 
   if (statName === '總傷害' || statName === '總傷害%') {
+    if (typeof isNormalWeapon71150MainPotentialContext === 'function'
+      && isNormalWeapon71150MainPotentialContext(context)) {
+      const reqLevel = item?.reqLevel || 100;
+      const pctBand = getLowLevelPercentBand(reqLevel);
+      const val = pickLowLevelRankRow(LOW_WEAPON_TOTAL_DAMAGE_PERCENT, pctBand, internalRank);
+      if (val) return { label: '總傷害', value: val };
+    }
     const num = pickTotalDamageValue(internalRank, item);
     return { label: '總傷害', value: `${num}%` };
   }
 
   if (statName === '爆擊機率%') {
     if (eventId === 8422) {
+      if (typeof isNormalWeapon71150AddPotentialContext === 'function'
+        && isNormalWeapon71150AddPotentialContext(context)) {
+        const reqLevel = item?.reqLevel || 100;
+        const pctBand = getLowLevelPercentBand(reqLevel);
+        const val = pickLowLevelRankRow(LOW_WEAPON_ADDPOT_CRIT_RATE_PERCENT, pctBand, internalRank);
+        if (val) return { label: '爆擊機率', value: val };
+      }
       const num = ADD_WEAPON_CRIT_RATE[internalRank] ?? ADD_WEAPON_CRIT_RATE.rare;
       return { label: '爆擊機率', value: `${num}%` };
+    }
+    if (typeof isNormalWeapon71150MainPotentialContext === 'function'
+      && isNormalWeapon71150MainPotentialContext(context)) {
+      const reqLevel = item?.reqLevel || 100;
+      const pctBand = getLowLevelPercentBand(reqLevel);
+      const val = pickLowLevelRankRow(LOW_WEAPON_CRIT_RATE_PERCENT, pctBand, internalRank);
+      if (val) return { label: '爆擊機率', value: val };
     }
     const tier = getWeaponTierKey(item);
     const row = MAIN_WEAPON_CRIT_RATE[tier] || MAIN_WEAPON_CRIT_RATE.normal;

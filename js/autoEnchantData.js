@@ -1424,7 +1424,10 @@ async function aePotRunHexaAutoEnchant(ctx) {
     let hit = false;
     let lastSession = null;
     for (let i = 0; i < stepsPerTick && isRunning() && !isCancelled() && attempts < maxRolls; i += 1) {
-      consumeCube();
+      if (consumeCube() === false) {
+        attempts = maxRolls;
+        break;
+      }
       attempts += 1;
 
       const session = rollSession();
@@ -1650,7 +1653,10 @@ async function aePotRunUnionAutoEnchant(ctx) {
     let workLineIndex = -1;
     let steps = 0;
     while (isRunning() && !isCancelled() && cubeUses < maxCubeUses && steps < stepsPerTick) {
-      consumeCube();
+      if (consumeCube() === false) {
+        cubeUses = maxCubeUses;
+        break;
+      }
       cubeUses += 1;
       reselectUses += 1;
       steps += 1;

@@ -59,6 +59,15 @@ const playerStarForceScrollInventory = {
 const CONSUME_ITEM_TYPE = {
   STARFORCE_SCROLL: 'starforce_scroll',
   POTENTIAL_SCROLL: 'potential_scroll',
+  CUBE: 'cube',
+  ADD_CUBE: 'add_cube',
+  HAMMER: 'hammer',
+  GLORY_SCROLL: 'glory_scroll',
+  BONUS_STAT: 'bonus_stat',
+  EXCEPTIONAL_HAMMER: 'exceptional_hammer',
+  SOUL: 'soul',
+  RECOVERY_CARD: 'recovery_card',
+  POTION: 'potion',
 };
 
 function isStarForceScrollConsumeEntry(entry) {
@@ -71,6 +80,7 @@ function isStarForceScrollConsumeEntry(entry) {
 
 /** 初始化消耗欄前幾格為星力卷（測試用） */
 function seedStarForceScrollConsumeInventory() {
+  if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) return;
   if (typeof playerInventoryConsume === 'undefined' || typeof INVENTORY_SLOT_COUNT === 'undefined') {
     return;
   }
@@ -96,6 +106,13 @@ function getStarForceScrollByMethod(method) {
 
 function getPlayerStarForceScrollCount(scrollId) {
   return playerStarForceScrollInventory[scrollId] || 0;
+}
+
+function grantStarForceScroll(scrollId, amount = 1) {
+  if (!scrollId || amount <= 0) return 0;
+  const add = Math.floor(amount);
+  playerStarForceScrollInventory[scrollId] = (playerStarForceScrollInventory[scrollId] || 0) + add;
+  return add;
 }
 
 function consumeStarForceScroll(scrollId, amount = 1) {

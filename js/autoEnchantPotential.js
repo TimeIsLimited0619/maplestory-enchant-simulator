@@ -68,6 +68,7 @@ const AutoEnchantPotentialModule = {
 
   isRollableCube(cube) {
     if (!cube) return false;
+    if (typeof getPlayerCubeCount === 'function' && getPlayerCubeCount(cube.id) <= 0) return false;
     if (cube.memoriaPick) return false;
     if (aePotIsHexaCube(cube) || aePotIsUnionCube(cube)) return true;
     return Boolean(cube.rateKey || typeof rerollPotential === 'function');
@@ -476,7 +477,7 @@ const AutoEnchantPotentialModule = {
       const batch = this.getBatchSize();
       for (let i = 0; i < batch && this.isRunning && !this.cancelled; i += 1) {
         if (!PotentialModule.itemData || !this.isRollableCube(cube)) break;
-        consumePlayerCube(cube.id);
+        if (typeof consumePlayerCube === 'function' && !consumePlayerCube(cube.id)) break;
         const rolled = rerollPotential(cube, PotentialModule.itemData.potential, PotentialModule.itemData);
         this.applyRollSilent(rolled, cube, { skipUi: true });
         attempts += 1;
@@ -577,7 +578,10 @@ const AutoEnchantPotentialModule = {
       let stoppedRankUp = false;
       let lastAfter = null;
       for (let i = 0; i < batch && !this.cancelled && attempts < maxRolls; i += 1) {
-        consumePlayerCube(cube.id);
+        if (typeof consumePlayerCube === 'function' && !consumePlayerCube(cube.id)) {
+          attempts = maxRolls;
+          break;
+        }
         attempts += 1;
 
         const rolled = rerollPotential(cube, snapshot, PotentialModule.itemData);

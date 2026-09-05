@@ -517,7 +517,9 @@ const ScrollEffectModule = {
     if (!scroll || typeof scrollRequiresRecoveryCard !== 'function') return false;
     return scrollRequiresRecoveryCard(scroll)
       && ScrollModule.recoveryCardChecked
-      && playerRecoveryCardCount > 0;
+      && (typeof ScrollModule.isRecoveryReady === 'function'
+        ? ScrollModule.isRecoveryReady()
+        : true);
   },
 
   async playScrollUse({ success, tryOnly = false, useRecoveryCard = false, onComplete }) {

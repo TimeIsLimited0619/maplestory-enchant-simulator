@@ -23,7 +23,10 @@ const AutoEnchantStarForceModule = {
   },
 
   getMaxStar() {
-    return StarForceModule.itemData?.maxStar || 30;
+    if (typeof getItemStarForceMaxStar === 'function') {
+      return getItemStarForceMaxStar(StarForceModule.itemData);
+    }
+    return StarForceModule.getMaxStar?.() || 30;
   },
 
   getMinTarget() {

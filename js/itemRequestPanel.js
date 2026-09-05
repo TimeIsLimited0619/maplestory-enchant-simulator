@@ -3,11 +3,13 @@
  */
 const ItemRequestPanel = (() => {
   const FILTERS = [
-    { id: 'all', label: '全部' },
+    { id: 'all', label: '裝備' },
     { id: 'weapon', label: '武器' },
     { id: 'offHand', label: '副武' },
     { id: 'armor', label: '防具' },
     { id: 'accessory', label: '飾品' },
+    { id: 'consume', label: '消耗' },
+    { id: 'etc', label: '其他' },
   ];
 
   let inited = false;
@@ -39,12 +41,53 @@ const ItemRequestPanel = (() => {
     return 4;
   }
 
+  function isOriginalEquip(item) {
+    if (typeof GeneratedEquipLoader !== 'undefined' && typeof GeneratedEquipLoader.isCatalogEquip === 'function') {
+      return GeneratedEquipLoader.isCatalogEquip(item);
+    }
+    const id = item?.itemId || item?.id;
+    if (!id) return false;
+    if (typeof ORIGINAL_EQUIP_IDS !== 'undefined' && Array.isArray(ORIGINAL_EQUIP_IDS)) {
+      return ORIGINAL_EQUIP_IDS.includes(id);
+    }
+    return true;
+  }
+
+  function isConsumeFilter() {
+    return filterId === 'consume';
+  }
+
+  function isEtcFilter() {
+    return filterId === 'etc';
+  }
+
+  function listConsumeItems() {
+    if (typeof IdleConsumeStore === 'undefined') return [];
+    IdleConsumeStore.refresh?.();
+    const q = query.trim().toLowerCase();
+    return IdleConsumeStore.list().filter((row) => (
+      !q
+      || String(row.name || '').toLowerCase().includes(q)
+      || String(row.id || '').toLowerCase().includes(q)
+    ));
+  }
+
+  function listEtcItems() {
+    if (typeof IdleEtcStore === 'undefined') return [];
+    const q = query.trim().toLowerCase();
+    return IdleEtcStore.list().filter((row) => (
+      !q
+      || String(row.name || '').toLowerCase().includes(q)
+      || String(row.id || '').toLowerCase().includes(q)
+    ));
+  }
+
   function listItems() {
     if (typeof ITEM_DATABASE === 'undefined') return [];
     const q = query.trim().toLowerCase();
     return Object.keys(ITEM_DATABASE)
       .map((id) => ITEM_DATABASE[id])
-      .filter((item) => matchFilter(item) && (!q || String(item.name || '').toLowerCase().includes(q)))
+      .filter((item) => isOriginalEquip(item) && matchFilter(item) && (!q || String(item.name || '').toLowerCase().includes(q)))
       .sort((a, b) => {
         const ra = sortRank(a);
         const rb = sortRank(b);
@@ -54,10 +97,23 @@ const ItemRequestPanel = (() => {
   }
 
   function grant(itemId, preferredSlot) {
+    if (!isOriginalEquip({ itemId })) return false;
     if (typeof InventoryModule === 'undefined' || typeof InventoryModule.addEquipFromCatalog !== 'function') {
       return false;
     }
     return InventoryModule.addEquipFromCatalog(itemId, preferredSlot);
+  }
+
+  function grantConsume(row) {
+    if (!row || typeof InventoryModule === 'undefined') return false;
+    const result = InventoryModule.grantConsumeDrop?.({ ...row, amount: 1 }, { logTag: '清單', switchTab: true });
+    return Boolean(result?.ok);
+  }
+
+  function grantEtc(itemId) {
+    if (!itemId || typeof InventoryModule === 'undefined') return false;
+    const result = InventoryModule.addEtcItem?.({ itemId, amount: 1 }, { logTag: '清單', switchTab: true });
+    return Boolean(result?.ok);
   }
 
   function discardFromBag(slotIndex) {
@@ -70,7 +126,9 @@ const ItemRequestPanel = (() => {
   function renderGrid() {
     const grid = $('irqGrid');
     if (!grid) return;
-    const items = listItems();
+    const consumeMode = isConsumeFilter();
+    const etcMode = isEtcFilter();
+    const items = consumeMode ? listConsumeItems() : (etcMode ? listEtcItems() : listItems());
     grid.innerHTML = '';
     const countEl = $('irqCount');
     if (countEl) countEl.textContent = String(items.length);
@@ -78,31 +136,70 @@ const ItemRequestPanel = (() => {
     items.forEach((item) => {
       const slot = document.createElement('div');
       slot.className = 'irq-slot';
-      slot.dataset.itemId = item.itemId || item.id;
-      slot.title = item.name || '';
+      const name = item.name || '';
+      slot.title = name;
 
       const img = document.createElement('img');
-      img.src = item.icon;
-      img.alt = item.name || '';
+      img.src = item.icon || '';
+      img.alt = name;
       img.draggable = true;
-      img.ondragstart = (e) => {
-        if (typeof EquipTooltipModule !== 'undefined') EquipTooltipModule.beginDrag?.();
-        e.dataTransfer.setData('text/plain', JSON.stringify({
-          source: 'request',
-          itemId: item.itemId || item.id,
-        }));
-        e.dataTransfer.effectAllowed = 'copy';
-        slot.classList.add('is-dragging');
-      };
+
+      if (consumeMode) {
+        slot.dataset.kind = 'consume';
+        img.ondragstart = (e) => {
+          e.dataTransfer.setData('text/plain', JSON.stringify({
+            source: 'request',
+            kind: 'consume',
+            row: item,
+          }));
+          e.dataTransfer.effectAllowed = 'copy';
+          slot.classList.add('is-dragging');
+        };
+        img.addEventListener('dblclick', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          grantConsume(item);
+        });
+      } else if (etcMode) {
+        slot.dataset.kind = 'etc';
+        slot.dataset.itemId = item.id;
+        img.ondragstart = (e) => {
+          e.dataTransfer.setData('text/plain', JSON.stringify({
+            source: 'request',
+            kind: 'etc',
+            itemId: item.id,
+          }));
+          e.dataTransfer.effectAllowed = 'copy';
+          slot.classList.add('is-dragging');
+        };
+        img.addEventListener('dblclick', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          grantEtc(item.id);
+        });
+      } else {
+        slot.dataset.kind = 'equip';
+        slot.dataset.itemId = item.itemId || item.id;
+        img.ondragstart = (e) => {
+          if (typeof EquipTooltipModule !== 'undefined') EquipTooltipModule.beginDrag?.();
+          e.dataTransfer.setData('text/plain', JSON.stringify({
+            source: 'request',
+            itemId: item.itemId || item.id,
+          }));
+          e.dataTransfer.effectAllowed = 'copy';
+          slot.classList.add('is-dragging');
+        };
+        img.addEventListener('dblclick', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          grant(item.itemId || item.id);
+        });
+      }
+
       img.ondragend = () => {
         slot.classList.remove('is-dragging');
         if (typeof EquipTooltipModule !== 'undefined') EquipTooltipModule.endDrag?.();
       };
-      img.addEventListener('dblclick', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        grant(item.itemId || item.id);
-      });
       slot.appendChild(img);
       grid.appendChild(slot);
     });
@@ -117,7 +214,7 @@ const ItemRequestPanel = (() => {
       const slot = event.target.closest('.irq-slot');
       if (!slot || grid._eqTooltipSlot === slot) return;
       const itemId = slot.dataset.itemId;
-      if (!itemId) return;
+      if (!itemId || (slot.dataset.kind && slot.dataset.kind !== 'equip')) return;
       grid._eqTooltipSlot = slot;
       EquipTooltipModule.show(slot, itemId, -1);
     });
@@ -144,9 +241,17 @@ const ItemRequestPanel = (() => {
     try {
       const parsed = JSON.parse(raw);
       if (parsed.source === 'request') return;
-      if (parsed.tab && parsed.tab !== 'equip') return;
       if (parsed.source === 'body') return;
       if (!Number.isInteger(parsed.slotIndex)) return;
+      if (parsed.tab === 'consume') {
+        InventoryModule.clearConsumeSlot?.(parsed.slotIndex);
+        return;
+      }
+      if (parsed.tab === 'etc') {
+        InventoryModule.clearEtcSlot?.(parsed.slotIndex);
+        return;
+      }
+      if (parsed.tab && parsed.tab !== 'equip') return;
       discardFromBag(parsed.slotIndex);
     } catch (_) { /* ignore */ }
   }

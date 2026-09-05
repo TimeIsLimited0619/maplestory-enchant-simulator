@@ -160,7 +160,14 @@ Object.assign(AddPotentialModule, {
     const cube = getAddPotCubeById(this.uniCubeId);
     if (!cube) return;
 
-    consumePlayerAddPotCube(this.uniCubeId);
+    if (typeof getPlayerAddPotCubeCount === 'function' && getPlayerAddPotCubeCount(this.uniCubeId) <= 0) {
+      this.renderUniOverlay();
+      return addLog('⚠️ 背包中沒有這個方塊。', 'log-fail');
+    }
+    if (typeof consumePlayerAddPotCube === 'function' && !consumePlayerAddPotCube(this.uniCubeId)) {
+      this.renderUniOverlay();
+      return addLog('⚠️ 背包中沒有這個方塊。', 'log-fail');
+    }
     addLog(`🟢 使用 ${cube.name} 重新選擇附加潛在能力。`, 'log-success');
 
     if (this.uniPhase === 'preview') {
@@ -260,5 +267,17 @@ Object.assign(AddPotentialModule, {
 
     if (actionsBefore) actionsBefore.classList.toggle('hidden', this.uniPhase !== 'select');
     if (actionsAfter) actionsAfter.classList.toggle('hidden', this.uniPhase !== 'preview');
+
+    const hasCube = !(
+      this.uniCubeId
+      && typeof getPlayerAddPotCubeCount === 'function'
+      && getPlayerAddPotCubeCount(this.uniCubeId) <= 0
+    );
+    ['apUniBtnReselectBefore', 'apUniBtnReselectAfter'].forEach((id) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.disabled = !hasCube;
+      btn.classList.toggle('is-disabled', !hasCube);
+    });
   }
 });

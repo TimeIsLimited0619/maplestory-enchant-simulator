@@ -84,7 +84,6 @@ function createMemoriaChoiceEffectModule(config) {
     clickBoundKey,
     getChoiceModule,
     getAutoEnchantModule,
-    isAnimEnabledFn,
     applyAfterLog,
     applyBeforeLog,
   } = config;
@@ -417,15 +416,14 @@ function createMemoriaChoiceEffectModule(config) {
       return Boolean(spec?.loop?.front?.length || spec?.appear?.back?.length);
     },
 
-    isAnimEnabled() {
-      return typeof isAnimEnabledFn === 'function' ? isAnimEnabledFn() : true;
-    },
-
+    /**
+     * 恢復自動選擇窗的翻牌／升階揭示動畫。
+     * 與「跳過動畫」（洗潛特效 chkPotentialAnim）分開：跳過動畫仍要播翻牌，否則 AFTER 無法點選。
+     */
     shouldUseMemorialAutoAnim() {
       const mod = this.getChoice();
       return Boolean(
         mod?.isMemorialAutoChoiceUi?.()
-        && this.isAnimEnabled()
         && this.hasAssets()
       );
     },
@@ -844,11 +842,6 @@ const PotentialMemoriaChoiceEffectModule = createMemoriaChoiceEffectModule({
   getAutoEnchantModule: () => (
     typeof AutoEnchantPotentialModule !== 'undefined' ? AutoEnchantPotentialModule : null
   ),
-  isAnimEnabledFn: () => (
-    typeof isPotentialEnhanceAnimEnabled === 'function'
-      ? isPotentialEnhanceAnimEnabled()
-      : document.getElementById('chkPotentialAnim')?.checked !== false
-  ),
   applyAfterLog: '🔮 恢復方塊：已套用 AFTER 結果。',
   applyBeforeLog: '🔮 恢復方塊：已套用 BEFORE 結果。',
 });
@@ -865,7 +858,6 @@ const AddPotentialMemoriaChoiceEffectModule = createMemoriaChoiceEffectModule({
   getAutoEnchantModule: () => (
     typeof AutoEnchantAddPotentialModule !== 'undefined' ? AutoEnchantAddPotentialModule : null
   ),
-  isAnimEnabledFn: () => document.getElementById('chkAddPotentialAnim')?.checked !== false,
   applyAfterLog: '🟢 恢復附加方塊：已套用 AFTER 結果。',
   applyBeforeLog: '🟢 恢復附加方塊：已套用 BEFORE 結果。',
 });

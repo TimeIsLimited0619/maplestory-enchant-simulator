@@ -291,6 +291,12 @@ function applySetEffectLine(line, acc) {
         acc.extraPercent[pctKey] = true;
         return;
       }
+      // 全屬性% 與套裝全屬性 flat 分 key，避免混進同一桶
+      if (isPercent && label === '全屬性') {
+        acc.extra['全屬性%'] = (acc.extra['全屬性%'] || 0) + value;
+        acc.extraPercent['全屬性%'] = true;
+        return;
+      }
       if (!isPercent && SET_MAIN_LABELS.has(label)) {
         acc.main[label] = (acc.main[label] || 0) + value;
         return;

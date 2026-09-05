@@ -1,0 +1,543 @@
+/* 極限屬性／AP：按鈕用素材原始像素，不拉伸 */
+
+.uci-root {
+  overflow: visible;
+}
+
+.uci-detail {
+  overflow: visible;
+}
+
+.uci-lvup {
+  pointer-events: auto;
+  cursor: pointer;
+  background-image: url('../../images/UICharacterInfo/local/detailStat/button/lvUpHp/normal/0.png');
+}
+
+.uci-lvup:hover:not(:disabled):not(.is-disabled) {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/button/lvUpHp/mouseOver/0.png');
+}
+
+.uci-lvup:active:not(:disabled):not(.is-disabled) {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/button/lvUpHp/pressed/0.png');
+}
+
+.uci-lvup:disabled,
+.uci-lvup.is-disabled {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/button/lvUpHp/disabled/0.png');
+  cursor: default;
+}
+
+.uci-ap-btn {
+  pointer-events: auto;
+  cursor: pointer;
+  left: 438px;
+  width: 10px;
+  background-image: url('../../images/UICharacterInfo/local/detailStat/button/apDistribution/normal/0.png');
+}
+
+.uci-ap-btn:hover:not(.is-active) {
+  left: 437px;
+  width: 12px;
+  background-image: url('../../images/UICharacterInfo/local/detailStat/button/apDistribution/mouseOver/0.png');
+}
+
+.uci-ap-btn:active,
+.uci-ap-btn.is-active {
+  left: 438px;
+  width: 10px;
+  background-image: url('../../images/UICharacterInfo/local/detailStat/button/apDistribution/pressed/0.png');
+}
+
+.uci-btn-hyper {
+  pointer-events: auto;
+  cursor: pointer;
+  background-image: url('../../images/UICharacterInfo/common/detailStat/button/hyper/normal/0.png');
+  opacity: 1;
+}
+
+.uci-btn-hyper:hover,
+.uci-btn-hyper.is-active {
+  background-image: url('../../images/UICharacterInfo/common/detailStat/button/hyper/mouseOver/0.png');
+}
+
+.uci-btn-hyper:active {
+  background-image: url('../../images/UICharacterInfo/common/detailStat/button/hyper/pressed/0.png');
+}
+
+.uci-btn-ability {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* ---- Hyper 212×479，對齊 detail 左側 ---- */
+.uci-hyper {
+  position: absolute;
+  left: -212px;
+  top: 230px;
+  width: 212px;
+  height: 479px;
+  background: url('../../images/UICharacterInfo/local/detailStat/HyperStat/Window/backgrnd.png') no-repeat 0 0;
+  z-index: 8;
+  image-rendering: pixelated;
+}
+
+.uci-hyper.is-hidden {
+  display: none;
+}
+
+.uci-hyper-close {
+  position: absolute;
+  left: 191px;
+  top: 10px;
+  width: 11px;
+  height: 11px;
+  padding: 0;
+  border: none;
+  background: url('../../images/UICharacterInfo/common/detailStat/HyperStat/Window/button/close/normal/0.png') no-repeat 0 0;
+  cursor: pointer;
+}
+
+.uci-hyper-row {
+  position: absolute;
+  left: 11px;
+  width: 190px;
+  height: 18px;
+}
+
+.uci-hyper-row-img {
+  position: absolute;
+  left: 8px;
+  top: 0;
+  display: none;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.uci-hyper-row:hover .uci-hyper-row-img,
+.uci-hyper-row.is-selected .uci-hyper-row-img {
+  display: block;
+}
+
+.uci-hyper-lvup {
+  position: absolute;
+  left: 127px;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: url('../../images/UICharacterInfo/local/detailStat/button/lvUpHp/normal/0.png') no-repeat 0 0;
+  cursor: pointer;
+}
+
+.uci-hyper-lvup:hover:not(:disabled) {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/button/lvUpHp/mouseOver/0.png');
+}
+
+.uci-hyper-lvup.is-disabled,
+.uci-hyper-lvup:disabled {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/button/lvUpHp/disabled/0.png');
+  cursor: default;
+}
+
+.uci-hyper-lv {
+  position: absolute;
+  left: 170px;
+  top: 1px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 1px #000;
+  pointer-events: none;
+}
+
+.uci-hyper-preset {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: none;
+  color: transparent;
+  font-size: 0;
+  background: url('../../images/UICharacterInfo/local/detailStat/HyperStat/Window/button/presetPage1/normal/0.png') no-repeat 0 0;
+  cursor: pointer;
+}
+
+.uci-hyper-preset[data-hyper-preset="1"] {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/HyperStat/Window/button/presetPage2/normal/0.png');
+}
+
+.uci-hyper-preset[data-hyper-preset="2"] {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/HyperStat/Window/button/presetPage3/normal/0.png');
+}
+
+.uci-hyper-preset.is-checked[data-hyper-preset="0"] {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/HyperStat/Window/button/presetPage1/checked/0.png');
+}
+
+.uci-hyper-preset.is-checked[data-hyper-preset="1"] {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/HyperStat/Window/button/presetPage2/checked/0.png');
+}
+
+.uci-hyper-preset.is-checked[data-hyper-preset="2"] {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/HyperStat/Window/button/presetPage3/checked/0.png');
+}
+
+.uci-hyper-preset-sel {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  background: url('../../images/UICharacterInfo/local/detailStat/HyperStat/Window/presetSelected0/0.png') no-repeat 0 0;
+}
+
+.uci-hyper-apply {
+  position: absolute;
+  left: 138px;
+  top: 417px;
+  width: 57px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: url('../../images/UICharacterInfo/local/detailStat/HyperStat/Window/button/presetApplication/normal/0.png') no-repeat 0 0;
+  cursor: pointer;
+}
+
+.uci-hyper-apply:hover {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/HyperStat/Window/button/presetApplication/mouseOver/0.png');
+}
+
+.uci-hyper-reset {
+  position: absolute;
+  left: 138px;
+  top: 448px;
+  width: 66px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: url('../../images/UICharacterInfo/local/detailStat/HyperStat/Window/button/reset/normal/0.png') no-repeat 0 0;
+  cursor: pointer;
+}
+
+.uci-hyper-reset:hover {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/HyperStat/Window/button/reset/mouseOver/0.png');
+}
+
+.uci-hyper-points {
+  position: absolute;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 1px #000;
+  pointer-events: none;
+}
+
+/* Level Up popup 212×230，疊在極限屬性窗上方 */
+.uci-hyper-popup {
+  position: absolute;
+  left: -212px;
+  top: 0;
+  width: 212px;
+  height: 230px;
+  background: url('../../images/UICharacterInfo/local/detailStat/HyperStat/popUp/backgrnd.png') no-repeat 0 0;
+  z-index: 10;
+  image-rendering: pixelated;
+}
+
+.uci-hyper-popup.is-hidden {
+  display: none;
+}
+
+.uci-hyper-popup-close {
+  position: absolute;
+  left: 191px;
+  top: 10px;
+  width: 11px;
+  height: 11px;
+  padding: 0;
+  border: none;
+  background: url('../../images/UICharacterInfo/local/detailStat/HyperStat/popUp/button/close/normal/0.png') no-repeat 0 0;
+  cursor: pointer;
+}
+
+.uci-hyper-popup-name {
+  position: absolute;
+  left: 105px;
+  top: 38px;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 1px 1px #000;
+}
+
+.uci-hyper-popup-cur,
+.uci-hyper-popup-dest {
+  position: absolute;
+  top: 76px;
+  color: #3a4450;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.uci-hyper-popup-cur {
+  left: 70px;
+  transform: translateX(-50%);
+}
+
+.uci-hyper-popup-dest {
+  left: 166px;
+  transform: translateX(-50%);
+}
+
+.uci-hyper-pop-minus,
+.uci-hyper-pop-plus,
+.uci-hyper-pop-max,
+.uci-hyper-pop-up {
+  position: absolute;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+}
+
+.uci-hyper-pop-minus {
+  left: 13px;
+  top: 104px;
+  width: 45px;
+  height: 20px;
+  background: url('../../images/UICharacterInfo/local/detailStat/HyperStat/popUp/button/lvMinus/normal/0.png') no-repeat 0 0;
+}
+
+.uci-hyper-pop-minus:hover:not(:disabled) {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/HyperStat/popUp/button/lvMinus/mouseOver/0.png');
+}
+
+.uci-hyper-pop-minus:disabled,
+.uci-hyper-pop-minus.is-disabled {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/HyperStat/popUp/button/lvMinus/disabled/0.png');
+  cursor: default;
+}
+
+.uci-hyper-pop-plus {
+  left: 60px;
+  top: 104px;
+  width: 45px;
+  height: 20px;
+  background: url('../../images/UICharacterInfo/local/detailStat/HyperStat/popUp/button/lvPlus/normal/0.png') no-repeat 0 0;
+}
+
+.uci-hyper-pop-plus:hover:not(:disabled) {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/HyperStat/popUp/button/lvPlus/mouseOver/0.png');
+}
+
+.uci-hyper-pop-plus:disabled,
+.uci-hyper-pop-plus.is-disabled {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/HyperStat/popUp/button/lvPlus/disabled/0.png');
+  cursor: default;
+}
+
+.uci-hyper-pop-max {
+  left: 107px;
+  top: 104px;
+  width: 92px;
+  height: 20px;
+  background: url('../../images/UICharacterInfo/local/detailStat/HyperStat/popUp/button/lvMax/normal/0.png') no-repeat 0 0;
+}
+
+.uci-hyper-pop-max:hover:not(:disabled) {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/HyperStat/popUp/button/lvMax/mouseOver/0.png');
+}
+
+.uci-hyper-pop-max:disabled,
+.uci-hyper-pop-max.is-disabled {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/HyperStat/popUp/button/lvMax/disabled/0.png');
+  cursor: default;
+}
+
+.uci-hyper-popup-remain,
+.uci-hyper-popup-need {
+  position: absolute;
+  left: 192px;
+  transform: translateX(-100%);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.uci-hyper-popup-remain {
+  top: 138px;
+  color: #9cadb3;
+}
+
+.uci-hyper-popup-need {
+  top: 162px;
+  color: #fff;
+}
+
+.uci-hyper-pop-up {
+  left: 10px;
+  top: 185px;
+  width: 194px;
+  height: 36px;
+  background: url('../../images/UICharacterInfo/local/detailStat/HyperStat/popUp/button/lvUP/normal/0.png') no-repeat 0 0;
+}
+
+.uci-hyper-pop-up:hover:not(:disabled) {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/HyperStat/popUp/button/lvUP/mouseOver/0.png');
+}
+
+.uci-hyper-pop-up:disabled,
+.uci-hyper-pop-up.is-disabled {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/HyperStat/popUp/button/lvUP/disabled/0.png');
+  cursor: default;
+}
+
+/* 極限屬性 tip：外框沿用 UIToolTip（eq-tooltip） */
+.uci-hyper-tip {
+  z-index: 500100;
+}
+
+.eq-tooltip-frame.uci-hyper-tip-frame {
+  width: 220px;
+}
+
+.uci-hyper-tip-title {
+  text-align: center;
+  color: #ffffff;
+  font-family: "PMingLiU", "SimSun", "MingLiU", sans-serif;
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  -webkit-font-smoothing: none;
+}
+
+.uci-hyper-tip-max,
+.uci-hyper-tip-desc,
+.uci-hyper-tip-lv,
+.uci-hyper-tip-fx {
+  color: #ffffff;
+  font-family: "PMingLiU", "SimSun", "MingLiU", sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  -webkit-font-smoothing: none;
+}
+
+.uci-hyper-tip-max {
+  margin-bottom: 2px;
+}
+
+.uci-hyper-tip-desc {
+  margin-bottom: 2px;
+}
+
+.uci-hyper-tip-levels {
+  margin-top: 2px;
+}
+
+.uci-hyper-tip-lv {
+  margin-top: 4px;
+  color: #ffd76a;
+}
+
+.uci-hyper-tip-lv:first-child {
+  margin-top: 0;
+}
+
+.uci-hyper-tip-fx {
+  color: #c8d0dc;
+}
+
+/* ---- AP 152×100 @ detailStat (461, 38) ---- */
+.uci-ap {
+  position: absolute;
+  left: 461px;
+  top: 38px;
+  width: 152px;
+  height: 100px;
+  background: url('../../images/UICharacterInfo/local/detailStat/Addon/apDistribution/backgrnd.png') no-repeat 0 0;
+  z-index: 9;
+  image-rendering: pixelated;
+}
+
+.uci-ap.is-hidden {
+  display: none;
+}
+
+/* 白底數字框：vector:pointPos 110,10 ～ pointPosX2 124 */
+.uci-ap-points {
+  position: absolute;
+  left: 108px;
+  top: 7px;
+  width: 36px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #111;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* apAuto 素材 138×44 */
+.uci-ap-auto {
+  position: absolute;
+  left: 7px;
+  top: 30px;
+  width: 138px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: url('../../images/UICharacterInfo/local/detailStat/Addon/apDistribution/button/apAuto/normal/0.png') no-repeat 0 0;
+  cursor: pointer;
+}
+
+.uci-ap-auto:hover:not(:disabled) {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/Addon/apDistribution/button/apAuto/mouseOver/0.png');
+}
+
+.uci-ap-auto:active:not(:disabled) {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/Addon/apDistribution/button/apAuto/pressed/0.png');
+}
+
+.uci-ap-auto:disabled,
+.uci-ap-auto.is-disabled {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/Addon/apDistribution/button/apAuto/disabled/0.png');
+  cursor: default;
+}
+
+/* 標題已畫在背景上，這裡只放開關圖 25×13 @ (118, 78) */
+.uci-ap-instant {
+  position: absolute;
+  left: 118px;
+  top: 78px;
+  width: 25px;
+  height: 13px;
+  padding: 0;
+  border: none;
+  background: url('../../images/UICharacterInfo/local/detailStat/Addon/apDistribution/button/apInstantDistribution/normal/0.png') no-repeat 0 0;
+  cursor: pointer;
+}
+
+.uci-ap-instant.is-on {
+  left: 119px;
+  top: 79px;
+  width: 23px;
+  height: 11px;
+  background-image: url('../../images/UICharacterInfo/local/detailStat/Addon/apDistribution/button/apInstantDistribution/checked/0.png');
+}

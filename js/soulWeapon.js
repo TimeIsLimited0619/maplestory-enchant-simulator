@@ -464,7 +464,10 @@ const SoulWeaponModule = {
 
     const mode = this.getMode();
     const list = (mode === 'enchanter' || mode === 'soul')
-      ? (this.MATERIALS[mode] || [])
+      ? (this.MATERIALS[mode] || []).filter((mat) => {
+        if (typeof isIdlePlayMode !== 'function' || !isIdlePlayMode()) return true;
+        return getPlayerSoulMaterialCount(mat.id) > 0;
+      })
       : [];
 
     grid.innerHTML = '';
@@ -510,7 +513,12 @@ const SoulWeaponModule = {
       && this.isSoulWeaponEligible()
       && Boolean(selected)
       && !this.busy
-      && !playing;
+      && !playing
+      && (
+        typeof isIdlePlayMode !== 'function'
+        || !isIdlePlayMode()
+        || getPlayerSoulMaterialCount(selected.id) > 0
+      );
 
     const btnEnchanter = document.getElementById('btnSoulEnchanter');
     const btnSoul = document.getElementById('btnSoulApply');
@@ -528,6 +536,10 @@ const SoulWeaponModule = {
     const mat = this.getSelectedMaterial();
     if (!mat || mat.kind !== 'enchanter' || !this.itemData) return;
     if (this.busy) return;
+    if (typeof consumePlayerSoulMaterial === 'function' && !consumePlayerSoulMaterial(mat.id, 1)) {
+      addLog('⚠️ 背包中沒有靈魂卷軸。', 'log-fail');
+      return;
+    }
 
     this.busy = true;
     this.updateConfirmButtonState();
@@ -562,6 +574,10 @@ const SoulWeaponModule = {
     const mat = this.getSelectedMaterial();
     if (!mat || mat.kind !== 'soul' || !this.itemData) return;
     if (this.busy) return;
+    if (typeof consumePlayerSoulMaterial === 'function' && !consumePlayerSoulMaterial(mat.id, 1)) {
+      addLog('⚠️ 背包中沒有這顆靈魂保珠。', 'log-fail');
+      return;
+    }
 
     this.busy = true;
     this.updateConfirmButtonState();
@@ -610,6 +626,45 @@ const SoulWeaponModule = {
     }
   },
 };
+
+const playerSoulMaterialCounts = {};
+
+function listSoulMaterials() {
+  const mats = [];
+  if (typeof SoulWeaponModule === 'undefined') return mats;
+  Object.values(SoulWeaponModule.MATERIALS || {}).forEach((list) => {
+    (list || []).forEach((mat) => mats.push(mat));
+  });
+  return mats;
+}
+
+function getSoulMaterialById(id) {
+  return listSoulMaterials().find((mat) => mat.id === id) || null;
+}
+
+function getPlayerSoulMaterialCount(id) {
+  return Math.max(0, Number(playerSoulMaterialCounts[id]) || 0);
+}
+
+function grantPlayerSoulMaterial(id, amount = 1) {
+  if (!id || amount <= 0) return 0;
+  const add = Math.floor(amount);
+  playerSoulMaterialCounts[id] = getPlayerSoulMaterialCount(id) + add;
+  return add;
+}
+
+function consumePlayerSoulMaterial(id, amount = 1) {
+  if (typeof isIdlePlayMode !== 'function' || !isIdlePlayMode()) return true;
+  const need = Math.max(1, Math.floor(Number(amount) || 1));
+  const have = getPlayerSoulMaterialCount(id);
+  if (have < need) return false;
+  playerSoulMaterialCounts[id] = have - need;
+  if (typeof InventoryModule !== 'undefined') {
+    InventoryModule.render?.();
+    InventoryModule.updateSlotCount?.();
+  }
+  return true;
+}
 
 function canUseSoulWeapon(item) {
   return SoulWeaponModule.isSoulWeaponEligible(item);

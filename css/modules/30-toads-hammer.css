@@ -1,0 +1,361 @@
+/* 蟾蜍鐵鎚／裝備繼承 — UIWindow4 ToadsHammer/main（對齊遊戲：圖1抽取→圖2繼承→圖3確認前） */
+
+.toads-hammer {
+  position: fixed;
+  inset: 0;
+  z-index: 100050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.toads-hammer.hidden {
+  display: none;
+}
+
+.toads-hammer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+}
+
+.toads-hammer-panel {
+  position: relative;
+  width: 472px;
+  height: 529px;
+  pointer-events: auto;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.55));
+}
+
+.toads-hammer-drag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 440px;
+  height: 36px;
+  z-index: 8;
+  cursor: move;
+}
+
+.th-backgrnd {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 472px;
+  height: 529px;
+  pointer-events: none;
+}
+
+.th-cover {
+  position: absolute;
+  left: 33px;
+  top: 262px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.th-guide1 { position: absolute; left: 42px; top: 138px; z-index: 2; pointer-events: none; }
+.th-guide2 { position: absolute; left: 197px; top: 138px; z-index: 2; pointer-events: none; }
+.th-guide3 { position: absolute; left: 360px; top: 134px; z-index: 2; pointer-events: none; }
+
+.th-guide.hidden {
+  display: none;
+}
+
+.th-formula-slot {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  overflow: visible;
+}
+
+/* 公式槽 icon：原始尺寸 ×2 */
+.th-formula-slot img {
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  object-fit: none;
+  image-rendering: pixelated;
+  transform: scale(2);
+  transform-origin: center center;
+  filter: drop-shadow(0 0 4px rgba(120, 200, 255, 0.65));
+}
+
+.th-formula-source { left: 42px; top: 138px; width: 77px; height: 59px; }
+.th-formula-target { left: 197px; top: 138px; width: 78px; height: 59px; }
+.th-formula-result { left: 360px; top: 134px; width: 62px; height: 64px; }
+
+.th-banner {
+  position: absolute;
+  left: 159px;
+  top: 437px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.th-layer {
+  position: absolute;
+  width: 210px;
+  height: 174px;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.th-no-extract,
+.th-transfer-choice {
+  left: 25px;
+  top: 229px;
+}
+
+.th-no-transfer,
+.th-extract-choice {
+  left: 238px;
+  top: 229px;
+}
+
+.th-layer.hidden {
+  display: none;
+}
+
+.th-btn {
+  position: absolute;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  z-index: 7;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
+}
+
+.th-exit {
+  left: 450px;
+  top: 6px;
+  width: 27px;
+  height: 27px;
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_close__normal__0.png');
+}
+.th-exit:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_close__mouseOver__0.png');
+}
+.th-exit:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_close__pressed__0.png');
+}
+
+.th-help {
+  left: 27px;
+  top: 42px;
+  width: 19px;
+  height: 20px;
+  background-image: url('../../images/toadshammer/ToadsHammer__main__button_help__normal__0.png');
+}
+.th-help:hover {
+  background-image: url('../../images/toadshammer/ToadsHammer__main__button_help__mouseOver__0.png');
+}
+.th-help:active {
+  background-image: url('../../images/toadshammer/ToadsHammer__main__button_help__pressed__0.png');
+}
+
+.th-confirm {
+  left: 147px;
+  top: 464px;
+  width: 88px;
+  height: 26px;
+  background-image: url('../../images/toadshammer/ToadsHammer__main__button_confirm__normal__0.png');
+}
+.th-confirm:hover:not(:disabled):not(.is-disabled) {
+  background-image: url('../../images/toadshammer/ToadsHammer__main__button_confirm__mouseOver__0.png');
+}
+.th-confirm:active:not(:disabled):not(.is-disabled) {
+  background-image: url('../../images/toadshammer/ToadsHammer__main__button_confirm__pressed__0.png');
+}
+.th-confirm:disabled,
+.th-confirm.is-disabled {
+  background-image: url('../../images/toadshammer/ToadsHammer__main__button_confirm__disabled__0.png');
+  cursor: default;
+}
+
+.th-cancel {
+  left: 238px;
+  top: 464px;
+  width: 88px;
+  height: 26px;
+  background-image: url('../../images/toadshammer/ToadsHammer__main__button_cancel__normal__0.png');
+}
+.th-cancel:hover {
+  background-image: url('../../images/toadshammer/ToadsHammer__main__button_cancel__mouseOver__0.png');
+}
+.th-cancel:active {
+  background-image: url('../../images/toadshammer/ToadsHammer__main__button_cancel__pressed__0.png');
+}
+
+.th-scroll {
+  position: absolute;
+  top: 261px;
+  width: 8px;
+  height: 136px;
+  z-index: 4;
+  pointer-events: none;
+  background: url('../../images/toadshammer/ToadsHammer__main__scroll1__enabled__base.png') repeat-y center top;
+  background-size: 8px auto;
+}
+
+.th-scroll-source { left: 219px; }
+.th-scroll-target { left: 431px; }
+
+/* 與背包相同：42px 格、間距 4px → 4×3 = 180×134 */
+.th-grid {
+  position: absolute;
+  top: 262px;
+  width: 180px;
+  height: 134px;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: repeat(4, 42px);
+  grid-auto-rows: 42px;
+  column-gap: 4px;
+  row-gap: 4px;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.th-grid-source { left: 33px; }
+.th-grid-target { left: 245px; }
+
+.th-grid.is-locked {
+  pointer-events: none;
+}
+
+.th-cell {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.th-cell-empty {
+  background: transparent;
+  pointer-events: none;
+}
+
+/* 格內 icon：原始尺寸（同背包） */
+.th-cell img {
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  object-fit: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.th-cell:has(img) {
+  z-index: 2;
+}
+
+.th-cell:hover:not(.th-cell-empty):not(:disabled) {
+  z-index: 6;
+}
+
+.th-cell.is-on {
+  outline: 2px solid #f5d142;
+  outline-offset: -2px;
+  box-shadow: 0 0 6px rgba(245, 209, 66, 0.55);
+}
+
+.th-cell.is-disabled {
+  cursor: default;
+}
+
+.th-disable {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+  background: url('../../images/toadshammer/ToadsHammer__main__disable.png') no-repeat center;
+  background-size: 48px 48px;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.th-e {
+  position: absolute;
+  left: 1px;
+  top: 1px;
+  font-size: 9px;
+  line-height: 1;
+  color: #fff;
+  background: #e07020;
+  padding: 1px 2px;
+  font-family: Tahoma, sans-serif;
+  font-weight: 700;
+  z-index: 2;
+}
+
+.th-star {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  font-size: 8px;
+  color: #ffe08a;
+  text-shadow: 0 0 2px #000;
+  font-family: Tahoma, sans-serif;
+  z-index: 2;
+}
+
+/* 文字在 backgrnd；只放 CheckBox3 勾選框 */
+.th-check {
+  position: absolute;
+  left: 33px;
+  top: 411px;
+  z-index: 7;
+  width: 160px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  background-color: transparent;
+  background-image: url('../../images/toadshammer/CheckBox3__0.png');
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 12px 12px;
+  image-rendering: pixelated;
+}
+
+.th-check:hover {
+  background-image: url('../../images/toadshammer/CheckBox3__2.png');
+}
+
+.th-check.is-on {
+  background-image: url('../../images/toadshammer/CheckBox3__1.png');
+}
+
+.th-check.is-on:hover {
+  background-image: url('../../images/toadshammer/CheckBox3__3.png');
+}

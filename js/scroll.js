@@ -39,6 +39,7 @@ function incrementScrollUsedCount(item, success = true) {
 const ScrollModule = {
   itemData: null,
   selectedTab: 'trace',
+  lastCatalogTab: 'special',
   selectedScrollId: null,
   selectedRestoreScrollId: null,
   selectedTraceId: null,
@@ -62,11 +63,34 @@ const ScrollModule = {
   dragStartY: 0,
   dragStartScroll: 0,
 
+  ensureScrollTooltip() {
+    let el = document.getElementById('scScrollTooltip');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'scScrollTooltip';
+      el.className = 'eq-tooltip inv-etc-tooltip sc-scroll-tooltip hidden';
+      el.setAttribute('aria-hidden', 'true');
+    }
+    if (el.parentElement !== document.body) {
+      document.body.appendChild(el);
+    }
+    return el;
+  },
+
   init() {
+    this.ensureScrollTooltip();
     const tabTrace = document.getElementById('scTabTrace');
     const tabSpecial = document.getElementById('scTabSpecial');
     if (tabTrace) tabTrace.addEventListener('click', () => this.selectTab('trace'));
-    if (tabSpecial) tabSpecial.addEventListener('click', () => this.selectTab('special'));
+    if (tabSpecial) {
+      tabSpecial.addEventListener('click', () => {
+        this.selectTab(this.lastCatalogTab === 'normal' ? 'normal' : 'special');
+      });
+    }
+    const kindSpecial = document.getElementById('scKindSpecial');
+    const kindNormal = document.getElementById('scKindNormal');
+    if (kindSpecial) kindSpecial.addEventListener('click', () => this.selectTab('special'));
+    if (kindNormal) kindNormal.addEventListener('click', () => this.selectTab('normal'));
 
     const recoveryCheck = document.getElementById('scRecoveryCheck');
     if (recoveryCheck) {
@@ -164,7 +188,7 @@ const ScrollModule = {
       slot.className = 'sc-scroll-slot';
       slot.dataset.slotIndex = String(i);
       slot.addEventListener('click', () => {
-        const item = getScrollItemBySlot(i);
+        const item = getScrollItemForUiSlot(i, this.itemData);
         if (item) this.selectScroll(item.id);
       });
       grid.appendChild(slot);
@@ -175,7 +199,7 @@ const ScrollModule = {
       if (!slot || grid._tooltipSlot === slot) return;
 
       grid._tooltipSlot = slot;
-      const item = getScrollItemBySlot(Number(slot.dataset.slotIndex));
+      const item = getScrollItemForUiSlot(Number(slot.dataset.slotIndex), this.itemData);
       if (item) this.showScrollTooltip(slot, item);
     });
 
@@ -295,47 +319,48 @@ const ScrollModule = {
   },
 
   showScrollTooltip(slot, scroll) {
-    const tooltip = document.getElementById('scScrollTooltip');
-    const img = document.getElementById('scScrollTooltipImg');
-    const detailPath = getScrollDetailImagePath(scroll);
-    if (!tooltip || !img || !detailPath) return;
+    const tooltip = this.ensureScrollTooltip();
+    if (!tooltip || !slot || !scroll) return;
+    if (typeof buildScrollTooltipHtml !== 'function') return;
 
-    img.src = detailPath;
-    img.alt = scroll.name || '卷軸詳細資訊';
+    this._scrollTooltipToken = (this._scrollTooltipToken || 0) + 1;
+    const token = this._scrollTooltipToken;
+    tooltip.innerHTML = buildScrollTooltipHtml(scroll);
     tooltip.classList.remove('hidden');
     tooltip.setAttribute('aria-hidden', 'false');
 
     const positionTooltip = () => {
+      if (token !== this._scrollTooltipToken) return;
       const rect = slot.getBoundingClientRect();
-      const gap = 8;
-      let left = rect.left - tooltip.offsetWidth - gap;
+      const tipW = tooltip.offsetWidth || 261;
+      const tipH = tooltip.offsetHeight || 120;
+      let left = rect.right + 8;
       let top = rect.top;
-
-      if (left < 8) {
-        left = rect.right + gap;
-      }
-
-      const maxTop = window.innerHeight - tooltip.offsetHeight - 8;
-      if (top > maxTop) top = Math.max(8, maxTop);
+      if (left + tipW > window.innerWidth - 8) left = Math.max(8, rect.left - tipW - 8);
+      if (top + tipH > window.innerHeight - 8) top = Math.max(8, window.innerHeight - tipH - 8);
       if (top < 8) top = 8;
-
       tooltip.style.left = `${left}px`;
       tooltip.style.top = `${top}px`;
     };
 
-    if (img.complete) {
-      positionTooltip();
-    } else {
-      img.onload = () => {
-        img.onload = null;
+    const iconEl = tooltip.querySelector('.eq-tip-icon');
+    if (iconEl) {
+      const applyScale = () => {
+        if (token !== this._scrollTooltipToken) return;
+        if (!iconEl.naturalWidth) return;
+        iconEl.style.width = `${Math.round(iconEl.naturalWidth * 2)}px`;
+        iconEl.style.height = `${Math.round(iconEl.naturalHeight * 2)}px`;
         positionTooltip();
       };
+      if (iconEl.complete) applyScale();
+      else iconEl.addEventListener('load', applyScale, { once: true });
     }
+    requestAnimationFrame(positionTooltip);
   },
 
   hideScrollTooltip() {
-    const tooltip = document.getElementById('scScrollTooltip');
-    const img = document.getElementById('scScrollTooltipImg');
+    this._scrollTooltipToken = (this._scrollTooltipToken || 0) + 1;
+    const tooltip = this.ensureScrollTooltip();
     const grid = document.getElementById('scScrollGrid');
     if (grid) grid._tooltipSlot = null;
 
@@ -344,12 +369,7 @@ const ScrollModule = {
     tooltip.setAttribute('aria-hidden', 'true');
     tooltip.style.removeProperty('left');
     tooltip.style.removeProperty('top');
-
-    if (img) {
-      img.onload = null;
-      img.removeAttribute('src');
-      img.alt = '';
-    }
+    tooltip.innerHTML = '';
   },
 
   loadEquip(item) {
@@ -407,7 +427,7 @@ const ScrollModule = {
     return Boolean(
       this.itemData
       && !this.isScrollUsesExhausted()
-      && this.selectedTab === 'special'
+      && this.isCatalogTab()
       && (isChaosScroll(scroll) || isRandomRollScroll(scroll) || isMultiStatRollScroll(scroll))
       && !this.getScrollEquipError()
     );
@@ -754,9 +774,17 @@ const ScrollModule = {
     }
   },
 
+  isCatalogTab() {
+    return this.selectedTab === 'special' || this.selectedTab === 'normal';
+  },
+
   selectTab(tab) {
     this.hideScrollTooltip();
+    if (this.isCatalogTab() && (tab === 'special' || tab === 'normal') && this.selectedTab !== tab) {
+      this.selectedScrollId = null;
+    }
     this.selectedTab = tab;
+    if (tab === 'special' || tab === 'normal') this.lastCatalogTab = tab;
     if (tab === 'trace') {
       this.selectedScrollId = null;
     } else {
@@ -1101,7 +1129,7 @@ const ScrollModule = {
   },
 
   needsRecoveryCardForUse() {
-    if (this.selectedTab !== 'special') return false;
+    if (!this.isCatalogTab()) return false;
     const scroll = this.getSelectedScroll();
     return scrollRequiresRecoveryCard(scroll);
   },
@@ -1118,7 +1146,11 @@ const ScrollModule = {
 
   isRecoveryReady() {
     if (!this.needsRecoveryCardForUse()) return false;
-    return this.recoveryCardChecked && playerRecoveryCardCount > 0;
+    if (!this.recoveryCardChecked) return false;
+    if (typeof isIdleRecoveryCardMode === 'function' && isIdleRecoveryCardMode()) {
+      return (typeof getHeldRecoveryCardCount === 'function' ? getHeldRecoveryCardCount() : 0) > 0;
+    }
+    return true;
   },
 
   tryConsumeRecoveryCardOnFail() {
@@ -1156,7 +1188,7 @@ const ScrollModule = {
       };
     }
 
-    if (this.selectedTab === 'special') {
+    if (this.isCatalogTab()) {
       const scroll = this.getSelectedScroll();
       if (!scroll) return null;
       if (isChaosScroll(scroll)) {
@@ -1190,7 +1222,7 @@ const ScrollModule = {
     return {
       type: 'trace',
       rate: trace.rate,
-      stats: [{ label: '咒文的痕跡', val: trace.cost }]
+      stats: [{ label: '全屬性', val: 5 }]
     };
   },
 
@@ -1294,7 +1326,7 @@ const ScrollModule = {
     if (!this.itemData || this.getRemainingUses() <= 0) return false;
     if (this.selectedRestoreScrollId) return false;
 
-    if (this.selectedTab === 'special') {
+    if (this.isCatalogTab()) {
       return Boolean(this.selectedScrollId) && this.isScrollUsableOnEquip();
     }
 
@@ -1354,7 +1386,7 @@ const ScrollModule = {
 
     if (selectedName) {
       const scroll = this.getSelectedScroll();
-      if (this.isScrollUsesExhausted() && this.selectedTab === 'special' && !this.getSelectedRestoreScroll()) {
+      if (this.isScrollUsesExhausted() && this.isCatalogTab() && !this.getSelectedRestoreScroll()) {
         selectedName.textContent = '';
       } else {
         selectedName.textContent = scroll ? scroll.name : '';
@@ -1362,7 +1394,7 @@ const ScrollModule = {
     }
 
     if (scrollHint) {
-      const hideHint = this.selectedTab === 'special'
+      const hideHint = this.isCatalogTab()
         && Boolean(this.getSelectedScroll())
         && !this.isScrollUsesExhausted();
       scrollHint.classList.toggle('hidden', hideHint);
@@ -1415,7 +1447,9 @@ const ScrollModule = {
 
     grid.querySelectorAll('.sc-scroll-slot').forEach((slot) => {
       const slotIndex = Number(slot.dataset.slotIndex);
-      const item = getScrollItemBySlot(slotIndex);
+      const item = typeof getScrollItemForUiSlot === 'function'
+        ? getScrollItemForUiSlot(slotIndex, this.itemData)
+        : getScrollItemBySlot(slotIndex);
       const exhausted = this.isScrollUsesExhausted();
       const equipUnusable = Boolean(
         item
@@ -1444,6 +1478,14 @@ const ScrollModule = {
           `<img class="sc-scroll-icon" src="${item.icon}" alt="${item.name}"`
           + ` width="${size.w}" height="${size.h}">`
         );
+        const showStack = this.selectedTab === 'normal'
+          || (typeof isIdlePlayMode === 'function' && isIdlePlayMode());
+        if (showStack && typeof getPlayerGloryScrollCount === 'function') {
+          const owned = getPlayerGloryScrollCount(item.id);
+          if (this.selectedTab === 'normal' || owned > 0) {
+            slot.insertAdjacentHTML('beforeend', `<span class="sc-scroll-count">${owned}</span>`);
+          }
+        }
       } else {
         slot.style.setProperty('--sc-color', item.color || '#555');
         slot.innerHTML = `<span class="sc-scroll-placeholder">${item.name.slice(0, 1)}</span>`;
@@ -1475,13 +1517,38 @@ const ScrollModule = {
     btn.type = 'button';
     btn.className = 'sc-trace-restore';
     if (this.selectedRestoreScrollId === restore.id) btn.classList.add('selected');
-    btn.title = restore.name;
+    const cost = getSpellTraceCostAmount(restore.cost);
+    btn.title = cost > 0 ? `${restore.name}（咒文的痕跡 ×${cost}）` : restore.name;
     btn.innerHTML = `
       <img class="sc-trace-restore-icon" src="${restore.icon}" alt="">
       <span class="sc-trace-restore-label">${restore.name}</span>
     `;
     btn.addEventListener('click', () => this.selectRestoreScroll(restore.id));
     return btn;
+  },
+
+  getSelectedSpellTraceCost() {
+    const restore = this.getSelectedRestoreScroll();
+    if (restore) return getSpellTraceCostAmount(restore.cost);
+    const trace = this.getSelectedTrace();
+    if (trace) return getSpellTraceCostAmount(trace.cost);
+    return 0;
+  },
+
+  renderTraceCost() {
+    const bar = document.getElementById('scTraceCostBar');
+    const amountEl = document.getElementById('scTraceCostAmount');
+    if (!bar || !amountEl) return;
+
+    const show = Boolean(this.itemData) && this.selectedTab === 'trace';
+    bar.classList.toggle('hidden', !show);
+    bar.setAttribute('aria-hidden', show ? 'false' : 'true');
+    if (!show) {
+      amountEl.textContent = '';
+      return;
+    }
+
+    amountEl.textContent = String(this.getSelectedSpellTraceCost());
   },
 
   renderTraceGrid() {
@@ -1493,6 +1560,7 @@ const ScrollModule = {
       grid.classList.add('hidden');
       grid.innerHTML = '';
       if (hint) hint.classList.remove('hidden');
+      this.renderTraceCost();
       return;
     }
 
@@ -1505,6 +1573,7 @@ const ScrollModule = {
         grid.appendChild(this.createRestoreScrollBtn(RESTORE_SCROLLS[row]));
       }
     }
+    this.renderTraceCost();
   },
 
   renderTraceTypes() {
@@ -1519,7 +1588,7 @@ const ScrollModule = {
     if (!bar) return;
 
     const show = Boolean(this.itemData)
-      && this.selectedTab === 'special'
+      && this.isCatalogTab()
       && this.needsRecoveryCardForUse()
       && !this.isScrollUsesExhausted();
     bar.classList.toggle('hidden', !show);
@@ -1528,23 +1597,27 @@ const ScrollModule = {
       iconEl.src = RECOVERY_CARD.icon;
     }
 
+    const idleCards = typeof isIdleRecoveryCardMode === 'function' && isIdleRecoveryCardMode();
+    const held = typeof getHeldRecoveryCardCount === 'function'
+      ? getHeldRecoveryCardCount()
+      : (idleCards ? Math.max(0, Number(playerRecoveryCardCount) || 0) : Infinity);
+    const noneLeft = idleCards && held <= 0;
+
     if (countEl) {
-      countEl.textContent = `${playerRecoveryCardCount} 個`;
+      countEl.classList.toggle('hidden', !idleCards);
+      countEl.textContent = idleCards ? `${held} 個` : '';
     }
 
     if (checkEl) {
       checkEl.checked = this.recoveryCardChecked;
-      checkEl.disabled = playerRecoveryCardCount <= 0;
-      if (playerRecoveryCardCount <= 0) {
+      checkEl.disabled = noneLeft;
+      if (noneLeft) {
         this.recoveryCardChecked = false;
         checkEl.checked = false;
       }
     }
 
-    bar.classList.toggle('is-disabled', playerRecoveryCardCount <= 0);
-
-    const cntRestore = document.getElementById('cntRestore');
-    if (cntRestore) cntRestore.textContent = `${playerRecoveryCardCount}次`;
+    bar.classList.toggle('is-disabled', noneLeft);
   },
 
   renderTabs() {
@@ -1553,19 +1626,23 @@ const ScrollModule = {
     const tracePanel = document.getElementById('scTracePanel');
     const scrollPanel = document.getElementById('scScrollPanel');
     const hasEquip = Boolean(this.itemData);
-    const onSpecialTab = this.selectedTab === 'special';
+    const onCatalogTab = this.isCatalogTab();
+    const kindSpecial = document.getElementById('scKindSpecial');
+    const kindNormal = document.getElementById('scKindNormal');
 
     if (tabTrace) tabTrace.classList.toggle('selected', this.selectedTab === 'trace');
-    if (tabSpecial) tabSpecial.classList.toggle('selected', onSpecialTab);
+    if (tabSpecial) tabSpecial.classList.toggle('selected', onCatalogTab);
+    if (kindSpecial) kindSpecial.classList.toggle('is-on', this.selectedTab === 'special');
+    if (kindNormal) kindNormal.classList.toggle('is-on', this.selectedTab === 'normal');
 
-    // 咒文分頁：咒文痕跡區；專用分頁：9×5 卷軸欄（可視 2 排）
+    // 咒文分頁：咒文痕跡區；專用／普通：9×5 卷軸欄（可視 2 排）
     if (tracePanel) {
-      tracePanel.classList.toggle('hidden', onSpecialTab);
+      tracePanel.classList.toggle('hidden', onCatalogTab);
       tracePanel.classList.remove('mode-recover');
-      tracePanel.classList.toggle('sc-idle-trace', !hasEquip && !onSpecialTab);
+      tracePanel.classList.toggle('sc-idle-trace', !hasEquip && !onCatalogTab);
     }
 
-    if (scrollPanel) scrollPanel.classList.toggle('hidden', !onSpecialTab);
+    if (scrollPanel) scrollPanel.classList.toggle('hidden', !onCatalogTab);
   },
 
   updateUseButtonState() {
@@ -1573,10 +1650,10 @@ const ScrollModule = {
     if (!btn) return;
 
     const hasEquip = Boolean(this.itemData);
-    const hasSelection = this.selectedTab === 'special'
+    const hasSelection = this.isCatalogTab()
       ? Boolean(this.selectedScrollId)
       : Boolean(this.selectedTraceId || this.selectedRestoreScrollId);
-    const equipOk = this.selectedTab !== 'special' || this.isScrollUsableOnEquip();
+    const equipOk = !this.isCatalogTab() || this.isScrollUsableOnEquip();
     const usesOk = this.selectedRestoreScrollId || this.getRemainingUses() > 0;
 
     btn.disabled = !(hasEquip && usesOk && hasSelection && equipOk)
@@ -1612,7 +1689,7 @@ const ScrollModule = {
       return addLog('⚠️ 升級次數已用完！', 'log-fail');
     }
 
-    if (this.selectedTab === 'special') {
+    if (this.isCatalogTab()) {
       const auto = document.getElementById('chkScrollAutoEnhance')?.checked;
       if (auto) {
         const scroll = this.getSelectedScroll();
@@ -1634,6 +1711,11 @@ const ScrollModule = {
 
     if (restore.restoreType === 'white' && !(this.itemData.scrollFailUses > 0)) {
       return addLog('⚠️ 沒有因卷軸失敗而消耗的次數可恢復。', 'log-fail');
+    }
+
+    const cost = getSpellTraceCostAmount(restore.cost);
+    if (typeof consumeSpellTrace === 'function' && !consumeSpellTrace(cost)) {
+      return addLog('⚠️ 咒文的痕跡不足。', 'log-fail');
     }
 
     const result = applyRestoreScroll(this.itemData, restore);
@@ -1668,6 +1750,12 @@ const ScrollModule = {
     const equipError = getScrollEquipError(scroll, this.itemData);
     if (equipError) {
       return addLog(`⚠️ ${equipError}`, 'log-fail');
+    }
+
+    if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+      if (typeof consumeGloryScroll === 'function' && !consumeGloryScroll(scroll.id, 1)) {
+        return addLog('⚠️ 背包中沒有這張卷軸。', 'log-fail');
+      }
     }
 
     const success = Math.random() * 100 < scroll.rate;
@@ -1713,7 +1801,10 @@ const ScrollModule = {
         addLog(`📜 ${scroll.name} 成功！${label} +${val}`, 'log-success');
       } else {
         applyFixedScrollStats(this.itemData, scroll.stats);
-        addLog(`📜 ${scroll.name} 成功！`, 'log-success');
+        const fixedText = typeof formatFixedScrollStats === 'function'
+          ? formatFixedScrollStats(scroll.stats)
+          : '';
+        addLog(`📜 ${scroll.name} 成功！${fixedText}`, 'log-success');
       }
 
       incrementScrollUsedCount(this.itemData);
@@ -1740,6 +1831,11 @@ const ScrollModule = {
   useTraceScroll() {
     const trace = this.getSelectedTrace();
     if (!trace) return;
+
+    const cost = getSpellTraceCostAmount(trace.cost);
+    if (typeof consumeSpellTrace === 'function' && !consumeSpellTrace(cost)) {
+      return addLog('⚠️ 咒文的痕跡不足。', 'log-fail');
+    }
 
     const success = Math.random() * 100 < trace.rate;
     const applyResult = () => {
@@ -1842,6 +1938,12 @@ function useRestoreCard() {
   }
 
   const ark = getRestoreScrollById('scroll_ark_recover');
+  const cost = getSpellTraceCostAmount(ark?.cost ?? 3000);
+  if (typeof consumeSpellTrace === 'function' && !consumeSpellTrace(cost)) {
+    addLog('⚠️ 咒文的痕跡不足。', 'log-fail');
+    return;
+  }
+
   if (ark) applyRestoreScroll(currentEnchantItem, ark);
   else {
     resetScrollBonusFields(currentEnchantItem);

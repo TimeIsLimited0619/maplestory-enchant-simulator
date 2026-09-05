@@ -123,6 +123,45 @@ function getExceptionalHammer(item) {
   return slot ? EXCEPTIONAL_HAMMER_BY_SLOT[slot] : null;
 }
 
+function listExceptionalHammers() {
+  const seen = new Set();
+  return Object.values(EXCEPTIONAL_HAMMER_BY_SLOT).filter((hammer) => {
+    if (!hammer?.id || seen.has(hammer.id)) return false;
+    seen.add(hammer.id);
+    return true;
+  });
+}
+
+function getExceptionalHammerById(hammerId) {
+  return listExceptionalHammers().find((hammer) => hammer.id === hammerId) || null;
+}
+
+const playerExceptionalHammerCounts = {};
+
+function getPlayerExceptionalHammerCount(hammerId) {
+  return Math.max(0, Number(playerExceptionalHammerCounts[hammerId]) || 0);
+}
+
+function grantPlayerExceptionalHammer(hammerId, amount = 1) {
+  if (!hammerId || amount <= 0) return 0;
+  const add = Math.floor(amount);
+  playerExceptionalHammerCounts[hammerId] = getPlayerExceptionalHammerCount(hammerId) + add;
+  return add;
+}
+
+function consumePlayerExceptionalHammer(hammerId, amount = 1) {
+  if (typeof isIdlePlayMode !== 'function' || !isIdlePlayMode()) return true;
+  const need = Math.max(1, Math.floor(Number(amount) || 1));
+  const have = getPlayerExceptionalHammerCount(hammerId);
+  if (have < need) return false;
+  playerExceptionalHammerCounts[hammerId] = have - need;
+  if (typeof InventoryModule !== 'undefined') {
+    InventoryModule.render?.();
+    InventoryModule.updateSlotCount?.();
+  }
+  return true;
+}
+
 function ensureExceptionalState(item) {
   if (!item) return null;
   if (!item.exceptional || typeof item.exceptional !== 'object') {

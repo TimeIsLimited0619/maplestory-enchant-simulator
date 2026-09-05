@@ -145,9 +145,19 @@ function formatPotentialStatValueForContext(statName, internalRank, context = {}
   const reqLevel = context.item?.reqLevel || 200;
   const eventId = context.eventId;
 
+  if (eventId === 8421 && typeof formatArmorAccessory71150MainPotentialStatValue === 'function') {
+    const armorAcc71150Val = formatArmorAccessory71150MainPotentialStatValue(statName, internalRank, context);
+    if (armorAcc71150Val != null) return armorAcc71150Val;
+  }
+
   if (eventId === 8421 && typeof formatArmorAccessory151250MainPotentialStatValue === 'function') {
     const armorAccVal = formatArmorAccessory151250MainPotentialStatValue(statName, internalRank, context);
     if (armorAccVal != null) return armorAccVal;
+  }
+
+  if (eventId === 8421 && typeof formatNormalWeapon71150MainPotentialStatValue === 'function') {
+    const normal71150Val = formatNormalWeapon71150MainPotentialStatValue(statName, internalRank, context);
+    if (normal71150Val != null) return normal71150Val;
   }
 
   if (eventId === 8421 && typeof formatNormalWeapon151200MainPotentialStatValue === 'function') {
@@ -161,6 +171,11 @@ function formatPotentialStatValueForContext(statName, internalRank, context = {}
   }
 
   if (eventId === 8422) {
+    if (typeof formatArmorAccessory71150AddPotentialStatValue === 'function') {
+      const armorAcc71150AddVal = formatArmorAccessory71150AddPotentialStatValue(statName, internalRank, context);
+      if (armorAcc71150AddVal != null) return armorAcc71150AddVal;
+    }
+
     if (typeof formatArmorAccessory201250AddPotentialStatValue === 'function') {
       const armorAcc201250Val = formatArmorAccessory201250AddPotentialStatValue(statName, internalRank, context);
       if (armorAcc201250Val != null) return armorAcc201250Val;
@@ -169,6 +184,11 @@ function formatPotentialStatValueForContext(statName, internalRank, context = {}
     if (typeof formatArmorAccessory151200AddPotentialStatValue === 'function') {
       const armorAccAddVal = formatArmorAccessory151200AddPotentialStatValue(statName, internalRank, context);
       if (armorAccAddVal != null) return armorAccAddVal;
+    }
+
+    if (typeof formatNormalWeapon71150AddPotentialStatValue === 'function') {
+      const normal71150AddVal = formatNormalWeapon71150AddPotentialStatValue(statName, internalRank, context);
+      if (normal71150AddVal != null) return normal71150AddVal;
     }
 
     if (typeof formatNormalWeapon151200AddPotentialStatValue === 'function') {
@@ -181,6 +201,11 @@ function formatPotentialStatValueForContext(statName, internalRank, context = {}
       if (destinyAddVal != null) return destinyAddVal;
     }
 
+    if (typeof isArmorAccessory71150AddPotentialContext === 'function'
+      && isArmorAccessory71150AddPotentialContext(context)) {
+      return null;
+    }
+
     if (typeof isArmorAccessory201250AddPotentialContext === 'function'
       && isArmorAccessory201250AddPotentialContext(context)) {
       return null;
@@ -188,6 +213,11 @@ function formatPotentialStatValueForContext(statName, internalRank, context = {}
 
     if (typeof isArmorAccessory151200AddPotentialContext === 'function'
       && isArmorAccessory151200AddPotentialContext(context)) {
+      return null;
+    }
+
+    if (typeof isNormalWeapon71150AddPotentialContext === 'function'
+      && isNormalWeapon71150AddPotentialContext(context)) {
       return null;
     }
 
@@ -207,8 +237,18 @@ function formatPotentialStatValueForContext(statName, internalRank, context = {}
     const addVal = formatAddPotentialStatValue(statName, internalRank, reqLevel);
     if (addVal != null) return addVal;
   } else if (eventId === 8421) {
+    if (typeof isArmorAccessory71150MainPotentialContext === 'function'
+      && isArmorAccessory71150MainPotentialContext(context)) {
+      return null;
+    }
+
     if (typeof isArmorAccessory151250MainPotentialContext === 'function'
       && isArmorAccessory151250MainPotentialContext(context)) {
+      return null;
+    }
+
+    if (typeof isNormalWeapon71150MainPotentialContext === 'function'
+      && isNormalWeapon71150MainPotentialContext(context)) {
       return null;
     }
 

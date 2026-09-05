@@ -36,6 +36,7 @@ const UiEquipModule = (() => {
     Sr: ['9'],
     ohp: ['10'], Si: ['10'],
     Wp: ['11'], Gw: ['11'], Op: ['11'],
+    WpSi: ['11'],
     Wpsi: ['11', '37'], // 神之子特殊武器：主武 11 或神之子輔助 37
     Ri: ['12', '13', '15', '16'],
     Pe: ['17', '36'],
@@ -299,6 +300,25 @@ const UiEquipModule = (() => {
     return ok;
   }
 
+  function playerLevel() {
+    if (typeof CharacterProgression !== 'undefined' && typeof CharacterProgression.getState === 'function') {
+      return Number(CharacterProgression.getState().level) || 1;
+    }
+    return 1;
+  }
+
+  function isIdleEquipMode() {
+    return (typeof SessionPersistenceModule !== 'undefined' && SessionPersistenceModule.activeProfile === 'idle')
+      || (typeof AppMode !== 'undefined' && AppMode.isIdle?.());
+  }
+
+  function meetsLevelReq(item) {
+    if (!isIdleEquipMode()) return true;
+    const need = Number(item?.reqLevel) || 0;
+    if (need <= 0) return true;
+    return playerLevel() >= need;
+  }
+
   /**
    * 穿上：從背包取出 → 放入身體槽；原槽有裝備則放回背包
    */
@@ -310,6 +330,13 @@ const UiEquipModule = (() => {
     const resolvedId = itemId || playerInventoryEquip[bagIndex];
     const item = getItemData(resolvedId);
     if (!item) return false;
+
+    if (!meetsLevelReq(item)) {
+      if (typeof addLog === 'function') {
+        addLog(`[裝備欄] 角色等級不足，無法穿上【${item.name}】（需要 Lv.${item.reqLevel}）。`, 'log-fail');
+      }
+      return false;
+    }
 
     const target = resolveWearTarget(item, preferredSlotId);
     if (!target) {
@@ -396,12 +423,47 @@ const UiEquipModule = (() => {
     return true;
   }
 
+  /** 身上該槽直接送進強化台（強化槽已有裝則先卸回物品欄） */
+  function moveWornSlotToEnchant(uiSlotId) {
+    const id = String(uiSlotId);
+    const entry = activeWear[id];
+    if (!entry?.itemId) return false;
+    if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
+      if (typeof unloadEquipFromSlot !== 'function' || !unloadEquipFromSlot()) {
+        return false;
+      }
+    }
+    activeWear[id] = null;
+    const ok = typeof loadEquipFromWearEntry === 'function' && loadEquipFromWearEntry(entry);
+    if (!ok) {
+      activeWear[id] = entry;
+      if (typeof addLog === 'function') {
+        addLog('[裝備欄] 無法放入強化槽。', 'log-fail');
+      }
+      refresh();
+      return false;
+    }
+    refresh();
+    scheduleSave();
+    return true;
+  }
+
   /** 強化互斥：依 itemId 從任一 preset 卸下並放回背包 */
   function unequipItemId(itemId, { refreshUi = true } = {}) {
     const found = findItemAcrossPresets(itemId);
     if (!found) return false;
     const entry = presetWear[found.preset][found.slot];
     if (!returnEntryToBagOrWarn(entry)) return false;
+    presetWear[found.preset][found.slot] = null;
+    if (refreshUi) refresh();
+    scheduleSave();
+    return true;
+  }
+
+  /** 直接銷毀身上裝備（不回背包），供蟾蜍鐵鎚等消耗來源裝備用 */
+  function destroyWornItem(itemId, { refreshUi = true } = {}) {
+    const found = findItemAcrossPresets(itemId);
+    if (!found) return false;
     presetWear[found.preset][found.slot] = null;
     if (refreshUi) refresh();
     scheduleSave();
@@ -623,10 +685,8 @@ const UiEquipModule = (() => {
         const slotId = el.getAttribute('data-slot');
         const entry = activeWear[String(slotId)];
         if (!entry?.itemId) return;
-        // 強化台開啟時優先放入強化槽；否則卸回背包
-        if (enchantOpen && typeof loadEquipToSlot === 'function') {
-          loadEquipToSlot(entry.itemId, -1);
-          refresh();
+        if (enchantOpen) {
+          moveWornSlotToEnchant(slotId);
           return;
         }
         unequipSlot(slotId);
@@ -682,6 +742,12 @@ const UiEquipModule = (() => {
         }
         return;
       }
+      if (!meetsLevelReq(item)) {
+        if (typeof addLog === 'function') {
+          addLog(`[裝備欄] 角色等級不足，無法穿上【${item.name}】（需要 Lv.${item.reqLevel}）。`, 'log-fail');
+        }
+        return;
+      }
       wearFromBag(itemId, data.slotIndex, uiSlotId);
     } catch (err) {
       console.error('[UiEquip] drop failed', err);
@@ -726,6 +792,7 @@ const UiEquipModule = (() => {
       PanelDrag.bringFront(wb || main);
     }
     syncMenuButtons();
+    if (typeof IdleHunt !== 'undefined') IdleHunt.syncBlockingPanelPause?.();
   }
 
   function setEquipOpen(next) {
@@ -802,6 +869,12 @@ const UiEquipModule = (() => {
     if (typeof UiCharacterInfo !== 'undefined' && typeof UiCharacterInfo.refresh === 'function') {
       UiCharacterInfo.refresh();
     }
+    if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.refreshDisplay === 'function') {
+      IdleHunt.refreshDisplay();
+    }
+    if (typeof Paperdoll !== 'undefined' && typeof Paperdoll.refresh === 'function') {
+      Paperdoll.refresh();
+    }
   }
 
   function bind() {
@@ -837,6 +910,9 @@ const UiEquipModule = (() => {
     syncPresetSelected();
     bind();
     refreshSlotContents();
+    if (typeof Paperdoll !== 'undefined' && typeof Paperdoll.initEquip === 'function') {
+      Paperdoll.initEquip();
+    }
     setEnchantOpen(false);
     setEquipOpen(false);
   }
@@ -912,6 +988,17 @@ const UiEquipModule = (() => {
     };
   }
 
+  function clearAllPresets() {
+    [1, 2, 3].forEach((n) => {
+      SLOT_IDS.forEach((id) => {
+        presetWear[n][id] = null;
+      });
+    });
+    pendingPreset = 1;
+    setActivePreset(1);
+    if (inited) refresh();
+  }
+
   function importState(data) {
     if (!data) return;
 
@@ -974,6 +1061,18 @@ const UiEquipModule = (() => {
     return activeWear[String(uiSlotId)] || null;
   }
 
+  function saveWornEntryState(uiSlotId, state) {
+    const id = String(uiSlotId);
+    const entry = activeWear[id];
+    if (!entry?.itemId || !state) return false;
+    entry.state = cloneState(state);
+    if (typeof syncEnchantStateFromModules === 'function') {
+      syncEnchantStateFromModules(entry.state);
+    }
+    scheduleSave();
+    return true;
+  }
+
   /** 背包 hover 比較用：同部位目前穿著（多槽取第一件有裝的） */
   function findWornCompareEntry(item) {
     const candidates = getCandidateSlots(item);
@@ -1007,8 +1106,10 @@ const UiEquipModule = (() => {
     getActivePreset: () => activePreset,
     isEquipView,
     wearFromBag,
+    moveWornSlotToEnchant,
     unequipSlot,
     unequipItemId,
+    destroyWornItem,
     isItemWorn,
     getWornItemIds,
     unequipBagIndex,
@@ -1018,7 +1119,9 @@ const UiEquipModule = (() => {
     remapBagIndices,
     exportState,
     importState,
+    clearAllPresets,
     getWornEntry,
+    saveWornEntryState,
     findWornCompareEntry,
     getActiveWearEntries,
     previewWearEntries,

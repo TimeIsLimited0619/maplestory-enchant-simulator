@@ -172,7 +172,14 @@ Object.assign(PotentialModule, {
     const cube = getPotentialCubeById(this.uniCubeId);
     if (!cube) return;
 
-    consumePlayerCube(this.uniCubeId);
+    if (typeof getPlayerCubeCount === 'function' && getPlayerCubeCount(this.uniCubeId) <= 0) {
+      this.renderUniOverlay();
+      return addLog('⚠️ 背包中沒有這個方塊。', 'log-fail');
+    }
+    if (typeof consumePlayerCube === 'function' && !consumePlayerCube(this.uniCubeId)) {
+      this.renderUniOverlay();
+      return addLog('⚠️ 背包中沒有這個方塊。', 'log-fail');
+    }
     addLog(`🔮 使用 ${cube.name} 重新選擇潛在能力。`, 'log-success');
 
     if (this.uniPhase === 'preview') {
@@ -272,5 +279,17 @@ Object.assign(PotentialModule, {
 
     if (actionsBefore) actionsBefore.classList.toggle('hidden', this.uniPhase !== 'select');
     if (actionsAfter) actionsAfter.classList.toggle('hidden', this.uniPhase !== 'preview');
+
+    const hasCube = !(
+      this.uniCubeId
+      && typeof getPlayerCubeCount === 'function'
+      && getPlayerCubeCount(this.uniCubeId) <= 0
+    );
+    ['ptUniBtnReselectBefore', 'ptUniBtnReselectAfter'].forEach((id) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.disabled = !hasCube;
+      btn.classList.toggle('is-disabled', !hasCube);
+    });
   }
 });

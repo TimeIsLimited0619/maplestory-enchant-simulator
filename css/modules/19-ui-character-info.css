@@ -122,10 +122,10 @@
   pointer-events: none;
 }
 
-/* Stat/1/titleImage（MP）— BattleSimulation outlink；對齊右欄與 HP 同列 */
+/* Stat/1 titlePos (231, 52)；titleImage 18×9 */
 .uci-mp-title {
   position: absolute;
-  left: 219px;
+  left: 231px;
   top: 52px;
   width: 18px;
   height: 9px;
@@ -158,16 +158,84 @@
   pointer-events: none;
 }
 
-/* canvas:utilityFont origin -12,-326 → (12,326) */
-.uci-utility-font {
+/* canvas:utilityFont origin -12,-326 → (12,326)；與 defenseFont 互斥顯示 */
+.uci-utility-font,
+.uci-defense-font {
   position: absolute;
   left: 12px;
   top: 326px;
-  width: 268px;
   height: 74px;
-  background: url('../../images/BattleSimulation/characterInfo/detailStat/canvas/utilityFont.png') no-repeat 0 0;
   z-index: 3;
   pointer-events: none;
+}
+
+/* BattleSimulation TW utilityFont（含 page1 頁點） */
+.uci-utility-font {
+  width: 271px;
+  background: url('../../images/BattleSimulation/characterInfo/detailStat/canvas/utilityFont.png') no-repeat 0 0;
+}
+
+/* TW defenseFont（含 page2 頁點） */
+.uci-defense-font {
+  width: 310px;
+  background: url('../../images/UICharacterInfo/common/detailStat/canvas/defenseFont_TW.png') no-repeat 0 0;
+  display: none;
+}
+
+.uci-detail-stat[data-page="2"] .uci-utility-font {
+  display: none;
+}
+
+.uci-detail-stat[data-page="2"] .uci-defense-font {
+  display: block;
+}
+
+/* vector:wheelLT/RB (1,315)–(446,404)：僅標記範圍，不攔截點擊 */
+.uci-wheel-zone {
+  position: absolute;
+  left: 1px;
+  top: 315px;
+  width: 445px;
+  height: 89px;
+  z-index: 7;
+  pointer-events: none;
+}
+
+.uci-num[data-page] {
+  display: none;
+}
+
+.uci-detail-stat[data-page="1"] .uci-num[data-page="1"],
+.uci-detail-stat[data-page="2"] .uci-num[data-page="2"],
+.uci-num:not([data-page]) {
+  display: block;
+}
+
+/* 能力值 clickRange 熱區 */
+.uci-hits {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 7;
+  pointer-events: none;
+}
+
+.uci-stat-hit {
+  position: absolute;
+  z-index: 7;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+  pointer-events: auto;
+}
+
+.uci-stat-hit:hover,
+.uci-stat-hit.is-active {
+  outline: 1px solid rgba(221, 254, 1, 0.35);
+  outline-offset: -1px;
 }
 
 /* local lvUp*（全部 outlink 到 lvUpHp 圖） */
@@ -276,4 +344,130 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   pointer-events: none;
   white-space: nowrap;
+}
+
+/* ---- Addon:statInfo 222×320 @ root 右側（避開左側 Hyper） ---- */
+.uci-stat-info {
+  position: absolute;
+  left: 474px;
+  top: 268px;
+  width: 222px;
+  height: 320px;
+  background: url('../../images/UICharacterInfo/local/detailStat/Addon/statInfo/backgrnd.png') no-repeat 0 0;
+  z-index: 12;
+  image-rendering: pixelated;
+}
+
+.uci-stat-info.is-hidden {
+  display: none;
+}
+
+.uci-stat-info-close {
+  position: absolute;
+  left: 201px;
+  top: 11px;
+  width: 13px;
+  height: 13px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.uci-stat-info-title {
+  position: absolute;
+  left: 16px;
+  top: 32px;
+  width: 183px;
+  text-align: center;
+  font-family: SimSun, "Microsoft JhengHei", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ddfe01;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.uci-stat-info-scroll {
+  position: absolute;
+  left: 10px;
+  top: 58px;
+  width: 196px;
+  height: 248px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.uci-stat-info-list {
+  position: relative;
+  width: 196px;
+}
+
+/* 列圖已含「現在數值／基本數值／%數值…」標籤；只疊右側數值，避免文字重疊 */
+.uci-stat-info-row {
+  position: relative;
+  width: 196px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 10px 0 8px;
+  box-sizing: border-box;
+  font-family: SimSun, "Microsoft JhengHei", sans-serif;
+  font-size: 12px;
+  line-height: 1;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+}
+
+.uci-stat-info-row.is-current {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/Addon/statInfo/currentNum.png');
+  color: #ddfe01;
+  font-weight: 700;
+}
+
+.uci-stat-info-row.is-current1 {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/Addon/statInfo/currentNum1.png');
+  color: #ddfe01;
+}
+
+.uci-stat-info-row.is-standard {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/Addon/statInfo/standardNum.png');
+  color: #abb5bb;
+}
+
+.uci-stat-info-row.is-percent {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/Addon/statInfo/percentNum.png');
+  color: #abb5bb;
+}
+
+.uci-stat-info-row.is-extra {
+  background-image: url('../../images/UICharacterInfo/local/detailStat/Addon/statInfo/extraNum.png');
+  color: #abb5bb;
+}
+
+/* 自訂來源列：無內建標籤，左右顯示 label + value */
+.uci-stat-info-row.is-desc {
+  background-image: none;
+  justify-content: space-between;
+  color: #abb5bb;
+}
+
+.uci-stat-info-k {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+  padding-left: 2px;
+}
+
+.uci-stat-info-v {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
 }

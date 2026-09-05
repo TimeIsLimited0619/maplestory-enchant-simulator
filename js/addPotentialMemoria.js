@@ -279,7 +279,14 @@ Object.assign(AddPotentialModule, {
     const cube = getAddPotCubeById(this.memoriaCubeId);
     if (!cube) return;
 
-    consumePlayerAddPotCube(cube.id);
+    if (typeof getPlayerAddPotCubeCount === 'function' && getPlayerAddPotCubeCount(cube.id) <= 0) {
+      this.renderMemoriaOverlay();
+      return addLog('⚠️ 背包中沒有這個方塊。', 'log-fail');
+    }
+    if (typeof consumePlayerAddPotCube === 'function' && !consumePlayerAddPotCube(cube.id)) {
+      this.renderMemoriaOverlay();
+      return addLog('⚠️ 背包中沒有這個方塊。', 'log-fail');
+    }
     addLog(`🟢 使用 ${cube.name} 重新設定附加潛在能力。`, 'log-success');
 
     const rolled = this.rollMemoriaAfter();
@@ -418,9 +425,14 @@ Object.assign(AddPotentialModule, {
     if (btn) {
       this.applyMemoriaResetButtonSkin(btn);
       const mode = this.getMemoriaResetButtonMode();
+      const outOfCubes = Boolean(
+        this.memoriaCubeId
+        && typeof getPlayerAddPotCubeCount === 'function'
+        && getPlayerAddPotCubeCount(this.memoriaCubeId) <= 0
+      );
       const disabled = mode === 'cancel'
         ? Boolean(this.memoriaClosing)
-        : Boolean(this.memoriaRankUp || this.memoriaClosing);
+        : Boolean(this.memoriaRankUp || this.memoriaClosing || outOfCubes);
       btn.disabled = disabled;
       btn.classList.toggle('is-disabled', disabled);
       this.paintMemoriaResetButton(btn, disabled ? 'disabled' : 'normal');

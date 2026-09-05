@@ -45,9 +45,34 @@ const STAR_CLASS_STAT_LABELS = {
   luk: 'LUK',
 };
 
-/** Class Stats：1~15 星僅基礎四圍 > 0 的屬性；16 星起四圍皆加（1~15 段仍依基礎判定） */
+/** reqJob 位元 → 星力 Class Stat 對應四圍（MapleStory Wiki：依職業相關屬性，非裝備基礎四圍） */
+const REQ_JOB_STAR_CLASS_STATS = {
+  1: ['str', 'dex'],
+  2: ['int', 'luk'],
+  4: ['dex', 'str'],
+  8: ['luk', 'dex'],
+  16: ['str', 'dex'],
+};
+
+function getStarClassStatKeysForItem(item) {
+  const reqJob = Number(item?.reqJob) || 0;
+  if (!reqJob) return STAR_CLASS_STAT_KEYS.slice();
+  const keys = new Set();
+  Object.entries(REQ_JOB_STAR_CLASS_STATS).forEach(([bit, stats]) => {
+    if (reqJob & Number(bit)) {
+      stats.forEach((key) => keys.add(key));
+    }
+  });
+  return keys.size ? [...keys] : STAR_CLASS_STAT_KEYS.slice();
+}
+
+function isStarClassStatEligible(item, statKey) {
+  return getStarClassStatKeysForItem(item).includes(statKey);
+}
+
+/** @deprecated 舊邏輯：依裝備基礎四圍；保留供相容，請改 isStarClassStatEligible */
 function hasBaseClassStat(item, statKey) {
-  return (item?.baseStats?.[statKey] || 0) > 0;
+  return isStarClassStatEligible(item, statKey);
 }
 
 function getRawClassStatCumulative(starCount, item) {
@@ -61,28 +86,22 @@ function getRawClassStatCumulative(starCount, item) {
     return statTable[star] ?? statTable[25] ?? 0;
   }
   const range = resolveArmorStarLevelRange(item?.reqLevel || 200);
-  const statTable = ARMOR_STAR_STAT_CUMULATIVE[range] || ARMOR_STAR_STAT_CUMULATIVE['200-249'];
+  const statTable = ARMOR_STAR_STAT_CUMULATIVE[range] || ARMOR_STAR_STAT_CUMULATIVE['201-249'];
   return statTable[star] ?? statTable[30] ?? 0;
 }
 
 function getStarClassStatBonus(rawBonus, item, statKey) {
   if (!rawBonus || rawBonus <= 0) return 0;
-  return hasBaseClassStat(item, statKey) ? rawBonus : 0;
+  return isStarClassStatEligible(item, statKey) ? rawBonus : 0;
 }
 
 function getStarClassStatBonusAtStar(starCount, item, statKey) {
   const star = Math.max(0, Math.min(30, starCount || 0));
+  if (typeof isSuperiorStarForceItem === 'function' && isSuperiorStarForceItem(item)) {
+    return getSuperiorStarForceBonusAtStar(star, item).stat || 0;
+  }
   const raw = getRawClassStatCumulative(star, item);
-  if (star <= 15) {
-    return getStarClassStatBonus(raw, item, statKey);
-  }
-  const raw15 = getRawClassStatCumulative(15, item);
-  const after15 = raw - raw15;
-  let total = after15;
-  if (hasBaseClassStat(item, statKey)) {
-    total += raw15;
-  }
-  return total;
+  return getStarClassStatBonus(raw, item, statKey);
 }
 
 function appendStarClassStatBoostLines(lines, item, classStatGains, labelMap = STAR_CLASS_STAT_LABELS) {
@@ -187,8 +206,8 @@ function getWeaponStarForceBonusAtStar(starCount, item) {
 function getArmorStarForceBonusAtStar(starCount, item) {
   const star = Math.max(0, Math.min(30, starCount || 0));
   const range = resolveArmorStarLevelRange(item?.reqLevel || 200);
-  const statTable = ARMOR_STAR_STAT_CUMULATIVE[range] || ARMOR_STAR_STAT_CUMULATIVE['200-249'];
-  const attTable = ARMOR_STAR_ATT_CUMULATIVE[range] || ARMOR_STAR_ATT_CUMULATIVE['200-249'];
+  const statTable = ARMOR_STAR_STAT_CUMULATIVE[range] || ARMOR_STAR_STAT_CUMULATIVE['201-249'];
+  const attTable = ARMOR_STAR_ATT_CUMULATIVE[range] || ARMOR_STAR_ATT_CUMULATIVE['201-249'];
   const stat = statTable[star] ?? statTable[30] ?? 0;
 
   const baseAtk = item?.baseStats?.atk || 0;
@@ -201,8 +220,8 @@ function getArmorStarForceBonusAtStar(starCount, item) {
 
   if (star <= 15 && isStarGloveItem(item)) {
     const gloveAtt = ARMOR_GLOVE_STAR_ATT_CUMULATIVE[star] ?? 0;
-    if (hasBaseAtk) atk = gloveAtt;
-    if (hasBaseMatk) matk = gloveAtt;
+    atk = gloveAtt;
+    matk = gloveAtt;
   } else {
     const att = attTable[star] ?? attTable[30] ?? 0;
     if (hasBaseAtk) atk = att;
@@ -213,6 +232,10 @@ function getArmorStarForceBonusAtStar(starCount, item) {
 }
 
 function getStarForceBonusAtStar(starCount, item) {
+  if (typeof isSuperiorStarForceItem === 'function' && isSuperiorStarForceItem(item)) {
+    const bonus = getSuperiorStarForceBonusAtStar(starCount, item);
+    return { stat: bonus.stat, atk: bonus.atk, matk: bonus.matk, def: 0, hp: 0 };
+  }
   const isWeapon = typeof usesWeaponStarForce === 'function'
     ? usesWeaponStarForce(item)
     : item?.mainType === EQUIP_TYPE.WEAPON;

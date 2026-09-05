@@ -201,7 +201,8 @@ const CombatPower = (() => {
       - getVal('skillAtk')
       - adjMentorAtk;
     const attackPercent = getVal('percentAtk') - getVal('skillPercentAtk');
-    const attackNoApply = getVal('noApplyAtk');
+    const attackNoApplyFull = getVal('noApplyAtk');
+    const attackNoApply = attackNoApplyFull - getVal('skillNoApplyAtk');
     const attackTotal = floorPercentApplied(attackBase, attackPercent) + attackNoApply;
 
     const zeroBossDmgPenalty = ctx.jobName === '神之子' ? getVal('adjZeroWeaponFlameBossDmg') : 0;
@@ -249,7 +250,7 @@ const CombatPower = (() => {
         percent: attackPercent,
         noApply: attackNoApply,
         total: attackTotal,
-        panel: panelStatValue(getVal('atk'), getVal('percentAtk'), attackNoApply),
+        panel: panelStatValue(getVal('atk'), getVal('percentAtk'), attackNoApplyFull),
         skillBase: getVal('skillAtk'),
         skillPercent: getVal('skillPercentAtk'),
       },
@@ -375,12 +376,35 @@ const CombatPower = (() => {
       + (Number(ex[equipLabel]) || 0)
       + (Number(soulFlat[equipLabel]) || 0);
 
+    /** 潛能固定值（不含 %） */
+    const potFlatOf = (keys) => {
+      let n = 0;
+      (keys || []).forEach((key) => {
+        if (String(key).endsWith('%')) return;
+        [potMain[key], potAdd[key]].forEach((pot) => {
+          if (!pot?.value) return;
+          if (pot.suffix === '%') return;
+          n += Number(pot.value) || 0;
+        });
+      });
+      return n;
+    };
+
     const pctOf = (label) => {
       let n = Number(extra[label]?.total) || 0;
       if (label === 'BOSS怪物傷害') n += Number(ex[label]) || 0;
       if (soulOpt[label] != null) n += Number(soulOpt[label]) || 0;
-      [potMain[label], potAdd[label]].forEach((pot) => {
-        if (pot?.value) n += Number(pot.value) || 0;
+      // 同時查「傷害」與「傷害%」（潛能固定／％分 key 後）
+      const potKeys = label.endsWith('%')
+        ? [label, label.slice(0, -1)]
+        : [label, `${label}%`];
+      potKeys.forEach((key) => {
+        [potMain[key], potAdd[key]].forEach((pot) => {
+          if (!pot?.value) return;
+          if (pot.suffix === '%' || key.endsWith('%')) {
+            n += Number(pot.value) || 0;
+          }
+        });
       });
       return n;
     };
@@ -399,17 +423,25 @@ const CombatPower = (() => {
       else if (labels.secondSub && statKey === labels.secondSub) delta.percentSubtwo += amount;
     };
 
-    // 主六維 flat
-    ['STR', 'DEX', 'INT', 'LUK'].forEach((k) => addStatFlat(k, flatOf(k)));
-    addStatFlat('HP', flatOf('最大HP'));
+    // 主六維 flat（裝備 + 潛能固定值）
+    [
+      ['STR', ['STR', '力量']],
+      ['DEX', ['DEX', '敏捷']],
+      ['INT', ['INT', '智力']],
+      ['LUK', ['LUK', '幸運']],
+    ].forEach(([stat, keys]) => {
+      addStatFlat(stat, flatOf(stat) + potFlatOf(keys));
+    });
+    addStatFlat('HP', flatOf('最大HP') + potFlatOf(['最大HP', 'MaxHP', 'HP']));
 
-    // 全屬／全屬%（惡復：全屬只進副屬；其餘進主+副[+副2]）— 抄 equipmentDelta.ts
+    // 全屬 flat／%（惡復：全屬只進副屬；其餘進主+副[+副2]）
+    // 全屬性% 併入主／副 percent（與單屬 STR% 等同加總）
     const extraAll = extra['全屬性'];
-    const extraAllIsPct = !!(extraAll && extraAll.isPercent);
     const allStatFlat = flatOf('全屬性')
-      + (!extraAllIsPct ? (Number(extraAll?.total) || 0) : 0);
+      + (!(extraAll?.isPercent) ? (Number(extraAll?.total) || 0) : 0)
+      + potFlatOf(['全屬性']);
     const allStatPct = pctOf('全屬性%')
-      + (extraAllIsPct ? (Number(extraAll?.total) || 0) : 0);
+      + (extraAll?.isPercent ? (Number(extraAll?.total) || 0) : 0);
     const isDA = jobCategory === 'da';
     const includeSecondSub = jobCategory === 'xenon' || jobCategory === 'dual';
     if (!isDA) {
@@ -426,7 +458,7 @@ const CombatPower = (() => {
       delta.percentMain += pctOf('最大HP%');
     }
 
-    // 單屬 %（潛能 label 多為 STR + value 12%，少數為 STR%）
+    // 單屬 %（潛能可能存成 STR% 或 STR+suffix=%）
     [
       ['STR', ['STR%', 'STR', '力量%', '力量']],
       ['DEX', ['DEX%', 'DEX', '敏捷%', '敏捷']],
@@ -434,17 +466,24 @@ const CombatPower = (() => {
       ['LUK', ['LUK%', 'LUK', '幸運%', '幸運']],
     ].forEach(([stat, keys]) => {
       keys.forEach((key) => {
-        const pot = potMain[key] || potAdd[key];
-        if (pot?.suffix === '%' && pot.value) addStatPercent(stat, Number(pot.value) || 0);
-        else if (key.endsWith('%') && pot?.value) addStatPercent(stat, Number(pot.value) || 0);
-        else if (extra[key]?.isPercent) addStatPercent(stat, Number(extra[key].total) || 0);
+        [potMain[key], potAdd[key]].forEach((pot) => {
+          if (!pot?.value) return;
+          if (pot.suffix === '%' || key.endsWith('%')) {
+            addStatPercent(stat, Number(pot.value) || 0);
+          }
+        });
+        if (extra[key]?.isPercent) addStatPercent(stat, Number(extra[key].total) || 0);
       });
     });
 
     // 攻擊：魔攻職業用魔法攻擊力
     const useMad = labels.main === 'INT';
-    delta.atk = useMad ? flatOf('魔法攻擊力') : flatOf('攻擊力');
-    if (!delta.atk && useMad) delta.atk = flatOf('攻擊力');
+    delta.atk = useMad
+      ? (flatOf('魔法攻擊力') + potFlatOf(['魔法攻擊力', '攻擊力']))
+      : (flatOf('攻擊力') + potFlatOf(['攻擊力', '物理攻擊力']));
+    if (!delta.atk && useMad) {
+      delta.atk = flatOf('攻擊力') + potFlatOf(['攻擊力', '物理攻擊力']);
+    }
 
     delta.dmg = pctOf('傷害');
     delta.bossDmg = pctOf('BOSS怪物傷害');

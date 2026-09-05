@@ -4,11 +4,16 @@
  */
 const CombatJobs = (() => {
   const jobOptions = [
-    { name: '英雄', category: 'normal' },
+    { name: '劍士', category: 'normal', jobId: 100, skillBook: 100, skillLine: 'warrior', skillRank: '10' },
+    { name: '狂戰士', category: 'normal', jobId: 110, skillBook: 110, skillLine: 'warrior', skillRank: '30' },
+    { name: '十字軍', category: 'normal', jobId: 111, skillBook: 111, skillLine: 'warrior', skillRank: '60' },
+    { name: '英雄', category: 'normal', jobId: 112, skillBook: 112, skillLine: 'warrior', skillRank: '100' },
     { name: '聖騎士', category: 'normal' },
     { name: '黑騎士', category: 'normal' },
-    { name: '大魔導士（冰、雷）', category: 'normal', aliases: ['冰雷', '大魔導士冰雷'] },
-    { name: '大魔導士（火、毒）', category: 'normal', aliases: ['火毒', '大魔導士火毒'] },
+    { name: '法師', category: 'normal',jobId:200, skillBook: 200, skillLine: 'wizard', skillRank: '10'},
+    { name: '巫師（冰、雷）', category: 'normal',jobId:220, skillBook: 220, skillLine: 'wizard', skillRank: '30'},
+    { name: '魔導士（冰、雷）', category: 'normal',jobId:221, skillBook: 221, skillLine: 'wizard', skillRank: '60'},
+    { name: '大魔導士（火、毒）', category: 'normal', jobId:222, skillBook: 222, skillLine: 'wizard', skillRank: '100'},
     { name: '主教', category: 'normal' },
     { name: '箭神', category: 'normal' },
     { name: '神射手', category: 'normal' },
@@ -59,7 +64,7 @@ const CombatJobs = (() => {
 
   const jobStatDisplayGroups = [
     {
-      names: ['英雄', '聖騎士', '黑騎士', '拳霸', '重砲指揮官', '聖魂劍士', '閃雷悍將', '米哈逸', '狂狼勇士', '隱月', '爆拳槍神', '惡魔殺手', '凱撒', '阿戴爾', '亞克', '蓮', '神之子', '劍豪'],
+      names: ['劍士', '英雄', '聖騎士', '黑騎士', '拳霸', '重砲指揮官', '聖魂劍士', '閃雷悍將', '米哈逸', '狂狼勇士', '隱月', '爆拳槍神', '惡魔殺手', '凱撒', '阿戴爾', '亞克', '蓮', '神之子', '劍豪'],
       main: 'STR', sub: 'DEX',
     },
     {
@@ -123,11 +128,24 @@ const CombatJobs = (() => {
     return stat;
   }
 
+  function getJobSkillMeta(jobName) {
+    const job = getJobByName(jobName);
+    if (!job) return null;
+    if (job.jobId == null && job.skillBook == null) return null;
+    return {
+      jobId: job.jobId ?? job.skillBook ?? null,
+      skillBook: job.skillBook ?? job.jobId ?? null,
+      skillRank: job.skillRank || '10',
+      name: job.name,
+    };
+  }
+
   return {
     jobOptions,
     getJobByName,
     getDefaultJobByCategory,
     getJobStatLabelsByName,
+    getJobSkillMeta,
     equipLabelForStat,
     EQUIP_STAT_KEY,
   };

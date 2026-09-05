@@ -1,0 +1,429 @@
+/* ==========================================
+   37. 全域左側導覽欄 (App Nav Sidebar)
+   ========================================== */
+:root {
+  --app-nav-width: 256px;
+  --app-nav-width-collapsed: 72px;
+  --app-nav-current-width: var(--app-nav-width);
+}
+
+html.app-nav-collapsed {
+  --app-nav-current-width: var(--app-nav-width-collapsed);
+}
+
+.app-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 14000;
+  box-sizing: border-box;
+  width: var(--app-nav-width);
+  height: 100vh;
+  padding: 20px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: #161A23;
+  border-right: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.80);
+  font-family: 'Microsoft JhengHei', 'PingFang TC', 'Segoe UI', sans-serif;
+  transition: width 0.2s ease, padding 0.2s ease;
+  overflow: hidden;
+}
+
+html.app-nav-collapsed .app-nav {
+  width: var(--app-nav-width-collapsed);
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.app-nav-divider {
+  border: none;
+  height: 2px;
+  margin: 16px 0;
+  background: #2D2F39;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.app-nav-divider--section {
+  margin-top: 12px;
+}
+
+/* --- Profile --- */
+.app-nav-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  min-height: 48px;
+}
+
+.app-nav-avatar-wrap {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #2D2F39;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.paperdoll-stage--nav {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+}
+
+.paperdoll-stage--nav .paperdoll-layers {
+  position: absolute;
+  left: 15%;
+  top: 25px;
+  transform: translateX(-50%) scale(1);
+  transform-origin: top center;
+}
+
+.paperdoll-stage--nav .paperdoll-layers img {
+  image-rendering: pixelated;
+}
+
+.app-nav-profile-text {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-nav-job {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.50);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-nav-name {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: rgba(255, 255, 255, 0.80);
+  cursor: text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-nav-name:hover {
+  color: #fff;
+}
+
+.app-nav-name-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 2px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  background: #2D2F39;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  outline: none;
+}
+
+html.app-nav-collapsed .app-nav-profile-text {
+  display: none;
+}
+
+/* --- Mode switch --- */
+.app-nav-mode {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.app-nav-mode-btn {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.50);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.app-nav-mode-btn:hover {
+  background: rgba(45, 47, 57, 0.6);
+  color: rgba(255, 255, 255, 0.80);
+}
+
+.app-nav-mode-btn.is-active {
+  background: #2D2F39;
+  border-color: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.90);
+}
+
+html.app-nav-collapsed .app-nav-mode {
+  flex-direction: column;
+}
+
+html.app-nav-collapsed .app-nav-mode-btn .app-nav-item-label {
+  display: none;
+}
+
+/* --- Sections --- */
+.app-nav-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  margin-right: -8px;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #3a3d48 transparent;
+}
+
+.app-nav-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.app-nav-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-nav-scroll::-webkit-scrollbar-thumb {
+  background: #3a3d48;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.app-nav-scroll::-webkit-scrollbar-thumb:hover {
+  background: #4d5060;
+  background-clip: padding-box;
+}
+
+.app-nav-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.app-nav-section {
+  margin-bottom: 4px;
+}
+
+.app-nav-section-title {
+  margin: 0 0 8px;
+  padding: 0 12px;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.50);
+}
+
+html.app-nav-collapsed .app-nav-section-title {
+  text-align: center;
+  padding: 0 4px;
+  font-size: 9px;
+  letter-spacing: 0;
+}
+
+html.app-mode-idle .app-nav [data-sim-only],
+body.app-mode-idle .app-nav [data-sim-only] {
+  display: none !important;
+}
+
+html.app-mode-sim .app-nav [data-idle-only],
+body.app-mode-sim .app-nav [data-idle-only] {
+  display: none !important;
+}
+
+.app-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* --- Nav items --- */
+.app-nav-item {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.50);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.app-nav-item:hover {
+  background: rgba(45, 47, 57, 0.6);
+  color: rgba(255, 255, 255, 0.80);
+}
+
+.app-nav-item.is-active,
+.app-nav-item:active {
+  background: #2D2F39;
+  color: rgba(255, 255, 255, 0.80);
+}
+
+.app-nav-item-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.app-nav-item-label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html.app-nav-collapsed .app-nav-item {
+  justify-content: center;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+html.app-nav-collapsed .app-nav-item-label {
+  display: none;
+}
+
+/* BOSS 戰等：側欄按鈕鎖定 */
+.app-nav.is-locked {
+  opacity: 0.72;
+}
+
+.app-nav.is-locked button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.35);
+}
+
+/* --- Footer / reset --- */
+.app-nav-footer {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.app-nav-item--danger {
+  color: #CC8889;
+}
+
+.app-nav-item--danger:hover,
+.app-nav-item--danger.is-active {
+  background: rgba(204, 136, 137, 0.12);
+  color: #e0a0a1;
+}
+
+.app-nav-reset-confirm {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #2D2F39;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.app-nav-reset-confirm.is-hidden {
+  display: none !important;
+}
+
+.app-nav-reset-confirm-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.app-nav-reset-confirm-actions button {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #161A23;
+  color: rgba(255, 255, 255, 0.80);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.app-nav-reset-confirm-actions button:hover {
+  background: #243040;
+}
+
+.app-nav-reset-confirm-actions .idle-hunt-btn--reset {
+  border-color: rgba(204, 136, 137, 0.45);
+  color: #CC8889;
+}
+
+/* --- Collapse toggle --- */
+.app-nav-collapse {
+  position: absolute;
+  top: 34px;
+  right: -14px;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #2D2F39;
+  border-radius: 8px;
+  background: #161A23;
+  color: rgba(255, 255, 255, 0.60);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.2s ease;
+}
+
+.app-nav-collapse:hover {
+  background: #2D2F39;
+  color: rgba(255, 255, 255, 0.90);
+}
+
+html.app-nav-collapsed .app-nav-collapse {
+  transform: rotate(180deg);
+}

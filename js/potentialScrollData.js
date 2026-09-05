@@ -63,16 +63,67 @@ function getPotentialScrollById(id) {
   return POTENTIAL_SCROLLS.find((scroll) => scroll.id === id) || null;
 }
 
+function isIdlePlayMode() {
+  if (typeof SessionPersistenceModule !== 'undefined') {
+    return SessionPersistenceModule.activeProfile === 'idle';
+  }
+  if (typeof AppMode !== 'undefined' && AppMode.isIdle?.()) return true;
+  return false;
+}
+
+function getIdleHeldMeso() {
+  if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.getGold === 'function') {
+    return Math.max(0, Math.floor(Number(IdleHunt.getGold()) || 0));
+  }
+  return 0;
+}
+
+function formatIdleHeldMeso() {
+  const n = getIdleHeldMeso();
+  if (typeof formatMesoAmount === 'function') {
+    return formatMesoAmount(n).replace(/\s*楓幣\s*$/, '');
+  }
+  return n.toLocaleString();
+}
+
+function trySpendIdleMeso(amount, opts = {}) {
+  if (!isIdlePlayMode()) return true;
+  const cost = Math.max(0, Math.floor(Number(amount) || 0));
+  if (!cost) return true;
+  if (typeof IdleHunt === 'undefined' || typeof IdleHunt.spendGold !== 'function') return false;
+  const ok = IdleHunt.spendGold(cost);
+  if (!ok && !opts.silent && typeof addLog === 'function') {
+    addLog('⚠️ 楓幣不足，無法進行強化。', 'log-fail');
+  }
+  return ok;
+}
+
+var getIdleHeldMeso = getIdleHeldMeso;
+var formatIdleHeldMeso = formatIdleHeldMeso;
+var trySpendIdleMeso = trySpendIdleMeso;
+
 function getPlayerPotentialScrollCount(scrollId) {
   return playerPotentialScrollInventory[scrollId] || 0;
 }
 
 function ensurePotentialScrollCounts() {
+  if (isIdlePlayMode()) return;
   POTENTIAL_SCROLLS.forEach((scroll) => {
     if (playerPotentialScrollInventory[scroll.id] == null) {
       playerPotentialScrollInventory[scroll.id] = 99;
     }
   });
+}
+
+function stripPotentialScrollsFromConsumeInventory() {
+  if (typeof playerInventoryConsume === 'undefined') return;
+  const type = typeof CONSUME_ITEM_TYPE !== 'undefined'
+    ? CONSUME_ITEM_TYPE.POTENTIAL_SCROLL
+    : 'potential_scroll';
+  for (let i = 0; i < playerInventoryConsume.length; i++) {
+    const entry = playerInventoryConsume[i];
+    if (entry && entry.type === type) playerInventoryConsume[i] = null;
+  }
 }
 
 function getPotentialScrollRankLabel(grade) {
@@ -94,11 +145,25 @@ function ensurePotentialScrollConsumeInventory() {
     return;
   }
 
-  ensurePotentialScrollCounts();
-
   const type = typeof CONSUME_ITEM_TYPE !== 'undefined'
     ? CONSUME_ITEM_TYPE.POTENTIAL_SCROLL
     : 'potential_scroll';
+
+  if (isIdlePlayMode()) {
+    (typeof POTENTIAL_SCROLLS !== 'undefined' ? POTENTIAL_SCROLLS : []).forEach((scroll) => {
+      if (getPlayerPotentialScrollCount(scroll.id) <= 0) return;
+      const hasSlot = playerInventoryConsume.some((entry) => (
+        entry && entry.type === type && entry.scrollId === scroll.id
+      ));
+      if (hasSlot) return;
+      const empty = playerInventoryConsume.findIndex((entry) => !entry);
+      if (empty < 0) return;
+      playerInventoryConsume[empty] = { type, scrollId: scroll.id };
+    });
+    return;
+  }
+
+  ensurePotentialScrollCounts();
 
   // 先移除所有潛能卷佔位，再依 preferredSlot 重放
   for (let i = 0; i < playerInventoryConsume.length; i++) {
@@ -127,6 +192,14 @@ function ensurePotentialScrollConsumeInventory() {
       scrollId: scroll.id,
     };
   });
+}
+
+function grantPotentialScroll(scrollId, amount = 1) {
+  if (!scrollId || amount <= 0) return 0;
+  ensurePotentialScrollCounts();
+  const add = Math.floor(amount);
+  playerPotentialScrollInventory[scrollId] = (playerPotentialScrollInventory[scrollId] || 0) + add;
+  return add;
 }
 
 function consumePotentialScroll(scrollId, amount = 1) {

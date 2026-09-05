@@ -1,0 +1,1490 @@
+/* 放置狩獵場 */
+.idle-hunt-root {
+  position: fixed;
+  left: 50%;
+  top: 56px;
+  transform: translateX(-50%);
+  z-index: 12005;
+  width: 860px;
+  max-height: calc(100vh - 72px);
+  overflow: auto;
+  background: transparent;
+  color: #ddd;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+/* UI 素材一律用 <img width height> 原始像素，不做 CSS 縮放 */
+.idle-hunt-shell img[width][height] {
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  object-fit: none;
+}
+
+.idle-hunt-shell {
+  position: relative;
+  width: 860px;
+  height: 820px;
+  margin: 0 auto;
+}
+
+.idle-hunt-shell__bg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+.idle-hunt-root.is-hidden {
+  display: none;
+}
+
+.idle-hunt-header {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  width: 860px;
+  height: 110px;
+  padding: 0;
+  box-sizing: border-box;
+  cursor: move;
+  user-select: none;
+  background: transparent;
+  border: none;
+}
+
+.idle-hunt-header__title {
+  position: absolute;
+  display: block;
+}
+
+.idle-hunt-map-title {
+  font-weight: 500;
+  color: #c8d4a8;
+  font-size: 11px;
+}
+
+.idle-hunt-body {
+  position: relative;
+  z-index: 2;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.idle-hunt-main {
+  position: absolute;
+  left: 27px;
+  bottom: 140px;
+  z-index: 2;
+  width: 800px;
+  box-sizing: border-box;
+}
+
+.idle-hunt-mapbar {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  margin: 0;
+  min-width: 0;
+}
+
+.idle-hunt-imgbtn {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.idle-hunt-imgbtn img {
+  display: block;
+}
+
+.idle-hunt-imgbtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.idle-hunt-current-map {
+  position: absolute;
+  color: #c8d4a8;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-align: right;
+  pointer-events: none;
+}
+
+.idle-hunt-field-wrap {
+  position: relative;
+  width: 800px;
+  margin: 0;
+}
+
+/* 地圖選擇：自左側導覽欄右緣滑出 */
+.idle-hunt-picker {
+  position: fixed;
+  top: 0;
+  left: var(--app-nav-current-width, var(--app-nav-width));
+  z-index: 13999;
+  width: min(340px, calc(100vw - var(--app-nav-current-width, var(--app-nav-width)) - 12px));
+  height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: #161A23;
+  border-right: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.80);
+  font-family: 'Microsoft JhengHei', 'PingFang TC', 'Segoe UI', sans-serif;
+  transform: translateX(-100%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.24s ease, opacity 0.24s ease, visibility 0.24s ease, left 0.2s ease;
+}
+
+.idle-hunt-picker.is-open {
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.idle-hunt-picker.is-hidden {
+  display: flex;
+}
+
+.idle-hunt-picker-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 16px 14px 12px;
+  border-bottom: 2px solid #2D2F39;
+  color: rgba(255, 255, 255, 0.80);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.idle-hunt-picker-head span {
+  flex: 1;
+  min-width: 0;
+}
+
+.idle-hunt-picker-nav {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.idle-hunt-picker-nav:hover {
+  background: #2D2F39;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.idle-hunt-picker-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  padding: 12px;
+  align-content: start;
+  scrollbar-width: thin;
+  scrollbar-color: #3a3d48 transparent;
+}
+
+.idle-hunt-picker-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.idle-hunt-picker-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.idle-hunt-picker-body::-webkit-scrollbar-thumb {
+  background: #3a3d48;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.idle-hunt-picker-body::-webkit-scrollbar-thumb:hover {
+  background: #4d5060;
+  background-clip: padding-box;
+}
+
+.idle-hunt-picker-body::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.idle-hunt-band {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.50);
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.idle-hunt-band:hover:not(:disabled) {
+  background: rgba(45, 47, 57, 0.6);
+  color: rgba(255, 255, 255, 0.80);
+}
+
+.idle-hunt-band.is-active {
+  background: #2D2F39;
+  color: rgba(255, 255, 255, 0.90);
+}
+
+.idle-hunt-band.is-locked,
+.idle-hunt-band:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.idle-hunt-band-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.idle-hunt-band-meta {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 11px;
+}
+
+.idle-hunt-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.50);
+  font-size: 12px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.idle-hunt-zone:hover:not(:disabled) {
+  background: rgba(45, 47, 57, 0.6);
+  color: rgba(255, 255, 255, 0.80);
+}
+
+.idle-hunt-zone.is-active {
+  background: #2D2F39;
+  color: rgba(255, 255, 255, 0.90);
+}
+
+.idle-hunt-zone.is-locked,
+.idle-hunt-zone:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.idle-hunt-zone-region {
+  color: rgba(255, 255, 255, 0.40);
+  font-size: 10px;
+}
+
+.idle-hunt-zone.is-active .idle-hunt-zone-region {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.idle-hunt-zone-name {
+  font-weight: 600;
+}
+
+.idle-hunt-zone-lv {
+  color: #8a949c;
+  font-size: 10px;
+}
+
+.idle-hunt-field {
+  position: relative;
+  width: 800px;
+  height: 500px;
+  padding: 0;
+  border: 1px solid #38434d;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #12161c;
+  margin: 0;
+}
+
+/* 章節 BOSS 限時（IdleUiTimer） */
+.idle-hunt-boss-timer-host {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100015;
+  line-height: 0;
+  pointer-events: none;
+}
+
+.idle-hunt-map {
+  position: relative;
+  z-index: 0;
+  display: block;
+  width: 800px;
+  height: 500px;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+}
+
+.idle-hunt-player-hp {
+  display: none;
+}
+
+@keyframes idle-hunt-hp-hurt {
+  0% { filter: brightness(1.8); }
+  100% { filter: brightness(1); }
+}
+
+.idle-hunt-stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 800px;
+  height: 500px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 技能特效專用層：高於 stage 內怪物堆疊 */
+.idle-hunt-skill-fx {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 800px;
+  height: 500px;
+  z-index: 100;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* 傷害數字專用層：高於 skill-fx */
+.idle-hunt-damage-fx {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 800px;
+  height: 500px;
+  z-index: 110;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.idle-hunt-field-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 100020;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* 作用中 buff：畫面右上，由右往左排 */
+.idle-hunt-buffs {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 100010;
+  display: flex;
+  flex-direction: row-reverse;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: 280px;
+  pointer-events: none;
+}
+
+.idle-hunt-buffs[hidden] {
+  display: none !important;
+}
+
+.idle-hunt-buff {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(220, 230, 200, 0.55);
+  border-radius: 3px;
+  background: rgba(12, 16, 20, 0.72);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.idle-hunt-buff__icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.idle-hunt-buff__cd {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1px 0 0;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #f4f7e8;
+  text-shadow: 0 0 2px #000, 0 1px 2px #000, 1px 0 1px #000;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.72));
+  pointer-events: none;
+}
+
+/* 技能 CD：畫面右下，由右往左排（同 buff 邏輯） */
+.idle-hunt-cds {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 100010;
+  display: flex;
+  flex-direction: row-reverse;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: 280px;
+  pointer-events: none;
+}
+
+.idle-hunt-cds[hidden] {
+  display: none !important;
+}
+
+.idle-hunt-cd {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(220, 230, 200, 0.55);
+  border-radius: 3px;
+  background: rgba(12, 16, 20, 0.72);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.idle-hunt-cd__icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.idle-hunt-cd__timer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1px 0 0;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #f4f7e8;
+  text-shadow: 0 0 2px #000, 0 1px 2px #000, 1px 0 1px #000;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.72));
+  pointer-events: none;
+}
+
+.idle-hunt-field-fx__fade {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.idle-hunt-field-fx__warning {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  width: 800px;
+  height: 500px;
+  object-fit: fill;
+  image-rendering: pixelated;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.idle-hunt-field-fx__warning.is-playing {
+  animation: idle-hunt-warning-blink 2s ease-in-out forwards;
+}
+
+@keyframes idle-hunt-warning-blink {
+  0%, 100% { opacity: 0; }
+  8%, 24%, 40% { opacity: 1; }
+  16%, 32%, 48% { opacity: 0.12; }
+  56%, 72%, 88% { opacity: 0.95; }
+  64%, 80% { opacity: 0.1; }
+}
+
+.idle-drop-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 90000;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.idle-drop-item {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -100%);
+  z-index: 3;
+  line-height: 0;
+  will-change: left, top, opacity;
+}
+
+.idle-drop-qty {
+  position: absolute;
+  right: -2px;
+  bottom: -1px;
+  min-width: 12px;
+  font-size: 10px;
+  font-weight: bold;
+  color: #fff;
+  text-align: right;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+}
+
+.idle-drop-item img {
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  object-fit: none;
+  image-rendering: pixelated;
+  user-select: none;
+  pointer-events: none;
+  display: block;
+}
+
+.idle-actor {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  width: max-content;
+  min-width: 0;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+}
+
+.idle-actor .idle-actor-name {
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  color: #f4f7fa;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.idle-actor--mob {
+  z-index: 2;
+  width: 0;
+  min-width: 0;
+  transform: none;
+  transition: left 0.32s linear;
+  --boss-sprite-scale: 1;
+  --boss-hud-scale: 1;
+  --hud-gap: 4px;
+}
+
+.idle-actor--mob .idle-actor-hud {
+  position: absolute;
+  left: 0;
+  top: calc(-1 * var(--boss-sprite-scale) * var(--oy, 64px) - var(--hud-gap));
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: max-content;
+}
+
+.idle-actor--mob .idle-actor-hp {
+  width: 52px;
+}
+
+.idle-actor-sprite-stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+}
+
+.idle-actor--mob .idle-actor-sprite {
+  position: absolute;
+  left: calc(-1 * var(--ox, 0px));
+  top: calc(-1 * var(--oy, 0px));
+  z-index: 1;
+}
+
+.idle-actor--mob .idle-actor-sprite--effect {
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* 怪物 info/hit：錨在紙娃娃身體 origin（腳底），與 Paperdoll layout 同一點 */
+.idle-actor--player {
+  z-index: 3;
+}
+
+.paperdoll-stage--hunt {
+  position: relative;
+  z-index: 2;
+}
+
+.paperdoll-stage--hunt .paperdoll-layers {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+.paperdoll-stage--hunt .paperdoll-layers img {
+  position: absolute;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.paperdoll-stage--hunt .paperdoll-hit-anchor,
+.paperdoll-stage--hunt .paperdoll-feet-anchor {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* hit 掛在玩家上（不進紙娃娃），對齊肚臍螢幕座標，不跟 scaleX(-1) 轉向 */
+.idle-actor--player > .idle-actor-hit-stage {
+  position: absolute;
+  left: 50%;
+  top: 55%;
+  width: 0;
+  height: 0;
+  z-index: 30;
+  overflow: visible;
+  pointer-events: none;
+  transform: none;
+}
+
+.idle-actor--player .idle-actor-sprite--hit {
+  position: absolute;
+  left: calc(-1 * var(--ox, 0px));
+  top: calc(-1 * var(--oy, 0px));
+  z-index: 30;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+/* 怪物 areaWarning：錨在玩家腳下 */
+.idle-actor--player > .idle-actor-area-warning-stage {
+  position: absolute;
+  width: 0;
+  height: 0;
+  z-index: 22;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.idle-actor--player .idle-actor-sprite--area-warning {
+  position: absolute;
+  left: calc(-1 * var(--ox, 0px));
+  top: calc(-1 * var(--oy, 0px));
+  z-index: 22;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+/* 升級特效：錨在紙娃娃腳底，可多實例疊加 */
+.idle-actor--player > .idle-levelup-stage {
+  position: absolute;
+  left: 50%;
+  top: 78%;
+  width: 0;
+  height: 0;
+  z-index: 40;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.idle-levelup-sprite {
+  position: absolute;
+  left: calc(-1 * var(--ox, 0px));
+  top: calc(-1 * var(--oy, 0px));
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+/* 技能施放／命中特效（掛在 skill-fx 層，高於怪物） */
+.idle-hunt-skill-fx > .idle-skill-fx-stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  z-index: 35;
+  overflow: visible;
+  pointer-events: none;
+  transform: none;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--area-effect0 {
+  z-index: 44;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--area-special {
+  z-index: 46;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--area-special0 {
+  z-index: 47;
+}
+
+.idle-skill-fx-sprite {
+  position: absolute;
+  left: calc(-1 * var(--ox, 0px));
+  top: calc(-1 * var(--oy, 0px));
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+/* 投擲物 shootobj／ball／召喚：掛在 skill-fx 層 */
+.idle-hunt-skill-fx > .idle-skill-fx-stage--projectile,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--shootobj,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--ball,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--ball-beam,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--ball-special,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon-attack {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  z-index: 55;
+  overflow: visible;
+  pointer-events: none;
+  transform: none;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon {
+  z-index: 40;
+}
+
+/* 召喚冰魔：玩家身後、腳底對齊，z 低於閃電球 */
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon-ice,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon-attack.idle-skill-fx-stage--summon-ice {
+  z-index: 38;
+}
+
+/* 閃電球：玩家頭上，z 高於冰魔 */
+/* 閃電球：玩家頭上，z 高於冰魔 */
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon-orbit,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon-attack.idle-skill-fx-stage--summon-orbit {
+  z-index: 52;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--channel-side {
+  z-index: 48;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--channel-keydown {
+  z-index: 46;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--blizzard-tile {
+  z-index: 50;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--ball-beam {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: visible;
+  z-index: 55;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--ball-special {
+  z-index: 56;
+}
+
+/* beam 段：取消 absolute＋origin 偏移，改用 flex 橫向串接 */
+.idle-hunt-skill-fx > .idle-skill-fx-stage--ball-beam > .idle-skill-fx-sprite--beam {
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  flex: 0 0 auto;
+  --ox: 0px;
+  --oy: 0px;
+}
+
+/* special：人物背後金色徽章（z 低於紙娃娃） */
+.idle-actor--player > .idle-combo-special {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  z-index: 1;
+  pointer-events: none;
+  transform: none;
+}
+
+.idle-combo-special-sprite {
+  position: absolute;
+  left: calc(-1 * var(--ox, 80px));
+  top: calc(-1 * var(--oy, 80px));
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+/* 球：正圓公轉（在角色前方） */
+.idle-actor--player > .idle-combo-orbit {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  z-index: 42;
+  pointer-events: none;
+  transform: none;
+}
+
+.idle-combo-orb-ball {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  will-change: transform;
+}
+
+.idle-combo-orb-sprite {
+  position: absolute;
+  left: calc(-1 * var(--ox, 30px));
+  top: calc(-1 * var(--oy, 30px));
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+  filter: drop-shadow(0 0 3px rgba(255, 160, 40, 0.55));
+}
+
+.idle-actor--mob.is-boss-scale-sprite {
+  --boss-sprite-scale: 2;
+}
+
+.idle-actor--mob.is-boss-scale-sprite .idle-actor-sprite {
+  transform: scale(var(--boss-sprite-scale));
+  transform-origin: var(--ox, 0px) var(--oy, 0px);
+}
+
+.idle-actor--mob.is-boss-scale-hud {
+  --boss-hud-scale: 2;
+}
+
+/* 只放大名稱／血條，不動定位容器（距離維持固定 --hud-gap） */
+.idle-actor--mob.is-boss-scale-hud .idle-actor-name,
+.idle-actor--mob.is-boss-scale-hud .idle-actor-hp {
+  transform: scale(var(--boss-hud-scale));
+  transform-origin: center bottom;
+}
+
+.idle-actor--mob.is-dying {
+  opacity: 0.92;
+  transition: none;
+}
+
+.idle-actor-sprite {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none;
+  image-rendering: pixelated;
+}
+
+.idle-actor-hp {
+  width: 100%;
+  height: 6px;
+  overflow: hidden;
+  border: 1px solid #44515c;
+  box-sizing: border-box;
+  background: #0e1114;
+}
+
+.idle-actor-hp span {
+  display: block;
+  height: 100%;
+  background: #ddfe01;
+}
+
+.idle-hunt-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.idle-hunt-stat {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+
+.idle-hunt-stat__icon {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.idle-hunt-stat__slot {
+  position: relative;
+  line-height: 0;
+  flex: 0 0 auto;
+}
+
+.idle-hunt-stat__slot-bg {
+  display: block;
+}
+
+.idle-hunt-stat__slot-value {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-shadow: 1px 0 #000, -1px 0 #000, 0 1px #000, 0 -1px #000;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.idle-hunt-stat--mobs .idle-hunt-stat__slot-value {
+  right: 5px;
+  font-size: 10px;
+}
+
+.idle-hunt-stat--power .idle-hunt-stat__slot-value {
+  right: 10px;
+  font-size: 10px;
+}
+
+.idle-hunt-stat__label {
+  color: #d8e0e8;
+  white-space: nowrap;
+  padding-bottom: 4px;
+}
+
+.idle-hunt-stat__value,
+.idle-hunt-hud strong {
+  color: #fff;
+  font-weight: 700;
+  padding-bottom: 2px;
+}
+
+.idle-hunt-stat__coin {
+  position: relative;
+  line-height: 0;
+}
+
+.idle-hunt-stat__coin-bg {
+  display: block;
+}
+
+.idle-hunt-stat__coin-value {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 1px 0 #000, -1px 0 #000, 0 1px #000, 0 -1px #000;
+}
+
+.idle-hunt-stat--level .idle-hunt-stat__label {
+  margin-right: 2px;
+}
+
+.idle-hunt-shell > .idle-hunt-actions {
+  position: absolute;
+  bottom: 48px;
+  z-index: 3;
+  height: 35px;
+  margin: 0;
+  pointer-events: none;
+}
+
+.idle-hunt-shell > .idle-hunt-hp-wrap {
+  position: absolute;
+  z-index: 3;
+  width: 786px;
+  margin: 0;
+  padding-bottom: 14px;
+  box-sizing: border-box;
+}
+
+.idle-hunt-hp-bar {
+  position: relative;
+  width: 786px;
+  height: 36px;
+  line-height: 0;
+}
+
+.idle-hunt-hp-bar__bg {
+  display: block;
+}
+
+.idle-hunt-hp-bar__fill-clip {
+  position: absolute;
+  left: var(--hp-fill-l, 29px);
+  top: var(--hp-fill-t, 1px);
+  width: var(--hp-fill-w, 729px);
+  height: var(--hp-fill-h, 34px);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.idle-hunt-hp-bar__fill {
+  height: var(--hp-fill-h, 34px);
+  width: 100%;
+  overflow: hidden;
+  transition: width 0.3s ease-out;
+}
+
+.idle-hunt-hp-bar__fill::before {
+  content: '';
+  display: block;
+  width: var(--hp-track-w, 729px);
+  height: var(--hp-fill-h, 34px);
+  background: url('../../images/Uiidelhunt/bar_hp_fill.png') left top no-repeat;
+}
+
+.idle-hunt-hp-bar.is-empty .idle-hunt-hp-bar__fill {
+  width: 0 !important;
+}
+
+.idle-hunt-hp-bar.is-hurt {
+  animation: idle-hunt-hp-hurt 0.22s ease;
+}
+
+.idle-hunt-hp-bar__text {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, calc(-50% - 1px));
+  z-index: 2;
+  color: #fff;
+  font-family: Tahoma, "MS Gothic", "Courier New", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.4px;
+  text-shadow:
+    1px 0 #000,
+    -1px 0 #000,
+    0 1px #000,
+    0 -1px #000,
+    1px 1px #000,
+    -1px -1px #000,
+    1px -1px #000,
+    -1px 1px #000;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.idle-hunt-reset-link {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #9a7070;
+  font-size: 10px;
+  font-family: inherit;
+  line-height: 1.2;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.idle-hunt-reset-link:hover {
+  color: #d0a0a0;
+  text-decoration: underline;
+}
+
+.idle-hunt-reset-link.is-hidden {
+  display: none;
+}
+
+.idle-hunt-exp {
+  position: relative;
+  margin-top: 4px;
+  padding-left: 0;
+  min-height: 25px;
+}
+
+.idle-hunt-exp-bar {
+  position: relative;
+  width: 800px;
+  height: 25px;
+  line-height: 0;
+}
+
+.idle-hunt-exp-bar__bg {
+  display: block;
+}
+
+.idle-hunt-exp-bar__fill-clip {
+  position: absolute;
+  left: var(--exp-fill-l, 0);
+  top: var(--exp-fill-t, 1px);
+  width: var(--exp-fill-w, 800px);
+  height: var(--exp-fill-h, 22px);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.idle-hunt-exp-bar__fill {
+  height: var(--exp-fill-h, 22px);
+  width: 0;
+  overflow: hidden;
+  transition: width 0.3s ease-out;
+}
+
+.idle-hunt-exp-bar__fill::before {
+  content: '';
+  display: block;
+  width: var(--exp-track-w, 800px);
+  height: var(--exp-fill-h, 22px);
+  background: url('../../images/Uiidelhunt/bar_exe_fill.png') left top no-repeat;
+}
+
+.idle-hunt-exp-bar__text {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, calc(-50% - 1px));
+  z-index: 2;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  text-shadow:
+    1px 0 #000,
+    -1px 0 #000,
+    0 1px #000,
+    0 -1px #000,
+    1px 1px #000,
+    -1px -1px #000,
+    1px -1px #000,
+    -1px 1px #000;
+  pointer-events: none;
+}
+
+.idle-hunt-actbtn {
+  position: absolute;
+  top: 0;
+  display: inline-block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+  pointer-events: auto;
+}
+
+.idle-hunt-actbtn__img {
+  display: block;
+}
+
+.idle-hunt-actbtn__label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -52%);
+  color: #fff8e8;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  text-shadow: 1px 0 #000, -1px 0 #000, 0 1px #000, 0 -1px #000;
+  pointer-events: none;
+}
+
+.idle-hunt-actbtn--afk.is-on .idle-hunt-actbtn__label {
+  color: #e8ffe8;
+}
+
+.idle-hunt-actbtn--afk.is-afk-farm.is-on .idle-hunt-actbtn__label {
+  color: #ffe9b8;
+}
+
+.idle-hunt-actbtn--boss .idle-hunt-actbtn__label {
+  color: #fff4d0;
+}
+
+.idle-hunt-actbtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.idle-hunt-btn--afk.is-on {
+  border-color: #4a9a58;
+  background: #1e3a24;
+  color: #b8f0c4;
+}
+
+.idle-hunt-btn {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid #6a7a48;
+  border-radius: 4px;
+  background: #2a3518;
+  color: #e8f0c8;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.idle-hunt-btn:hover:not(:disabled) {
+  background: #3a4a22;
+}
+
+.idle-hunt-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.idle-hunt-btn--boss {
+  border-color: #a07a28;
+  background: #3a2c10;
+  color: #ffe9a8;
+}
+
+.idle-hunt-btn--boss:hover:not(:disabled) {
+  background: #4a3a18;
+}
+
+.idle-hunt-btn--ghost {
+  border-color: #55616d;
+  background: #1a1e22;
+  color: #c5ced6;
+}
+
+.idle-hunt-btn--reset {
+  border-color: #8a3a3a;
+  background: #3a1818;
+  color: #f0c8c8;
+}
+
+.idle-hunt-btn--reset:hover {
+  background: #4a2020;
+}
+
+.idle-hunt-reset-confirm {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid #8a3a3a;
+  border-radius: 4px;
+  background: #2a1414;
+  color: #f0c8c8;
+  font-size: 11px;
+}
+
+.idle-hunt-reset-confirm.is-hidden {
+  display: none;
+}
+
+.idle-hunt-reset-confirm-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.idle-hunt-jobline-picker {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(8, 10, 18, 0.72);
+}
+
+.idle-hunt-jobline-picker.is-hidden {
+  display: none;
+}
+
+.idle-hunt-shell--jobline-pending .idle-hunt-actions,
+.idle-hunt-shell--jobline-pending .idle-hunt-main,
+.idle-hunt-shell--jobline-pending .idle-hunt-hp-wrap {
+  pointer-events: none;
+  filter: saturate(0.65) brightness(0.82);
+}
+
+.idle-hunt-jobline-picker__box {
+  min-width: 260px;
+  max-width: 320px;
+  padding: 14px 16px 12px;
+  border: 1px solid #5a6a8a;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #2a3348 0%, #1a2030 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.idle-hunt-jobline-picker__title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #eef2ff;
+  text-align: center;
+}
+
+.idle-hunt-jobline-picker__hint {
+  margin: 0 0 12px;
+  font-size: 11px;
+  color: #a8b4cc;
+  text-align: center;
+}
+
+.idle-hunt-jobline-picker__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.idle-hunt-jobline-picker__btn {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #4a5878;
+  border-radius: 4px;
+  background: #232b3d;
+  color: #e8ecff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.idle-hunt-jobline-picker__btn:hover {
+  border-color: #7a8eb8;
+  background: #2f3850;
+}
+
+.paperdoll-stage--hunt {
+  width: 120px;
+  height: 160px;
+  /* WZ 素材預設朝左；放置場面向右打怪 */
+  transform: scaleX(-1) translateY(25px);
+}
+
+/* 章節死亡彈窗：下移，避免擋住 playerdeath 中央紅字 */
+.idle-hunt-field > .idle-hunt-death-modal {
+  z-index: 100100;
+  align-items: flex-end;
+  padding-bottom: 15px;
+  background: transparent;
+}
+
+.idle-hunt-death-modal .idle-boss-start-modal__msg[hidden] {
+  display: none !important;
+}
+
+.idle-hunt-death-auto {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(255, 210, 120, 0.88);
+}
+
+.idle-hunt-death-auto[hidden] {
+  display: none !important;
+}
+

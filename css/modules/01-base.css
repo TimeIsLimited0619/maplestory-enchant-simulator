@@ -14,10 +14,14 @@ body {
   color: #fff;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   min-height: 100vh;
   margin: 0;
+  padding-top: 12px;
+  padding-left: var(--app-nav-current-width, var(--app-nav-width));
+  box-sizing: border-box;
   user-select: none;
+  transition: padding-left 0.2s ease;
 }
 
 /* 三欄式整體容器 */
@@ -30,7 +34,63 @@ body {
   overflow: visible;
 }
 
-/* 頂部中央介面開關選單 */
+.app-mode-bar {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 13001;
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid #5a6a7a;
+  background: rgba(26, 36, 48, 0.94);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.app-mode-btn {
+  min-width: 92px;
+  padding: 5px 12px;
+  border: 1px solid #5a6a7a;
+  background: #1a2430;
+  color: #d8dde3;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.app-mode-btn:hover {
+  background: #243040;
+  color: #fff;
+}
+
+.app-mode-btn.is-active {
+  border-color: #c9a227;
+  background: #3a3018;
+  color: #ffe9a8;
+}
+
+.app-mode-bar,
+.ms-top-menu {
+  display: none !important;
+}
+
+html.app-mode-idle .ms-top-menu [data-sim-only],
+body.app-mode-idle .ms-top-menu [data-sim-only] {
+  display: none;
+}
+
+html.app-mode-sim .idle-hunt-root,
+body.app-mode-sim .idle-hunt-root,
+html.app-mode-sim .idle-gm-root,
+body.app-mode-sim .idle-gm-root,
+html.app-mode-sim .idle-dungeon-root,
+body.app-mode-sim .idle-dungeon-root,
+html.app-mode-sim .idle-dungeon-gm,
+body.app-mode-sim .idle-dungeon-gm {
+  display: none !important;
+}
+
+/* 頂部中央介面開關選單（Figma 深色導覽風格） */
 .ms-top-menu {
   position: fixed;
   top: 10px;
@@ -38,40 +98,63 @@ body {
   transform: translateX(-50%);
   z-index: 13000;
   display: flex;
-  gap: 8px;
+  gap: 4px;
   justify-content: center;
   align-items: center;
-  padding: 6px 10px;
-  border: 1px solid #5a6a7a;
-  background: rgba(26, 36, 48, 0.94);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  background: #161A23;
+  box-shadow: 0 5px 10px -4px rgba(0, 0, 0, 0.25);
 }
 
 .ms-top-menu .view-mode-btn {
-  min-width: 64px;
-  padding: 4px 10px;
-  border: 1px solid #5a6a7a;
-  background: #1a2430;
-  color: #d8dde3;
-  font-size: 13px;
-  line-height: 1.2;
+  min-width: 0;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.50);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  font-family: 'Microsoft JhengHei', 'PingFang TC', 'Segoe UI', sans-serif;
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .ms-top-menu .view-mode-btn:hover {
-  background: #243040;
-  color: #fff;
+  background: rgba(45, 47, 57, 0.6);
+  color: rgba(255, 255, 255, 0.80);
 }
 
 .ms-top-menu .view-mode-btn.is-active {
-  border-color: #8aa0b8;
-  background: #2c3c50;
-  color: #fff;
+  background: #2D2F39;
+  color: rgba(255, 255, 255, 0.80);
 }
 
-/* 工具：置於選單最右側並與其他按鈕分開 */
+.ms-top-menu .view-mode-btn:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.35);
+  outline-offset: 1px;
+}
+
+/* 工具：置於選單最右側，以分隔線區隔 */
 .ms-top-menu .ms-top-menu-tools {
-  margin-left: 12px;
+  margin-left: 4px;
+  padding-left: 16px;
+  position: relative;
+}
+
+.ms-top-menu .ms-top-menu-tools::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 20px;
+  background: #2D2F39;
+  border-radius: 2px;
 }
 
 /* 強化工具列 + 中控台：一體拖曳（含右側 autoEnchant 面板） */
@@ -149,7 +232,7 @@ body {
 }
 
 #pageEnhance {
-  padding-top: 48px;
+  padding-top: 0;
   box-sizing: border-box;
 }
 
@@ -173,8 +256,9 @@ body {
 }
 
 .is-panel-drag-pinned {
-  /* fixed 座標由 JS 寫入；避免 flex 拉伸干擾 */
+  /* fixed 座標由 JS 寫入；避免 flex 拉伸與置中 transform 干擾 */
   flex-shrink: 0;
+  transform: none;
 }
 
 .is-panel-drag-surface {

@@ -456,6 +456,7 @@ const EquipTooltipModule = {
     pushWzLine('無視怪物防禦率', wz.imdR, true, item.scrollImdR || 0);
     pushWzLine('跳躍力', wz.incJump, false, item.scrollJump || 0);
     pushWzLine('移動速度', wz.incSpeed, false, item.scrollSpeed || 0);
+    pushWzLine('最大HP%', wz.incMHPr, true);
 
     if (bonusLines.length && typeof aggregateBonusStatLines === 'function') {
       const covered = new Set(Object.values(EQUIP_BONUS_STAT_KEY_MAP));
@@ -530,6 +531,9 @@ const EquipTooltipModule = {
     valueEl.className = 'eq-tip-info-value';
     if (options.valueTone === 'label') {
       valueEl.classList.add('eq-tip-info-label');
+    }
+    if (options.valueTone === 'fail') {
+      valueEl.classList.add('is-unmet');
     }
     valueEl.textContent = value;
     row.appendChild(valueEl);
@@ -1306,7 +1310,9 @@ const EquipTooltipModule = {
     const isEquipped = typeof slotIndex === 'string' && slotIndex.startsWith('body:');
     const tags = this.getCategoryTags(item);
     const statLines = this.buildStatSegments(item);
-    const maxStar = item.maxStar || 30;
+    const maxStar = typeof getItemStarForceMaxStar === 'function'
+      ? getItemStarForceMaxStar(item)
+      : (item.maxStar || 30);
     const starCount = item.star || 0;
     const setId = item.wz?.setItemID || 0;
     const setLabel = EQUIP_SET_LABELS[setId];
@@ -1429,10 +1435,38 @@ const EquipTooltipModule = {
     ));
     const reqLevel = Number(item.reqLevel) || 0;
     if (reqLevel > 0) {
+      const idle = (typeof SessionPersistenceModule !== 'undefined' && SessionPersistenceModule.activeProfile === 'idle')
+        || (typeof AppMode !== 'undefined' && AppMode.isIdle?.());
+      const lv = (typeof CharacterProgression !== 'undefined' && CharacterProgression.getState)
+        ? (Number(CharacterProgression.getState().level) || 1)
+        : 1;
+      const unmet = idle && lv < reqLevel;
       reqBlock.appendChild(this.createInfoLine(
         '要求等級',
-        `Lv. ${reqLevel}`,
+        unmet ? `Lv. ${reqLevel}（目前 ${lv}）` : `Lv. ${reqLevel}`,
+        unmet ? { valueTone: 'fail' } : undefined,
       ));
+    }
+    if (item.mainType === 'WEAPON' || item.islot === 'Wp' || item.islot === 'Gw' || item.islot === 'Wpsi') {
+      let wzAttackSpeed = 0;
+      if (typeof WeaponTypeMap !== 'undefined' && typeof WeaponTypeMap.resolveWzAttackSpeed === 'function') {
+        wzAttackSpeed = WeaponTypeMap.resolveWzAttackSpeed(item);
+      } else if (typeof WeaponTypeMap !== 'undefined' && typeof WeaponTypeMap.resolveAttackSpeedStage === 'function') {
+        wzAttackSpeed = WeaponTypeMap.resolveAttackSpeedStage(item);
+      } else {
+        wzAttackSpeed = Number(item.wz?.attackSpeed) || 0;
+      }
+      if (wzAttackSpeed > 0) {
+        const stage = (typeof WeaponTypeMap !== 'undefined'
+          && typeof WeaponTypeMap.calculateAttackSpeedStage === 'function')
+          ? WeaponTypeMap.calculateAttackSpeedStage(wzAttackSpeed, 0)
+          : Math.min(8, Math.max(1, 10 - wzAttackSpeed));
+        reqBlock.appendChild(this.createInfoLine(
+          '攻擊速度',
+          `第${stage}階段`,
+          { valueTone: 'label' },
+        ));
+      }
     }
     root.appendChild(reqBlock);
 
@@ -1472,17 +1506,6 @@ const EquipTooltipModule = {
           { valueTone: 'label' },
         ));
       }
-      if (isDestinyWeapon || isGenesisWeapon) {
-        const attackSpeed = Number(item.wz?.attackSpeed) || 0;
-        if (attackSpeed > 0) {
-          setBlock.appendChild(this.createInfoLine(
-            '攻擊速度',
-            `${attackSpeed}階段`,
-            { valueTone: 'label' },
-          ));
-        }
-      }
-
       root.appendChild(setBlock);
     }
 
@@ -1639,6 +1662,13 @@ const EquipTooltipModule = {
 
     this.position(tooltip, anchorEl);
     this.hoverSlot = { itemId, slotIndex };
+    this._hoverAnchor = anchorEl;
+    if (typeof HoverTooltipGuard !== 'undefined') {
+      HoverTooltipGuard.watch('equip', anchorEl, {
+        hide: () => this.hide(),
+        isPinned: () => this.pinned,
+      });
+    }
     const compareStarEffectImg = this.updateSidePanel(item, slotIndex);
     this.positionSet(tooltip);
     window.requestAnimationFrame(() => this.positionSet(tooltip));
@@ -1945,6 +1975,9 @@ const EquipTooltipModule = {
 
   hide(force = false) {
     if (this.pinned && !force) return;
+
+    if (typeof HoverTooltipGuard !== 'undefined') HoverTooltipGuard.unwatch('equip');
+    this._hoverAnchor = null;
 
     const tooltip = document.getElementById('equipTooltip');
     const grid = document.getElementById('inventoryGrid');

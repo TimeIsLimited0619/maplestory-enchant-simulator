@@ -407,11 +407,25 @@ function formatPotentialStatValue(statName, internalRank, context = {}) {
     if (energyVal != null) return energyVal;
   }
 
+  if (typeof formatArmorAccessory71150MainPotentialStatValue === 'function'
+    && typeof isArmorAccessory71150MainPotentialContext === 'function'
+    && isArmorAccessory71150MainPotentialContext(context)) {
+    const armorAcc71150Val = formatArmorAccessory71150MainPotentialStatValue(statName, internalRank, context);
+    if (armorAcc71150Val != null) return armorAcc71150Val;
+  }
+
   if (typeof formatArmorAccessory151250MainPotentialStatValue === 'function'
     && typeof isArmorAccessory151250MainPotentialContext === 'function'
     && isArmorAccessory151250MainPotentialContext(context)) {
     const armorAccVal = formatArmorAccessory151250MainPotentialStatValue(statName, internalRank, context);
     if (armorAccVal != null) return armorAccVal;
+  }
+
+  if (typeof formatArmorAccessory71150AddPotentialStatValue === 'function'
+    && typeof isArmorAccessory71150AddPotentialContext === 'function'
+    && isArmorAccessory71150AddPotentialContext(context)) {
+    const armorAcc71150AddVal = formatArmorAccessory71150AddPotentialStatValue(statName, internalRank, context);
+    if (armorAcc71150AddVal != null) return armorAcc71150AddVal;
   }
 
   if (typeof formatArmorAccessory201250AddPotentialStatValue === 'function'
@@ -428,6 +442,13 @@ function formatPotentialStatValue(statName, internalRank, context = {}) {
     if (armorAccAddVal != null) return armorAccAddVal;
   }
 
+  if (typeof formatNormalWeapon71150MainPotentialStatValue === 'function'
+    && typeof isNormalWeapon71150MainPotentialContext === 'function'
+    && isNormalWeapon71150MainPotentialContext(context)) {
+    const normal71150Val = formatNormalWeapon71150MainPotentialStatValue(statName, internalRank, context);
+    if (normal71150Val != null) return normal71150Val;
+  }
+
   if (typeof formatNormalWeapon151200MainPotentialStatValue === 'function'
     && typeof isNormalWeapon151200MainPotentialContext === 'function'
     && isNormalWeapon151200MainPotentialContext(context)) {
@@ -440,6 +461,13 @@ function formatPotentialStatValue(statName, internalRank, context = {}) {
     && isDestinyWeaponMainPotentialContext(context)) {
     const destinyVal = formatDestinyWeaponPotentialStatValue(statName, internalRank, context);
     if (destinyVal != null) return destinyVal;
+  }
+
+  if (typeof formatNormalWeapon71150AddPotentialStatValue === 'function'
+    && typeof isNormalWeapon71150AddPotentialContext === 'function'
+    && isNormalWeapon71150AddPotentialContext(context)) {
+    const normal71150AddVal = formatNormalWeapon71150AddPotentialStatValue(statName, internalRank, context);
+    if (normal71150AddVal != null) return normal71150AddVal;
   }
 
   if (typeof formatNormalWeapon151200AddPotentialStatValue === 'function'
@@ -479,6 +507,11 @@ function parsePotentialStat(statName, internalRank, context = {}) {
     if (energyStat) return energyStat;
   }
 
+  if (context.eventId === 8422 && typeof parseArmorAccessory71150AddPotentialStat === 'function') {
+    const armorAcc71150AddPot = parseArmorAccessory71150AddPotentialStat(statName, internalRank, context);
+    if (armorAcc71150AddPot) return armorAcc71150AddPot;
+  }
+
   if (context.eventId === 8422 && typeof parseArmorAccessory201250AddPotentialStat === 'function') {
     const armorAcc201250AddPot = parseArmorAccessory201250AddPotentialStat(statName, internalRank, context);
     if (armorAcc201250AddPot) return armorAcc201250AddPot;
@@ -489,6 +522,11 @@ function parsePotentialStat(statName, internalRank, context = {}) {
     if (armorAccAddPot) return armorAccAddPot;
   }
 
+  if (context.eventId === 8422 && typeof parseNormalWeapon71150AddPotentialStat === 'function') {
+    const normal71150AddPot = parseNormalWeapon71150AddPotentialStat(statName, internalRank, context);
+    if (normal71150AddPot) return normal71150AddPot;
+  }
+
   if (context.eventId === 8422 && typeof parseNormalWeapon151200AddPotentialStat === 'function') {
     const normal151200AddPot = parseNormalWeapon151200AddPotentialStat(statName, internalRank, context);
     if (normal151200AddPot) return normal151200AddPot;
@@ -497,6 +535,11 @@ function parsePotentialStat(statName, internalRank, context = {}) {
   if (context.eventId === 8422 && typeof parseDestinyWeaponAddPotentialStat === 'function') {
     const destinyAddPot = parseDestinyWeaponAddPotentialStat(statName, internalRank, context);
     if (destinyAddPot) return destinyAddPot;
+  }
+
+  if (typeof parseArmorAccessory71150MainPotentialStat === 'function') {
+    const armorAcc71150Stat = parseArmorAccessory71150MainPotentialStat(statName, internalRank, context);
+    if (armorAcc71150Stat) return armorAcc71150Stat;
   }
 
   if (typeof parseArmorAccessory151250MainPotentialStat === 'function') {
@@ -521,6 +564,10 @@ function parsePotentialStat(statName, internalRank, context = {}) {
   }
 
   if (statName === '被擊中時有一定機率無視傷害') {
+    if (typeof isArmorAccessory71150MainPotentialContext === 'function'
+      && isArmorAccessory71150MainPotentialContext(context)) {
+      return null;
+    }
     if (typeof isArmorAccessory151250MainPotentialContext === 'function'
       && isArmorAccessory151250MainPotentialContext(context)) {
       return null;
@@ -535,10 +582,19 @@ function parsePotentialStat(statName, internalRank, context = {}) {
   }
 
   if (statName === 'HP恢復道具及恢復技能效果增加') {
+    if (typeof isArmorAccessory71150MainPotentialContext === 'function'
+      && isArmorAccessory71150MainPotentialContext(context)) {
+      return null;
+    }
     if (typeof isArmorAccessory151250MainPotentialContext === 'function'
       && isArmorAccessory151250MainPotentialContext(context)) {
       return null;
     }
+    if (typeof isArmorAccessory71150AddPotentialContext === 'function'
+      && isArmorAccessory71150AddPotentialContext(context)) {
+      return null;
+    }
+
     if (typeof isArmorAccessory151200AddPotentialContext === 'function'
       && isArmorAccessory151200AddPotentialContext(context)) {
       return null;

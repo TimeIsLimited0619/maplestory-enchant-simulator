@@ -41,7 +41,36 @@
   background-repeat: no-repeat;
 }
 
-/* min / full 切換按鈕（右上角，× 左側） */
+/* —— AutoBuild 關閉鈕 (211,4) 27×27 —— */
+.inv-close-btn {
+  position: absolute;
+  left: 211px;
+  top: 4px;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  z-index: 6;
+  color: transparent;
+  font-size: 0;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 27px 27px;
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_close__normal__0.png');
+  image-rendering: pixelated;
+}
+
+.inv-close-btn:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_close__mouseOver__0.png');
+}
+
+.inv-close-btn:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_close__pressed__0.png');
+}
+
+/* min / full：full (193,8)／min (171,8) 19×19 */
 .inv-size-btn {
   position: absolute;
   top: 8px;
@@ -55,113 +84,110 @@
   background-size: contain;
   cursor: pointer;
   z-index: 5;
+  image-rendering: pixelated;
 }
 
 .inv-size-full {
-  right: 38px;
-  background-image: url('../../images/iventory/AutoBuild.button_full.normal.0.png');
+  left: 193px;
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_full__normal__0.png');
 }
 
 .inv-size-full:hover {
-  background-image: url('../../images/iventory/AutoBuild.button_full.mouseOver.0.png');
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_full__mouseOver__0.png');
 }
 
 .inv-size-full:active {
-  background-image: url('../../images/iventory/AutoBuild.button_full.pressed.0.png');
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_full__pressed__0.png');
 }
 
 .inv-size-min {
-  right: 38px;
-  background-image: url('../../images/iventory/AutoBuild.button_min.normal.0.png');
+  left: 171px;
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_min__normal__0.png');
 }
 
 .inv-size-min:hover {
-  background-image: url('../../images/iventory/AutoBuild.button_min.mouseOver.0.png');
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_min__mouseOver__0.png');
 }
 
 .inv-size-min:active {
-  background-image: url('../../images/iventory/AutoBuild.button_min.pressed.0.png');
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_min__pressed__0.png');
 }
 
-/* 分頁切換 */
+/* 分頁：tab 0..5 at x=11+37k, y=31；35×22（小背包） */
 .inv-tabs {
   position: absolute;
-  display: flex;
-  gap: 0;
+  top: 0;
+  left: 0;
+  width: 242px;
+  height: 60px;
   z-index: 4;
+  pointer-events: none;
 }
 
-.inv-tabs-min {
+.inv-tabs .inv-tab {
+  position: absolute;
   top: 31px;
-  left: 12px;
-}
-
-.inv-tabs-full {
-  top: 31px;
-  left: 8px;
-}
-
-.inv-tabs-min .inv-tab {
   width: 35px;
   height: 22px;
   padding: 0;
   border: none;
+  pointer-events: auto;
   background-color: transparent;
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
   cursor: pointer;
+  image-rendering: pixelated;
 }
 
-.inv-tabs-min .inv-tab-equip {
-  background-image: url('../../images/iventory/AutoBuild.tab_category.normal.0.png');
+.inv-tabs .inv-tab[data-tab-idx="0"] { left: 11px; }
+.inv-tabs .inv-tab[data-tab-idx="1"] { left: 48px; }
+.inv-tabs .inv-tab[data-tab-idx="2"] { left: 85px; }
+.inv-tabs .inv-tab[data-tab-idx="3"] { left: 122px; }
+.inv-tabs .inv-tab[data-tab-idx="4"] { left: 159px; }
+.inv-tabs .inv-tab[data-tab-idx="5"] { left: 196px; }
+
+.inv-tabs .inv-tab-0 {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__tab_category__normal__0.png');
+}
+.inv-tabs .inv-tab-0.checked {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__tab_category__selected__0.png');
+}
+.inv-tabs .inv-tab-1 {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__tab_category__normal__1.png');
+}
+.inv-tabs .inv-tab-1.checked {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__tab_category__selected__1.png');
+}
+.inv-tabs .inv-tab-2 {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__tab_category__normal__2.png');
+}
+.inv-tabs .inv-tab-2.checked {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__tab_category__selected__2.png');
+}
+.inv-tabs .inv-tab-3 {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__tab_category__normal__3.png');
+}
+.inv-tabs .inv-tab-3.checked {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__tab_category__selected__3.png');
+}
+.inv-tabs .inv-tab-4 {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__tab_category__normal__4.png');
+}
+.inv-tabs .inv-tab-4.checked {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__tab_category__selected__4.png');
+}
+.inv-tabs .inv-tab-5 {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__tab_category__normal__5.png');
+}
+.inv-tabs .inv-tab-5.checked {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__tab_category__selected__5.png');
 }
 
-.inv-tabs-min .inv-tab-equip.checked {
-  background-image: url('../../images/iventory/AutoBuild.tab_category.selected.0.png');
-}
-
-.inv-tabs-min .inv-tab-consume {
-  background-image: url('../../images/iventory/AutoBuild.tab_category.normal.1.png');
-}
-
-.inv-tabs-min .inv-tab-consume.checked {
-  background-image: url('../../images/iventory/AutoBuild.tab_category.selected.1.png');
-}
-
-.inv-tabs-full .inv-tab {
-  width: 128px;
-  height: 22px;
-  padding: 0;
-  border: none;
-  background-color: transparent;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  cursor: pointer;
-}
-
-.inv-tabs-full .inv-tab-equip {
-  background-image: url('../../images/iventory/UIInventory.img.Inventory.FullAutoBuild.tab_category.normal.0.png');
-}
-
-.inv-tabs-full .inv-tab-equip.checked {
-  background-image: url('../../images/iventory/UIInventory.img.Inventory.FullAutoBuild.tab_category.selected.0.png');
-}
-
-.inv-tabs-full .inv-tab-consume {
-  background-image: url('../../images/iventory/UIInventory.img.Inventory.FullAutoBuild.tab_category.normal.1.png');
-}
-
-.inv-tabs-full .inv-tab-consume.checked {
-  background-image: url('../../images/iventory/UIInventory.img.Inventory.FullAutoBuild.tab_category.selected.1.png');
-}
-
-/* 裝備整理（分頁下方；相對原位下 12、右 8） */
-.inv-sort-btn {
+/* 工具列按鈕共用（小背包 y=66，22×23） */
+.inv-tool-btn {
   position: absolute;
-  top: 67px;
-  left: 20px;
+  top: 66px;
   width: 22px;
   height: 23px;
   padding: 0;
@@ -170,35 +196,87 @@
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
-  background-image: url('../../images/iventory/UIInventory.img.Inventory.AutoBuild.button_sort.normal.0.png');
   cursor: pointer;
   z-index: 5;
+  image-rendering: pixelated;
 }
 
-.inv-sort-btn:hover {
-  background-image: url('../../images/iventory/UIInventory.img.Inventory.AutoBuild.button_sort.mouseOver.0.png');
+.inv-btn-sort { left: 19px; }
+.inv-btn-slot-lock,
+.inv-btn-slot-lock-active { left: 43px; }
+.inv-btn-item-lock,
+.inv-btn-item-lock-active { left: 67px; }
+.inv-btn-filter,
+.inv-btn-filter-applied { left: 91px; }
+
+.inv-btn-sort {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_sort__normal__0.png');
+}
+.inv-btn-sort:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_sort__mouseOver__0.png');
+}
+.inv-btn-sort:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_sort__pressed__0.png');
 }
 
-.inv-sort-btn:active {
-  background-image: url('../../images/iventory/UIInventory.img.Inventory.AutoBuild.button_sort.pressed.0.png');
+.inv-btn-slot-lock {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_slotLock__normal__0.png');
+}
+.inv-btn-slot-lock:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_slotLock__mouseOver__0.png');
+}
+.inv-btn-slot-lock:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_slotLock__pressed__0.png');
+}
+.inv-btn-slot-lock-active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_slotLockActive__normal__0.png');
+}
+.inv-btn-slot-lock-active:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_slotLockActive__mouseOver__0.png');
+}
+.inv-btn-slot-lock-active:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_slotLockActive__pressed__0.png');
 }
 
-.ms-inventory.inv-mode-full .inv-sort-btn {
-  left: 16px;
-  width: 68px;
-  height: 22px;
-  background-image: url('../../images/iventory/UIInventory.img.Inventory.FullAutoBuild.button_sort.normal.0.png');
+.inv-btn-item-lock {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_itemLock__normal__0.png');
+}
+.inv-btn-item-lock:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_itemLock__mouseOver__0.png');
+}
+.inv-btn-item-lock:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_itemLock__pressed__0.png');
+}
+.inv-btn-item-lock-active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_itemLockActive__normal__0.png');
+}
+.inv-btn-item-lock-active:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_itemLockActive__mouseOver__0.png');
+}
+.inv-btn-item-lock-active:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_itemLockActive__pressed__0.png');
 }
 
-.ms-inventory.inv-mode-full .inv-sort-btn:hover {
-  background-image: url('../../images/iventory/UIInventory.img.Inventory.FullAutoBuild.button_sort.mouseOver.0.png');
+.inv-btn-filter {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_filter__normal__0.png');
+}
+.inv-btn-filter:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_filter__mouseOver__0.png');
+}
+.inv-btn-filter:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_filter__pressed__0.png');
+}
+.inv-btn-filter-applied {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_filterApplied__normal__0.png');
+}
+.inv-btn-filter-applied:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_filterApplied__mouseOver__0.png');
+}
+.inv-btn-filter-applied:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_filterApplied__pressed__0.png');
 }
 
-.ms-inventory.inv-mode-full .inv-sort-btn:active {
-  background-image: url('../../images/iventory/UIInventory.img.Inventory.FullAutoBuild.button_sort.pressed.0.png');
-}
-
-.inv-sort-btn:disabled {
+.inv-tool-btn:disabled {
   opacity: 0.45;
   cursor: default;
   pointer-events: none;
@@ -207,8 +285,8 @@
 /* 格子數量 */
 .inv-slot-count {
   position: absolute;
-  top: 67px;
-  right: 52px;
+  top: 68px;
+  right: 44px;
   min-width: 32px;
   height: 18px;
   padding: 0 8px;
@@ -222,10 +300,588 @@
   z-index: 4;
 }
 
-.ms-inventory.inv-mode-full .inv-slot-count-equip,
-.ms-inventory.inv-mode-full .inv-slot-count-consume {
+/* meso 鈕 (25,485) 12×13；數字右對齊至 vector:Meso 213 */
+.inv-meso-btn {
+  position: absolute;
+  left: 25px;
+  top: 485px;
+  width: 12px;
+  height: 13px;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  z-index: 5;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_meso__normal__0.png');
+  image-rendering: pixelated;
+}
+
+.inv-meso-btn:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_meso__mouseOver__0.png');
+}
+
+.inv-meso-btn:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_meso__pressed__0.png');
+}
+
+.inv-meso-balance {
+  position: absolute;
+  left: 40px;
+  top: 485px;
+  width: 173px; /* → right edge ~213 */
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: #4b4b4b;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.ms-inventory.inv-mode-full .inv-meso-balance {
+  left: 40px;
+  top: 485px;
+  width: 150px; /* → vector:Meso 190 */
+}
+
+/* 楓葉點數：小背包 (213,509)；大背包並排 (348,485) */
+.inv-maple-balance {
+  position: absolute;
+  left: 40px;
+  top: 509px;
+  width: 173px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 12px;
+  line-height: 16px;
+  color: #4b4b4b;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.ms-inventory.inv-mode-full .inv-maple-balance {
+  left: 200px;
+  top: 485px;
+  width: 148px; /* → vector:MaplePoint 348 */
+}
+
+/* 動作列 y=530：24×25 */
+.inv-action-btn {
+  position: absolute;
+  top: 530px;
+  width: 24px;
+  height: 25px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  cursor: pointer;
+  z-index: 5;
+  image-rendering: pixelated;
+}
+
+.inv-btn-alchemy { left: 145px; }
+.inv-btn-succession { left: 172px; }
+.inv-btn-upgrade { left: 199px; }
+
+.inv-btn-alchemy {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_itemAlchemy__normal__0.png');
+}
+.inv-btn-alchemy:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_itemAlchemy__mouseOver__0.png');
+}
+.inv-btn-alchemy:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_itemAlchemy__pressed__0.png');
+}
+
+.inv-btn-succession {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_succession__normal__0.png');
+}
+.inv-btn-succession:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_succession__mouseOver__0.png');
+}
+.inv-btn-succession:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_succession__pressed__0.png');
+}
+
+.inv-btn-upgrade {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_upgrade__normal__0.png');
+}
+.inv-btn-upgrade:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_upgrade__mouseOver__0.png');
+}
+.inv-btn-upgrade:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_upgrade__pressed__0.png');
+}
+
+/* 底列 y=563：24×24（help 外連缺圖時仍保留熱區） */
+.inv-footer-btn {
+  position: absolute;
+  top: 563px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  cursor: pointer;
+  z-index: 5;
+  image-rendering: pixelated;
+}
+
+.inv-btn-help { left: 11px; }
+.inv-btn-equip { left: 103px; }
+.inv-btn-shop { left: 129px; }
+.inv-btn-trunk { left: 155px; }
+.inv-btn-bossreward { left: 181px; }
+.inv-btn-bag { left: 207px; }
+
+.inv-btn-help {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_help__normal__0.png');
+}
+.inv-btn-help:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_help__mouseOver__0.png');
+}
+.inv-btn-help:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_help__pressed__0.png');
+}
+
+.inv-btn-equip {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_equip__normal__0.png');
+}
+.inv-btn-equip:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_equip__mouseOver__0.png');
+}
+.inv-btn-equip:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_equip__pressed__0.png');
+}
+
+.inv-btn-shop {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_shop__normal__0.png');
+}
+.inv-btn-shop:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_shop__mouseOver__0.png');
+}
+.inv-btn-shop:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_shop__pressed__0.png');
+}
+
+.inv-btn-trunk {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_trunk__normal__0.png');
+}
+.inv-btn-trunk:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_trunk__mouseOver__0.png');
+}
+.inv-btn-trunk:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_trunk__pressed__0.png');
+}
+
+.inv-btn-bossreward {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_bossreward__normal__0.png');
+}
+.inv-btn-bossreward:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_bossreward__mouseOver__0.png');
+}
+.inv-btn-bossreward:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_bossreward__pressed__0.png');
+}
+
+.inv-btn-bag {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_bag__normal__0.png');
+}
+.inv-btn-bag:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_bag__mouseOver__0.png');
+}
+.inv-btn-bag:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_bag__pressed__0.png');
+}
+
+/* slotExpand 42×42（官方由 client 擺在擴充格；暫放末列首格供檢視） */
+.inv-slot-expand-btn {
+  position: absolute;
+  left: 28px;
+  top: 423px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  cursor: pointer;
+  z-index: 6;
+  image-rendering: pixelated;
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_slotExpand__normal__0.png');
+}
+
+.inv-slot-expand-btn:hover {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_slotExpand__mouseOver__0.png');
+}
+
+.inv-slot-expand-btn:active {
+  background-image: url('../../images/iventory/Inventory__AutoBuild__button_slotExpand__pressed__0.png');
+}
+
+/* 暫隱藏：擴充欄位／展開裝扮 */
+.inv-slot-expand-btn,
+.inv-btn-fullmax-avatar,
+.ms-inventory.inv-mode-full .inv-btn-fullmax-avatar {
+  display: none !important;
+}
+
+/* —— FullAutoBuild 大背包覆寫（800×546） —— */
+.inv-full-only {
+  display: none;
+}
+
+.ms-inventory.inv-mode-full .inv-full-only {
+  display: block;
+}
+
+.ms-inventory.inv-mode-full .inv-close-btn {
+  left: 769px;
+  top: 4px;
+}
+
+.ms-inventory.inv-mode-full .inv-size-full {
+  left: 751px;
+  right: auto;
+}
+
+.ms-inventory.inv-mode-full .inv-size-min {
+  left: 729px;
+  right: auto;
+}
+
+.ms-inventory.inv-mode-full .inv-tabs {
+  width: 800px;
+}
+
+.ms-inventory.inv-mode-full .inv-tabs .inv-tab {
+  width: 128px;
+  height: 22px;
+}
+
+.ms-inventory.inv-mode-full .inv-tab[data-tab-idx="0"] { left: 11px; }
+.ms-inventory.inv-mode-full .inv-tab[data-tab-idx="1"] { left: 141px; }
+.ms-inventory.inv-mode-full .inv-tab[data-tab-idx="2"] { left: 271px; }
+.ms-inventory.inv-mode-full .inv-tab[data-tab-idx="3"] { left: 401px; }
+.ms-inventory.inv-mode-full .inv-tab[data-tab-idx="4"] { left: 531px; }
+.ms-inventory.inv-mode-full .inv-tab[data-tab-idx="5"] { left: 661px; }
+
+.ms-inventory.inv-mode-full .inv-tab-0 {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__tab_category__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-tab-0.checked {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__tab_category__selected__0.png');
+}
+.ms-inventory.inv-mode-full .inv-tab-1 {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__tab_category__normal__1.png');
+}
+.ms-inventory.inv-mode-full .inv-tab-1.checked {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__tab_category__selected__1.png');
+}
+.ms-inventory.inv-mode-full .inv-tab-2 {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__tab_category__normal__2.png');
+}
+.ms-inventory.inv-mode-full .inv-tab-2.checked {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__tab_category__selected__2.png');
+}
+.ms-inventory.inv-mode-full .inv-tab-3 {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__tab_category__normal__3.png');
+}
+.ms-inventory.inv-mode-full .inv-tab-3.checked {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__tab_category__selected__3.png');
+}
+.ms-inventory.inv-mode-full .inv-tab-4 {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__tab_category__normal__4.png');
+}
+.ms-inventory.inv-mode-full .inv-tab-4.checked {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__tab_category__selected__4.png');
+}
+.ms-inventory.inv-mode-full .inv-tab-5 {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__tab_category__normal__5.png');
+}
+.ms-inventory.inv-mode-full .inv-tab-5.checked {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__tab_category__selected__5.png');
+}
+
+.ms-inventory.inv-mode-full .inv-tool-btn {
   top: 67px;
-  right: 52px;
+  width: 68px;
+  height: 22px;
+}
+
+.ms-inventory.inv-mode-full .inv-btn-sort { left: 21px; }
+.ms-inventory.inv-mode-full .inv-btn-slot-lock,
+.ms-inventory.inv-mode-full .inv-btn-slot-lock-active { left: 95px; }
+.ms-inventory.inv-mode-full .inv-btn-item-lock,
+.ms-inventory.inv-mode-full .inv-btn-item-lock-active { left: 169px; }
+.ms-inventory.inv-mode-full .inv-btn-filter,
+.ms-inventory.inv-mode-full .inv-btn-filter-applied { left: 243px; }
+
+.ms-inventory.inv-mode-full .inv-btn-sort {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_sort__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-sort:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_sort__mouseOver__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-sort:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_sort__pressed__0.png');
+}
+
+.ms-inventory.inv-mode-full .inv-btn-slot-lock {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_slotLock__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-slot-lock:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_slotLock__mouseOver__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-slot-lock:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_slotLock__pressed__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-slot-lock-active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_slotLockActive__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-slot-lock-active:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_slotLockActive__mouseOver__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-slot-lock-active:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_slotLockActive__pressed__0.png');
+}
+
+.ms-inventory.inv-mode-full .inv-btn-item-lock {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_itemLock__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-item-lock:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_itemLock__mouseOver__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-item-lock:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_itemLock__pressed__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-item-lock-active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_itemLockActive__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-item-lock-active:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_itemLockActive__mouseOver__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-item-lock-active:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_itemLockActive__pressed__0.png');
+}
+
+.ms-inventory.inv-mode-full .inv-btn-filter {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_filter__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-filter:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_filter__mouseOver__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-filter:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_filter__pressed__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-filter-applied {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_filterApplied__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-filter-applied:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_filterApplied__mouseOver__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-filter-applied:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_filterApplied__pressed__0.png');
+}
+
+.ms-inventory.inv-mode-full .inv-slot-count {
+  top: 68px;
+  right: 44px; /* ~slotNum1 771 */
+}
+
+.ms-inventory.inv-mode-full .inv-action-btn {
+  top: 479px;
+  width: 92px;
+  height: 27px;
+}
+
+.ms-inventory.inv-mode-full .inv-btn-alchemy { left: 496px; }
+.ms-inventory.inv-mode-full .inv-btn-succession { left: 592px; }
+.ms-inventory.inv-mode-full .inv-btn-upgrade { left: 688px; }
+
+.ms-inventory.inv-mode-full .inv-btn-alchemy {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_itemAlchemy__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-alchemy:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_itemAlchemy__mouseOver__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-alchemy:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_itemAlchemy__pressed__0.png');
+}
+
+.ms-inventory.inv-mode-full .inv-btn-succession {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_succession__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-succession:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_succession__mouseOver__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-succession:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_succession__pressed__0.png');
+}
+
+.ms-inventory.inv-mode-full .inv-btn-upgrade {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_upgrade__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-upgrade:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_upgrade__mouseOver__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-upgrade:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_upgrade__pressed__0.png');
+}
+
+.ms-inventory.inv-mode-full .inv-footer-btn {
+  top: 515px;
+  width: 76px;
+  height: 24px;
+}
+
+.ms-inventory.inv-mode-full .inv-btn-help {
+  left: 11px;
+  width: 24px;
+  height: 24px;
+}
+
+.ms-inventory.inv-mode-full .inv-btn-equip { left: 391px; }
+.ms-inventory.inv-mode-full .inv-btn-shop { left: 471px; }
+.ms-inventory.inv-mode-full .inv-btn-trunk { left: 551px; }
+.ms-inventory.inv-mode-full .inv-btn-bossreward { left: 631px; }
+.ms-inventory.inv-mode-full .inv-btn-bag { left: 711px; }
+
+.ms-inventory.inv-mode-full .inv-btn-equip {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_equip__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-equip:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_equip__mouseOver__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-equip:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_equip__pressed__0.png');
+}
+
+.ms-inventory.inv-mode-full .inv-btn-shop {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_shop__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-shop:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_shop__mouseOver__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-shop:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_shop__pressed__0.png');
+}
+
+.ms-inventory.inv-mode-full .inv-btn-trunk {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_trunk__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-trunk:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_trunk__mouseOver__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-trunk:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_trunk__pressed__0.png');
+}
+
+.ms-inventory.inv-mode-full .inv-btn-bossreward {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_bossreward__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-bossreward:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_bossreward__mouseOver__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-bossreward:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_bossreward__pressed__0.png');
+}
+
+.ms-inventory.inv-mode-full .inv-btn-bag {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_bag__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-bag:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_bag__mouseOver__0.png');
+}
+.ms-inventory.inv-mode-full .inv-btn-bag:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_bag__pressed__0.png');
+}
+
+.inv-btn-fullmax-avatar {
+  position: absolute;
+  left: 357px;
+  top: 474px;
+  width: 80px;
+  height: 17px;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  z-index: 5;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_fullMax_avatar__normal__0.png');
+}
+
+.inv-btn-fullmax-avatar:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_fullMax_avatar__mouseOver__0.png');
+}
+
+.inv-btn-fullmax-avatar:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_fullMax_avatar__pressed__0.png');
+}
+
+.inv-search-input {
+  position: absolute;
+  left: 68px;
+  top: 520px;
+  width: 168px;
+  height: 18px;
+  padding: 0 4px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #4b4b4b;
+  font-size: 12px;
+  line-height: 18px;
+  z-index: 5;
+  font-family: "PMingLiU", "MingLiU", "SimSun", sans-serif;
+}
+
+.inv-btn-search,
+.inv-btn-search-cancel {
+  position: absolute;
+  left: 246px;
+  top: 519px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  z-index: 6;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
+}
+
+.ms-inventory.inv-mode-full .inv-slot-expand-btn {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_slotExpand__normal__0.png');
+}
+.ms-inventory.inv-mode-full .inv-slot-expand-btn:hover {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_slotExpand__mouseOver__0.png');
+}
+.ms-inventory.inv-mode-full .inv-slot-expand-btn:active {
+  background-image: url('../../images/iventory/Inventory__FullAutoBuild__button_slotExpand__pressed__0.png');
 }
 
 /* 背包主體 */
@@ -450,6 +1106,42 @@ body.inv-potential-scroll-use * {
   width: 290px;
   height: auto;
   image-rendering: pixelated;
+}
+
+.inv-etc-tooltip {
+  position: fixed;
+  z-index: 100050;
+  pointer-events: none;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.65));
+}
+
+.inv-etc-tooltip.hidden {
+  display: none;
+}
+
+.inv-etc-frame {
+  width: 261px;
+}
+
+.inv-etc-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.inv-etc-desc {
+  flex: 1;
+  min-width: 0;
+  color: #ffffff;
+  font-family: "PMingLiU", "SimSun", "MingLiU", sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  -webkit-font-smoothing: none;
+  text-rendering: geometricPrecision;
+}
+
+.inv-etc-em {
+  color: #ffd200;
 }
 
 /* 背包內的裝備圖片：使用原始尺寸，超出槽位可溢出 */

@@ -1,0 +1,21 @@
+{
+  "name": "maplestory-enchant-simulator",
+  "private": true,
+  "description": "MapleStory enchant simulator (local static app). npm 僅給匯入腳本用。",
+  "scripts": {
+    "import:equips": "node scripts/import-maplestory-io.mjs",
+    "import:wz": "node scripts/import-wz-xml.mjs",
+    "import:paperdoll": "node scripts/import-paperdoll-wz.mjs",
+    "import:gear": "node scripts/import-wz-xml.mjs && node scripts/import-paperdoll-wz.mjs",
+    "import:mob": "node scripts/import-mob-wz.mjs",
+    "import:boss": "node scripts/import-boss-wz.mjs",
+    "import:npcshop": "node scripts/import-npcshop-ui.mjs",
+    "import:levelup": "node scripts/import-basic-eff-levelup.mjs",
+    "import:skill": "node scripts/import-skill-wz.mjs",
+    "import:action-instructions": "node scripts/import-action-instructions.mjs",
+    "gm-writer": "node scripts/idle-gm-writer.mjs"
+  },
+  "devDependencies": {
+    "sharp": "^0.33.5"
+  }
+}

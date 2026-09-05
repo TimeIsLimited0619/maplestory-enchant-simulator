@@ -1,0 +1,66 @@
+/* 技能 Tooltip 內文（外框沿用 eq-tooltip） */
+.skb-skill-tooltip {
+  z-index: 500100;
+}
+
+.eq-tooltip-frame.skb-tip-frame {
+  width: 280px;
+}
+
+.skb-tip-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.skb-tip-desc {
+  flex: 1;
+  min-width: 0;
+  color: #ffffff;
+  font-family: "PMingLiU", "SimSun", "MingLiU", sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  -webkit-font-smoothing: none;
+}
+
+.skb-tip-effects {
+  margin-top: 2px;
+}
+
+.skb-tip-lv-label {
+  margin-top: 6px;
+  color: #ffd76a;
+  font-family: "PMingLiU", "SimSun", "MingLiU", sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  -webkit-font-smoothing: none;
+}
+
+.skb-tip-lv-label:first-child {
+  margin-top: 0;
+}
+
+.skb-tip-effect {
+  color: #c8d0dc;
+  font-family: "PMingLiU", "SimSun", "MingLiU", sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  -webkit-font-smoothing: none;
+}
+
+.skb-tip-em {
+  color: #ff9a3c;
+}
+
+.skb-tip-meta {
+  margin-top: 8px;
+  color: #8a93a3;
+  font-family: "PMingLiU", "SimSun", "MingLiU", sans-serif;
+  font-size: 11px;
+  line-height: 14px;
+  -webkit-font-smoothing: none;
+}
+
+.skb-tip-icon {
+  image-rendering: pixelated;
+}

@@ -62,6 +62,10 @@ const AddPotentialModule = {
     }
 
     getPlayerAddPotCubeCount(cube.id);
+    if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()
+      && getPlayerAddPotCubeCount(cube.id) <= 0) {
+      return addLog('⚠️ 背包中沒有這個方塊。', 'log-fail');
+    }
     this.selectedCubeId = this.selectedCubeId === cubeId ? null : cubeId;
     this.updateUI();
   },
@@ -170,13 +174,20 @@ const AddPotentialModule = {
     grid.querySelectorAll('.pt-cube-slot').forEach((slot) => {
       const slotIndex = Number(slot.dataset.slotIndex);
       const cube = getAddPotCubeBySlot(slotIndex);
+      const owned = !(typeof isIdlePlayMode === 'function' && isIdlePlayMode())
+        || (cube && typeof getPlayerAddPotCubeCount === 'function' && getPlayerAddPotCubeCount(cube.id) > 0);
+      const showCube = Boolean(cube && owned);
       const hasEquip = Boolean(this.itemData);
 
-      slot.classList.toggle('has-item', Boolean(cube));
-      slot.classList.toggle('selected', Boolean(cube && this.selectedCubeId === cube.id));
+      slot.classList.toggle('has-item', showCube);
+      slot.classList.toggle('selected', Boolean(showCube && this.selectedCubeId === cube.id));
       slot.innerHTML = '';
 
-      if (!cube) return;
+      if (!showCube) {
+        slot.disabled = true;
+        slot.removeAttribute('data-cube-id');
+        return;
+      }
 
       slot.dataset.cubeId = cube.id;
       const blockReason = getAddPotCubeBlockReason(cube, this.itemData);
@@ -269,7 +280,11 @@ const AddPotentialModule = {
     const blockReason = getAddPotCubeBlockReason(cube, this.itemData);
     if (!btn) return;
     const hide = overlayOpen || autoUiActive;
-    btn.disabled = !(this.itemData && this.selectedCubeId && !blockReason) || hide || animating;
+    const idle = typeof isIdlePlayMode === 'function' && isIdlePlayMode();
+    const hasCube = !idle || (cube && typeof getPlayerAddPotCubeCount === 'function' && getPlayerAddPotCubeCount(cube.id) > 0);
+    const mesoNeed = typeof getAddPotentialCubeMesoCost === 'function' ? getAddPotentialCubeMesoCost(this.itemData) : 0;
+    const hasMeso = !idle || (typeof getIdleHeldMeso === 'function' && getIdleHeldMeso() >= mesoNeed);
+    btn.disabled = !(this.itemData && this.selectedCubeId && !blockReason && hasCube && hasMeso) || hide || animating;
     btn.classList.toggle('hidden', hide);
     this.renderMesoCost();
   },
@@ -339,8 +354,23 @@ const AddPotentialModule = {
       return addLog(`⚠️ ${blockReason}`, 'log-fail');
     }
 
+    if (typeof getPlayerAddPotCubeCount === 'function' && getPlayerAddPotCubeCount(cube.id) <= 0) {
+      this.updateResetButtonState();
+      this.renderCubeGrid();
+      return addLog('⚠️ 背包中沒有這個方塊。', 'log-fail');
+    }
+
+    const takeCube = () => {
+      if (typeof consumePlayerAddPotCube !== 'function') return true;
+      if (consumePlayerAddPotCube(cube.id)) return true;
+      addLog('⚠️ 背包中沒有這個方塊。', 'log-fail');
+      this.updateResetButtonState();
+      this.renderCubeGrid();
+      return false;
+    };
+
     if (cube.hexaPick) {
-      consumePlayerAddPotCube(cube.id);
+      if (!takeCube()) return;
       addLog(`🟢 使用 ${cube.name} 重新設定附加潛在能力。`, 'log-success');
       if (typeof PotentialEffectModule !== 'undefined') {
         PotentialEffectModule.runWithTryAnim({
@@ -354,7 +384,7 @@ const AddPotentialModule = {
     }
 
     if (cube.uniPick) {
-      consumePlayerAddPotCube(cube.id);
+      if (!takeCube()) return;
       addLog(`🟢 使用 ${cube.name} 選擇附加潛在能力。`, 'log-success');
       if (typeof PotentialEffectModule !== 'undefined') {
         PotentialEffectModule.runWithTryAnim({
@@ -368,7 +398,7 @@ const AddPotentialModule = {
     }
 
     if (cube.memoriaPick) {
-      consumePlayerAddPotCube(cube.id);
+      if (!takeCube()) return;
       addLog(`🟢 使用 ${cube.name} 重新設定附加潛在能力。`, 'log-success');
       if (typeof PotentialEffectModule !== 'undefined') {
         PotentialEffectModule.runWithTryAnim({
@@ -382,7 +412,7 @@ const AddPotentialModule = {
     }
 
     const doRoll = () => {
-      consumePlayerAddPotCube(cube.id);
+      if (!takeCube()) return null;
       this.lastAtkPow = this.itemData.additionalPotential.atkPow;
       return rerollAddPotential(cube, this.itemData.additionalPotential, this.itemData);
     };
@@ -399,6 +429,7 @@ const AddPotentialModule = {
       || !PotentialEffectModule.hasAssetsForRank(effectRank)
     ) {
       const rolled = doRoll();
+      if (!rolled) return;
       this.applyRollResult(rolled, cube);
       return;
     }
@@ -408,7 +439,14 @@ const AddPotentialModule = {
       rank: effectRank,
       oldRank,
       rollFn: doRoll,
-      onComplete: (rolled) => this.applyRollResult(rolled, cube),
+      onComplete: (rolled) => {
+        if (!rolled) {
+          this.updateResetButtonState();
+          this.renderCubeGrid();
+          return;
+        }
+        this.applyRollResult(rolled, cube);
+      },
     });
   },
 };

@@ -1,0 +1,709 @@
+/* ==========================================
+   33. Skill Board（UIskillboard，無 XML → 量測定位）
+   基準：skill_board_backgrnd.png 1278×710
+   外層可拖曳；縮放在 .skb-frame，避免 PanelDrag 清掉 transform
+   ========================================== */
+
+.skb-root {
+  --skb-scale: 0.7;
+  position: fixed;
+  left: 50%;
+  top: 48px;
+  margin-left: calc(1278px * var(--skb-scale) / -2);
+  z-index: 12020;
+  width: calc(1278px * var(--skb-scale));
+  height: calc(710px * var(--skb-scale));
+  user-select: none;
+  filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.45));
+  font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+}
+
+.skb-root.is-hidden {
+  display: none;
+}
+
+.skb-root.is-panel-drag-pinned {
+  margin-left: 0;
+}
+
+.skb-frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1278px;
+  height: 710px;
+  background: url('../../images/UIskillboard/skill_board_backgrnd.png') no-repeat 0 0;
+  transform: scale(var(--skb-scale));
+  transform-origin: top left;
+  image-rendering: auto;
+}
+
+.skb-drag-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1220px;
+  height: 72px;
+  cursor: move;
+  z-index: 6;
+}
+
+#skbClose.panel-wb-close {
+  left: auto;
+  right: 18px;
+  top: 18px;
+  width: 36px;
+  height: 36px;
+  font-size: 28px;
+  z-index: 8;
+}
+
+.skb-job-label {
+  position: absolute;
+  left: 178px;
+  top: 28px;
+  z-index: 5;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* ---- 左側 rank 頁籤：sidebar 0–155，自 y=75 起每格 90 ---- */
+.skb-rank-tabs {
+  position: absolute;
+  left: 0;
+  top: 78px;
+  width: 155px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+}
+
+.skb-rank-tab {
+  position: relative;
+  box-sizing: border-box;
+  width: 155px;
+  height: 90px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.skb-rank-tab.is-locked {
+  cursor: not-allowed;
+}
+
+.skb-rank-tab[data-rank="10"] { background-image: url('../../images/UIskillboard/tab_skill_level_10_normal.png'); }
+.skb-rank-tab[data-rank="10"].is-active { background-image: url('../../images/UIskillboard/tab_skill_level_10_check.png'); }
+.skb-rank-tab[data-rank="30"] { background-image: url('../../images/UIskillboard/tab_skill_level_30_normal.png'); }
+.skb-rank-tab[data-rank="30"].is-active { background-image: url('../../images/UIskillboard/tab_skill_level_30_check.png'); }
+.skb-rank-tab[data-rank="60"] { background-image: url('../../images/UIskillboard/tab_skill_level_60_normal.png'); }
+.skb-rank-tab[data-rank="60"].is-active { background-image: url('../../images/UIskillboard/tab_skill_level_60_check.png'); }
+.skb-rank-tab[data-rank="100"] { background-image: url('../../images/UIskillboard/tab_skill_level_100_normal.png'); }
+.skb-rank-tab[data-rank="100"].is-active { background-image: url('../../images/UIskillboard/tab_skill_level_100_check.png'); }
+.skb-rank-tab[data-rank="hyper"] { background-image: url('../../images/UIskillboard/tab_skill_level_hyper_normal.png'); }
+.skb-rank-tab[data-rank="hyper"].is-active { background-image: url('../../images/UIskillboard/tab_skill_level_hyper_check.png'); }
+.skb-rank-tab[data-rank="hexa"] { background-image: url('../../images/UIskillboard/tab_skill_level_hexa_normal.png'); }
+.skb-rank-tab[data-rank="hexa"].is-active { background-image: url('../../images/UIskillboard/tab_skill_level_hexa_check.png'); }
+
+.skb-rank-lock {
+  position: absolute;
+  left: 18px;
+  top: 32px;
+  width: 25px;
+  height: 25px;
+  background: url('../../images/UIskillboard/tab_skill_level_lockicon.png') no-repeat 0 0;
+  pointer-events: none;
+}
+
+.skb-rank-tab:not(.is-locked) .skb-rank-lock {
+  display: none;
+}
+
+/* ---- 左欄：裝備預設 + 3×3（內容區 x≈156–638） ---- */
+.skb-equip-panel {
+  position: absolute;
+  left: 156px;
+  top: 80px;
+  width: 482px;
+  height: 620px;
+  z-index: 3;
+}
+
+.skb-presets {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 12px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  z-index: 2;
+}
+
+.skb-presets-group {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  min-width: 0;
+  margin-right: 20px;
+}
+
+.skb-preset-btn {
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.skb-preset-btn[data-preset="1"] { background-image: url('../../images/UIskillboard/btn_skill_preset1_normal.png'); }
+.skb-preset-btn[data-preset="1"]:hover { background-image: url('../../images/UIskillboard/btn_skill_preset1_mouseover.png'); }
+.skb-preset-btn[data-preset="1"].is-active { background-image: url('../../images/UIskillboard/btn_skill_preset1_enable.png'); }
+.skb-preset-btn[data-preset="2"] { background-image: url('../../images/UIskillboard/btn_skill_preset2_normal.png'); }
+.skb-preset-btn[data-preset="2"]:hover { background-image: url('../../images/UIskillboard/btn_skill_preset2_mouseover.png'); }
+.skb-preset-btn[data-preset="2"].is-active { background-image: url('../../images/UIskillboard/btn_skill_preset2_enable.png'); }
+.skb-preset-btn[data-preset="3"] { background-image: url('../../images/UIskillboard/btn_skill_preset3_normal.png'); }
+.skb-preset-btn[data-preset="3"]:hover { background-image: url('../../images/UIskillboard/btn_skill_preset3_mouseover.png'); }
+.skb-preset-btn[data-preset="3"].is-active { background-image: url('../../images/UIskillboard/btn_skill_preset3_enable.png'); }
+
+.skb-preset-set {
+  width: 46px;
+  height: 46px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: url('../../images/UIskillboard/btn_skill_preset_set.png') no-repeat center;
+  background-color: transparent;
+  cursor: default;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.skb-equip-grid {
+  position: absolute;
+  left: 54px;
+  top: 78px;
+  width: 340px;
+  display: grid;
+  grid-template-columns: repeat(3, 96px);
+  grid-template-rows: repeat(3, 96px);
+  gap: 16px;
+  z-index: 2;
+}
+
+/* 技能連鎖：九宮格下方（素材原尺寸，由 .skb-frame --skb-scale 縮放） */
+.skb-skill-link {
+  position: absolute;
+  left: 49px; /* 原 54，整體左移 5px */
+  top: 418px;
+  width: max-content;
+  z-index: 3;
+  line-height: 0;
+}
+
+.skb-skill-link__bg {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+  image-rendering: pixelated;
+}
+
+.skb-skill-link__slots {
+  position: absolute;
+  left: 0%;
+  top: 22%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  pointer-events: none;
+}
+
+.skb-link-slot {
+  position: relative;
+  flex: 0 0 96px;
+  width: 96px;
+  height: 96px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  overflow: visible;
+  border-radius: 6px;
+}
+
+.skb-link-slot.is-locked {
+  cursor: default;
+}
+
+.skb-link-slot-lock {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
+}
+
+.skb-link-slot.is-drop-target {
+  outline: 2px solid rgba(221, 254, 1, 0.85);
+  outline-offset: -2px;
+  background: rgba(221, 254, 1, 0.12);
+}
+
+.skb-link-slot.is-reject {
+  outline: 2px solid rgba(255, 80, 80, 0.9);
+  outline-offset: -2px;
+  background: rgba(255, 60, 60, 0.18);
+}
+
+.skb-skill-link.is-drag-over-host .skb-link-slot:not(.is-filled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.skb-link-slot .skb-equip-icon,
+.skb-link-slot .skb-equip-icon-fallback {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.skb-link-slot .skb-equip-icon-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.skb-equip-slot {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: url('../../images/UIskillboard/slot_skill_equipment.png') no-repeat 0 0;
+  background-color: transparent;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.skb-equip-slot.is-filled {
+  cursor: pointer;
+}
+
+.skb-equip-slot .skb-equip-icon {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.skb-equip-slot .skb-equip-icon-fallback {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+/* ---- SP 區：slot 包覆點數與重置（對齊左欄底部黑條） ---- */
+.skb-sp-label {
+  position: absolute;
+  left: 457px;
+  top: 660px;
+  width: 171px;
+  height: 43px;
+  background: url('../../images/UIskillboard/slot_skillpoint.png') no-repeat 0 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.skb-sp-value {
+  position: absolute;
+  left: 520px;
+  top: 660px;
+  width: 68px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2c3340;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.skb-sp-reset {
+  position: absolute;
+  left: 586px;
+  top: 661px;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: url('../../images/UIskillboard/btn_skill_resetskillpoint.png') no-repeat 0 0;
+  background-color: transparent;
+  cursor: pointer;
+  z-index: 5;
+}
+
+.skb-sp-reset:hover {
+  filter: brightness(1.08);
+}
+
+/* ---- 右欄：類型頁籤 + 列表 ---- */
+.skb-list-panel {
+  position: absolute;
+  left: 639px;
+  top: 80px;
+  width: 635px; /* → 1274，右側留給捲軸 */
+  height: 610px;
+  z-index: 3;
+}
+
+.skb-type-tabs {
+  position: absolute;
+  left: 12px;
+  top: 5px;
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  height: 40px;
+  z-index: 2;
+}
+
+.skb-type-tab {
+  position: relative;
+  width: 200px; /* 對齊 tab_skilltype_check.png 寬度 */
+  height: 32px;
+  margin: 0;
+  padding: 0 0 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.skb-type-tab-label {
+  display: block;
+  height: 19px;
+  background-repeat: no-repeat;
+  background-position: center bottom;
+}
+
+.skb-type-tab[data-type="active"] .skb-type-tab-label {
+  width: 43px;
+  background-image: url('../../images/UIskillboard/tab_skilltype_active_normal.png');
+}
+.skb-type-tab[data-type="active"].is-active .skb-type-tab-label {
+  background-image: url('../../images/UIskillboard/tab_skilltype_active_check.png');
+}
+.skb-type-tab[data-type="buff"] .skb-type-tab-label {
+  width: 44px;
+  height: 14px;
+  margin-bottom: 2px;
+  background-image: url('../../images/UIskillboard/tab_skilltype_buff_normal.png');
+}
+.skb-type-tab[data-type="buff"].is-active .skb-type-tab-label {
+  background-image: url('../../images/UIskillboard/tab_skilltype_buff_check.png');
+}
+.skb-type-tab[data-type="passive"] .skb-type-tab-label {
+  width: 42px;
+  background-image: url('../../images/UIskillboard/tab_skilltype_passive_normal.png');
+}
+.skb-type-tab[data-type="passive"].is-active .skb-type-tab-label {
+  background-image: url('../../images/UIskillboard/tab_skilltype_passive_check.png');
+}
+
+.skb-type-count {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  margin-left: 22px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 7px;
+  background: #f07a28;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+}
+
+.skb-type-tab.is-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 200px;
+  height: 6px;
+  background: url('../../images/UIskillboard/tab_skilltype_check.png') no-repeat 0 0;
+}
+
+.skb-skill-list {
+  position: absolute;
+  left: 0;
+  top: 58px;
+  width: 100%;
+  height: 540px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0 8px 12px 0; /* 右側 gutter：捲軸在背景內側，不擠列 */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  z-index: 1;
+  scrollbar-gutter: stable;
+}
+
+.skb-skill-list::-webkit-scrollbar {
+  width: 8px;
+}
+.skb-skill-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.skb-skill-list::-webkit-scrollbar-thumb {
+  background: rgba(80, 90, 110, 0.45);
+  border-radius: 4px;
+}
+
+.skb-skill-empty {
+  margin-top: 48px;
+  color: #8a93a3;
+  font-size: 15px;
+}
+
+.skb-skill-row {
+  position: relative;
+  flex-shrink: 0;
+  width: 622px;
+  height: 122px;
+  background: url('../../images/UIskillboard/slot_skill.png') no-repeat 0 0;
+}
+
+.skb-skill-row.is-skill-locked {
+  opacity: 0.55;
+  filter: grayscale(0.35);
+}
+
+.skb-skill-req {
+  margin-left: 6px;
+  font-size: 12px;
+  color: #c8a84a;
+}
+
+.skb-skill-icon-frame {
+  position: absolute;
+  left: 11px;
+  top: 13px;
+  width: 96px;
+  height: 96px;
+  background: url('../../images/UIskillboard/slot_skillicon.png') no-repeat 0 0;
+  overflow: hidden;
+}
+
+.skb-skill-icon-frame.is-draggable {
+  cursor: grab;
+}
+
+.skb-skill-icon-frame.is-draggable:active,
+.skb-skill-icon-frame.is-dragging {
+  cursor: grabbing;
+  opacity: 0.72;
+}
+
+.skb-skill-icon {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.skb-skill-icon-fallback {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 26px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.skb-skill-name {
+  position: absolute;
+  left: 120px;
+  top: 18px;
+  max-width: 220px;
+  color: #2c3340;
+  font-size: 18px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 2;
+}
+
+/* slot_skill.png 已含「Lv.」「MAX Lv.」字樣 → 只疊數字對齊右側 */
+.skb-skill-lv {
+  position: absolute;
+  left: 148px;
+  top: 68px;
+  color: #f07a28;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  z-index: 2;
+  background: none;
+  padding: 0;
+}
+
+.skb-skill-max {
+  position: absolute;
+  left: 192px;
+  top: 91px;
+  color: #5a6270;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  z-index: 2;
+  background: none;
+  padding: 0;
+}
+
+.skb-skill-equipped {
+  position: absolute;
+  right: 14px;
+  top: 8px;
+  width: 102px;
+  height: 28px;
+  background: url('../../images/UIskillboard/skill_equipped_icon.png') no-repeat 0 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.skb-skill-linked {
+  position: absolute;
+  right: 14px;
+  top: 40px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(40, 90, 160, 0.88);
+  color: #e8f0ff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  z-index: 3;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+}
+
+.skb-skill-linked::after {
+  content: '連鎖';
+}
+
+.skb-skill-actions {
+  position: absolute;
+  left: 348px;
+  top: 65px;
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  z-index: 2;
+}
+
+.skb-btn-equip,
+.skb-btn-levelup {
+  width: 126px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  cursor: pointer;
+}
+
+.skb-btn-equip {
+  background-image: url('../../images/UIskillboard/btn_skill_equipment.png');
+}
+
+.skb-btn-levelup {
+  background-image: url('../../images/UIskillboard/btn_skill_levelup.png');
+}
+
+.skb-btn-levelup.is-max {
+  background-image: url('../../images/UIskillboard/btn_skill_levelup_disabled.png');
+  cursor: default;
+}
+
+.skb-btn-equip:hover,
+.skb-btn-levelup:not(.is-max):hover {
+  filter: brightness(1.06);
+}

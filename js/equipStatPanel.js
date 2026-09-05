@@ -77,6 +77,28 @@ const EquipStatPanel = (() => {
     return IED_LABEL_RE.test(String(label || ''));
   }
 
+  /**
+   * 額外屬性存放 key：全屬性 flat／% 不可共用同一 key
+   * （套裝全屬性+N 與星火全屬性+N% 會撞名）
+   */
+  function extraStoreKey(label, isPercent) {
+    const raw = String(label || '').trim();
+    if (!raw) return raw;
+    if (isPercent && (raw === '全屬性' || raw === 'allStat')) return '全屬性%';
+    return raw;
+  }
+
+  function addExtraTotal(extraTotals, label, amount, isPercent) {
+    const n = Number(amount) || 0;
+    if (!n) return;
+    const key = extraStoreKey(label, isPercent);
+    if (!extraTotals[key]) {
+      extraTotals[key] = { total: 0, isPercent: !!isPercent || key.endsWith('%') };
+    }
+    extraTotals[key].total += n;
+    if (isPercent || key.endsWith('%')) extraTotals[key].isPercent = true;
+  }
+
   function parsePotentialValue(raw) {
     if (raw == null || raw === '') return { num: 0, suffix: '' };
     const text = String(raw).trim();
@@ -111,6 +133,18 @@ const EquipStatPanel = (() => {
     return raw;
   }
 
+  /**
+   * 固定值與 % 必須分 key 存放，避免「STR +10」與「STR +12%」加總成同一筆。
+   * 例：STR / STR% 、攻擊力 / 攻擊力% 、最大HP / 最大HP%
+   */
+  function potAggStoreKey(baseKey, parsedSuffix) {
+    const raw = String(baseKey || '').trim() || '(未知潛能)';
+    const labelHadPercent = /%$/.test(raw);
+    const base = raw.replace(/%$/, '').trim() || raw;
+    const isPercent = parsedSuffix === '%' || labelHadPercent;
+    return isPercent ? `${base}%` : base;
+  }
+
   function collectPotentialAgg(pot, dest) {
     const lines = pot?.lines;
     if (!Array.isArray(lines) || !lines.length) return;
@@ -122,14 +156,16 @@ const EquipStatPanel = (() => {
       const valueRaw = line.value != null ? String(line.value) : '';
       let parsed = parsePotentialValue(valueRaw);
       if (!parsed.num) parsed = parsePotentialValue(labelRaw);
-      const key = normalizePotKey(labelRaw, valueRaw);
+      const baseKey = normalizePotKey(labelRaw, valueRaw);
+      const key = potAggStoreKey(baseKey, parsed.suffix);
+      const isPercent = key.endsWith('%') || parsed.suffix === '%';
       if (!dest[key]) {
-        dest[key] = { value: 0, suffix: parsed.suffix, count: 0, texts: [] };
+        dest[key] = { value: 0, suffix: isPercent ? '%' : '', count: 0, texts: [] };
       }
       dest[key].count += 1;
       if (parsed.num) {
         dest[key].value += parsed.num;
-        if (parsed.suffix) dest[key].suffix = parsed.suffix;
+        if (isPercent) dest[key].suffix = '%';
       } else {
         dest[key].texts.push(labelRaw);
       }
@@ -210,11 +246,8 @@ const EquipStatPanel = (() => {
     Object.entries(bonuses.extra || {}).forEach(([label, n]) => {
       const amount = Number(n) || 0;
       if (!amount) return;
-      if (!extraTotals[label]) {
-        extraTotals[label] = { total: 0, isPercent: !!bonuses.extraPercent?.[label] };
-      }
-      extraTotals[label].total += amount;
-      if (bonuses.extraPercent?.[label]) extraTotals[label].isPercent = true;
+      const isPercent = !!bonuses.extraPercent?.[label];
+      addExtraTotal(extraTotals, label, amount, isPercent);
     });
     (bonuses.details || []).forEach((block) => {
       (block.totals?.ied || []).forEach((rate) => {
@@ -295,21 +328,19 @@ const EquipStatPanel = (() => {
           srow.total += Number(seg.total) || 0;
         } else {
           const t = Number(seg.total) || 0;
-          if (!extraTotals[label]) {
-            extraTotals[label] = { total: 0, isPercent: !!seg.isPercent };
-          }
-          extraTotals[label].total += t;
-          if (seg.isPercent) extraTotals[label].isPercent = true;
+          const isPercent = !!seg.isPercent;
+          const storeKey = extraStoreKey(label, isPercent);
+          addExtraTotal(extraTotals, label, t, isPercent);
           if (isIedLabel(label) && t) pushIedSource(iedSources, t, item.name, '裝備');
           if (t) {
             slotExtra.push({
-              label,
+              label: storeKey,
               base: Number(seg.base) || 0,
               star: Number(seg.star) || 0,
               scroll: Number(seg.scroll) || 0,
               bonus: Number(seg.bonus) || 0,
               total: t,
-              isPercent: !!seg.isPercent,
+              isPercent,
             });
           }
         }
@@ -434,13 +465,15 @@ const EquipStatPanel = (() => {
     }
     const rows = keys.map((label) => {
       const info = agg[label];
+      const isPercent = !!info.suffix || label.endsWith('%');
+      const displayLabel = String(label).replace(/%$/, '');
       let text;
       if (info.value) {
-        text = `${label} ${formatSigned(info.value, !!info.suffix)}`;
+        text = `${displayLabel} ${formatSigned(info.value, isPercent)}`;
       } else if (info.texts?.length) {
         text = info.texts[0] + (info.count > 1 ? ` ×${info.count}` : '');
       } else {
-        text = `${label} ×${info.count}`;
+        text = `${displayLabel} ×${info.count}`;
       }
       return `<div class="esp-row"><span class="esp-k">${esc(text)}</span></div>`;
     }).join('');
@@ -488,6 +521,7 @@ const EquipStatPanel = (() => {
       rows.push(`<div class="esp-row"><span class="esp-k">${esc(label)}</span><span class="esp-v">${esc(formatSigned(amount, isPercent))}</span></div>`);
     };
     push('全屬性', totals?.extra?.['全屬性'] ?? totals?.main?.['全屬性'], !!totals?.extraPercent?.['全屬性']);
+    push('全屬性%', totals?.extra?.['全屬性%'], true);
     MAIN_KEYS.forEach(({ label }) => push(label, totals?.main?.[label], false));
     Object.entries(totals?.extra || {}).forEach(([label, n]) => {
       push(label, n, !!totals?.extraPercent?.[label]);

@@ -201,7 +201,14 @@ Object.assign(PotentialModule, {
     const cube = getPotentialCubeById(this.hexaCubeId);
     if (!cube) return;
 
-    consumePlayerCube(cube.id);
+    if (typeof getPlayerCubeCount === 'function' && getPlayerCubeCount(cube.id) <= 0) {
+      this.renderHexaOverlay();
+      return addLog('⚠️ 背包中沒有這個方塊。', 'log-fail');
+    }
+    if (typeof consumePlayerCube === 'function' && !consumePlayerCube(cube.id)) {
+      this.renderHexaOverlay();
+      return addLog('⚠️ 背包中沒有這個方塊。', 'log-fail');
+    }
     addLog(`🔮 使用 ${cube.name} 重新設定潛在能力。`, 'log-success');
 
     const session = rollDazzlingHexaChoices(this.itemData, this.itemData.potential);
@@ -328,9 +335,19 @@ Object.assign(PotentialModule, {
     }
 
     const canConfirm = this.hexaPhase === 'select' && this.hexaSelected?.size === HEXA_PICK_COUNT;
+    const hasCube = !(
+      this.hexaCubeId
+      && typeof getPlayerCubeCount === 'function'
+      && getPlayerCubeCount(this.hexaCubeId) <= 0
+    );
     if (actionsBefore) actionsBefore.classList.toggle('hidden', this.hexaPhase !== 'select');
     if (actionsAfter) actionsAfter.classList.toggle('hidden', this.hexaPhase !== 'preview');
     if (btnOk) btnOk.disabled = !canConfirm;
+    const btnUse = document.getElementById('ptHexaBtnUse');
+    if (btnUse) {
+      btnUse.disabled = !hasCube;
+      btnUse.classList.toggle('is-disabled', !hasCube);
+    }
     aePotSyncHexaAutoEnchantLayout?.();
   }
 });

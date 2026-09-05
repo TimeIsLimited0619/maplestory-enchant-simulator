@@ -57,7 +57,14 @@ const ExceptionalModule = {
 
   isEnchantDisabled() {
     if (!this.itemData || !this.isEligible()) return true;
-    return getExceptionalLevel(this.itemData) >= EXCEPTIONAL_MAX_LEVEL;
+    if (getExceptionalLevel(this.itemData) >= EXCEPTIONAL_MAX_LEVEL) return true;
+    if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+      const hammer = getExceptionalHammer(this.itemData);
+      if (!hammer?.id) return true;
+      return typeof getPlayerExceptionalHammerCount !== 'function'
+        || getPlayerExceptionalHammerCount(hammer.id) <= 0;
+    }
+    return false;
   },
 
   isExtractDisabled() {
@@ -286,12 +293,19 @@ const ExceptionalModule = {
       const rate = getExceptionalSuccessRate(this.itemData);
       probEl.textContent = rate != null ? `${rate}%` : '-';
     }
-    if (hammerIcon && hammer) {
+    const idleOwned = !(typeof isIdlePlayMode === 'function' && isIdlePlayMode())
+      || (hammer?.id && typeof getPlayerExceptionalHammerCount === 'function'
+        && getPlayerExceptionalHammerCount(hammer.id) > 0);
+    if (hammerIcon && hammer && idleOwned) {
       hammerIcon.src = hammer.icon;
       hammerIcon.alt = hammer.name;
+      hammerIcon.classList.remove('hidden');
+    } else if (hammerIcon) {
+      hammerIcon.removeAttribute('src');
+      hammerIcon.classList.add('hidden');
     }
     if (hammerName) {
-      hammerName.textContent = hammer?.name || '-';
+      hammerName.textContent = idleOwned ? (hammer?.name || '-') : '-';
     }
   },
 
@@ -342,6 +356,11 @@ const ExceptionalModule = {
     const item = this.itemData;
     const tryLevel = getExceptionalLevel(item);
     const hammer = getExceptionalHammer(item);
+    if (typeof consumePlayerExceptionalHammer === 'function' && hammer?.id
+      && !consumePlayerExceptionalHammer(hammer.id, 1)) {
+      addLog('⚠️ 背包中沒有對應的卓越鐵鎚。', 'log-fail');
+      return;
+    }
     const rate = getExceptionalSuccessRate(item);
     const success = rollExceptionalEnchant(item);
 
@@ -449,6 +468,17 @@ const ExceptionalModule = {
     const finish = () => {
       this.busy = false;
       applyExceptionalExtract(item);
+      if (hammer?.id && prevLevel > 0 && typeof grantPlayerExceptionalHammer === 'function') {
+        grantPlayerExceptionalHammer(hammer.id, prevLevel);
+        if (typeof InventoryModule !== 'undefined' && typeof CONSUME_ITEM_TYPE !== 'undefined') {
+          InventoryModule.ensureConsumeSlot?.(
+            (entry) => entry && entry.type === CONSUME_ITEM_TYPE.EXCEPTIONAL_HAMMER && entry.hammerId === hammer.id,
+            () => ({ type: CONSUME_ITEM_TYPE.EXCEPTIONAL_HAMMER, hammerId: hammer.id }),
+          );
+          InventoryModule.render?.();
+          InventoryModule.updateSlotCount?.();
+        }
+      }
       addLog(`📦 卓越強化已提取，獲得 ${hammer?.name || '卓越鐵鎚'} × ${prevLevel}`, 'log-success');
       if (!this.isEnchantDisabled()) this.subTab = 'enchant';
       this.updateUI();

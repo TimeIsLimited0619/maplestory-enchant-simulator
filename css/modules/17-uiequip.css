@@ -59,6 +59,29 @@
   pointer-events: none;
 }
 
+.paperdoll-stage {
+  position: relative;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.paperdoll-stage img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.paperdoll-stage--equip {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  width: 180px;
+  height: 220px;
+  transform: translate(-50%, calc(-50% - 70px));
+}
+
 .uiequip-slots {
   position: absolute;
   inset: 0;

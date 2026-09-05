@@ -1,0 +1,198 @@
+/* UIpotion：images/UIpotion 原始尺寸
+   compact 50×52／full 100×52；Open/close 5×17；Up/Down 21×23 */
+
+.idle-potion-panel {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 100010;
+  pointer-events: auto;
+  line-height: 0;
+}
+
+.idle-potion-panel.is-hidden {
+  display: none;
+}
+
+.idle-potion-shell {
+  position: relative;
+  width: 100px;
+  height: 52px;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  image-rendering: pixelated;
+  overflow: visible;
+}
+
+.idle-potion-quick-slot {
+  position: absolute;
+  box-sizing: border-box;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.idle-potion-quick-slot.inv-drag-over {
+  outline: 2px solid #7ab4ff;
+  outline-offset: 0;
+}
+
+.idle-potion-icon-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.idle-potion-icon-frame.inv-item-frame {
+  width: 100%;
+  height: 100%;
+}
+
+.idle-potion-icon-frame img,
+.idle-potion-icon-frame.inv-item-frame img {
+  width: auto !important;
+  height: auto !important;
+  max-width: none;
+  max-height: none;
+  object-fit: none;
+  image-rendering: pixelated;
+  pointer-events: auto;
+}
+
+.idle-potion-icon-frame .inv-item-count {
+  right: 1px;
+  bottom: 0;
+  font-size: 11px;
+}
+
+.idle-potion-controls {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.idle-potion-controls[hidden] {
+  display: none !important;
+}
+
+.idle-potion-pct {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  background: transparent;
+  border: 0;
+  outline: none;
+  box-shadow: none;
+}
+
+.idle-potion-pct__input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  outline: none !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #000;
+  -webkit-text-fill-color: #000;
+  caret-color: #000;
+  font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.idle-potion-pct__input:focus,
+.idle-potion-pct__input:hover,
+.idle-potion-pct__input:active {
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: #000;
+  -webkit-text-fill-color: #000;
+}
+
+.idle-potion-pct__input:-webkit-autofill,
+.idle-potion-pct__input:-webkit-autofill:hover,
+.idle-potion-pct__input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #000;
+  transition: background-color 99999s ease-out;
+  box-shadow: 0 0 0 100px transparent inset !important;
+  border: 0 !important;
+}
+
+.idle-potion-pct__input::-webkit-outer-spin-button,
+.idle-potion-pct__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.idle-potion-step {
+  position: absolute;
+  width: 21px;
+  height: 23px;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  image-rendering: pixelated;
+  user-select: none;
+}
+
+.idle-potion-step.is-disabled {
+  cursor: default;
+}
+
+.idle-potion-toggle {
+  position: absolute;
+  width: 5px;
+  height: 17px;
+  display: block;
+  box-sizing: content-box;
+  /* 擴大可感應範圍，靠近右側較易叫出 */
+  padding: 8px 10px;
+  margin: -8px -10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  z-index: 4;
+  image-rendering: pixelated;
+  user-select: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.idle-potion-panel:hover .idle-potion-toggle,
+.idle-potion-toggle:hover,
+.idle-potion-toggle:focus,
+.idle-potion-toggle:focus-visible {
+  opacity: 1;
+}
+
+.idle-potion-tip-copy {
+  display: flex;
+  flex-direction: column;
+  min-height: 72px;
+}
+
+.idle-potion-tip-stats {
+  margin-top: auto;
+  text-align: right;
+}

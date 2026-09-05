@@ -518,6 +518,38 @@
   pointer-events: none;
 }
 
+/* 底圖下半：使用費用列（圖示／名稱／「個」已在素材上，此處只填數量） */
+.sc-trace-cost-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--sc-trace-grid-bottom);
+  pointer-events: none;
+}
+
+.sc-trace-cost-bar.hidden {
+  display: none;
+}
+
+.sc-trace-cost-amount {
+  position: absolute;
+  right: 42%;
+  top: 63%;
+  transform: translateY(-50%);
+  min-width: 72px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: bold;
+  color: #ffffff;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-cost-trace.sc-idle-trace .sc-trace-cost-bar {
+  display: none;
+}
+
 .sc-trace-types {
   position: absolute;
   top: 10px;
@@ -573,6 +605,42 @@
   overflow: hidden;
   text-overflow: ellipsis;
   pointer-events: none;
+}
+
+.sc-scroll-kind-bar {
+  position: absolute;
+  top: 2px;
+  left: 8px;
+  z-index: 2;
+  display: flex;
+  gap: 2px;
+}
+
+.app-mode-idle .sc-scroll-kind-bar {
+  display: none;
+}
+
+.app-mode-idle .sc-selected-name {
+  left: 12px;
+}
+
+.sc-scroll-kind {
+  height: 18px;
+  min-width: 40px;
+  padding: 0 6px;
+  border: 1px solid #3a4654;
+  background: #1e2630;
+  color: #9aa8b8;
+  font-size: 11px;
+  line-height: 16px;
+  cursor: pointer;
+  image-rendering: pixelated;
+}
+
+.sc-scroll-kind.is-on {
+  color: #f4f4f4;
+  border-color: #c9a44c;
+  background: #3a3220;
 }
 
 .sc-scroll-hint {
@@ -709,6 +777,25 @@
   pointer-events: none;
 }
 
+.sc-scroll-count {
+  position: absolute;
+  right: 1px;
+  bottom: 0;
+  min-width: 12px;
+  font-size: 10px;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: right;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 3;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+}
+
 .sc-scroll-icon {
   position: relative;
   z-index: 1;
@@ -733,20 +820,31 @@
 
 .sc-scroll-tooltip {
   position: fixed;
-  z-index: 50;
+  z-index: 100050;
   pointer-events: none;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55));
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.65));
 }
 
 .sc-scroll-tooltip.hidden {
   display: none;
 }
 
-.sc-scroll-tooltip-img {
-  display: block;
-  width: 290px;
-  height: auto;
-  image-rendering: pixelated;
+.sc-scroll-tip-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.sc-scroll-tip-stats {
+  margin-top: 2px;
+}
+
+.sc-scroll-tip-stat {
+  color: #ffd200;
+  font-family: "PMingLiU", "SimSun", "MingLiU", sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  -webkit-font-smoothing: none;
+  text-rendering: geometricPrecision;
 }
 
 .sc-btn-use {

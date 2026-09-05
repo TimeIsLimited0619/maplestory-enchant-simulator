@@ -100,10 +100,21 @@ const BonusStatModule = {
     }
 
     if (this.costTab === 'meso') {
+      if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+        const cost = (typeof getBonusStatMesoCost === 'function'
+          ? getBonusStatMesoCost(this.itemData.bonusStat?.level)
+          : 10000000);
+        return (typeof getIdleHeldMeso === 'function' ? getIdleHeldMeso() : 0) >= cost;
+      }
       return true;
     }
 
-    return Boolean(this.getSelectedItem());
+    const item = this.getSelectedItem();
+    if (!item) return false;
+    if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+      return typeof getPlayerBonusStatItemCount === 'function' && getPlayerBonusStatItemCount(item.id) > 0;
+    }
+    return true;
   },
 
   getResetBlockReason() {
@@ -114,23 +125,62 @@ const BonusStatModule = {
     if (this.costTab === 'item' && !this.getSelectedItem()) {
       return '請選擇要使用的道具。';
     }
+    if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+      if (this.costTab === 'meso') {
+        const cost = typeof getBonusStatMesoCost === 'function'
+          ? getBonusStatMesoCost(this.itemData.bonusStat?.level)
+          : 10000000;
+        if ((typeof getIdleHeldMeso === 'function' ? getIdleHeldMeso() : 0) < cost) {
+          return '楓幣不足。';
+        }
+      } else {
+        const item = this.getSelectedItem();
+        if (item && typeof getPlayerBonusStatItemCount === 'function'
+          && getPlayerBonusStatItemCount(item.id) <= 0) {
+          return '背包中沒有這顆星火。';
+        }
+      }
+    }
     return null;
   },
 
   payResetCost(count = 1) {
-    if (this.costTab === 'meso') {
-      if (typeof trackCostEvent === 'function') {
-        const meso = getBonusStatMesoCost(this.itemData.bonusStat.level) * count;
-        trackCostEvent('bonusStatMeso', meso);
-      }
-      return true;
+    const extra = typeof getBonusStatCatValleyExtraMaterials === 'function'
+      ? getBonusStatCatValleyExtraMaterials(this.itemData)
+      : null;
+    const extraCost = extra && count > 0
+      ? Object.fromEntries(Object.entries(extra).map(([k, v]) => [k, (Number(v) || 0) * count]))
+      : null;
+    const idle = typeof isIdlePlayMode === 'function' && isIdlePlayMode();
+    if (idle && extraCost && typeof idleCanAffordEtcMap === 'function' && !idleCanAffordEtcMap(extraCost)) {
+      addLog('⚠️ 貓谷素材不足，無法重設附加能力。', 'log-fail');
+      return false;
     }
 
-    const item = this.getSelectedItem();
-    if (!item) return false;
-    consumePlayerBonusStatItem(item.id, count);
-    if (typeof trackCostEvent === 'function') {
-      trackCostEvent(`bonusStatItem:${item.id}`, count);
+    if (this.costTab === 'meso') {
+      const meso = (typeof getBonusStatMesoCost === 'function'
+        ? getBonusStatMesoCost(this.itemData.bonusStat.level)
+        : 10000000) * count;
+      if (typeof trySpendIdleMeso === 'function' && !trySpendIdleMeso(meso)) {
+        return false;
+      }
+      if (typeof trackCostEvent === 'function') {
+        trackCostEvent('bonusStatMeso', meso);
+      }
+    } else {
+      const item = this.getSelectedItem();
+      if (!item) return false;
+      if (typeof consumePlayerBonusStatItem === 'function' && !consumePlayerBonusStatItem(item.id, count)) {
+        addLog('⚠️ 星火數量不足。', 'log-fail');
+        return false;
+      }
+      if (typeof trackCostEvent === 'function') {
+        trackCostEvent(`bonusStatItem:${item.id}`, count);
+      }
+    }
+
+    if (idle && extraCost && typeof idleSpendEtcMap === 'function') {
+      idleSpendEtcMap(extraCost);
     }
     if (typeof trackBonusStatCatValleyCost === 'function') {
       trackBonusStatCatValleyCost(this.itemData, count);
@@ -178,7 +228,7 @@ const BonusStatModule = {
     const successVariant = showChoice ? 1 : 0;
 
     const applyReset = () => {
-      this.payResetCost(rollCount);
+      if (!this.payResetCost(rollCount)) return;
       this.lastAtkPow = this.itemData.bonusStat.atkPow;
       const { before, after } = this.performRoll();
       let result = after;
@@ -621,15 +671,21 @@ const BonusStatModule = {
     grid.querySelectorAll('.bs-item-slot').forEach((slot) => {
       const slotIndex = Number(slot.dataset.slotIndex);
       const item = getBonusStatItemBySlot(slotIndex);
+      const owned = !(typeof isIdlePlayMode === 'function' && isIdlePlayMode())
+        || (item && typeof getPlayerBonusStatItemCount === 'function' && getPlayerBonusStatItemCount(item.id) > 0);
+      const show = Boolean(item && owned);
       const hasEquip = Boolean(this.itemData);
 
-      slot.classList.toggle('has-item', Boolean(item));
-      slot.classList.toggle('selected', Boolean(item && this.selectedItemId === item.id));
-      slot.classList.toggle('is-blocked', Boolean(item && !hasEquip));
+      slot.classList.toggle('has-item', show);
+      slot.classList.toggle('selected', Boolean(show && this.selectedItemId === item.id));
+      slot.classList.toggle('is-blocked', Boolean(show && !hasEquip));
       slot.innerHTML = '';
       slot.disabled = false;
 
-      if (!item) return;
+      if (!show) {
+        slot.removeAttribute('data-item-id');
+        return;
+      }
 
       slot.dataset.itemId = item.id;
       const w = item.iconWidth || 32;

@@ -8,6 +8,16 @@ const CharacterCombatPanel = (() => {
   const RESET_FLAG = 'uci.characterCombat.reset20260814';
   const MAX_ABS_VALUE = 1e12;
 
+  function isIdleMode() {
+    return (typeof SessionPersistenceModule !== 'undefined'
+      && SessionPersistenceModule.activeProfile === 'idle')
+      || (typeof AppMode !== 'undefined' && AppMode.isIdle?.());
+  }
+
+  function storageKey() {
+    return isIdleMode() ? `${STORAGE_KEY}.idle` : STORAGE_KEY;
+  }
+
   const FIELD_IDS = [
     'baseMain', 'percentMain', 'noApplyMain', 'skillBaseMain', 'skillPercentMain',
     'baseSub', 'percentSub', 'noApplySub', 'skillBaseSub', 'skillPercentSub',
@@ -83,7 +93,7 @@ const CharacterCombatPanel = (() => {
         localStorage.setItem(RESET_FLAG, '1');
       }
 
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(storageKey());
       if (!raw) return;
       const data = JSON.parse(raw);
       if (data.jobName) state.jobName = data.jobName;
@@ -109,13 +119,13 @@ const CharacterCombatPanel = (() => {
         state.weaponCorrection.isZero = !!saved.isZero;
       }
     } catch (_) {
-      try { localStorage.removeItem(STORAGE_KEY); } catch (__) { /* ignore */ }
+      try { localStorage.removeItem(storageKey()); } catch (__) { /* ignore */ }
     }
   }
 
   function save() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      localStorage.setItem(storageKey(), JSON.stringify({
         jobName: state.jobName,
         includeEquipDelta: state.includeEquipDelta,
         genesisFinalCheck: state.genesisFinalCheck,
@@ -174,19 +184,74 @@ const CharacterCombatPanel = (() => {
 
   function syncToCombatPower() {
     if (typeof CombatPower === 'undefined') return;
+    if (typeof UiCharacterInfo !== 'undefined') {
+      UiCharacterInfo.invalidateHuntCombatCache?.();
+    }
     const job = currentJob();
-    const fields = buildFields();
+    // 放置模式：不套用模擬器「戰鬥力數值」面板的手動基底，只吃等級／AP／極限 + 裝備
+    const idle = isIdleMode();
+    const fields = idle ? {} : buildFields();
     const weaponCorrection = getWeaponCorrectionResult();
     fields.adjWeaponAtk = Number(weaponCorrection?.correction) || 0;
+    const addField = (id, value) => {
+      const n = Number(value) || 0;
+      if (!n) return;
+      fields[id] = (Number(fields[id]) || 0) + n;
+    };
+    if (typeof CharacterProgression !== 'undefined' && typeof CharacterProgression.getCombatBonus === 'function') {
+      const bonus = CharacterProgression.getCombatBonus(labels());
+      // AP 進 base（吃％）；極限進 noApply（不吃％）
+      addField('baseMain', bonus.apMain);
+      addField('baseSub', bonus.apSub);
+      addField('baseSubtwo', bonus.apSubtwo);
+      addField('noApplyMain', bonus.noApplyMain);
+      addField('noApplySub', bonus.noApplySub);
+      addField('noApplySubtwo', bonus.noApplySubtwo);
+      addField('atk', bonus.atk);
+      addField('dmg', bonus.dmg);
+      addField('bossDmg', bonus.bossDmg);
+      addField('critDmg', bonus.critDmg);
+    }
+    if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
+      const mods = SkillModifiers.getTotals();
+      // 鬥氣終傷改由 UiCharacterInfo 終傷來源「鬥氣」獨立乘算，不寫入 skillFinal
+      const comboFd = Number(SkillModifiers.getComboTotals?.()?.finalDamR) || 0;
+      const lb = labels();
+      const mainKey = SkillModifiers.flatStatKey?.(lb.main);
+      const subKey = SkillModifiers.flatStatKey?.(lb.sub);
+      const sub2Key = SkillModifiers.flatStatKey?.(lb.secondSub);
+      // 技能 flat 屬性：併入面板 base（吃％），並同步寫入 skillBase 供戰鬥力扣除
+      const mirrorSkillBase = (baseId, skillId, amount) => {
+        const n = Number(amount) || 0;
+        if (!n) return;
+        addField(baseId, n);
+        addField(skillId, n);
+      };
+      if (mainKey) mirrorSkillBase('baseMain', 'skillBaseMain', mods[mainKey]);
+      if (subKey) mirrorSkillBase('baseSub', 'skillBaseSub', mods[subKey]);
+      if (sub2Key) mirrorSkillBase('baseSubtwo', 'skillBaseSubtwo', mods[sub2Key]);
+      // 攻魔／傷／B傷／爆傷：面板顯示，戰鬥力經 skill* 扣除
+      // flatPad 不吃攻擊力％ → noApply；仍鏡射到 skillAtk 並在公式以 noApply 路徑扣除見下
+      const pad = (Number(mods.flatPad) || 0) + (Number(mods.flatMad) || 0);
+      if (pad) {
+        addField('noApplyAtk', pad);
+        addField('skillNoApplyAtk', pad);
+      }
+      mirrorSkillBase('dmg', 'skillDmg', mods.damR);
+      mirrorSkillBase('bossDmg', 'skillBossDmg', mods.bdR);
+      mirrorSkillBase('critDmg', 'skillCritDmg', mods.critDmg);
+      // 技能終傷：面板用，戰鬥力公式本就不計 skillFinal（創世除外）
+      addField('skillFinal', Math.max(0, (mods.finalDamR || 0) - comboFd));
+    }
     CombatPower.setCharacterInputs(fields, {
       jobCategory: job.category,
       jobName: job.name,
       weaponSet: weaponCorrection?.setKey || '',
-      genesisFinalChecked: !!state.genesisFinalCheck,
+      genesisFinalChecked: idle ? !!weaponCorrection && weaponCorrection.setKey === 'genesis' : !!state.genesisFinalCheck,
       useBuff: false,
-      xenonPowerCoefficientRaw: state.values.adjXenonPowerCoefficient || '',
-      daPowerCoefficientRaw: state.values.adjDAPowerCoefficient || '',
-      includeEquipDelta: !!state.includeEquipDelta,
+      xenonPowerCoefficientRaw: idle ? '' : (state.values.adjXenonPowerCoefficient || ''),
+      daPowerCoefficientRaw: idle ? '' : (state.values.adjDAPowerCoefficient || ''),
+      includeEquipDelta: idle ? true : !!state.includeEquipDelta,
     });
   }
 
@@ -194,6 +259,7 @@ const CharacterCombatPanel = (() => {
     syncToCombatPower();
     save();
     if (typeof UiCharacterInfo !== 'undefined') UiCharacterInfo.refresh?.();
+    if (typeof AppNavSidebar !== 'undefined') AppNavSidebar.refreshProfile?.();
   }
 
   function detectEquippedWeapon() {
@@ -542,6 +608,56 @@ const CharacterCombatPanel = (() => {
     setOpen(false);
   }
 
+  function applyDefaults() {
+    state.jobName = '英雄';
+    state.includeEquipDelta = true;
+    state.genesisFinalCheck = false;
+    state.values = {};
+    state.weaponCorrection = {
+      auto: true,
+      setKey: 'genesis',
+      starCount: 0,
+      flameTier: 0,
+      scrollAtk: 0,
+      currentWeaponAtk: 0,
+      isZero: false,
+    };
+    state.jobLockedByWeapon = false;
+    state.detectedWeaponType = '';
+  }
+
+  function reloadFromStorage() {
+    applyDefaults();
+    load();
+    if (inited) {
+      render();
+      syncFromEquippedWeapon();
+      syncToCombatPower();
+    }
+  }
+
+  function resetDefault() {
+    applyDefaults();
+    save();
+    if (inited) {
+      render();
+      syncFromEquippedWeapon();
+      syncToCombatPower();
+    }
+  }
+
+  function setJobName(name) {
+    if (!name) return;
+    state.jobName = String(name);
+    state.jobLockedByWeapon = false;
+    state.detectedWeaponType = '';
+    save();
+    if (inited) {
+      render();
+      syncToCombatPower();
+    }
+  }
+
   return {
     init,
     refresh: render,
@@ -550,6 +666,10 @@ const CharacterCombatPanel = (() => {
     isOpen: () => !!open,
     syncToCombatPower,
     syncFromEquippedWeapon,
+    save,
+    reloadFromStorage,
+    resetDefault,
+    setJobName,
     getState: () => ({
       ...state,
       values: { ...state.values },

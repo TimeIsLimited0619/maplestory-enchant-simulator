@@ -1,0 +1,302 @@
+/* 裝備製作側欄（自導覽欄右緣滑出，與章節選單同型） */
+.equip-craft-panel {
+  position: fixed;
+  top: 0;
+  left: var(--app-nav-current-width, var(--app-nav-width));
+  z-index: 13998;
+  width: min(360px, calc(100vw - var(--app-nav-current-width, var(--app-nav-width)) - 12px));
+  height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: #161A23;
+  border-right: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.80);
+  font-family: 'Microsoft JhengHei', 'PingFang TC', 'Segoe UI', sans-serif;
+  transform: translateX(-100%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.24s ease, opacity 0.24s ease, visibility 0.24s ease, left 0.2s ease;
+}
+
+.equip-craft-panel.is-open {
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.equip-craft-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 16px 14px 12px;
+  border-bottom: 2px solid #2D2F39;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.equip-craft-head span {
+  flex: 1;
+  min-width: 0;
+}
+
+.equip-craft-nav {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.equip-craft-nav:hover {
+  background: #2D2F39;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.equip-craft-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #3a3d48 transparent;
+}
+
+.equip-craft-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.equip-craft-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.equip-craft-body::-webkit-scrollbar-thumb {
+  background: #3a3d48;
+  border-radius: 6px;
+}
+
+.equip-craft-section-title {
+  margin: 8px 0 8px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.50);
+}
+
+.equip-craft-section-title:first-child {
+  margin-top: 0;
+}
+
+.equip-craft-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.equip-craft-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.equip-craft-row:hover {
+  background: rgba(45, 47, 57, 0.6);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.equip-craft-row.is-active {
+  background: #2D2F39;
+  color: rgba(255, 255, 255, 0.90);
+}
+
+.equip-craft-row__icon,
+.equip-craft-output__icon,
+.equip-craft-req-item__icon--native {
+  flex-shrink: 0;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  object-fit: none;
+  image-rendering: pixelated;
+}
+
+.equip-craft-row__icon {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+}
+
+.equip-craft-row__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.equip-craft-row__name {
+  display: block;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.equip-craft-row__meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.40);
+}
+
+.equip-craft-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.equip-craft-output {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #2D2F39;
+}
+
+.equip-craft-output__name {
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.equip-craft-req-title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.equip-craft-inherit-hint {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(166, 196, 233, 0.08);
+  border: 1px solid rgba(166, 196, 233, 0.18);
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(200, 216, 230, 0.9);
+}
+
+.equip-craft-req-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.equip-craft-req-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 12px;
+}
+
+.equip-craft-req-item.is-ok {
+  color: rgba(255, 255, 255, 0.80);
+}
+
+.equip-craft-req-item.is-short {
+  color: #CC8889;
+}
+
+.equip-craft-req-item__icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.equip-craft-req-item__icon--native {
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  object-fit: none;
+}
+
+.equip-craft-req-item__label {
+  flex: 1;
+  min-width: 0;
+}
+
+.equip-craft-req-item__qty {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.equip-craft-btn {
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #3a4a62;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.equip-craft-btn:hover:not(:disabled) {
+  background: #4a5a72;
+}
+
+.equip-craft-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.equip-craft-empty {
+  padding: 16px 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.40);
+  text-align: center;
+}
+
+.equip-craft-shared-mats {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(45, 47, 57, 0.55);
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.65);
+}

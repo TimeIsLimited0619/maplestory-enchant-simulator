@@ -189,7 +189,14 @@ Object.assign(AddPotentialModule, {
     const cube = getAddPotCubeById(this.hexaCubeId);
     if (!cube) return;
 
-    consumePlayerAddPotCube(cube.id);
+    if (typeof getPlayerAddPotCubeCount === 'function' && getPlayerAddPotCubeCount(cube.id) <= 0) {
+      this.renderHexaOverlay();
+      return addLog('⚠️ 背包中沒有這個方塊。', 'log-fail');
+    }
+    if (typeof consumePlayerAddPotCube === 'function' && !consumePlayerAddPotCube(cube.id)) {
+      this.renderHexaOverlay();
+      return addLog('⚠️ 背包中沒有這個方塊。', 'log-fail');
+    }
     addLog(`🟢 使用 ${cube.name} 重新設定附加潛在能力。`, 'log-success');
 
     const session = rollBrightAddHexaChoices(this.itemData, this.itemData.additionalPotential);
@@ -316,9 +323,19 @@ Object.assign(AddPotentialModule, {
     }
 
     const canConfirm = this.hexaPhase === 'select' && this.hexaSelected?.size === AP_HEXA_PICK_COUNT;
+    const hasCube = !(
+      this.hexaCubeId
+      && typeof getPlayerAddPotCubeCount === 'function'
+      && getPlayerAddPotCubeCount(this.hexaCubeId) <= 0
+    );
     if (actionsBefore) actionsBefore.classList.toggle('hidden', this.hexaPhase !== 'select');
     if (actionsAfter) actionsAfter.classList.toggle('hidden', this.hexaPhase !== 'preview');
     if (btnOk) btnOk.disabled = !canConfirm;
+    const btnUse = document.getElementById('apHexaBtnUse');
+    if (btnUse) {
+      btnUse.disabled = !hasCube;
+      btnUse.classList.toggle('is-disabled', !hasCube);
+    }
     aePotSyncHexaAutoEnchantLayout?.();
   }
 });

@@ -177,7 +177,7 @@
   --img-normal:   url('../../images/tabbutton/catValley_tab_normal.png');
   --img-hover:    url('../../images/tabbutton/catValley_tab_mouseOver.png');
   --img-pressed:  url('../../images/tabbutton/catValley_tab_pressed.png');
-  --img-checked:  url('../../images/tabbutton/catValley_tab_normal.png');
+  --img-checked:  url('../../images/tabbutton/catValley_tab_checked.png');
   --img-disabled: url('../../images/tabbutton/catValley_tab_disabled.png');
 }
 

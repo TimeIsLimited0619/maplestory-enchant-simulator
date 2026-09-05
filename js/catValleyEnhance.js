@@ -136,6 +136,15 @@ const CatValleyEnhanceModule = {
       btn.addEventListener('click', () => this.handleClick());
     }
 
+    const panelBtn = document.getElementById('btnCatValleyEnhance');
+    if (panelBtn && panelBtn.dataset.bound !== '1') {
+      panelBtn.dataset.bound = '1';
+      panelBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        this.handlePanelEnhance();
+      });
+    }
+
     const menu = this.ensureSubmenu();
     if (menu && menu.dataset.bound !== '1') {
       menu.dataset.bound = '1';
@@ -307,6 +316,8 @@ const CatValleyEnhanceModule = {
       this.updateSubmenuState();
     }
 
+    this.updatePanel();
+
     if (!item) {
       btn.title = '請先將裝備放入中間強化槽';
       return;
@@ -355,6 +366,84 @@ const CatValleyEnhanceModule = {
       return;
     }
     btn.title = `${meta.label}（${level}/${meta.maxLevel}，可再強化 ${remain} 次）`;
+  },
+
+  formatLevelSummary(preview, item) {
+    if (!preview?.ok) return preview?.message || '—';
+    if (preview.mode === 'medal') {
+      if (preview.level === 0) return `${preview.label} 首次開啟（+0）`;
+      const prev = preview.level - 1;
+      return `${preview.label} Lv.${prev} → Lv.${preview.level}`;
+    }
+    const meta = typeof getCatValleyEnhanceMeta === 'function'
+      ? getCatValleyEnhanceMeta(item)
+      : null;
+    if (meta?.id === CAT_VALLEY_ENHANCE_TYPE.TOTEM && !isCatValleyTotemStarted(item)) {
+      return `${preview.label} 未開啟 → Lv.0`;
+    }
+    const cur = getCatValleyLevel(item);
+    return `${preview.label} Lv.${cur} → Lv.${preview.level}`;
+  },
+
+  updatePanel() {
+    const active = typeof getActiveCategory === 'function' && getActiveCategory() === 'catValley';
+    if (!active) return;
+
+    const item = this.getActiveItem();
+    const levelEl = document.getElementById('cvLevelSummary');
+    const statEl = document.getElementById('cvStatPreview');
+    const costEl = document.getElementById('cvCostPreview');
+    const btn = document.getElementById('btnCatValleyEnhance');
+    const preview = item && typeof previewCatValleyEnhanceOnce === 'function'
+      ? previewCatValleyEnhanceOnce(item)
+      : null;
+
+    if (levelEl) {
+      if (!item) {
+        levelEl.textContent = '請放入裝備';
+      } else {
+        levelEl.textContent = this.formatLevelSummary(preview, item);
+      }
+    }
+
+    if (statEl) {
+      if (!preview?.ok) {
+        statEl.innerHTML = `<div class="cv-stat-empty">${preview?.message || '—'}</div>`;
+      } else {
+        const summary = typeof formatCatValleyChangeSummary === 'function'
+          ? formatCatValleyChangeSummary(preview.changes)
+          : '';
+        statEl.innerHTML = summary
+          ? `<div class="cv-stat-line">${summary}</div>`
+          : '<div class="cv-stat-empty">本次無額外屬性</div>';
+      }
+    }
+
+    if (costEl) {
+      const entries = preview?.ok && typeof formatCatValleyCostEntries === 'function'
+        ? formatCatValleyCostEntries(preview.cost)
+        : [];
+      if (!entries.length) {
+        costEl.innerHTML = '<div class="cv-cost-left"><span>無消耗</span></div>';
+      } else {
+        const mid = Math.ceil(entries.length / 2);
+        const left = entries.slice(0, mid).map((e) => `<span>${e.text}</span>`).join('');
+        const right = entries.slice(mid).map((e) => `<span>${e.text}</span>`).join('');
+        costEl.innerHTML = `<div class="cv-cost-left">${left}</div><div class="cv-cost-right">${right}</div>`;
+      }
+    }
+
+    if (btn) {
+      let canEnhance = !!(item && preview?.ok);
+      if (canEnhance
+        && typeof isIdlePlayMode === 'function'
+        && isIdlePlayMode()
+        && preview?.cost
+        && typeof idleCanAffordEtcMap === 'function') {
+        canEnhance = idleCanAffordEtcMap(preview.cost);
+      }
+      btn.disabled = !canEnhance;
+    }
   },
 
   persistItem(item) {
@@ -579,28 +668,6 @@ const CatValleyEnhanceModule = {
     }
 
     if (isCatValleyPotentialItem(item)) {
-      if (typeof canUseCatValleyMedalEnhance === 'function' && canUseCatValleyMedalEnhance(item)) {
-        this.closeSubmenu();
-        const result = applyCatValleyMedalEnhanceOnce(item);
-        if (!result.ok) {
-          if (typeof addLog === 'function') {
-            addLog(`⚠️ ${result.message || '勳章強化失敗'}`, 'log-fail');
-          }
-          this.updateButton();
-          return;
-        }
-        this.persistItem(item);
-        const summary = formatCatValleyChangeSummary(result.changes);
-        if (typeof addLog === 'function') {
-          addLog(
-            `✨ 【${item.name}】${result.message}${summary ? ` → ${summary}` : ''}`,
-            'log-success'
-          );
-        }
-        this.updateButton();
-        return;
-      }
-
       if (typeof canUseCatValleyPotentialMenu === 'function' && canUseCatValleyPotentialMenu(item)) {
         if (this.autoRunning) return;
         this.toggleSubmenu();
@@ -610,14 +677,51 @@ const CatValleyEnhanceModule = {
     }
 
     this.closeSubmenu();
+    const btn = document.getElementById(this.BUTTON_ID);
+    if (typeof switchCategoryTab === 'function') {
+      switchCategoryTab('catValley', btn);
+    }
+    this.updatePanel();
+  },
+
+  handlePanelEnhance() {
+    const item = this.getActiveItem();
+    if (!item || !canUseCatValleyEnhance(item)) {
+      this.updatePanel();
+      return;
+    }
+
+    if (isCatValleyPotentialItem(item)
+      && typeof canUseCatValleyMedalEnhance === 'function'
+      && canUseCatValleyMedalEnhance(item)) {
+      const result = applyCatValleyMedalEnhanceOnce(item);
+      if (!result.ok) {
+        if (typeof addLog === 'function') {
+          addLog(`⚠️ ${result.message || '勳章強化失敗'}`, 'log-fail');
+        }
+        this.updatePanel();
+        return;
+      }
+      this.persistItem(item);
+      const summary = formatCatValleyChangeSummary(result.changes);
+      if (typeof addLog === 'function') {
+        addLog(
+          `✨ 【${item.name}】${result.message}${summary ? ` → ${summary}` : ''}`,
+          'log-success'
+        );
+      }
+      this.updateButton();
+      this.updatePanel();
+      return;
+    }
 
     const meta = getCatValleyEnhanceMeta(item);
     const result = applyCatValleyEnhanceOnce(item);
     if (!result.ok) {
       if (typeof addLog === 'function') {
-        addLog('⚠️ 貓谷特殊強化套用失敗。', 'log-fail');
+        addLog(`⚠️ ${result.message || '貓谷特殊強化套用失敗。'}`, 'log-fail');
       }
-      this.updateButton();
+      this.updatePanel();
       return;
     }
 
@@ -642,6 +746,7 @@ const CatValleyEnhanceModule = {
     }
 
     this.updateButton();
+    this.updatePanel();
   },
 };
 

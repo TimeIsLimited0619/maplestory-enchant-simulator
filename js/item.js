@@ -280,6 +280,7 @@ const ISLOT_TO_SUB_TYPE = {
 /**
  * 由 Character.*.img.xml 的 info 節點建立裝備資料。
  * 圖示固定為 images/equip/{itemId}.png
+ * 掉落用無陰影圖：images/equipRaw/{itemId}.png
  * 機器人另有：裝備欄 {id}D.png、外型 images/Android/{id}A.png
  *
  * @param {string} itemId - 物品 ID（與 XML 檔名一致，如 01215041）
@@ -305,6 +306,7 @@ function buildEquipFromWzInfo(itemId, name, info) {
     itemId,
     name: displayName,
     icon: `images/equip/${itemId}.png`,
+    iconRaw: `images/equipRaw/${itemId}.png`,
     reqLevel: Number(info.reqLevel) || 0,
     mainType,
     subType,
@@ -315,8 +317,10 @@ function buildEquipFromWzInfo(itemId, name, info) {
     reqSpecJob: Number(info.reqSpecJob) || 0,
     weaponTier: isDestinyWeapon ? WEAPON_TIER.DESTINY : WEAPON_TIER.NORMAL,
     atlas: Number(info.atlas) ? 1 : 0,
+    price: Math.max(0, Math.floor(Number(info.price) || 0)),
     star: 0,
-    // 胸章不可星力
+    superiorEqp: Boolean(info.superiorEqp),
+    // 胸章不可星力；其餘依需求等級／Superior 建檔
     maxStar: isPin ? 0 : 30,
     upgradeSlots: tuc,
     maxUpgradeSlots: tuc,
@@ -375,6 +379,10 @@ function buildEquipFromWzInfo(itemId, name, info) {
     item.androidNonHuman = Boolean(info.androidNonHuman);
     item.androidShop = info.androidShop !== false;
     item.maxStar = 0;
+  }
+
+  if (typeof applyStarForceItemRules === 'function') {
+    applyStarForceItemRules(item);
   }
 
   return item;
@@ -5511,6 +5519,9 @@ const ITEM_DATABASE = {
   })
 };
 
+/** 模擬器物品清單只顯示這批（item.js 手維護），不含 Maple.io 匯入。 */
+const ORIGINAL_EQUIP_IDS = Object.freeze(Object.keys(ITEM_DATABASE));
+
 // ==========================================
 // 3. 當前狀態資料
 // ==========================================
@@ -5519,6 +5530,8 @@ const INVENTORY_SLOT_COUNT = 128;
 
 let playerInventoryEquip = new Array(INVENTORY_SLOT_COUNT).fill(null);
 let playerInventoryConsume = new Array(INVENTORY_SLOT_COUNT).fill(null);
+/** 其他欄（放置掉落雜項） */
+let playerInventoryEtc = new Array(INVENTORY_SLOT_COUNT).fill(null);
 /** 裝備分頁各格子的強化進度（卸下後保留，重置按鈕會清空） */
 let playerInventoryState = new Array(INVENTORY_SLOT_COUNT).fill(null);
 

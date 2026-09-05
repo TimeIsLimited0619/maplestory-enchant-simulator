@@ -133,21 +133,38 @@ let playerCubeCounts = {
 };
 
 function getPlayerCubeCount(cubeId) {
-  const count = playerCubeCounts[cubeId];
-  if (!count || count <= 0) {
+  const count = Number(playerCubeCounts[cubeId]) || 0;
+  if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+    return Math.max(0, count);
+  }
+  if (count <= 0) {
     playerCubeCounts[cubeId] = DEFAULT_CUBE_COUNT;
     return DEFAULT_CUBE_COUNT;
   }
   return count;
 }
 
+function grantPlayerCube(cubeId, amount = 1) {
+  if (!cubeId || amount <= 0) return 0;
+  const add = Math.floor(amount);
+  const current = Number(playerCubeCounts[cubeId]) || 0;
+  playerCubeCounts[cubeId] = current + add;
+  return add;
+}
+
 function consumePlayerCube(cubeId) {
   const count = getPlayerCubeCount(cubeId);
+  if (count <= 0) return false;
   playerCubeCounts[cubeId] = count - 1;
-  if (playerCubeCounts[cubeId] <= 0) {
+  const idle = typeof isIdlePlayMode === 'function' && isIdlePlayMode();
+  if (!idle && playerCubeCounts[cubeId] <= 0) {
     playerCubeCounts[cubeId] = DEFAULT_CUBE_COUNT;
   }
   trackCostUsage('cube', cubeId);
+  if (typeof InventoryModule !== 'undefined') {
+    InventoryModule.render?.();
+    InventoryModule.updateSlotCount?.();
+  }
   return true;
 }
 

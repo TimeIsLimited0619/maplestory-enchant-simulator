@@ -1,3 +1,32 @@
+const playerHammerInventory = {
+  golden: 0,
+  platinum: 0,
+};
+
+function getPlayerHammerCount(hammerId) {
+  return Math.max(0, Number(playerHammerInventory[hammerId]) || 0);
+}
+
+function grantPlayerHammer(hammerId, amount = 1) {
+  if (!hammerId || amount <= 0) return 0;
+  const add = Math.floor(amount);
+  playerHammerInventory[hammerId] = getPlayerHammerCount(hammerId) + add;
+  return add;
+}
+
+function consumePlayerHammer(hammerId, amount = 1) {
+  if (!hammerId || amount <= 0) return false;
+  if (typeof isIdlePlayMode !== 'function' || !isIdlePlayMode()) return true;
+  const current = getPlayerHammerCount(hammerId);
+  if (current < amount) return false;
+  playerHammerInventory[hammerId] = current - amount;
+  if (typeof InventoryModule !== 'undefined') {
+    InventoryModule.render?.();
+    InventoryModule.updateSlotCount?.();
+  }
+  return true;
+}
+
 /**
  * HammerModule - 強化次數增加（鐵鎚）邏輯與 UI
  */
@@ -156,6 +185,12 @@ const HammerModule = {
       return addLog(`⚠️ 此裝備的${name}使用次數已達上限！`, 'log-fail');
     }
 
+    if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()
+      && getPlayerHammerCount(hammerId) <= 0) {
+      const name = HAMMER_TYPES[hammerId]?.name || hammerId;
+      return addLog(`⚠️ 背包中沒有${name}。`, 'log-fail');
+    }
+
     this.selectedHammer = this.selectedHammer === hammerId ? null : hammerId;
 
     if (this.selectedHammer === 'golden') {
@@ -311,14 +346,18 @@ const HammerModule = {
 
       const mat = slots[i];
       if (mat) {
-        const type = HAMMER_TYPES[mat.id];
-        slot.dataset.hammerId = mat.id;
-        slot.title = type.name;
-        slot.innerHTML = `<img class="hm-mat-icon" src="${type.icon}" alt="${type.name}">`;
-        slot.addEventListener('click', () => this.selectHammer(mat.id));
+        const owned = !(typeof isIdlePlayMode === 'function' && isIdlePlayMode())
+          || getPlayerHammerCount(mat.id) > 0;
+        if (owned) {
+          const type = HAMMER_TYPES[mat.id];
+          slot.dataset.hammerId = mat.id;
+          slot.title = type.name;
+          slot.innerHTML = `<img class="hm-mat-icon" src="${type.icon}" alt="${type.name}">`;
+          slot.addEventListener('click', () => this.selectHammer(mat.id));
 
-        if (this.selectedHammer === mat.id) {
-          slot.classList.add('selected');
+          if (this.selectedHammer === mat.id) {
+            slot.classList.add('selected');
+          }
         }
       }
 
@@ -340,12 +379,16 @@ const HammerModule = {
     if (autoCheck) autoCheck.disabled = !canUseHammer || effectPlaying;
 
     const autoChecked = autoCheck?.checked;
+    const idle = typeof isIdlePlayMode === 'function' && isIdlePlayMode();
+    const bagOk = (hammerId) => !idle || getPlayerHammerCount(hammerId) > 0;
     const canUseManual = canUseHammer &&
       this.selectedHammer &&
-      this.getRemainingUses(this.selectedHammer) > 0;
+      this.getRemainingUses(this.selectedHammer) > 0 &&
+      bagOk(this.selectedHammer);
     const canUseAuto = canUseHammer &&
       autoChecked &&
-      this.getRemainingUses('platinum') > 0;
+      this.getRemainingUses('platinum') > 0 &&
+      bagOk('platinum');
 
     btn.disabled = this.autoRunning || effectPlaying || !(canUseManual || canUseAuto);
     if (!this.autoRunning) {
@@ -425,6 +468,12 @@ const HammerModule = {
       return 'exhausted';
     }
 
+    if (typeof consumePlayerHammer === 'function' && !consumePlayerHammer(hammerId, 1)) {
+      const name = HAMMER_TYPES[hammerId]?.name || hammerId;
+      addLog(`⚠️ 背包中沒有${name}。`, 'log-fail');
+      return null;
+    }
+
     const type = HAMMER_TYPES[hammerId];
     const used = this.getHammerUsed(hammerId);
     const rate = type.rates[used] ?? type.rates[type.rates.length - 1];
@@ -501,6 +550,14 @@ const HammerModule = {
         addLog(`⚠️ 此裝備的${name}使用次數已達上限！`, 'log-fail');
       }
       return 'exhausted';
+    }
+
+    if (typeof consumePlayerHammer === 'function' && !consumePlayerHammer(hammerId, 1)) {
+      if (!silent) {
+        const name = HAMMER_TYPES[hammerId]?.name || hammerId;
+        addLog(`⚠️ 背包中沒有${name}。`, 'log-fail');
+      }
+      return null;
     }
 
     const type = HAMMER_TYPES[hammerId];
