@@ -626,13 +626,18 @@
 }
 
 .idle-actor .idle-actor-name {
-  width: 100%;
+  width: max-content;
+  max-width: none;
   text-align: center;
   white-space: nowrap;
   color: #f4f7fa;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  text-shadow: none;
   font-size: 12px;
   line-height: 1.2;
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 10%;
+  box-sizing: border-box;
 }
 
 .idle-actor--mob {
@@ -656,6 +661,17 @@
   align-items: center;
   gap: 3px;
   width: max-content;
+  z-index: 4;
+}
+
+/* 怪物名稱在腳下；血條仍在頭頂 .idle-actor-hud */
+.idle-actor--mob > .idle-actor-name {
+  position: absolute;
+  left: 0;
+  top: var(--hud-gap, 4px);
+  transform: translate(-50%, 0);
+  width: max-content;
+  z-index: 4;
 }
 
 .idle-actor--mob .idle-actor-hp {
@@ -686,6 +702,19 @@
 /* 怪物 info/hit：錨在紙娃娃身體 origin（腳底），與 Paperdoll layout 同一點 */
 .idle-actor--player {
   z-index: 3;
+}
+
+/*
+ * 名稱絕對定位在腳下，不佔 flex 高度，
+ * 才不會把 translate(-50%, -100%) 的腳底錨點往上抬。
+ */
+.idle-actor--player > .idle-actor-name {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  margin-top: 2px;
+  transform: translateX(-50%);
+  z-index: 4;
 }
 
 .paperdoll-stage--hunt {
@@ -957,8 +986,12 @@
   --boss-hud-scale: 2;
 }
 
-/* 只放大名稱／血條，不動定位容器（距離維持固定 --hud-gap） */
-.idle-actor--mob.is-boss-scale-hud .idle-actor-name,
+/* 只放大名稱／血條，不動定位容器 */
+.idle-actor--mob.is-boss-scale-hud .idle-actor-name {
+  transform: translate(-50%, 0) scale(var(--boss-hud-scale));
+  transform-origin: center top;
+}
+
 .idle-actor--mob.is-boss-scale-hud .idle-actor-hp {
   transform: scale(var(--boss-hud-scale));
   transform-origin: center bottom;

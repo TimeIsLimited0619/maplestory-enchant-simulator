@@ -71,6 +71,12 @@ const SkillBlizzardCast = (() => {
       return false;
     }
 
+    if (typeof document !== 'undefined' && document.hidden) {
+      if (typeof onHit === 'function') onHit();
+      finish();
+      return true;
+    }
+
     if (fx.effect?.length) {
       SkillEffectPlayer.playOnPlayer(fx.effect, {
         playerEl,

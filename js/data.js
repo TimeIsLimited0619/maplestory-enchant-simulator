@@ -232,9 +232,13 @@ function getArmorStarForceBonusAtStar(starCount, item) {
 }
 
 function getStarForceBonusAtStar(starCount, item) {
+  const star = Math.max(0, Math.min(30, starCount || 0));
+  const def = typeof getStarDefBonusAtStar === 'function'
+    ? getStarDefBonusAtStar(star, item)
+    : 0;
   if (typeof isSuperiorStarForceItem === 'function' && isSuperiorStarForceItem(item)) {
     const bonus = getSuperiorStarForceBonusAtStar(starCount, item);
-    return { stat: bonus.stat, atk: bonus.atk, matk: bonus.matk, def: 0, hp: 0 };
+    return { stat: bonus.stat, atk: bonus.atk, matk: bonus.matk, def, hp: 0 };
   }
   const isWeapon = typeof usesWeaponStarForce === 'function'
     ? usesWeaponStarForce(item)
@@ -242,10 +246,6 @@ function getStarForceBonusAtStar(starCount, item) {
   const core = isWeapon
     ? getWeaponStarForceBonusAtStar(starCount, item)
     : getArmorStarForceBonusAtStar(starCount, item);
-  const star = Math.max(0, Math.min(30, starCount || 0));
-  const def = typeof getStarDefBonusAtStar === 'function'
-    ? getStarDefBonusAtStar(star, item)
-    : 0;
   const hp = typeof isStarHpEligible === 'function' && isStarHpEligible(item)
     ? getStarHpBonus(star)
     : 0;
@@ -258,9 +258,7 @@ function getStarForceGain(fromStar, toStar, item) {
   const statDiff = next.stat - cur.stat;
   const atkDiff = next.atk - cur.atk;
   const matkDiff = next.matk - cur.matk;
-  const defDiff = item?.mainType === EQUIP_TYPE.ARMOR && typeof getStarDefBonusAtStar === 'function'
-    ? getStarDefBonusAtStar(toStar, item) - getStarDefBonusAtStar(fromStar, item)
-    : 0;
+  const defDiff = (next.def || 0) - (cur.def || 0);
   const classStatGains = {};
   for (const key of STAR_CLASS_STAT_KEYS) {
     classStatGains[key] = getStarClassStatBonusAtStar(toStar, item, key)
@@ -296,38 +294,35 @@ function isStarHpEligible(item) {
   return !STAR_HP_EXCLUDED_ISLOTS.has(islot);
 }
 
-function getStarDefCyclePos(star) {
-  return ((star - 1) % 10) + 1;
+function getStarDefBase(item) {
+  return Math.max(0, (item?.baseStats?.def || 0) + (item?.scrollDef || 0));
 }
 
-function isStarDefCapItem(item) {
-  return item?.islot === 'Cp';
+function isStarDefOverallItem(item) {
+  return item?.islot === 'MaPn' || item?.subType === 'longcoat';
 }
 
-/** 防具星力防禦：每 10 星一循環；1~9 星 = floor(位置 × 基礎防禦 / 100)；第 10 星帽子 floor(0.2%)，其餘 round(0.2%) */
+function getStarDefRate(item) {
+  return isStarDefOverallItem(item) ? 0.1 : 0.05;
+}
+
+/**
+ * 星力防禦：每星固定 +floor((純防＋卷軸) × 5%)；套服 ×10%。
+ * 正式服已取消獨立魔法防禦，僅計算／顯示防禦力。
+ */
 function getStarDefPerStarGain(star, item) {
-  const baseDef = item?.baseStats?.def || 0;
-  if (baseDef <= 0 || star <= 0) return 0;
-  const pos = getStarDefCyclePos(star);
-  if (pos === 10) {
-    const exact = baseDef * 0.002;
-    return isStarDefCapItem(item) ? Math.floor(exact) : Math.round(exact);
-  }
-  return Math.floor((pos * baseDef) / 100);
+  if (star <= 0) return 0;
+  const baseDef = getStarDefBase(item);
+  if (baseDef <= 0) return 0;
+  return Math.floor(baseDef * getStarDefRate(item));
 }
 
-/** 防具星力防禦累積：逐星增量加總 */
+/** 防禦力星力累積（有基礎防禦的裝備皆適用） */
 function getStarDefBonusAtStar(starCount, item) {
-  if (item?.mainType !== EQUIP_TYPE.ARMOR) return 0;
-  const baseDef = item?.baseStats?.def || 0;
-  if (baseDef <= 0) return 0;
+  const perStar = getStarDefPerStarGain(1, item);
+  if (perStar <= 0) return 0;
   const star = Math.max(0, Math.min(30, starCount || 0));
-  if (star <= 0) return 0;
-  let total = 0;
-  for (let s = 1; s <= star; s += 1) {
-    total += getStarDefPerStarGain(s, item);
-  }
-  return total;
+  return perStar * star;
 }
 
 // 2. 星力強化楓幣費用表 (200級 / 250級，索引 0 = 0★→1★ … 29 = 29★→30★，已 ×2)

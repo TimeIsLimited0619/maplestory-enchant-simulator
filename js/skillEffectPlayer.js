@@ -182,6 +182,9 @@ const SkillEffectPlayer = (() => {
   }
 
   function playFrames(parentEl, frames, opts = {}) {
+    if (typeof document !== 'undefined' && document.hidden && !opts.forcePlay) {
+      return null;
+    }
     const list = (frames || []).filter((f) => f && (f.src || f.delay));
     if (!parentEl || !list.length) return null;
     const inst = createInstance(parentEl, list, opts);
@@ -259,7 +262,7 @@ const SkillEffectPlayer = (() => {
     if (!player || !fieldEl) return null;
     const layer = getSkillFxLayer(fieldEl);
     if (!layer) return null;
-    const facingRight = opts.mirrorX != null ? !!opts.mirrorX : true;
+    const facingRight = opts.mirrorX != null ? !!opts.mirrorX : playerFacingRight(player);
     return playFrames(layer, frames, {
       className: opts.className || 'idle-skill-fx-stage idle-skill-fx-stage--cast',
       mirrorX: facingRight,
@@ -279,6 +282,12 @@ const SkillEffectPlayer = (() => {
         return { x: pt.x, y: pt.y };
       },
     });
+  }
+
+  /** 狩獵預設朝右；Boss 場 is-flip-x＝朝左 */
+  function playerFacingRight(playerEl) {
+    if (!playerEl || !playerEl.classList) return true;
+    return !playerEl.classList.contains('is-flip-x');
   }
 
   function playOnMob(mob, frames, opts = {}) {
@@ -403,6 +412,15 @@ const SkillEffectPlayer = (() => {
     };
 
     if (!fieldEl || !list.length || !targets.length) {
+      finish();
+      return null;
+    }
+
+    // 背景分頁：略過飛行動畫，立刻結算命中（否則 rAF／timeout 被節流會卡傷害）
+    if (typeof document !== 'undefined' && document.hidden) {
+      targets.forEach((mob, i) => {
+        if (typeof onHit === 'function') onHit(mob, i);
+      });
       finish();
       return null;
     }
@@ -862,6 +880,7 @@ const SkillEffectPlayer = (() => {
     resolveMobCenterLocal,
     fieldPointFromPlayer,
     fieldPointFromMob,
+    playerFacingRight,
     activeCombatField,
     getSkillFxLayer,
   };

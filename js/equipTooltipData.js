@@ -205,7 +205,6 @@ const EQUIP_STAT_LABELS = [
   { key: 'atk', label: '攻擊力' },
   { key: 'matk', label: '魔法攻擊力' },
   { key: 'def', label: '防禦力' },
-  { key: 'mdef', label: '魔法防禦力' },
 ];
 
 /** reqJob 位元遮罩 → 顯示名稱 */
@@ -240,7 +239,7 @@ const EQUIP_REQ_JOB2_SUBWEAPON_LABELS = {
   161:'如意寶珠'
 };
 
-/** setItemID → 套組名稱（常用套裝） */
+/** setItemID → 套組名稱（合併顯示用；其餘走 SetItemInfo / getEquipSetLabel） */
 const EQUIP_SET_LABELS = {
   617: '神祕冥界套裝',
   618: '神祕冥界套裝',

@@ -71,15 +71,20 @@ const DamageNumber = (() => {
     return u * u;
   }
 
+  function activeCombatField() {
+    const arena = document.getElementById('idleBossArena');
+    if (arena?.classList.contains('is-open')) {
+      return document.getElementById('idleBossField') || document.getElementById('idleHuntField');
+    }
+    return document.getElementById('idleHuntField') || document.getElementById('idleBossField');
+  }
+
   function ensureLayer() {
     if (!stageEl) return null;
 
-    const field = stageEl.closest('#idleBossField')
-      || stageEl.closest('#idleHuntField')
-      || (document.getElementById('idleBossArena')?.classList.contains('is-open')
-        ? document.getElementById('idleBossField')
-        : null)
-      || document.getElementById('idleHuntField');
+    const field = activeCombatField()
+      || stageEl.closest('#idleBossField')
+      || stageEl.closest('#idleHuntField');
     if (!field) return null;
 
     // 切換狩獵場／BOSS 場時不可沿用舊 layer
@@ -433,7 +438,7 @@ const DamageNumber = (() => {
           : raw;
         spriteScale = Number.isFinite(cssRaw) && cssRaw > 0 ? cssRaw : 2;
       }
-      // 對齊 HUD 底（精靈頂 − gap）再往上留出血條／名稱高度，避免擋血條
+      // 對齊血條底（精靈頂 − gap）再往上略留空隙，避免擋頭頂血條
       const hudClearance = 5;
       return {
         x: Math.round(x),
@@ -540,6 +545,11 @@ const DamageNumber = (() => {
   }
 
   function huntOrBossPlayer() {
+    const field = activeCombatField();
+    if (field) {
+      const local = field.querySelector('.idle-actor--player');
+      if (local) return local;
+    }
     return document.querySelector('#idleBossField .idle-actor--player')
       || document.querySelector('#idleHuntField .idle-actor--player');
   }

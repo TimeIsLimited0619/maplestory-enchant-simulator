@@ -63,7 +63,8 @@
 }
 
 .idle-potion-icon-frame .inv-item-count {
-  right: 1px;
+  left: 1px;
+  right: auto;
   bottom: 0;
   font-size: 11px;
 }

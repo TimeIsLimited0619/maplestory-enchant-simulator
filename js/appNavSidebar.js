@@ -37,7 +37,6 @@ const AppNavSidebar = (() => {
     { id: 'idleHuntNpcShop', label: '商店', icon: 'shop', title: '商店' },
     { id: 'idleHuntDungeon', label: '副本', icon: 'idelhuntdungon', title: '副本' },
     { id: 'idleHuntBoss', label: 'BOSS', icon: 'boss', title: 'BOSS' },
-    { id: 'idleHuntGmDrops', label: 'GM 編輯器', icon: 'gm', title: 'GM 編輯器' },
   ];
 
   let inited = false;

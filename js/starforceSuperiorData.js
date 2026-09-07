@@ -22,18 +22,24 @@ function addStarForceIdRange(target, from, to) {
   }
 }
 
-/** 暴君：披風／鞋子／腰帶／手套（五職業各一） */
+/** 精英赫力席蒙（Lv80，最高 3 星）：披風／鞋子／腰帶 */
+const STARFORCE_HELISEUM_ITEM_IDS = {};
+addStarForceIdRange(STARFORCE_HELISEUM_ITEM_IDS, 1102471, 1102475);
+addStarForceIdRange(STARFORCE_HELISEUM_ITEM_IDS, 1072732, 1072736);
+addStarForceIdRange(STARFORCE_HELISEUM_ITEM_IDS, 1132164, 1132168);
+
+/** 諾巴／超新星（Lv110，最高 8 星）：披風／鞋子／腰帶 */
+const STARFORCE_NOVA_ITEM_IDS = {};
+addStarForceIdRange(STARFORCE_NOVA_ITEM_IDS, 1102476, 1102480);
+addStarForceIdRange(STARFORCE_NOVA_ITEM_IDS, 1072737, 1072741);
+addStarForceIdRange(STARFORCE_NOVA_ITEM_IDS, 1132169, 1132173);
+
+/** 暴君（Lv150，最高 15 星）：披風／鞋子／腰帶／手套 */
 const STARFORCE_TYRANT_ITEM_IDS = {};
 addStarForceIdRange(STARFORCE_TYRANT_ITEM_IDS, 1102481, 1102485);
-addStarForceIdRange(STARFORCE_TYRANT_ITEM_IDS, 1072732, 1072736);
+addStarForceIdRange(STARFORCE_TYRANT_ITEM_IDS, 1072743, 1072747);
 addStarForceIdRange(STARFORCE_TYRANT_ITEM_IDS, 1132174, 1132178);
 addStarForceIdRange(STARFORCE_TYRANT_ITEM_IDS, 1082543, 1082547);
-
-/** 精英赫力席蒙：之後加入裝備時補 ID */
-const STARFORCE_HELISEUM_ITEM_IDS = {};
-
-/** 諾巴 Superior：之後加入裝備時補 ID */
-const STARFORCE_NOVA_ITEM_IDS = {};
 
 const SUPERIOR_STARFORCE_ID_SETS = [
   { setId: 'tyrant', ids: STARFORCE_TYRANT_ITEM_IDS },
@@ -104,10 +110,10 @@ function getSuperiorStarForceSet(item) {
 function getSuperiorStarForceMaxStar(item) {
   const set = getSuperiorStarForceSet(item);
   if (set) return set.maxStar;
-  const lv = Number(item?.reqLevel) || 0;
-  if (lv >= 150) return 15;
-  if (lv >= 108) return 8;
-  return 3;
+  // 與 SUPERIOR_STAR_*_CUMULATIVE 各等級欄長度一致（索引＝星數）
+  const range = resolveSuperiorStarLevelRange(item?.reqLevel);
+  const table = SUPERIOR_STAR_ALLSTAT_CUMULATIVE[range] || SUPERIOR_STAR_ALLSTAT_CUMULATIVE['150+'];
+  return Math.max(0, table.length - 1);
 }
 
 /** Superior 費用與星數無關：1000 + round(L^3.56)，再四捨五入至百位 */

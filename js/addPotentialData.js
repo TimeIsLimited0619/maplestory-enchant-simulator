@@ -152,6 +152,18 @@ function getAddPotCubeBySlot(slotIndex) {
   return ADDPOT_CUBE_TYPES.find((cube) => cube.slotIndex === slotIndex) || null;
 }
 
+/** 待機模式：只列持有中的附加方塊，依目錄順序緊排 */
+function listIdleVisibleAddPotCubes() {
+  return ADDPOT_CUBE_TYPES.filter((cube) => getPlayerAddPotCubeCount(cube.id) > 0);
+}
+
+function getAddPotCubeForUiSlot(slotIndex) {
+  if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+    return listIdleVisibleAddPotCubes()[slotIndex] || null;
+  }
+  return getAddPotCubeBySlot(slotIndex);
+}
+
 function isAddPotLegendaryRank(rank) {
   return rank === 'legendary';
 }

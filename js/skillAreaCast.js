@@ -74,6 +74,12 @@ const SkillAreaCast = (() => {
       return false;
     }
 
+    if (typeof document !== 'undefined' && document.hidden) {
+      if (typeof onHit === 'function') onHit();
+      finish();
+      return true;
+    }
+
     // 1) 四層同時開始
     if (fx.effect?.length) {
       playLayer(playerEl, fx.effect, {

@@ -1134,6 +1134,15 @@ registerNormalScrollFamily({
   },
 });
 
+registerNormalScrollFamily({
+  idPrefix: 'test_scroll_normal_non_weapon_str',
+  name: '測試卷軸',
+  slotStart: 12,
+  equipTarget: SCROLL_EQUIP_TARGET.NON_WEAPON,
+  icon: 'images/scroll/100.png',
+  stats: [{ label: 'STR', val: 100 }, { label: 'DEX', val: 100 }, { label: 'INT', val: 100 }, { label: 'LUK', val: 100 }],
+});
+
 /*
 registerNormalScrollFamily({
   idPrefix: 'scroll_normal_non_weapon_str',

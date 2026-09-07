@@ -5,6 +5,7 @@
   "scripts": {
     "import:equips": "node scripts/import-maplestory-io.mjs",
     "import:wz": "node scripts/import-wz-xml.mjs",
+    "import:setitem": "node scripts/import-setitem-info.mjs",
     "import:paperdoll": "node scripts/import-paperdoll-wz.mjs",
     "import:gear": "node scripts/import-wz-xml.mjs && node scripts/import-paperdoll-wz.mjs",
     "import:mob": "node scripts/import-mob-wz.mjs",

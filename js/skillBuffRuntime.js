@@ -106,6 +106,10 @@ const SkillBuffRuntime = (() => {
       x: Math.round(pr.left - fr.left + localX),
       y: Math.round(pr.top - fr.top + localY),
     });
+    const facingRight = (typeof SkillEffectPlayer !== 'undefined'
+      && SkillEffectPlayer.playerFacingRight)
+      ? SkillEffectPlayer.playerFacingRight(playerEl)
+      : !playerEl.classList?.contains('is-flip-x');
 
     let feet = { x: pr.width * 0.5, y: pr.height * 0.78 };
     if (typeof Paperdoll !== 'undefined' && typeof Paperdoll.getHuntFeetAnchor === 'function') {
@@ -116,10 +120,11 @@ const SkillBuffRuntime = (() => {
     }
 
     if (placement.slot === 'feet-behind') {
-      // 玩家身後（場上朝右 → 身後＝偏左）；腳底 Y 與玩家對齊
+      // 身後：朝右時偏左、朝左時偏右
       const ox = Number(placement.offsetX) || 0;
       const extra = Number(placement.behindExtra) || 0;
-      return toField(feet.x + ox + extra, feet.y);
+      const dx = ox + extra;
+      return toField(feet.x + (facingRight ? dx : -dx), feet.y);
     }
 
     if (placement.slot === 'head') {
@@ -134,13 +139,13 @@ const SkillBuffRuntime = (() => {
         }
       }
       const ox = Number(placement.offsetX) || 0;
-      return toField(head.x - ox, head.y);
+      return toField(head.x - (facingRight ? ox : -ox), head.y);
     }
 
     const ox = Number(placement.offsetX) || 80;
     const oy = Number(placement.offsetY) || -40;
     return {
-      x: Math.round(pr.left - fr.left + pr.width * 0.5 - ox),
+      x: Math.round(pr.left - fr.left + pr.width * 0.5 - (facingRight ? ox : -ox)),
       y: Math.round(pr.top - fr.top + pr.height * 0.85 + oy),
     };
   }
@@ -152,6 +157,10 @@ const SkillBuffRuntime = (() => {
     const stand = visual.stand || visual.move || null;
     const summoned = visual.summoned || null;
     const parentSkillId = placement.parentSkillId || '';
+    const facingRight = (typeof SkillEffectPlayer !== 'undefined'
+      && SkillEffectPlayer.playerFacingRight)
+      ? SkillEffectPlayer.playerFacingRight(playerEl)
+      : !playerEl?.classList?.contains('is-flip-x');
 
     const startStand = () => {
       if (!stand?.length) return null;
@@ -162,7 +171,7 @@ const SkillBuffRuntime = (() => {
         y: pt.y,
         loop: true,
         className,
-        mirrorX: true,
+        mirrorX: facingRight,
         zIndex: placement.zIndex,
       });
     };
@@ -175,7 +184,7 @@ const SkillBuffRuntime = (() => {
         y: pt.y,
         loop: false,
         className,
-        mirrorX: true,
+        mirrorX: facingRight,
         zIndex: placement.zIndex,
         onDone: () => {},
       });
@@ -185,11 +194,11 @@ const SkillBuffRuntime = (() => {
         if (!state || state.mode !== 'summon') return;
         state.standFxId = startStand();
       }, Math.max(60, dur));
-      return { x: pt.x, y: pt.y, standFxId: null };
+      return { x: pt.x, y: pt.y, standFxId: null, facingRight };
     }
 
     const standFxId = startStand();
-    return { x: pt.x, y: pt.y, standFxId };
+    return { x: pt.x, y: pt.y, standFxId, facingRight };
   }
 
   function expireSummons(t = nowMs()) {
@@ -314,6 +323,7 @@ const SkillBuffRuntime = (() => {
         fieldEl: ctx.fieldEl || null,
         anchorX: placed?.x ?? 160,
         anchorY: placed?.y ?? 220,
+        facingRight: placed?.facingRight != null ? !!placed.facingRight : true,
         standFxId: placed?.standFxId ?? null,
         hitFrames: summon?.fx?.hit || skill.fx?.hit || null,
         placement,
@@ -381,7 +391,7 @@ const SkillBuffRuntime = (() => {
           y: state.anchorY,
           loop: false,
           className: attackClass,
-          mirrorX: true,
+          mirrorX: state.facingRight != null ? !!state.facingRight : true,
           zIndex: state.placement?.zIndex,
         });
       }

@@ -334,30 +334,36 @@ const HammerModule = {
 
     grid.innerHTML = '';
 
-    const slots = [
+    const catalog = [
       { id: 'golden' },
       { id: 'platinum' }
     ];
+    const idle = typeof isIdlePlayMode === 'function' && isIdlePlayMode();
+    const list = idle
+      ? catalog.filter((mat) => getPlayerHammerCount(mat.id) > 0)
+      : catalog;
 
     for (let i = 0; i < 16; i++) {
       const slot = document.createElement('button');
       slot.type = 'button';
       slot.className = 'hm-mat-slot';
 
-      const mat = slots[i];
+      const mat = list[i];
       if (mat) {
-        const owned = !(typeof isIdlePlayMode === 'function' && isIdlePlayMode())
-          || getPlayerHammerCount(mat.id) > 0;
-        if (owned) {
-          const type = HAMMER_TYPES[mat.id];
-          slot.dataset.hammerId = mat.id;
-          slot.title = type.name;
-          slot.innerHTML = `<img class="hm-mat-icon" src="${type.icon}" alt="${type.name}">`;
-          slot.addEventListener('click', () => this.selectHammer(mat.id));
-
-          if (this.selectedHammer === mat.id) {
-            slot.classList.add('selected');
+        const type = HAMMER_TYPES[mat.id];
+        slot.dataset.hammerId = mat.id;
+        slot.title = type.name;
+        slot.innerHTML = `<img class="hm-mat-icon" src="${type.icon}" alt="${type.name}">`;
+        if (idle) {
+          const owned = getPlayerHammerCount(mat.id);
+          if (owned > 0) {
+            slot.insertAdjacentHTML('beforeend', `<span class="hm-mat-count">${owned}</span>`);
           }
+        }
+        slot.addEventListener('click', () => this.selectHammer(mat.id));
+
+        if (this.selectedHammer === mat.id) {
+          slot.classList.add('selected');
         }
       }
 

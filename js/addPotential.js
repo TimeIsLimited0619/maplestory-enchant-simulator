@@ -170,13 +170,14 @@ const AddPotentialModule = {
   renderCubeGrid() {
     const grid = document.getElementById('apCubeGrid');
     if (!grid) return;
+    const idle = typeof isIdlePlayMode === 'function' && isIdlePlayMode();
 
     grid.querySelectorAll('.pt-cube-slot').forEach((slot) => {
       const slotIndex = Number(slot.dataset.slotIndex);
-      const cube = getAddPotCubeBySlot(slotIndex);
-      const owned = !(typeof isIdlePlayMode === 'function' && isIdlePlayMode())
-        || (cube && typeof getPlayerAddPotCubeCount === 'function' && getPlayerAddPotCubeCount(cube.id) > 0);
-      const showCube = Boolean(cube && owned);
+      const cube = typeof getAddPotCubeForUiSlot === 'function'
+        ? getAddPotCubeForUiSlot(slotIndex)
+        : getAddPotCubeBySlot(slotIndex);
+      const showCube = Boolean(cube);
       const hasEquip = Boolean(this.itemData);
 
       slot.classList.toggle('has-item', showCube);
@@ -204,6 +205,13 @@ const AddPotentialModule = {
         slot.innerHTML = `
           <span class="pt-cube-placeholder" style="--pt-cube-color:${cube.color}"></span>
         `;
+      }
+
+      if (idle && typeof getPlayerAddPotCubeCount === 'function') {
+        const owned = getPlayerAddPotCubeCount(cube.id);
+        if (owned > 0) {
+          slot.insertAdjacentHTML('beforeend', `<span class="pt-cube-count">${owned}</span>`);
+        }
       }
 
       slot.onclick = () => this.selectCube(cube.id);

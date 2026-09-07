@@ -362,6 +362,7 @@
 }
 
 .sw-mat-slot {
+  position: relative;
   width: 38px;
   height: 38px;
   border: none;
@@ -391,6 +392,25 @@
   object-position: center;
   image-rendering: pixelated;
   pointer-events: none;
+}
+
+.sw-mat-count {
+  position: absolute;
+  left: 1px;
+  bottom: 0;
+  min-width: 12px;
+  font-size: 10px;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: left;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 3;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
 }
 
 .sw-soulgem-tooltip {

@@ -176,6 +176,18 @@ function getPotentialCubeBySlot(slotIndex) {
   return POTENTIAL_CUBE_TYPES.find((cube) => cube.slotIndex === slotIndex) || null;
 }
 
+/** 待機模式：只列持有中的方塊，依目錄順序緊排 */
+function listIdleVisiblePotentialCubes() {
+  return POTENTIAL_CUBE_TYPES.filter((cube) => getPlayerCubeCount(cube.id) > 0);
+}
+
+function getPotentialCubeForUiSlot(slotIndex) {
+  if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+    return listIdleVisiblePotentialCubes()[slotIndex] || null;
+  }
+  return getPotentialCubeBySlot(slotIndex);
+}
+
 function getPotentialCubeBlockReason(cube, itemData) {
   if (!cube || !itemData) return null;
   if (typeof isMedalItem === 'function' && isMedalItem(itemData)) {

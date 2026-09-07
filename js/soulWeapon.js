@@ -462,10 +462,11 @@ const SoulWeaponModule = {
 
     this.initMaterialGridHover();
 
+    const idle = typeof isIdlePlayMode === 'function' && isIdlePlayMode();
     const mode = this.getMode();
     const list = (mode === 'enchanter' || mode === 'soul')
       ? (this.MATERIALS[mode] || []).filter((mat) => {
-        if (typeof isIdlePlayMode !== 'function' || !isIdlePlayMode()) return true;
+        if (!idle) return true;
         return getPlayerSoulMaterialCount(mat.id) > 0;
       })
       : [];
@@ -487,6 +488,15 @@ const SoulWeaponModule = {
         img.alt = mat.name;
         img.draggable = false;
         btn.appendChild(img);
+        if (idle) {
+          const owned = getPlayerSoulMaterialCount(mat.id);
+          if (owned > 0) {
+            const count = document.createElement('span');
+            count.className = 'sw-mat-count';
+            count.textContent = String(owned);
+            btn.appendChild(count);
+          }
+        }
         btn.onclick = () => this.selectMaterial(mat.id);
       }
       grid.appendChild(btn);

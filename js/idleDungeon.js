@@ -564,7 +564,7 @@ const IdleDungeon = (() => {
       const parts = [`${cur.name || d?.name || '副本'}${cur.diffName ? ` · ${cur.diffName}` : ''}`];
       if (cur.type === 'timed') {
         parts.push(`擊殺 ${cur.kills}`);
-        parts.push(`結算 ${formatN(cur.kills * (cur.settleGoldPerKill || 0))} 楓幣`);
+        parts.push(`總計 ${formatN(cur.kills * (cur.settleGoldPerKill || 0))} 楓幣`);
       } else if (cur.type === 'normal') {
         const hunt = typeof IdleHunt !== 'undefined' ? IdleHunt.getState?.() : null;
         if (cur.bossSummoned || hunt?.huntMode === 'boss') {

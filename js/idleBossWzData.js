@@ -1180,6 +1180,2548 @@ const IDLE_BOSS_WZ = {
     "hpMult": 1,
     "dmgMult": 1,
     "cdMult": 1
+  },
+  "2": {
+    "listId": "2",
+    "name": "暗黑龍王",
+    "parts": [
+      {
+        "role": "head",
+        "mobId": "8810000",
+        "z": 20,
+        "level": 160,
+        "maxHP": 330000000,
+        "maxMP": 43000,
+        "PADamage": 14500,
+        "MADamage": 5300,
+        "PDDamage": 1760,
+        "MDDamage": 1840,
+        "PDRate": 40,
+        "MDRate": 40,
+        "acc": 550,
+        "eva": 169,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 100000,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 1,
+            "elemAttr": "I",
+            "animMs": 3360,
+            "dmg": 5300
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": false,
+            "conMP": 1,
+            "elemAttr": "I",
+            "animMs": 2240,
+            "dmg": 14500
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 100,
+            "type": 4,
+            "magic": false,
+            "conMP": 1,
+            "elemAttr": "I",
+            "animMs": 0,
+            "dmg": 14500
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 200,
+            "action": 2,
+            "level": 58,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 200,
+            "action": 2,
+            "level": 59,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 200,
+            "action": 2,
+            "level": 60,
+            "effectAfter": 0
+          },
+          {
+            "index": 3,
+            "skill": 128,
+            "action": 3,
+            "level": 1,
+            "effectAfter": 0
+          },
+          {
+            "index": 4,
+            "skill": 128,
+            "action": 3,
+            "level": 2,
+            "effectAfter": 0
+          },
+          {
+            "index": 5,
+            "skill": 128,
+            "action": 3,
+            "level": 3,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 2240,
+          "skill2": 2380,
+          "skill3": 0
+        }
+      },
+      {
+        "role": "head",
+        "mobId": "8810001",
+        "z": 20,
+        "level": 160,
+        "maxHP": 330000000,
+        "maxMP": 43000,
+        "PADamage": 14500,
+        "MADamage": 5300,
+        "PDDamage": 1760,
+        "MDDamage": 1840,
+        "PDRate": 40,
+        "MDRate": 40,
+        "acc": 550,
+        "eva": 169,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 5000,
+        "mpRecovery": 100,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 1,
+            "elemAttr": "L",
+            "animMs": 3220,
+            "dmg": 5300
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": true,
+            "conMP": 1,
+            "elemAttr": "L",
+            "animMs": 2240,
+            "dmg": 5300
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 1,
+            "elemAttr": "L",
+            "animMs": 2240,
+            "dmg": 5300
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 200,
+            "action": 2,
+            "level": 58,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 200,
+            "action": 2,
+            "level": 59,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 200,
+            "action": 2,
+            "level": 60,
+            "effectAfter": 0
+          },
+          {
+            "index": 3,
+            "skill": 128,
+            "action": 3,
+            "level": 1,
+            "effectAfter": 0
+          },
+          {
+            "index": 4,
+            "skill": 128,
+            "action": 3,
+            "level": 2,
+            "effectAfter": 0
+          },
+          {
+            "index": 5,
+            "skill": 128,
+            "action": 3,
+            "level": 3,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 2240,
+          "skill2": 2380,
+          "skill3": 0
+        }
+      },
+      {
+        "role": "body",
+        "mobId": "8810002",
+        "z": 50,
+        "level": 160,
+        "maxHP": 330000000,
+        "maxMP": 43000,
+        "PADamage": 14500,
+        "MADamage": 5300,
+        "PDDamage": 1760,
+        "MDDamage": 1840,
+        "PDRate": 40,
+        "MDRate": 40,
+        "acc": 550,
+        "eva": 169,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 100000,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 1,
+            "elemAttr": "I",
+            "animMs": 3220,
+            "dmg": 5300
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 4,
+            "magic": false,
+            "conMP": 1,
+            "elemAttr": "I",
+            "animMs": 2040,
+            "dmg": 14500
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 37,
+            "type": 0,
+            "magic": false,
+            "conMP": 1,
+            "elemAttr": "I",
+            "animMs": 0,
+            "dmg": 5365
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 200,
+            "action": 2,
+            "level": 53,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 200,
+            "action": 2,
+            "level": 54,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 200,
+            "action": 2,
+            "level": 55,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 2240,
+          "skill2": 1960
+        }
+      },
+      {
+        "role": "body",
+        "mobId": "8810003",
+        "z": 60,
+        "level": 160,
+        "maxHP": 490000000,
+        "maxMP": 49000,
+        "PADamage": 2000,
+        "MADamage": 1600,
+        "PDDamage": 1840,
+        "MDDamage": 1920,
+        "PDRate": 40,
+        "MDRate": 40,
+        "acc": 550,
+        "eva": 169,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 100000,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 1,
+            "elemAttr": "F",
+            "animMs": 3640,
+            "dmg": 1600
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": false,
+            "conMP": 1,
+            "elemAttr": "F",
+            "animMs": 1800,
+            "dmg": 2000
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 1,
+            "elemAttr": "F",
+            "animMs": 2100,
+            "dmg": 1600
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 200,
+            "action": 2,
+            "level": 53,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 200,
+            "action": 2,
+            "level": 54,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 200,
+            "action": 2,
+            "level": 55,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 1960,
+          "skill2": 1960,
+          "skill3": 1820
+        }
+      },
+      {
+        "role": "body",
+        "mobId": "8810004",
+        "z": 50,
+        "level": 160,
+        "maxHP": 330000000,
+        "maxMP": 43000,
+        "PADamage": 14500,
+        "MADamage": 5300,
+        "PDDamage": 1760,
+        "MDDamage": 1840,
+        "PDRate": 40,
+        "MDRate": 40,
+        "acc": 550,
+        "eva": 169,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 100000,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 1,
+            "elemAttr": "L",
+            "animMs": 3360,
+            "dmg": 5300
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": true,
+            "conMP": 1,
+            "elemAttr": "L",
+            "animMs": 2040,
+            "dmg": 5300
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 1,
+            "elemAttr": "L",
+            "animMs": 0,
+            "dmg": 5300
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 200,
+            "action": 2,
+            "level": 53,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 200,
+            "action": 2,
+            "level": 54,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 200,
+            "action": 2,
+            "level": 55,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 2240,
+          "skill2": 1960
+        }
+      },
+      {
+        "role": "hand",
+        "mobId": "8810005",
+        "z": 40,
+        "handIndex": 0,
+        "level": 160,
+        "maxHP": 230000000,
+        "maxMP": 35000,
+        "PADamage": 7300,
+        "MADamage": 2200,
+        "PDDamage": 1350,
+        "MDDamage": 1450,
+        "PDRate": 40,
+        "MDRate": 40,
+        "acc": 550,
+        "eva": 169,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 100000,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 10,
+            "elemAttr": "",
+            "animMs": 2520,
+            "dmg": 2200
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 112,
+            "action": 2,
+            "level": 4,
+            "effectAfter": 1120
+          },
+          {
+            "index": 1,
+            "skill": 128,
+            "action": 3,
+            "level": 1,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 128,
+            "action": 3,
+            "level": 2,
+            "effectAfter": 0
+          },
+          {
+            "index": 3,
+            "skill": 128,
+            "action": 3,
+            "level": 3,
+            "effectAfter": 0
+          },
+          {
+            "index": 4,
+            "skill": 128,
+            "action": 3,
+            "level": 4,
+            "effectAfter": 0
+          },
+          {
+            "index": 5,
+            "skill": 128,
+            "action": 3,
+            "level": 5,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 2380,
+          "skill2": 2240,
+          "skill3": 2240
+        }
+      },
+      {
+        "role": "hand",
+        "mobId": "8810006",
+        "z": 40,
+        "handIndex": 1,
+        "level": 160,
+        "maxHP": 230000000,
+        "maxMP": 35000,
+        "PADamage": 7300,
+        "MADamage": 2200,
+        "PDDamage": 1350,
+        "MDDamage": 1450,
+        "PDRate": 40,
+        "MDRate": 40,
+        "acc": 550,
+        "eva": 169,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 100000,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 5,
+            "elemAttr": "",
+            "animMs": 2520,
+            "dmg": 2200
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 120,
+            "action": 1,
+            "level": 8,
+            "effectAfter": 2380
+          },
+          {
+            "index": 1,
+            "skill": 121,
+            "action": 1,
+            "level": 4,
+            "effectAfter": 2380
+          },
+          {
+            "index": 2,
+            "skill": 113,
+            "action": 2,
+            "level": 4,
+            "effectAfter": 1120
+          },
+          {
+            "index": 3,
+            "skill": 128,
+            "action": 3,
+            "level": 1,
+            "effectAfter": 0
+          },
+          {
+            "index": 4,
+            "skill": 128,
+            "action": 3,
+            "level": 2,
+            "effectAfter": 0
+          },
+          {
+            "index": 5,
+            "skill": 128,
+            "action": 3,
+            "level": 3,
+            "effectAfter": 0
+          },
+          {
+            "index": 6,
+            "skill": 128,
+            "action": 3,
+            "level": 4,
+            "effectAfter": 0
+          },
+          {
+            "index": 7,
+            "skill": 128,
+            "action": 3,
+            "level": 5,
+            "effectAfter": 0
+          },
+          {
+            "index": 8,
+            "skill": 122,
+            "action": 1,
+            "level": 6,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 2380,
+          "skill2": 2240,
+          "skill3": 2240
+        }
+      },
+      {
+        "role": "body",
+        "mobId": "8810007",
+        "z": 20,
+        "level": 160,
+        "maxHP": 270000000,
+        "maxMP": 400000,
+        "PADamage": 7000,
+        "MADamage": 2400,
+        "PDDamage": 1440,
+        "MDDamage": 1640,
+        "PDRate": 40,
+        "MDRate": 40,
+        "acc": 550,
+        "eva": 169,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 100000,
+        "mpRecovery": 1000,
+        "attacks": [],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 200,
+            "action": 1,
+            "level": 56,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 200,
+            "action": 1,
+            "level": 57,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 114,
+            "action": 2,
+            "level": 9,
+            "effectAfter": 840
+          },
+          {
+            "index": 3,
+            "skill": 114,
+            "action": 2,
+            "level": 10,
+            "effectAfter": 840
+          },
+          {
+            "index": 4,
+            "skill": 110,
+            "action": 3,
+            "level": 5,
+            "effectAfter": 1260
+          },
+          {
+            "index": 5,
+            "skill": 111,
+            "action": 3,
+            "level": 4,
+            "effectAfter": 1260
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 2940,
+          "skill2": 2520,
+          "skill3": 2380
+        }
+      },
+      {
+        "role": "body",
+        "mobId": "8810008",
+        "z": 30,
+        "level": 160,
+        "maxHP": 130000000,
+        "maxMP": 38000,
+        "PADamage": 10700,
+        "MADamage": 2500,
+        "PDDamage": 1380,
+        "MDDamage": 1580,
+        "PDRate": 40,
+        "MDRate": 40,
+        "acc": 550,
+        "eva": 169,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 100000,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 70,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 2180,
+            "dmg": 7490
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 70,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 123,
+            "level": 10,
+            "animMs": 2380,
+            "dmg": 7490
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 70,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 1820,
+            "dmg": 7490
+          },
+          {
+            "index": 3,
+            "action": 4,
+            "actionKey": "attack4",
+            "attackRatio": 70,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 123,
+            "level": 10,
+            "animMs": 2380,
+            "dmg": 7490
+          }
+        ],
+        "skills": [],
+        "skillAnimMs": {}
+      },
+      {
+        "role": "body",
+        "mobId": "8810009",
+        "z": 10,
+        "level": 160,
+        "maxHP": 80000000,
+        "maxMP": 26000,
+        "PADamage": 24500,
+        "MADamage": 2500,
+        "PDDamage": 1430,
+        "MDDamage": 1630,
+        "PDRate": 40,
+        "MDRate": 40,
+        "acc": 550,
+        "eva": 169,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 100000,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 23,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 2660,
+            "dmg": 5635
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 131,
+            "action": 1,
+            "level": 4,
+            "effectAfter": 1820
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 2070
+        }
+      }
+    ],
+    "extraMobs": [
+      "8810010",
+      "8810011",
+      "8810012",
+      "8810013",
+      "8810014",
+      "8810015",
+      "8810016",
+      "8810017",
+      "8810018"
+    ],
+    "hpMult": 1,
+    "dmgMult": 1,
+    "cdMult": 1
+  },
+  "10": {
+    "listId": "10",
+    "name": "梅格耐斯",
+    "parts": [
+      {
+        "role": "body",
+        "mobId": "8880000",
+        "z": 20,
+        "level": 190,
+        "maxHP": 2000000000,
+        "maxMP": 100000,
+        "PADamage": 22000,
+        "MADamage": 24000,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 120,
+        "MDRate": 120,
+        "acc": 9999,
+        "eva": 750,
+        "bodyAttack": false,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 10000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "animMs": 1560,
+            "dmg": 24000
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "animMs": 2040,
+            "dmg": 24000
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 10,
+            "elemAttr": "",
+            "animMs": 1800,
+            "dmg": 24000
+          },
+          {
+            "index": 3,
+            "action": 4,
+            "actionKey": "attack4",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 2,
+            "elemAttr": "",
+            "animMs": 6240,
+            "dmg": 22000
+          },
+          {
+            "index": 4,
+            "action": 5,
+            "actionKey": "attack5",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 2,
+            "elemAttr": "",
+            "animMs": 4770,
+            "dmg": 22000
+          },
+          {
+            "index": 5,
+            "action": 6,
+            "actionKey": "attack6",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 2,
+            "elemAttr": "",
+            "disease": 126,
+            "level": 61,
+            "animMs": 2070,
+            "dmg": 22000
+          },
+          {
+            "index": 6,
+            "action": 7,
+            "actionKey": "attack7",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 2,
+            "elemAttr": "",
+            "disease": 133,
+            "level": 32,
+            "animMs": 1920,
+            "dmg": 22000
+          }
+        ],
+        "skills": [],
+        "skillAnimMs": {}
+      }
+    ],
+    "extraMobs": [],
+    "hpMult": 1,
+    "dmgMult": 1,
+    "cdMult": 1
+  },
+  "11": {
+    "listId": "11",
+    "name": "粉紅豆豆",
+    "parts": [
+      {
+        "role": "body",
+        "mobId": "8820000",
+        "z": 20,
+        "level": 160,
+        "maxHP": 1,
+        "maxMP": 1000,
+        "PADamage": 6802,
+        "MADamage": 7126,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 25,
+        "MDRate": 25,
+        "acc": 650,
+        "eva": 225,
+        "bodyAttack": false,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 500,
+        "attacks": [],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 114,
+            "action": 1,
+            "level": 3,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 100,
+            "action": 2,
+            "level": 8,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 200,
+            "action": 3,
+            "level": 102,
+            "effectAfter": 0
+          },
+          {
+            "index": 3,
+            "skill": 102,
+            "action": 4,
+            "level": 4,
+            "effectAfter": 0
+          },
+          {
+            "index": 4,
+            "skill": 103,
+            "action": 5,
+            "level": 3,
+            "effectAfter": 0
+          },
+          {
+            "index": 5,
+            "skill": 110,
+            "action": 6,
+            "level": 7,
+            "effectAfter": 0
+          },
+          {
+            "index": 6,
+            "skill": 111,
+            "action": 7,
+            "level": 6,
+            "effectAfter": 0
+          },
+          {
+            "index": 7,
+            "skill": 112,
+            "action": 8,
+            "level": 5,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 7050,
+          "skill2": 8730,
+          "skill3": 10800,
+          "skill4": 13350,
+          "skill5": 12600,
+          "skill6": 12750,
+          "skill7": 14760,
+          "skill8": 14340
+        }
+      },
+      {
+        "role": "body",
+        "mobId": "8820001",
+        "z": 20,
+        "level": 160,
+        "maxHP": 2100000000,
+        "maxMP": 50000,
+        "PADamage": 23100,
+        "MADamage": 11500,
+        "PDDamage": 1700,
+        "MDDamage": 1930,
+        "PDRate": 70,
+        "MDRate": 70,
+        "acc": 650,
+        "eva": 625,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 1000000,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": true,
+            "conMP": 5,
+            "elemAttr": "",
+            "disease": 123,
+            "level": 7,
+            "animMs": 1800,
+            "dmg": 11500
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 52,
+            "type": 0,
+            "magic": false,
+            "conMP": 1,
+            "elemAttr": "",
+            "disease": 132,
+            "level": 1,
+            "animMs": 2880,
+            "dmg": 12012
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": true,
+            "conMP": 5,
+            "elemAttr": "",
+            "disease": 128,
+            "level": 7,
+            "animMs": 2400,
+            "dmg": 11500
+          },
+          {
+            "index": 3,
+            "action": 4,
+            "actionKey": "attack4",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 1,
+            "elemAttr": "",
+            "disease": 120,
+            "level": 10,
+            "animMs": 2520,
+            "dmg": 23100
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 200,
+            "action": 1,
+            "level": 101,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 133,
+            "action": 3,
+            "level": 1,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 2280,
+          "skill2": 2400,
+          "skill3": 2880
+        }
+      },
+      {
+        "role": "hand",
+        "mobId": "8820002",
+        "z": 30,
+        "handIndex": 0,
+        "level": 160,
+        "maxHP": 1580000000,
+        "maxMP": 50000,
+        "PADamage": 21700,
+        "MADamage": 13500,
+        "PDDamage": 1700,
+        "MDDamage": 1980,
+        "PDRate": 60,
+        "MDRate": 60,
+        "acc": 650,
+        "eva": 225,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 100000,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": true,
+            "conMP": 5,
+            "elemAttr": "",
+            "disease": 121,
+            "level": 8,
+            "animMs": 3960,
+            "dmg": 13500
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": true,
+            "conMP": 5,
+            "elemAttr": "",
+            "disease": 123,
+            "level": 12,
+            "animMs": 2760,
+            "dmg": 13500
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 133,
+            "action": 1,
+            "level": 1,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 114,
+            "action": 2,
+            "level": 25,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 131,
+            "action": 2,
+            "level": 4,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 2520,
+          "skill2": 2400
+        }
+      },
+      {
+        "role": "hand",
+        "mobId": "8820003",
+        "z": 31,
+        "handIndex": 1,
+        "level": 160,
+        "maxHP": 800000000,
+        "maxMP": 50000,
+        "PADamage": 16500,
+        "MADamage": 4700,
+        "PDDamage": 1540,
+        "MDDamage": 1810,
+        "PDRate": 60,
+        "MDRate": 60,
+        "acc": 650,
+        "eva": 225,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 100000,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 5,
+            "elemAttr": "",
+            "disease": 123,
+            "level": 7,
+            "animMs": 2160,
+            "dmg": 16500
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 5,
+            "elemAttr": "L",
+            "disease": 120,
+            "level": 9,
+            "animMs": 2400,
+            "dmg": 4700
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 39,
+            "type": 0,
+            "magic": false,
+            "conMP": 5,
+            "elemAttr": "",
+            "disease": 126,
+            "level": 2,
+            "animMs": 2280,
+            "dmg": 6435
+          }
+        ],
+        "skills": [],
+        "skillAnimMs": {}
+      },
+      {
+        "role": "hand",
+        "mobId": "8820004",
+        "z": 32,
+        "handIndex": 2,
+        "level": 160,
+        "maxHP": 800000000,
+        "maxMP": 50000,
+        "PADamage": 17500,
+        "MADamage": 4500,
+        "PDDamage": 1580,
+        "MDDamage": 1830,
+        "PDRate": 60,
+        "MDRate": 60,
+        "acc": 650,
+        "eva": 225,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 100000,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 5,
+            "elemAttr": "",
+            "disease": 133,
+            "level": 1,
+            "animMs": 2160,
+            "dmg": 4500
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 5,
+            "elemAttr": "L",
+            "disease": 121,
+            "level": 4,
+            "animMs": 2400,
+            "dmg": 4500
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 43,
+            "type": 0,
+            "magic": false,
+            "conMP": 5,
+            "elemAttr": "",
+            "disease": 125,
+            "level": 9,
+            "animMs": 2280,
+            "dmg": 7525
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 132,
+            "action": 1,
+            "level": 2,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 1920
+        }
+      },
+      {
+        "role": "hand",
+        "mobId": "8820005",
+        "z": 33,
+        "handIndex": 3,
+        "level": 160,
+        "maxHP": 1185000000,
+        "maxMP": 50000,
+        "PADamage": 19900,
+        "MADamage": 6400,
+        "PDDamage": 1600,
+        "MDDamage": 1860,
+        "PDRate": 60,
+        "MDRate": 60,
+        "acc": 650,
+        "eva": 225,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 100000,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 5,
+            "elemAttr": "F",
+            "disease": 126,
+            "level": 5,
+            "animMs": 1920,
+            "dmg": 6400
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 38,
+            "type": 3,
+            "magic": false,
+            "conMP": 5,
+            "elemAttr": "",
+            "disease": 133,
+            "level": 1,
+            "animMs": 2760,
+            "dmg": 7562
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 120,
+            "action": 2,
+            "level": 8,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 122,
+            "action": 2,
+            "level": 6,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 1680,
+          "skill2": 1920
+        }
+      },
+      {
+        "role": "hand",
+        "mobId": "8820006",
+        "z": 34,
+        "handIndex": 4,
+        "level": 160,
+        "maxHP": 1185000000,
+        "maxMP": 50000,
+        "PADamage": 20400,
+        "MADamage": 7200,
+        "PDDamage": 1580,
+        "MDDamage": 1880,
+        "PDRate": 60,
+        "MDRate": 60,
+        "acc": 650,
+        "eva": 225,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 100000,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 5,
+            "elemAttr": "I",
+            "disease": 132,
+            "level": 1,
+            "animMs": 1920,
+            "dmg": 7200
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 37,
+            "type": 3,
+            "magic": false,
+            "conMP": 5,
+            "elemAttr": "",
+            "disease": 123,
+            "level": 12,
+            "animMs": 2760,
+            "dmg": 7548
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 129,
+            "action": 1,
+            "level": 2,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 128,
+            "action": 2,
+            "level": 10,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 122,
+            "action": 2,
+            "level": 6,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 1680,
+          "skill2": 1920
+        }
+      },
+      {
+        "role": "body",
+        "mobId": "8820010",
+        "z": 0,
+        "level": 1,
+        "maxHP": 300000000,
+        "maxMP": 0,
+        "PADamage": 3,
+        "MADamage": 1,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 25,
+        "MDRate": 25,
+        "acc": 650,
+        "eva": 0,
+        "bodyAttack": false,
+        "firstAttack": false,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 0,
+        "attacks": [],
+        "skills": [],
+        "skillAnimMs": {}
+      },
+      {
+        "role": "body",
+        "mobId": "8820011",
+        "z": 0,
+        "level": 1,
+        "maxHP": 600000000,
+        "maxMP": 0,
+        "PADamage": 3,
+        "MADamage": 1,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 25,
+        "MDRate": 25,
+        "acc": 650,
+        "eva": 0,
+        "bodyAttack": false,
+        "firstAttack": false,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 0,
+        "attacks": [],
+        "skills": [],
+        "skillAnimMs": {}
+      },
+      {
+        "role": "body",
+        "mobId": "8820012",
+        "z": 0,
+        "level": 1,
+        "maxHP": 1050000000,
+        "maxMP": 0,
+        "PADamage": 3,
+        "MADamage": 1,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 25,
+        "MDRate": 25,
+        "acc": 650,
+        "eva": 0,
+        "bodyAttack": false,
+        "firstAttack": false,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 0,
+        "attacks": [],
+        "skills": [],
+        "skillAnimMs": {}
+      },
+      {
+        "role": "body",
+        "mobId": "8820013",
+        "z": 0,
+        "level": 1,
+        "maxHP": 1500000000,
+        "maxMP": 0,
+        "PADamage": 3,
+        "MADamage": 1,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 25,
+        "MDRate": 25,
+        "acc": 650,
+        "eva": 0,
+        "bodyAttack": false,
+        "firstAttack": false,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 0,
+        "attacks": [],
+        "skills": [],
+        "skillAnimMs": {}
+      },
+      {
+        "role": "body",
+        "mobId": "8820014",
+        "z": 0,
+        "level": 1,
+        "maxHP": 5550000000,
+        "maxMP": 0,
+        "PADamage": 3,
+        "MADamage": 1,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 25,
+        "MDRate": 25,
+        "acc": 650,
+        "eva": 0,
+        "bodyAttack": false,
+        "firstAttack": false,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 0,
+        "attacks": [],
+        "skills": [],
+        "skillAnimMs": {}
+      }
+    ],
+    "extraMobs": [
+      "8820008",
+      "8820009",
+      "8820019",
+      "8820020",
+      "8820021",
+      "8820022",
+      "8820023"
+    ],
+    "hpMult": 1,
+    "dmgMult": 1,
+    "cdMult": 1
+  },
+  "12": {
+    "listId": "12",
+    "name": "西格諾斯",
+    "parts": [
+      {
+        "role": "body",
+        "mobId": "8850111",
+        "z": 20,
+        "level": 140,
+        "maxHP": 2100000000,
+        "maxMP": 90000,
+        "PADamage": 20000,
+        "MADamage": 25000,
+        "PDDamage": 1700,
+        "MDDamage": 1930,
+        "PDRate": 100,
+        "MDRate": 100,
+        "acc": 723,
+        "eva": 625,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "animMs": 5280,
+            "dmg": 25000
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 2,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "animMs": 1620,
+            "dmg": 25000
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": true,
+            "conMP": 10,
+            "elemAttr": "",
+            "disease": 131,
+            "level": 13,
+            "animMs": 1860,
+            "dmg": 25000
+          },
+          {
+            "index": 3,
+            "action": 4,
+            "actionKey": "attack4",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": false,
+            "conMP": 2,
+            "elemAttr": "",
+            "disease": 173,
+            "level": 1,
+            "animMs": 4080,
+            "dmg": 20000
+          },
+          {
+            "index": 4,
+            "action": 5,
+            "actionKey": "attack5",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "animMs": 5280,
+            "dmg": 25000
+          },
+          {
+            "index": 5,
+            "action": 6,
+            "actionKey": "attack6",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "animMs": 5280,
+            "dmg": 25000
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 133,
+            "action": 3,
+            "level": 27,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 129,
+            "action": 1,
+            "level": 13,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 201,
+            "action": 2,
+            "level": 159,
+            "effectAfter": 0
+          },
+          {
+            "index": 3,
+            "skill": 172,
+            "action": 4,
+            "level": 1,
+            "effectAfter": 1260
+          },
+          {
+            "index": 4,
+            "skill": 200,
+            "action": 5,
+            "level": 222,
+            "effectAfter": 0
+          },
+          {
+            "index": 5,
+            "skill": 171,
+            "action": 7,
+            "level": 1,
+            "effectAfter": 630
+          },
+          {
+            "index": 6,
+            "skill": 201,
+            "action": 5,
+            "level": 158,
+            "effectAfter": 0
+          },
+          {
+            "index": 7,
+            "skill": 201,
+            "action": 2,
+            "level": 160,
+            "effectAfter": 0
+          },
+          {
+            "index": 8,
+            "skill": 114,
+            "action": 7,
+            "level": 43,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 1620,
+          "skill2": 2400,
+          "skill3": 2520,
+          "skill4": 2340,
+          "skill5": 3120,
+          "skill6": 2640,
+          "skill7": 1980
+        }
+      },
+      {
+        "role": "hand",
+        "mobId": "8850110",
+        "z": 25,
+        "handIndex": 0,
+        "level": 140,
+        "maxHP": 400000000,
+        "maxMP": 25000,
+        "PADamage": 7000,
+        "MADamage": 6000,
+        "PDDamage": 170,
+        "MDDamage": 210,
+        "PDRate": 60,
+        "MDRate": 60,
+        "acc": 723,
+        "eva": 205,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 1000,
+        "attacks": [],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 114,
+            "action": 2,
+            "level": 42,
+            "effectAfter": 480
+          },
+          {
+            "index": 1,
+            "skill": 146,
+            "action": 1,
+            "level": 1,
+            "effectAfter": 980
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 1680,
+          "skill2": 1800
+        }
+      },
+      {
+        "role": "hand",
+        "mobId": "8850100",
+        "z": 30,
+        "handIndex": 1,
+        "level": 140,
+        "maxHP": 1050000000,
+        "maxMP": 72500,
+        "PADamage": 21500,
+        "MADamage": 14000,
+        "PDDamage": 170,
+        "MDDamage": 210,
+        "PDRate": 60,
+        "MDRate": 60,
+        "acc": 723,
+        "eva": 225,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 2,
+            "magic": false,
+            "conMP": 2,
+            "elemAttr": "",
+            "animMs": 1620,
+            "dmg": 21500
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 2,
+            "elemAttr": "",
+            "animMs": 1200,
+            "dmg": 21500
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 35,
+            "type": 0,
+            "magic": false,
+            "conMP": 2,
+            "elemAttr": "",
+            "disease": 121,
+            "level": 15,
+            "animMs": 1440,
+            "dmg": 7525
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 100,
+            "action": 1,
+            "level": 25,
+            "effectAfter": 480
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 2160
+        }
+      },
+      {
+        "role": "hand",
+        "mobId": "8850101",
+        "z": 30,
+        "handIndex": 2,
+        "level": 140,
+        "maxHP": 1050000000,
+        "maxMP": 72500,
+        "PADamage": 20000,
+        "MADamage": 18000,
+        "PDDamage": 170,
+        "MDDamage": 210,
+        "PDRate": 60,
+        "MDRate": 60,
+        "acc": 723,
+        "eva": 225,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 131,
+            "level": 13,
+            "animMs": 1500,
+            "dmg": 18000
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "animMs": 1200,
+            "dmg": 18000
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "animMs": 1710,
+            "dmg": 18000
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 120,
+            "action": 2,
+            "level": 19,
+            "effectAfter": 480
+          },
+          {
+            "index": 1,
+            "skill": 170,
+            "action": 1,
+            "level": 5,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 201,
+            "action": 3,
+            "level": 161,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 480,
+          "skill2": 2040,
+          "skill3": 540
+        }
+      },
+      {
+        "role": "hand",
+        "mobId": "8850102",
+        "z": 30,
+        "handIndex": 3,
+        "level": 140,
+        "maxHP": 1050000000,
+        "maxMP": 72500,
+        "PADamage": 20000,
+        "MADamage": 15000,
+        "PDDamage": 170,
+        "MDDamage": 210,
+        "PDRate": 60,
+        "MDRate": 60,
+        "acc": 723,
+        "eva": 225,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 2,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 1320,
+            "dmg": 20000
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 900,
+            "dmg": 20000
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 1200,
+            "dmg": 15000
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 146,
+            "action": 1,
+            "level": 2,
+            "effectAfter": 990
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 990
+        }
+      },
+      {
+        "role": "hand",
+        "mobId": "8850103",
+        "z": 30,
+        "handIndex": 4,
+        "level": 140,
+        "maxHP": 1050000000,
+        "maxMP": 72500,
+        "PADamage": 20500,
+        "MADamage": 14500,
+        "PDDamage": 170,
+        "MDDamage": 210,
+        "PDRate": 60,
+        "MDRate": 60,
+        "acc": 723,
+        "eva": 205,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 18,
+            "type": 0,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "animMs": 1350,
+            "dmg": 2610
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 2,
+            "magic": false,
+            "conMP": 2,
+            "elemAttr": "",
+            "animMs": 1140,
+            "dmg": 20500
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 50,
+            "type": 2,
+            "magic": false,
+            "conMP": 2,
+            "elemAttr": "",
+            "animMs": 900,
+            "dmg": 10250
+          },
+          {
+            "index": 3,
+            "action": 4,
+            "actionKey": "attack4",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "animMs": 1560,
+            "dmg": 14500
+          }
+        ],
+        "skills": [],
+        "skillAnimMs": {
+          "skill1": 620
+        }
+      },
+      {
+        "role": "hand",
+        "mobId": "8850104",
+        "z": 30,
+        "handIndex": 5,
+        "level": 140,
+        "maxHP": 1050000000,
+        "maxMP": 72500,
+        "PADamage": 21000,
+        "MADamage": 14000,
+        "PDDamage": 170,
+        "MDDamage": 210,
+        "PDRate": 60,
+        "MDRate": 60,
+        "acc": 723,
+        "eva": 500,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 2,
+            "magic": true,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 1530,
+            "dmg": 14000
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 1350,
+            "dmg": 21000
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 2070,
+            "dmg": 21000
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 100,
+            "action": 1,
+            "level": 25,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 1710,
+          "skill2": 540
+        }
+      }
+    ],
+    "extraMobs": [],
+    "hpMult": 1,
+    "dmgMult": 1,
+    "cdMult": 1
+  },
+  "22": {
+    "listId": "22",
+    "name": "拉圖斯",
+    "parts": [
+      {
+        "role": "body",
+        "mobId": "8500000",
+        "z": 20,
+        "level": 125,
+        "maxHP": 539925,
+        "maxMP": 12000,
+        "PADamage": 1574,
+        "MADamage": 1531,
+        "PDDamage": 1000,
+        "MDDamage": 1100,
+        "PDRate": 25,
+        "MDRate": 25,
+        "acc": 250,
+        "eva": 250,
+        "bodyAttack": true,
+        "firstAttack": false,
+        "boss": true,
+        "hpRecovery": 5000,
+        "mpRecovery": 100,
+        "attacks": [],
+        "skills": [],
+        "skillAnimMs": {}
+      },
+      {
+        "role": "body",
+        "mobId": "8500001",
+        "z": 20,
+        "level": 125,
+        "maxHP": 300000000,
+        "maxMP": 2000000,
+        "PADamage": 3806,
+        "MADamage": 3625,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 50,
+        "MDRate": 50,
+        "acc": 423,
+        "eva": 423,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 10000,
+        "mpRecovery": 50000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": true,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 1920,
+            "dmg": 3625
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 100,
+            "elemAttr": "",
+            "animMs": 1620,
+            "dmg": 3806
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 241,
+            "action": 1,
+            "level": 1,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 241,
+            "action": 1,
+            "level": 2,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 201,
+            "action": 5,
+            "level": 235,
+            "effectAfter": 0
+          },
+          {
+            "index": 3,
+            "skill": 241,
+            "action": 2,
+            "level": 7,
+            "effectAfter": 0
+          },
+          {
+            "index": 4,
+            "skill": 241,
+            "action": 3,
+            "level": 6,
+            "effectAfter": 0,
+            "onlyOtherSkill": true
+          },
+          {
+            "index": 5,
+            "skill": 241,
+            "action": 4,
+            "level": 6,
+            "effectAfter": 0,
+            "onlyOtherSkill": true
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 1800,
+          "skill2": 2880,
+          "skill3": 3240,
+          "skill4": 1440,
+          "skill5": 1800
+        }
+      },
+      {
+        "role": "body",
+        "mobId": "8500002",
+        "z": 20,
+        "level": 125,
+        "maxHP": 100000000,
+        "maxMP": 2000000,
+        "PADamage": 3924,
+        "MADamage": 3878,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 50,
+        "MDRate": 50,
+        "acc": 423,
+        "eva": 423,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 0,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 2,
+            "magic": true,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 1890,
+            "dmg": 3878
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 201,
+            "action": 1,
+            "level": 233,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 105,
+            "action": 2,
+            "level": 16,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 241,
+            "action": 3,
+            "level": 4,
+            "effectAfter": 0
+          },
+          {
+            "index": 3,
+            "skill": 241,
+            "action": 4,
+            "level": 9,
+            "effectAfter": 0
+          },
+          {
+            "index": 4,
+            "skill": 241,
+            "action": 5,
+            "level": 6,
+            "effectAfter": 0,
+            "onlyOtherSkill": true
+          },
+          {
+            "index": 5,
+            "skill": 241,
+            "action": 6,
+            "level": 6,
+            "effectAfter": 0,
+            "onlyOtherSkill": true
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 1440,
+          "skill2": 1560,
+          "skill3": 1350,
+          "skill4": 2880,
+          "skill5": 3240,
+          "skill6": 1440
+        }
+      }
+    ],
+    "extraMobs": [],
+    "hpMult": 1,
+    "dmgMult": 1,
+    "cdMult": 1
   }
 };
 

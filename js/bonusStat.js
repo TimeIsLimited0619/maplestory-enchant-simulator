@@ -665,15 +665,16 @@ const BonusStatModule = {
   renderItemGrid() {
     const grid = document.getElementById('bsItemGrid');
     if (!grid) return;
+    const idle = typeof isIdlePlayMode === 'function' && isIdlePlayMode();
 
     this.hideItemTooltip();
 
     grid.querySelectorAll('.bs-item-slot').forEach((slot) => {
       const slotIndex = Number(slot.dataset.slotIndex);
-      const item = getBonusStatItemBySlot(slotIndex);
-      const owned = !(typeof isIdlePlayMode === 'function' && isIdlePlayMode())
-        || (item && typeof getPlayerBonusStatItemCount === 'function' && getPlayerBonusStatItemCount(item.id) > 0);
-      const show = Boolean(item && owned);
+      const item = typeof getBonusStatItemForUiSlot === 'function'
+        ? getBonusStatItemForUiSlot(slotIndex)
+        : getBonusStatItemBySlot(slotIndex);
+      const show = Boolean(item);
       const hasEquip = Boolean(this.itemData);
 
       slot.classList.toggle('has-item', show);
@@ -693,6 +694,12 @@ const BonusStatModule = {
       slot.innerHTML = `
         <img class="bs-item-icon" src="${item.icon}" alt="${item.name}" width="${w}" height="${h}">
       `;
+      if (idle && typeof getPlayerBonusStatItemCount === 'function') {
+        const owned = getPlayerBonusStatItemCount(item.id);
+        if (owned > 0) {
+          slot.insertAdjacentHTML('beforeend', `<span class="bs-item-count">${owned}</span>`);
+        }
+      }
       slot.onclick = () => this.selectItem(item.id);
     });
 

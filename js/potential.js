@@ -174,13 +174,14 @@ const PotentialModule = {
   renderCubeGrid() {
     const grid = document.getElementById('ptCubeGrid');
     if (!grid) return;
+    const idle = typeof isIdlePlayMode === 'function' && isIdlePlayMode();
 
     grid.querySelectorAll('.pt-cube-slot').forEach((slot) => {
       const slotIndex = Number(slot.dataset.slotIndex);
-      const cube = getPotentialCubeBySlot(slotIndex);
-      const owned = !(typeof isIdlePlayMode === 'function' && isIdlePlayMode())
-        || (cube && typeof getPlayerCubeCount === 'function' && getPlayerCubeCount(cube.id) > 0);
-      const showCube = Boolean(cube && owned);
+      const cube = typeof getPotentialCubeForUiSlot === 'function'
+        ? getPotentialCubeForUiSlot(slotIndex)
+        : getPotentialCubeBySlot(slotIndex);
+      const showCube = Boolean(cube);
       const hasEquip = Boolean(this.itemData);
 
       slot.classList.toggle('has-item', showCube);
@@ -211,6 +212,13 @@ const PotentialModule = {
         slot.innerHTML = `
           <span class="pt-cube-placeholder" style="--pt-cube-color:${cube.color}"></span>
         `;
+      }
+
+      if (idle && typeof getPlayerCubeCount === 'function') {
+        const owned = getPlayerCubeCount(cube.id);
+        if (owned > 0) {
+          slot.insertAdjacentHTML('beforeend', `<span class="pt-cube-count">${owned}</span>`);
+        }
       }
 
       slot.onclick = () => this.selectCube(cube.id);

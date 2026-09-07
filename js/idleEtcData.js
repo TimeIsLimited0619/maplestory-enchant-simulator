@@ -56,6 +56,11 @@ const IDLE_ETC_DATABASE = [
   { id: 'black_dragon_soul', name: '暗黑龍王的靈魂', icon: 'images/ETCicon/02435366.png', desc: '滅龍騎士進階材料，可通過擊敗暗黑龍王獲取。' },
   { id: 'cyclops_eye', name: '精密機械材料', icon: 'images/ETCicon/04310407.png', desc: '獨眼巨人進階材料，可通過材料副本獲取。' },
   { id: 'spell_trace', name: '咒文的痕跡', icon: 'images/ETCicon/04001832.png', desc: '卷軸強化所需材料，可通過狩獵怪物或分解卷軸獲得。' },
+  { id: 'Fearless_pcs', name: '蓋世無雙碎片', icon: 'images/ETCicon/04020013.png', desc: '蓋世無雙進階材料，可通過分解中心獲取。' },
+  { id: 'tyrants_coin', name: '暴君硬幣', icon: 'images/ETCicon/04310059.png', desc: '暴君裝備材料，可通過分解中心或擊敗boss獲取。' },
+  { id: 'tinkerer_chest', name: '意志盒', icon: 'images/ETCicon/04033667.png', desc: '楓之谷堅韌意志進階材料，可通過分解中心或擊敗boss獲取。' },
+  { id: '140armor_pcs', name: '黑色守護的碎片', icon: 'images/ETCicon/02434589.png', desc: '附著西格諾斯守護騎士團力量的碎片。收集5個可以製作Lv. 140女皇裝備' },
+  { id: '140weapon_pcs', name: '黑色破壞的碎片', icon: 'images/ETCicon/02434588.png', desc: '附著西格諾斯守護騎士團力量的碎片。收集15個可以製作Lv. 140女皇武器' },
 ];
 
 const IdleEtcStore = {

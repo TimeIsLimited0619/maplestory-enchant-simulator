@@ -39,12 +39,19 @@ css/style.monolith.css
 # 本機雜項
 *.local
 import-equip/
+import-equip.bat
 .gitignore/
+
+# 本機匯入／工具腳本（不上傳）
+scripts/
 
 # 未使用的圖片素材（本機保留，不上傳）
 _unused_images/
 
-# HaRepacker 匯出的 WZ XML（只留資料夾說明，本體不上傳）
-wz-xml/**/*.xml
-wz-xml/**/*.img
-!wz-xml/README.txt
+# HaRepacker 匯出的 WZ XML（整個資料夾不上傳）
+wz-xml/
+
+# GM 編輯器（僅本機；push 後無入口／無本體）
+js/uiIdleGmDrops.js
+css/modules/27-idle-gm-drops.css
+images/menubtn/gm/

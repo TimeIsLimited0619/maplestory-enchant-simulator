@@ -268,6 +268,18 @@ function getBonusStatItemBySlot(slotIndex) {
   return BONUS_STAT_ITEMS.find((item) => item.slotIndex === slotIndex) || null;
 }
 
+/** 待機模式：只列持有中的星火，依目錄順序緊排 */
+function listIdleVisibleBonusStatItems() {
+  return BONUS_STAT_ITEMS.filter((item) => getPlayerBonusStatItemCount(item.id) > 0);
+}
+
+function getBonusStatItemForUiSlot(slotIndex) {
+  if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+    return listIdleVisibleBonusStatItems()[slotIndex] || null;
+  }
+  return getBonusStatItemBySlot(slotIndex);
+}
+
 function getBonusStatItemTooltipPath(item) {
   if (!item?.tooltipImage) return null;
   return item.tooltipImage;

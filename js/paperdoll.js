@@ -433,7 +433,8 @@ const Paperdoll = (() => {
     const target = swingTargetOverrideMs > 0
       ? swingTargetOverrideMs
       : attackActionDelayMs();
-    return Math.max(30, Math.round(raw * (target / cycle)));
+    // 等比縮放到攻速視窗；勿強制 ≥30ms（否則短動作會被壓成連打空揮）
+    return Math.max(1, Math.round(raw * (target / cycle)));
   }
 
   /**
@@ -503,7 +504,7 @@ const Paperdoll = (() => {
   }
 
   function preferSwingNow() {
-    if (typeof IdleHunt !== 'undefined' && IdleHunt.isRunning?.()) return true;
+    // 僅在實際出招視窗內揮砍；勿因 isRunning 就持續播普攻（否則開場／空等會超高速空揮）
     return forceSwingUntil > 0 && performance.now() < forceSwingUntil;
   }
 
@@ -969,7 +970,13 @@ const Paperdoll = (() => {
       if (!s.frameStarted) s.frameStarted = now;
       if (now - s.frameStarted >= s.lastDelay) {
         s.frameStarted = now;
-        s.frameIndex += 1;
+        const count = Math.max(1, frameCount(s.action));
+        // 出招視窗內播完一輪就停在末幀，避免被壓短後反覆空揮
+        if (forceSwingUntil > now && isAttackActionName(s.action) && s.frameIndex >= count - 1) {
+          s.frameIndex = count - 1;
+        } else {
+          s.frameIndex += 1;
+        }
         renderHost(host);
       }
     });

@@ -11,7 +11,8 @@ const IdleMobAnim = (() => {
   const DIE_MAX_MS = 1600;
   const HIT_MS = 280;
   const SKILL_MS = 420;
-  const SKILL_MAX_MS = 5000;
+  /** 鎖招上限（安全網）；實際鎖長以動畫總長為準，勿低於長技（如梅格耐斯 attack4 ~6s） */
+  const SKILL_MAX_MS = 30000;
   const MOVE_MS = 320;
 
   function pad(iconId) {
@@ -105,13 +106,16 @@ const IdleMobAnim = (() => {
   function actionForKind(kind) {
     if (kind === 'move') return 'move';
     if (kind === 'hit') return 'hit1';
-    if (/^attack[1-4]$/i.test(kind)) return String(kind).toLowerCase();
+    // attack5+（梅格耐斯等）：不可只認 1–4，否則會落到 stand、動畫播不完／閃招失敗
+    if (/^attack\d+$/i.test(kind)) return String(kind).toLowerCase();
     if (kind === 'attack') return 'attack1';
     // skill16 等：不可只認 skill1–4，否則會被落到 stand
     if (/^skill\d+$/i.test(kind)) return String(kind).toLowerCase();
     if (kind === 'skill') return 'skill1';
     if (/^die\d*$/i.test(kind)) return kind === 'die' ? 'die1' : String(kind).toLowerCase();
     if (kind === 'regen') return 'regen';
+    if (kind === 'sleep') return 'sleep';
+    if (kind === 'wakeup') return 'wakeup';
     return 'stand';
   }
 
@@ -124,8 +128,9 @@ const IdleMobAnim = (() => {
     if (a === 'skill1' && !hasAction(id, 'skill1') && hasAction(id, 'skill')) a = 'skill';
     if (a === 'attack1' && !hasAction(id, 'attack1') && hasAction(id, 'attack')) a = 'attack';
     if (hasAction(id, a)) return a;
-    if (/^attack[2-4]$/i.test(a)) return null;
-    if (/^skill[2-4]$/i.test(a)) return null;
+    // 缺圖時不要 fallback 成 stand（會造成「技能播到一半變站立」）
+    if (/^attack([2-9]|\d{2,})$/i.test(a)) return null;
+    if (/^skill([2-9]|\d{2,})$/i.test(a)) return null;
     if (a === 'attack1' || a === 'attack') return null;
     if (/^skill/i.test(a)) return null;
     if (a !== 'stand' && hasAction(id, 'stand')) return 'stand';
@@ -451,30 +456,36 @@ const IdleMobAnim = (() => {
     if (fx.dataset.done === '1') return { active: true, wrapped: true };
 
     const id = fx.dataset.iconId || bodyImg.dataset.iconId;
-    const action = fx.dataset.action;
-    const frame = Number(fx.dataset.frame) || 0;
-    const step = frameDelay(id, action, frame, kind);
-    const acc = (Number(fx.dataset.frameAcc) || 0) + (Number(dt) || 0) * 1000;
-    if (acc < step) {
+    let acc = (Number(fx.dataset.frameAcc) || 0) + (Number(dt) || 0) * 1000;
+    let wrapped = false;
+    // 戰鬥 tick（100ms）可能大於單幀 delay（如 60ms），需一次補多幀
+    for (let guard = 0; guard < 32; guard += 1) {
+      const action = fx.dataset.action;
+      const frame = Number(fx.dataset.frame) || 0;
+      const step = frameDelay(id, action, frame, kind);
+      if (acc < step) {
+        fx.dataset.frameAcc = String(acc);
+        return { active: true, wrapped: false };
+      }
+      acc -= step;
       fx.dataset.frameAcc = String(acc);
-      return { active: true, wrapped: false };
-    }
-    fx.dataset.frameAcc = String(acc - step);
 
-    const range = actionRange(id, action);
-    if (!range) {
-      fx.dataset.done = '1';
-      return { active: true, wrapped: true };
+      const range = actionRange(id, action);
+      if (!range) {
+        fx.dataset.done = '1';
+        return { active: true, wrapped: true };
+      }
+      let next = frame + 1;
+      while (next <= range.max && !frameMeta(id, action, next)) next += 1;
+      if (next > range.max) {
+        fx.dataset.done = '1';
+        bindLayer(fx, id, action, range.max, { updateActor: false });
+        return { active: true, wrapped: true };
+      }
+      bindLayer(fx, id, action, next, { updateActor: false });
+      wrapped = false;
     }
-    let next = frame + 1;
-    while (next <= range.max && !frameMeta(id, action, next)) next += 1;
-    if (next > range.max) {
-      fx.dataset.done = '1';
-      bindLayer(fx, id, action, range.max, { updateActor: false });
-      return { active: true, wrapped: true };
-    }
-    bindLayer(fx, id, action, next, { updateActor: false });
-    return { active: true, wrapped: false };
+    return { active: true, wrapped };
   }
 
   function syncPlayerHitAnchor(playerEl, stage) {
@@ -673,30 +684,33 @@ const IdleMobAnim = (() => {
       return { active: false, wrapped: true };
     }
     const id = img.dataset.iconId;
-    const action = img.dataset.action;
-    const frame = Number(img.dataset.frame) || 0;
-    const step = frameDelay(id, action, frame, 'attack');
-    const acc = (Number(img.dataset.frameAcc) || 0) + (Number(dt) || 0) * 1000;
-    if (acc < step) {
+    let acc = (Number(img.dataset.frameAcc) || 0) + (Number(dt) || 0) * 1000;
+    for (let guard = 0; guard < 32; guard += 1) {
+      const action = img.dataset.action;
+      const frame = Number(img.dataset.frame) || 0;
+      const step = frameDelay(id, action, frame, 'attack');
+      if (acc < step) {
+        img.dataset.frameAcc = String(acc);
+        return { active: true, wrapped: false };
+      }
+      acc -= step;
       img.dataset.frameAcc = String(acc);
-      return { active: true, wrapped: false };
+      const range = actionRange(id, action);
+      if (!range) {
+        img.dataset.done = '1';
+        clearAreaWarning(playerEl, { flushDamage: true });
+        return { active: false, wrapped: true };
+      }
+      let next = frame + 1;
+      while (next <= range.max && !frameMeta(id, action, next)) next += 1;
+      if (next > range.max) {
+        img.dataset.done = '1';
+        bindLayer(img, id, action, range.max, { updateActor: false });
+        clearAreaWarning(playerEl, { flushDamage: true });
+        return { active: false, wrapped: true };
+      }
+      bindLayer(img, id, action, next, { updateActor: false });
     }
-    img.dataset.frameAcc = String(acc - step);
-    const range = actionRange(id, action);
-    if (!range) {
-      img.dataset.done = '1';
-      clearAreaWarning(playerEl, { flushDamage: true });
-      return { active: false, wrapped: true };
-    }
-    let next = frame + 1;
-    while (next <= range.max && !frameMeta(id, action, next)) next += 1;
-    if (next > range.max) {
-      img.dataset.done = '1';
-      bindLayer(img, id, action, range.max, { updateActor: false });
-      clearAreaWarning(playerEl, { flushDamage: true });
-      return { active: false, wrapped: true };
-    }
-    bindLayer(img, id, action, next, { updateActor: false });
     return { active: true, wrapped: false };
   }
 
@@ -807,31 +821,34 @@ const IdleMobAnim = (() => {
       return { active: false, wrapped: true };
     }
     const id = img.dataset.iconId;
-    const action = img.dataset.action;
-    const frame = Number(img.dataset.frame) || 0;
-    const step = frameDelay(id, action, frame, 'attack');
-    const acc = (Number(img.dataset.frameAcc) || 0) + (Number(dt) || 0) * 1000;
-    if (acc < step) {
+    let acc = (Number(img.dataset.frameAcc) || 0) + (Number(dt) || 0) * 1000;
+    for (let guard = 0; guard < 32; guard += 1) {
+      const action = img.dataset.action;
+      const frame = Number(img.dataset.frame) || 0;
+      const step = frameDelay(id, action, frame, 'attack');
+      if (acc < step) {
+        img.dataset.frameAcc = String(acc);
+        return { active: true, wrapped: false };
+      }
+      acc -= step;
       img.dataset.frameAcc = String(acc);
-      return { active: true, wrapped: false };
+      const range = actionRange(id, action);
+      if (!range) {
+        img.dataset.done = '1';
+        img.hidden = true;
+        return { active: false, wrapped: true };
+      }
+      let next = frame + 1;
+      while (next <= range.max && !frameMeta(id, action, next)) next += 1;
+      if (next > range.max) {
+        img.dataset.done = '1';
+        bindLayer(img, id, action, range.max, { updateActor: false });
+        img.hidden = true;
+        applySrc(img, '');
+        return { active: false, wrapped: true };
+      }
+      bindLayer(img, id, action, next, { updateActor: false });
     }
-    img.dataset.frameAcc = String(acc - step);
-    const range = actionRange(id, action);
-    if (!range) {
-      img.dataset.done = '1';
-      img.hidden = true;
-      return { active: false, wrapped: true };
-    }
-    let next = frame + 1;
-    while (next <= range.max && !frameMeta(id, action, next)) next += 1;
-    if (next > range.max) {
-      img.dataset.done = '1';
-      bindLayer(img, id, action, range.max, { updateActor: false });
-      img.hidden = true;
-      applySrc(img, '');
-      return { active: false, wrapped: true };
-    }
-    bindLayer(img, id, action, next, { updateActor: false });
     return { active: true, wrapped: false };
   }
 
@@ -864,7 +881,8 @@ const IdleMobAnim = (() => {
       || /^attack/i.test(kind)
       || /^skill/i.test(kind)
       || kind === 'die'
-      || /^die/i.test(kind);
+      || /^die/i.test(kind)
+      || kind === 'wakeup';
     if (!id || img.dataset.mode !== 'anim' || !getMobEntry(id)) {
       return { wrapped: oneShot };
     }
@@ -886,6 +904,34 @@ const IdleMobAnim = (() => {
     if (frame > range.max) {
       bodyWrapped = true;
       frame = oneShot ? range.max : range.min;
+    }
+    // 引導技：repeatFrame 期間從 loopFrom 循環，不標記 bodyDone
+    if (oneShot && bodyWrapped) {
+      const actorEl = img.closest?.('.idle-actor');
+      const channelUntil = Number(actorEl?.dataset?.channelUntil) || 0;
+      const loopFrom = Number(actorEl?.dataset?.channelLoopFrom);
+      if (
+        actorEl
+        && channelUntil > Date.now()
+        && Number.isFinite(loopFrom)
+        && loopFrom >= range.min
+        && loopFrom <= range.max
+      ) {
+        bodyWrapped = false;
+        frame = loopFrom;
+        while (frame <= range.max && !frameMeta(id, resolved, frame)) frame += 1;
+        if (frame > range.max) frame = loopFrom;
+        img.dataset.bodyDone = '0';
+        if (!bindLayer(img, id, resolved, frame, { updateActor: true })) {
+          img.dataset.bodyDone = '1';
+          bindLayer(img, id, resolved, range.max, { updateActor: true });
+          bodyWrapped = true;
+        }
+        if (/^attack/i.test(kind) || /^skill/i.test(kind)) {
+          return { wrapped: false };
+        }
+        return { wrapped: false };
+      }
     }
     if (oneShot && bodyWrapped) {
       img.dataset.bodyDone = '1';
@@ -971,6 +1017,8 @@ const IdleMobAnim = (() => {
     if (hitUntil > Date.now()) return 'hit';
     const moveUntil = Number(el.dataset.moveUntil) || 0;
     if (el.classList.contains('is-moving') || moveUntil > Date.now()) return 'move';
+    // 機制 hold（如西格諾斯 sleep）：避免 skillUntil 到期後閃一幀 stand
+    if (el.dataset.holdAction) return el.dataset.holdAction;
     return 'stand';
   }
 
@@ -989,7 +1037,50 @@ const IdleMobAnim = (() => {
     el.dataset.attackUntil = '0';
     el.dataset.attackAction = '';
     el.dataset.moveUntil = '0';
+    el.dataset.channelUntil = '0';
+    el.dataset.channelLoopFrom = '';
     delete el.dataset.introAction;
+  }
+
+  /**
+   * 引導技本體動畫：播放 action，並在 untilMs 內從 loopFrom 循環。
+   * skillUntil 鎖到 untilMs，期間 isActorCasting 為 true。
+   */
+  function startActorChannel(el, opts = {}) {
+    if (!el || el.classList.contains('is-dying')) return false;
+    if (isActorCasting(el)) return false;
+    const img = actorBodyImg(el);
+    const iconId = pad(opts.iconId || img?.dataset.iconId || '');
+    const want = actionForKind(opts.action || 'skill1');
+    const resolved = iconId ? resolveAction(iconId, want) : null;
+    if (!resolved || resolved === 'stand' || !img || !iconId) return false;
+    const scaleDelayMs = typeof opts.scaleDelayMs === 'function' ? opts.scaleDelayMs : (ms) => ms;
+    const untilMs = Math.max(200, scaleDelayMs(Number(opts.untilMs) || 0));
+    const loopFrom = Math.max(0, Math.floor(Number(opts.loopFrom) || 0));
+    const range = actionRange(iconId, resolved);
+    if (!range) return false;
+
+    el.dataset.hitUntil = '0';
+    el.dataset.attackUntil = '0';
+    el.dataset.attackAction = '';
+    el.dataset.channelUntil = String(Date.now() + untilMs);
+    el.dataset.channelLoopFrom = String(
+      Number.isFinite(loopFrom) && loopFrom >= range.min && loopFrom <= range.max
+        ? loopFrom
+        : range.min,
+    );
+    el.dataset.skillUntil = String(Date.now() + untilMs);
+    img.dataset.frameAcc = '0';
+    img.dataset.bodyDone = '0';
+    img.dataset.kindAction = resolved;
+    bind(img, iconId, resolved, range.min);
+    return true;
+  }
+
+  function endActorChannel(el) {
+    if (!el) return;
+    el.dataset.channelUntil = '0';
+    el.dataset.channelLoopFrom = '';
   }
 
   function bindActorSprite(el, iconId, kind) {
@@ -1028,6 +1119,7 @@ const IdleMobAnim = (() => {
       80,
       Number(actionDurationMs(iconId, resolved, resolved)) || SKILL_MS,
     );
+    // 鎖招至少涵蓋完整動畫；SKILL_MAX_MS 僅防異常超長
     const lockMs = scaleDelayMs(Math.min(SKILL_MAX_MS, bodyMs + 80));
     el.dataset.hitUntil = '0';
     img.dataset.frameAcc = '0';
@@ -1081,22 +1173,25 @@ const IdleMobAnim = (() => {
     }
 
     const fxTick = tickEffect(img, kind, dt);
-    const action = img.dataset.action || actionForKind(kind);
-    const frame = Number(img.dataset.frame) || 0;
-    const step = frameDelay(img.dataset.iconId, action, frame, kind);
-    const acc = (Number(img.dataset.frameAcc) || 0) + (Number(dt) || 0) * 1000;
-
+    let acc = (Number(img.dataset.frameAcc) || 0) + (Number(dt) || 0) * 1000;
     let result = { wrapped: false };
-    if (acc < step) {
-      img.dataset.frameAcc = String(acc);
-      if ((/^attack/i.test(kind) || /^skill/i.test(kind)) && img.dataset.bodyDone === '1' && fxTick.wrapped) {
-        result = { wrapped: true };
-      } else {
-        return;
+    // 戰鬥 tick 100ms、幀 delay 60ms 時，若每 tick 只進 1 幀，鎖招會先到期 → 約第 16 幀被截斷
+    for (let guard = 0; guard < 32; guard += 1) {
+      const action = img.dataset.action || actionForKind(kind);
+      const frame = Number(img.dataset.frame) || 0;
+      const step = frameDelay(img.dataset.iconId, action, frame, kind);
+      if (acc < step) {
+        img.dataset.frameAcc = String(acc);
+        if ((/^attack/i.test(kind) || /^skill/i.test(kind)) && img.dataset.bodyDone === '1' && fxTick.wrapped) {
+          result = { wrapped: true };
+        }
+        break;
       }
-    } else {
-      img.dataset.frameAcc = String(acc - step);
+      acc -= step;
+      img.dataset.frameAcc = String(acc);
       result = advance(img, kind);
+      if (result.wrapped) break;
+      if (img.dataset.kindAction !== kind) break;
     }
 
     if (kind === 'hit' && result.wrapped) el.dataset.hitUntil = '0';
@@ -1104,7 +1199,13 @@ const IdleMobAnim = (() => {
       el.dataset.attackUntil = '0';
       el.dataset.attackAction = '';
     }
-    if (/^skill/i.test(kind) && result.wrapped) el.dataset.skillUntil = '0';
+    if (/^skill/i.test(kind) && result.wrapped) {
+      const channelUntil = Number(el.dataset.channelUntil) || 0;
+      if (!(channelUntil > Date.now())) {
+        el.dataset.skillUntil = '0';
+        endActorChannel(el);
+      }
+    }
     if (kind === 'die' && result.wrapped) el.dataset.dieDone = '1';
   }
 
@@ -1163,6 +1264,8 @@ const IdleMobAnim = (() => {
     spriteKind,
     isActorCasting,
     clearActorCastFlags,
+    startActorChannel,
+    endActorChannel,
     bindActorSprite,
     flashActorAttack,
     beginActorDie,

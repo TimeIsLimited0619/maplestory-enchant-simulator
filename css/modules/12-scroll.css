@@ -779,13 +779,13 @@
 
 .sc-scroll-count {
   position: absolute;
-  right: 1px;
+  left: 1px;
   bottom: 0;
   min-width: 12px;
   font-size: 10px;
   font-weight: bold;
   color: #ffffff;
-  text-align: right;
+  text-align: left;
   line-height: 1;
   pointer-events: none;
   z-index: 3;

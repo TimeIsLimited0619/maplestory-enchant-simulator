@@ -423,7 +423,7 @@ const EquipTooltipModule = {
             : starBonus.stat);
       } else if (key === 'def') {
         scrollVal = scrollByMain.def || 0;
-        starVal = starBonus.def;
+        starVal = starBonus.def || 0;
       } else if (key === 'hp') {
         scrollVal = scrollByMain.hp || 0;
         starVal = starBonus.hp;
@@ -1315,7 +1315,9 @@ const EquipTooltipModule = {
       : (item.maxStar || 30);
     const starCount = item.star || 0;
     const setId = item.wz?.setItemID || 0;
-    const setLabel = EQUIP_SET_LABELS[setId];
+    const setLabel = (typeof getEquipSetLabel === 'function'
+      ? getEquipSetLabel(setId)
+      : (EQUIP_SET_LABELS[setId] || ''));
     const showEnhancement = this.canShowEnhancementUi(item);
 
     let starEffectImg = null;

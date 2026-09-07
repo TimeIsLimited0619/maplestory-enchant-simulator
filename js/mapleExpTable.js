@@ -109,7 +109,20 @@ const MapleExpTable = (() => {
   }
 
   /**
-   * 怪物打玩家：官方物理減傷公式（物理／魔法統一）。
+   * 官方公式的屬性修正在「現代高四圍」會線性暴衝（STR 4000 → corr≈1.4）。
+   * 該公式對應年代四圍遠低於此；放置地圖又直接用 flat 基礎傷害而非 物攻²。
+   * 將修正值硬上限，避免防禦減傷遠超預期。
+   */
+  const PHYS_CORR_CAP = 0.4;
+  /** 物防相對基礎傷害的減傷上限（技能 % 減傷另算） */
+  const DEF_MITIGATION_CAP = 0.72;
+
+  function cappedPhysCorrection(stats, isWarrior) {
+    return Math.min(PHYS_CORR_CAP, physCorrection(stats, isWarrior));
+  }
+
+  /**
+   * 怪物打玩家：官方物理減傷公式（物理／魔法統一），並針對放置 flat 傷害校正。
    * baseDmg = 地圖設定的基礎傷害（非物攻²）
    * 物防 ≥ 基準：base − 物防×A − (物防−基準)×B
    * 物防 < 基準：base − 物防×A（不套用負減傷懲罰，避免地圖基礎傷害被放大）
@@ -120,20 +133,20 @@ const MapleExpTable = (() => {
     if (!(base > 0)) return 0;
     const pdd = Math.max(0, Math.floor(Number(defense) || 0));
     const pl = Math.max(1, Math.min(300, Math.floor(Number(playerLevel) || 1)));
-    const ml = Math.max(1, Math.min(300, Math.floor(Number(mobLevel) || 1)));
     const ctx = (opts && typeof opts === 'object') ? opts : {};
     const isWarrior = !!ctx.isWarrior;
     const baselineKind = ctx.baselineKind === 'mage' ? 'mage' : 'warrior';
     const baseline = baselineDefenseFor(pl, baselineKind);
-    const corr = physCorrection(ctx, isWarrior);
+    const corr = cappedPhysCorrection(ctx, isWarrior);
     const A = corr + 0.28;
     let reduction = pdd * A;
     if (pdd >= baseline) {
       const B = corr * 28 / 45 + pl * 7 / 13000 + 0.196;
       reduction += (pdd - baseline) * B;
     }
-    // 地圖基礎傷害模式：減傷不低於 0，避免前期低防把傷害放大到基礎值以上
+    // 地圖基礎傷害模式：減傷不低於 0，且不超過基礎傷害的一定比例
     reduction = Math.max(0, reduction);
+    reduction = Math.min(reduction, base * DEF_MITIGATION_CAP);
     return Math.max(1, Math.floor(base - reduction));
   }
 
@@ -147,6 +160,9 @@ const MapleExpTable = (() => {
     MAGE_BASELINE_DEF,
     baselineDefenseFor,
     physCorrection,
+    cappedPhysCorrection,
+    PHYS_CORR_CAP,
+    DEF_MITIGATION_CAP,
     mobHitTakenDamage,
   };
 })();

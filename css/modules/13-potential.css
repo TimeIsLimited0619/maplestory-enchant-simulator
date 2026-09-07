@@ -962,20 +962,21 @@
 
 .pt-cube-count {
   position: absolute;
-  left: 2px;
-  bottom: 1px;
+  left: 1px;
+  bottom: 0;
+  min-width: 12px;
   font-size: 10px;
   font-weight: bold;
   line-height: 1;
   color: #ffffff;
-  -webkit-text-stroke: 1px #000000;
-  paint-order: stroke fill;
-  text-shadow:
-    1px 0 0 #000000,
-    -1px 0 0 #000000,
-    0 1px 0 #000000,
-    0 -1px 0 #000000;
+  text-align: left;
   pointer-events: none;
+  z-index: 3;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
 }
 
 /* 附加潛能：確認鈕上方 7px、置中 — 楓幣費用列 */

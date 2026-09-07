@@ -13,7 +13,6 @@ const EquipStatPanel = (() => {
     { key: 'atk', label: '攻擊力' },
     { key: 'matk', label: '魔法攻擊力' },
     { key: 'def', label: '防禦力' },
-    { key: 'mdef', label: '魔法防禦力' },
   ];
 
   const MAIN_LABEL_SET = new Set(MAIN_KEYS.map((x) => x.label));

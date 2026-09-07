@@ -498,13 +498,13 @@
   background: #e07070;
 }
 
-/* 頂部 BOSS 血條 + 其下 buff */
+/* 頂部 BOSS 血條 + 其下 buff（需高於 damage-fx 100020，避免傷害數字蓋住血條） */
 .idle-boss-hud-top {
   position: absolute;
   top: 12px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 100010;
+  z-index: 100030;
   width: min(980px, calc(100% - 24px));
   display: flex;
   flex-direction: column;
@@ -552,10 +552,23 @@
   z-index: 30 !important;
 }
 
-/* 炎魔手臂：水平鏡像（WZ 9451128 與 9451127 同圖同錨點，否則會疊成一隻） */
+/* 炎魔手臂：水平鏡像 */
 .idle-boss-part.is-flip-x .idle-actor-sprite {
   transform: scaleX(-1);
   transform-origin: var(--ox, 0px) var(--oy, 0px);
+}
+
+/*
+ * 紙娃娃 WZ 預設朝左；hunt 以 scaleX(-1) 改朝右打怪。
+ * 龍王 playerFlipX：取消鏡像恢復朝左（再 scaleX(-1) 會跟預設一樣朝右）。
+ */
+.idle-boss-field .idle-actor--player.is-flip-x [data-paperdoll="hunt"] {
+  transform: translateY(25px);
+}
+
+.idle-boss-field .idle-actor--player.is-flip-x > img.idle-actor-sprite {
+  transform: scaleX(-1);
+  transform-origin: center bottom;
 }
 
 .idle-boss-hp {

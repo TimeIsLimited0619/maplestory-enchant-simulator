@@ -454,7 +454,7 @@ const StarForceModule = {
       statDiff,
       atkDiff,
       matkDiff: atkDiff,
-      defDiff: this.itemData?.mainType === EQUIP_TYPE.ARMOR && typeof getStarDefBonusAtStar === 'function'
+      defDiff: typeof getStarDefBonusAtStar === 'function'
         ? getStarDefBonusAtStar(toStar, this.itemData) - getStarDefBonusAtStar(fromStar, this.itemData)
         : 0,
     };
@@ -731,7 +731,8 @@ const StarForceModule = {
     const hasClassGain = typeof STAR_CLASS_STAT_KEYS !== 'undefined'
       ? STAR_CLASS_STAT_KEYS.some((key) => (classStatGains[key] || 0) > 0)
       : gain.statDiff > 0;
-    if (!this.itemData || (!hasClassGain && gain.atkDiff <= 0 && gain.matkDiff <= 0 && (gain.defDiff || 0) <= 0)) {
+    const hasDefGain = (gain.defDiff || 0) > 0;
+    if (!this.itemData || (!hasClassGain && gain.atkDiff <= 0 && gain.matkDiff <= 0 && !hasDefGain)) {
       return [];
     }
 
@@ -767,9 +768,13 @@ const StarForceModule = {
       if ((this.itemData.baseStats?.matk || 0) > 0 && gain.matkDiff > 0) {
         lines.push({ label: '魔法攻擊力', val: gain.matkDiff });
       }
-      if (gain.defDiff > 0 && type === EQUIP_TYPE.ARMOR) {
-        lines.push({ label: '防禦力', val: gain.defDiff });
-      }
+    }
+
+    const defBase = typeof getStarDefBase === 'function'
+      ? getStarDefBase(this.itemData)
+      : (this.itemData.baseStats?.def || 0);
+    if (gain.defDiff > 0 && defBase > 0) {
+      lines.push({ label: '防禦力', val: gain.defDiff });
     }
 
     return lines;

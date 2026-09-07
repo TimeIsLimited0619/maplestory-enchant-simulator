@@ -1,25 +1,89 @@
 /**
- * 套裝效果提示框資料（光輝／漆黑／神祕冥界／永恆）
- * 永恆 886–890 共用「永恆套組」，神祕冥界 617–621 共用「神祕冥界套裝」，清單去職業名。
+ * 套裝效果：以 wzImportedSetItems.js（Etc.SetItemInfo）為準。
+ * 永恆 886–890、神祕冥界 617–621 合併顯示；創世／命運武器仍可用名稱匹配。
  */
 
 const ETERNAL_SET_IDS = [886, 887, 888, 889, 890];
 const ARCANE_SET_IDS = [617, 618, 619, 620, 621];
 
-const ETERNAL_HATS = ['01005980', '01005981', '01005982', '01005983', '01005984'];
-const ETERNAL_COATS = ['01042433', '01042434', '01042435', '01042436', '01042437'];
-const ETERNAL_PANTS = ['01062285', '01062286', '01062287', '01062288', '01062289'];
-const ETERNAL_SHOULDERS = ['01152212', '01152213', '01152214', '01152215', '01152216'];
-const ETERNAL_GLOVES = ['01082760', '01082761', '01082762', '01082763', '01082764'];
-const ETERNAL_SHOES = ['01073629', '01073630', '01073631', '01073632', '01073633'];
-const ETERNAL_CAPES = ['01103433', '01103434', '01103435', '01103436', '01103437'];
+/** SetItem Option（無 ItemOption.wz 時的對照；level 對應表上數值） */
+const SET_ITEM_OPTION_LINES = {
+  '60020@1': '爆擊傷害 +5%',
+  '60023@13': '無視怪物防禦率 +10%',
+  '60024@13': '攻擊Boss怪物時傷害 +10%',
+  '60087@13': '無視怪物防禦率 +20%',
+  '60088@13': '攻擊Boss怪物時傷害 +15%',
+  '60089@13': '無視怪物防禦率 +15%',
+  // 露塔必思 4 件：潛能表 option 30602 lv15（本專案潛能儲存格式不同，直接對照）
+  '30602@15': '攻擊Boss怪物時傷害 +30%',
+  '40116@14': '異常狀態抗性: +10' ,
+  '30602@14': '攻擊Boss怪物時傷害 +30%',
+};
 
-const ARCANE_HATS = ['01004808', '01004809', '01004810', '01004811', '01004812'];
-const ARCANE_OVERALLS = ['01053063', '01053064', '01053065', '01053066', '01053067'];
-const ARCANE_SHOULDERS = ['01152174', '01152175', '01152176', '01152177', '01152178'];
-const ARCANE_GLOVES = ['01082695', '01082696', '01082697', '01082698', '01082699'];
-const ARCANE_SHOES = ['01073158', '01073159', '01073160', '01073161', '01073162'];
-const ARCANE_CAPES = ['01102940', '01102941', '01102942', '01102943', '01102944'];
+const SET_ITEM_TYPE_META = [
+  { code: 100, slot: '帽子' },
+  { code: 101, slot: '臉飾' },
+  { code: 102, slot: '眼飾' },
+  { code: 103, slot: '耳環' },
+  { code: 104, slot: '上衣' },
+  { code: 105, slot: '套服' },
+  { code: 106, slot: '褲/裙' },
+  { code: 107, slot: '鞋子' },
+  { code: 108, slot: '手套' },
+  { code: 109, slot: '盾牌' },
+  { code: 110, slot: '披風' },
+  { code: 111, slot: '戒指' },
+  { code: 112, slot: '墜飾' },
+  { code: 113, slot: '腰帶' },
+  { code: 114, slot: '勳章' },
+  { code: 115, slot: '肩膀裝飾' },
+  { code: 116, slot: '口袋道具' },
+  { code: 118, slot: '胸章' },
+  { code: 119, slot: '徽章' },
+  { code: 166, slot: '機器人' },
+  { code: 167, slot: '機器心臟' },
+];
+
+function padSetItemId(raw) {
+  const digits = String(raw || '').replace(/\D/g, '');
+  if (!digits) return '';
+  return digits.padStart(8, '0').slice(-8);
+}
+
+function setItemTypeCode(itemId) {
+  const digits = String(itemId || '').replace(/\D/g, '').replace(/^0+/, '') || '0';
+  if (digits.length < 3) return Number(digits) || 0;
+  return Number(digits.slice(0, 3)) || 0;
+}
+
+function isSetWeaponTypeCode(code) {
+  return code >= 121 && code <= 159;
+}
+
+function setSlotMeta(itemId) {
+  const code = setItemTypeCode(itemId);
+  if (isSetWeaponTypeCode(code)) return { code, slot: '武器', weapon: true };
+  const hit = SET_ITEM_TYPE_META.find((row) => row.code === code);
+  return { code, slot: hit?.slot || `道具(${code})`, weapon: false };
+}
+
+function lookupSetItemName(itemId) {
+  const id = padSetItemId(itemId);
+  if (typeof ITEM_DATABASE !== 'undefined' && ITEM_DATABASE[id]?.name) return ITEM_DATABASE[id].name;
+  if (typeof WZ_IMPORTED_EQUIP_RECORDS !== 'undefined') {
+    const row = WZ_IMPORTED_EQUIP_RECORDS.find((r) => r.id === id);
+    if (row?.name) return row.name;
+  }
+  return id;
+}
+
+function stripJobSetName(name) {
+  return String(name || '')
+    .replace(/（[^）]*）/g, '')
+    .replace(/\([^)]*\)/g, '')
+    .replace(/\(劍士\)|\(法師\)|\(弓箭手\)|\(盜賊\)|\(海盜\)|\(戰士\)|\(弓手\)/g, '')
+    .trim();
+}
 
 /** 永恆／神祕冥界套組武器：名稱含創世／命運，且為武器部位（含神之子 Wpsi） */
 function isEternalSetWeaponCandidate(row) {
@@ -32,112 +96,263 @@ function isEternalSetWeaponCandidate(row) {
   return islot === 'Wp' || islot === 'Wpsi' || islot === 'Gw' || islot === 'Op';
 }
 
-const BLACK_SPELLBOOKS = ['01162080', '01162081', '01162082', '01162083'];
-const BLACK_MITRA = ['01190566', '01190567', '01190568', '01190569', '01190570'];
-const BLACK_HEARTS = ['01672101'];
+function getWzSetRecord(setItemId) {
+  const id = String(Number(setItemId) || 0);
+  if (!id || id === '0') return null;
+  if (typeof WZ_IMPORTED_SET_ITEM_BY_ID !== 'undefined' && WZ_IMPORTED_SET_ITEM_BY_ID[id]) {
+    return WZ_IMPORTED_SET_ITEM_BY_ID[id];
+  }
+  if (typeof WZ_IMPORTED_SET_ITEM_RECORDS !== 'undefined') {
+    return WZ_IMPORTED_SET_ITEM_RECORDS.find((row) => Number(row.id) === Number(setItemId)) || null;
+  }
+  return null;
+}
 
-const EQUIP_SET_DEFS = {
-  1055: {
-    id: 1055,
-    name: '光輝Boss套裝',
-    pieces: [
-      { slot: '戒指', name: '根源的耳語', itemIds: ['01113341'] },
-      { slot: '墜飾', name: '死亡之誓', itemIds: ['01122447'] },
-      { slot: '勳章', name: '不朽的遺產', itemIds: ['01143471'] },
-      { slot: '戒指', name: '恍惚的惡夢', itemIds: ['01113360'] },
-      { slot: '臉飾', name: '傲慢的原罪', itemIds: ['01012911'] },
-      { slot: '眼飾', name: '飢渴的血色冤魂', itemIds: ['01022913'] },
-    ],
-    effects: {
-      2: ['全屬性 +20, 最大HP +500', '攻擊力/魔力 +20', '攻擊Boss怪物時傷害 +15%'],
-      3: ['全屬性 +20, 最大HP +500', '攻擊力/魔力 +20', '無視怪物防禦率 +15%'],
-      4: ['全屬性 +20, 最大HP +500', '攻擊力/魔力 +20', '爆擊傷害 +5%'],
-      5: ['全屬性 +20, 最大HP +500', '攻擊力/魔力 +20', '攻擊Boss怪物時傷害 +15%'],
-      6: ['全屬性 +20, 最大HP/最大MP +500', '攻擊力/魔力 +20', '爆擊傷害 +7.5%'],
-    },
-  },
-  677: {
-    id: 677,
-    name: '漆黑BOSS套裝',
-    pieces: [
-      { slot: '臉飾', name: '口紅控制器標誌', itemIds: ['01012632'] },
-      { slot: '眼飾', name: '附有魔力的眼罩', itemIds: ['01022278'] },
-      { slot: '腰帶', name: '夢幻的腰帶', itemIds: ['01132308'] },
-      { slot: '墜飾', name: '苦痛的根源', itemIds: ['01122430'] },
-      { slot: '胸章', name: '創世的胸章', itemIds: ['01182285'] },
-      { slot: '耳環', name: '指揮官力量耳環', itemIds: ['01032316'] },
-      { slot: '戒指', name: '巨大的恐怖', itemIds: ['01113306'] },
-      { slot: '口袋道具', name: '被詛咒的魔導書中擇1', itemIds: BLACK_SPELLBOOKS, chooseOne: true },
-      { slot: '徽章', name: '在米特拉的憤怒中選1', itemIds: BLACK_MITRA, chooseOne: true },
-      { slot: '機器心臟', name: '黑心', itemIds: [], group: 'heart', chooseOne: true },
-      { slot: '機器心臟', name: '全面控制核心', itemIds: BLACK_HEARTS, group: 'heart', chooseOne: true },
-    ],
-    effects: {
-      2: ['全屬性 +10, 最大HP +250', '攻擊力/魔力 +10', '攻擊Boss怪物時傷害 +10%'],
-      3: ['全屬性 +10, 最大HP +250', '攻擊力/魔力 +10', '防禦力 +250', '無視怪物防禦率 +10%'],
-      4: ['全屬性 +15, 最大HP +375', '攻擊力/魔力 +15', '爆擊傷害 +5%'],
-      5: ['全屬性 +15, 最大HP +375', '攻擊力/魔力 +15', '攻擊Boss怪物時傷害 +10%'],
-      6: ['全屬性 +15, 最大HP +375', '攻擊力/魔力 +15', '無視怪物防禦率 +10%'],
-      7: ['全屬性 +15, 最大HP +375', '攻擊力/魔力 +15', '爆擊傷害 +5%'],
-      8: ['全屬性 +15, 最大HP +375', '攻擊力/魔力 +15', '攻擊Boss怪物時傷害 +10%'],
-      9: ['全屬性 +15, 最大HP +375', '攻擊力/魔力 +15', '爆擊傷害 +5%'],
-      10: ['全屬性 +20, 最大HP +500', '攻擊力/魔力 +20', '攻擊Boss怪物時傷害 +10%'],
-    },
-  },
-  eternal: {
-    id: 'eternal',
-    name: '永恆套組',
-    setIds: ETERNAL_SET_IDS,
-    pieces: [
-      { slot: '帽子', name: '永恆頭盔', itemIds: ETERNAL_HATS },
-      { slot: '上衣', name: '永恆鎧甲', itemIds: ETERNAL_COATS },
-      { slot: '褲/裙', name: '永恆褲', itemIds: ETERNAL_PANTS },
-      { slot: '肩膀裝飾', name: '永恆肩膀', itemIds: ETERNAL_SHOULDERS },
-      { slot: '武器', name: '可選擇創世或命運武器其一', match: 'eternalWeapon', chooseOne: true },
-      { slot: '手套', name: '永恆手套', itemIds: ETERNAL_GLOVES },
-      { slot: '鞋子', name: '永恆鞋', itemIds: ETERNAL_SHOES },
-      { slot: '披風', name: '永恆斗篷', itemIds: ETERNAL_CAPES },
-    ],
-    effects: {
-      2: ['最大 HP/最大 MP +2500', '攻擊力/魔力 +40', '攻擊Boss怪物時傷害 +10%'],
-      3: ['全屬性 +50', '攻擊力/魔力 +40', '防禦力 +600', '攻擊Boss怪物時傷害 +10%'],
-      4: ['最大 HP/最大 MP +15%', '攻擊力/魔力 +40', '攻擊Boss怪物時傷害 +10%'],
-      5: ['攻擊力/魔力 +40', '無視怪物防禦率 +20%'],
-      6: ['攻擊力/魔力 +40', '攻擊Boss怪物時傷害 +15%'],
-      7: ['全屬性 +50, 最大 HP/最大 MP +2500', '攻擊力/魔力 +40', '攻擊Boss怪物時傷害 +15%'],
-      8: ['攻擊力/魔力 +40', '攻擊Boss怪物時傷害 +15%'],
-    },
-  },
-  arcane: {
-    id: 'arcane',
-    name: '神祕冥界套裝',
-    setIds: ARCANE_SET_IDS,
-    pieces: [
-      { slot: '帽子', name: '神祕冥界頭盔', itemIds: ARCANE_HATS },
-      { slot: '套服', name: '神祕冥界套服', itemIds: ARCANE_OVERALLS },
-      { slot: '肩膀裝飾', name: '神祕冥界護肩', itemIds: ARCANE_SHOULDERS },
-      { slot: '武器', name: '可選擇創世或命運武器其一', match: 'eternalWeapon', chooseOne: true },
-      { slot: '手套', name: '神祕冥界手套', itemIds: ARCANE_GLOVES },
-      { slot: '鞋子', name: '神祕冥界鞋', itemIds: ARCANE_SHOES },
-      { slot: '披風', name: '神祕冥界斗篷', itemIds: ARCANE_CAPES },
-    ],
-    effects: {
-      2: ['攻擊力/魔力 +30', '攻擊Boss怪物時傷害 +10%'],
-      3: ['攻擊力/魔力 +30', '防禦力 +400', '無視怪物防禦率 +10%'],
-      4: ['全屬性 +50', '攻擊力/魔力 +35', '攻擊Boss怪物時傷害 +10%'],
-      5: ['最大HP/最大MP +2000', '攻擊力/魔力 +40', '攻擊Boss怪物時傷害 +10%'],
-      6: ['最大HP/最大MP +30%', '攻擊力/魔力 +30'],
-      7: ['攻擊力/魔力 +30', '無視怪物防禦率 +10%'],
-    },
-  },
-};
+function formatSetStatLines(stats) {
+  const s = stats || {};
+  const lines = [];
+  const take = (key) => {
+    const v = Number(s[key]) || 0;
+    return v;
+  };
+
+  const all = take('incAllStat');
+  const pad = take('incPAD');
+  const mad = take('incMAD');
+  const mhp = take('incMHP');
+  const mmp = take('incMMP');
+  const mhpr = take('incMHPr');
+  const mmpr = take('incMMPr');
+  const pdd = take('incPDD');
+  const mdd = take('incMDD');
+  const str = take('incSTR');
+  const dex = take('incDEX');
+  const int_ = take('incINT');
+  const luk = take('incLUK');
+
+  const flatParts = [];
+  if (all) flatParts.push(`全屬性 +${all}`);
+  if (str) flatParts.push(`STR +${str}`);
+  if (dex) flatParts.push(`DEX +${dex}`);
+  if (int_) flatParts.push(`INT +${int_}`);
+  if (luk) flatParts.push(`LUK +${luk}`);
+  if (mhp && mmp && mhp === mmp) flatParts.push(`最大HP/最大MP +${mhp}`);
+  else {
+    if (mhp) flatParts.push(`最大HP +${mhp}`);
+    if (mmp) flatParts.push(`最大MP +${mmp}`);
+  }
+  if (flatParts.length) lines.push(flatParts.join(', '));
+
+  if (pad && mad && pad === mad) lines.push(`攻擊力/魔力 +${pad}`);
+  else {
+    if (pad) lines.push(`攻擊力 +${pad}`);
+    if (mad) lines.push(`魔力 +${mad}`);
+  }
+
+  if (pdd) lines.push(`防禦力 +${pdd}`);
+  if (mdd && mdd !== pdd) lines.push(`魔法防禦力 +${mdd}`);
+
+  if (mhpr && mmpr && mhpr === mmpr) lines.push(`最大HP/最大MP +${mhpr}%`);
+  else {
+    if (mhpr) lines.push(`最大HP +${mhpr}%`);
+    if (mmpr) lines.push(`最大MP +${mmpr}%`);
+  }
+
+  return lines;
+}
+
+function formatSetOptionLines(options) {
+  return (options || []).map((opt) => {
+    const key = `${Number(opt.option) || 0}@${Number(opt.level) || 0}`;
+    return SET_ITEM_OPTION_LINES[key] || `潛在能力選項 ${key}`;
+  }).filter(Boolean);
+}
+
+function formatSetEffectLines(tierEffect) {
+  if (!tierEffect) return [];
+  return [
+    ...formatSetStatLines(tierEffect.stats),
+    ...formatSetOptionLines(tierEffect.options),
+  ];
+}
+
+function groupSetPieces(itemIds, opts = {}) {
+  /** 可同時穿著多件、且套裝清單各自計件（如戒指） */
+  const multiInstanceTypes = new Set([111]);
+  const groups = new Map();
+  (itemIds || []).forEach((rawId) => {
+    const id = padSetItemId(rawId);
+    if (!id) return;
+    const meta = setSlotMeta(id);
+    if (opts.weaponMatch && meta.weapon) return;
+    if (multiInstanceTypes.has(meta.code)) {
+      const key = `multi:${id}`;
+      groups.set(key, {
+        slot: meta.slot,
+        itemIds: [id],
+        weapon: false,
+        order: meta.code,
+        forceSingle: true,
+      });
+      return;
+    }
+    const key = meta.weapon ? 'weapon' : `t${meta.code}`;
+    if (!groups.has(key)) {
+      groups.set(key, {
+        slot: meta.slot,
+        itemIds: [],
+        weapon: meta.weapon,
+        order: meta.weapon ? 500 : meta.code,
+      });
+    }
+    const g = groups.get(key);
+    if (!g.itemIds.includes(id)) g.itemIds.push(id);
+  });
+
+  const pieces = [...groups.values()]
+    .sort((a, b) => a.order - b.order || String(a.itemIds[0]).localeCompare(String(b.itemIds[0])))
+    .map((g) => {
+      const names = g.itemIds.map((id) => lookupSetItemName(id));
+      const uniqueNames = [...new Set(names.filter(Boolean))];
+      const chooseOne = !g.forceSingle && g.itemIds.length > 1;
+      let name = uniqueNames[0] || g.slot;
+      const looksLikeId = (n) => !n || /^\d{7,8}$/.test(String(n));
+      if (chooseOne) {
+        if (g.weapon) name = opts.weaponDesc || '可選擇其中一件武器';
+        else {
+          const nice = uniqueNames.find((n) => !looksLikeId(n));
+          name = nice ? `${stripJobSetName(nice)}（擇1）` : `${g.slot}（擇1）`;
+        }
+      } else if (looksLikeId(name)) {
+        name = g.slot;
+      }
+      return {
+        slot: g.slot,
+        name,
+        itemIds: g.itemIds,
+        chooseOne,
+      };
+    });
+
+  if (opts.weaponMatch) {
+    pieces.push({
+      slot: '武器',
+      name: opts.weaponDesc || '可選擇創世或命運武器其一',
+      match: 'eternalWeapon',
+      chooseOne: true,
+    });
+    pieces.sort((a, b) => {
+      const ao = a.slot === '武器' ? 500 : setItemTypeCode(a.itemIds?.[0] || 0);
+      const bo = b.slot === '武器' ? 500 : setItemTypeCode(b.itemIds?.[0] || 0);
+      if (ao !== bo) return ao - bo;
+      return String(a.itemIds?.[0] || '').localeCompare(String(b.itemIds?.[0] || ''));
+    });
+  }
+  return pieces;
+}
+
+function buildEffectsFromWz(effectsObj) {
+  const out = {};
+  Object.keys(effectsObj || {}).forEach((key) => {
+    const n = Number(key);
+    if (!Number.isFinite(n)) return;
+    const lines = formatSetEffectLines(effectsObj[key]);
+    if (lines.length) out[n] = lines;
+  });
+  return out;
+}
+
+function buildDefFromWzRecord(rec, override = {}) {
+  if (!rec) return null;
+  const weaponMatch = !!override.weaponMatch;
+  const weaponDesc = override.weaponDesc
+    || rec.desc?.weapon
+    || (weaponMatch ? '可選擇創世或命運武器其一' : '');
+  const itemIds = override.itemIds || rec.itemIds || [];
+  return {
+    id: override.id != null ? override.id : rec.id,
+    name: override.name || stripJobSetName(rec.name) || rec.name,
+    setIds: override.setIds || [rec.id],
+    completeCount: override.completeCount || rec.completeCount || 0,
+    jokerPossible: !!(override.jokerPossible ?? rec.jokerPossible),
+    pieces: groupSetPieces(itemIds, { weaponMatch, weaponDesc }),
+    effects: buildEffectsFromWz(override.effects || rec.effects),
+    source: 'setItemInfo',
+  };
+}
+
+function mergeWzSetRecords(setIds, mergeOpts) {
+  const records = setIds.map((id) => getWzSetRecord(id)).filter(Boolean);
+  if (!records.length) return null;
+  const itemIds = [];
+  const seen = new Set();
+  records.forEach((rec) => {
+    (rec.itemIds || []).forEach((id) => {
+      const p = padSetItemId(id);
+      if (!p || seen.has(p)) return;
+      seen.add(p);
+      itemIds.push(p);
+    });
+  });
+  // 效果以第一筆職業分支為準（各分支相同）
+  return buildDefFromWzRecord(records[0], {
+    id: mergeOpts.key,
+    name: mergeOpts.name,
+    setIds,
+    itemIds,
+    weaponMatch: true,
+    weaponDesc: records[0].desc?.weapon || mergeOpts.weaponDesc,
+    effects: records[0].effects,
+    completeCount: records[0].completeCount,
+    jokerPossible: records.some((r) => r.jokerPossible),
+  });
+}
+
+const _equipSetDefCache = Object.create(null);
 
 function getEquipSetDef(setItemId) {
   const id = Number(setItemId) || 0;
   if (!id) return null;
-  if (ETERNAL_SET_IDS.includes(id)) return EQUIP_SET_DEFS.eternal;
-  if (ARCANE_SET_IDS.includes(id)) return EQUIP_SET_DEFS.arcane;
-  return EQUIP_SET_DEFS[id] || null;
+  if (ETERNAL_SET_IDS.includes(id)) {
+    if (!_equipSetDefCache.eternal) {
+      _equipSetDefCache.eternal = mergeWzSetRecords(ETERNAL_SET_IDS, {
+        key: 'eternal',
+        name: '永恆套組',
+      });
+    }
+    return _equipSetDefCache.eternal;
+  }
+  if (ARCANE_SET_IDS.includes(id)) {
+    if (!_equipSetDefCache.arcane) {
+      _equipSetDefCache.arcane = mergeWzSetRecords(ARCANE_SET_IDS, {
+        key: 'arcane',
+        name: '神祕冥界套裝',
+      });
+    }
+    return _equipSetDefCache.arcane;
+  }
+  const cacheKey = String(id);
+  if (_equipSetDefCache[cacheKey]) return _equipSetDefCache[cacheKey];
+  const rec = getWzSetRecord(id);
+  if (!rec) return null;
+  const def = buildDefFromWzRecord(rec);
+  _equipSetDefCache[cacheKey] = def;
+  return def;
+}
+
+/** 目前穿著可能觸發的套裝 def（依 setItemID；合併組去重） */
+function listActiveEquipSetDefs(wornList) {
+  const seen = new Set();
+  const defs = [];
+  (wornList || []).forEach((row) => {
+    const def = getEquipSetDef(row.setId);
+    if (!def) return;
+    const key = String(def.id);
+    if (seen.has(key)) return;
+    seen.add(key);
+    defs.push(def);
+  });
+  return defs;
 }
 
 function getWornEquipEntries() {
@@ -218,7 +433,7 @@ function snapshotSetFromWornList(def, wornList) {
     if (!groups.includes(row.group)) groups.push(row.group);
   });
   const wornCount = groups.filter((g) => groupFilled[g]).length;
-  const total = groups.length;
+  const total = def.completeCount > 0 ? def.completeCount : groups.length;
 
   return {
     def,
@@ -252,15 +467,21 @@ const SET_STAT_LABEL_ALIASES = {
   攻擊力: ['攻擊力'],
   魔力: ['魔法攻擊力'],
   防禦力: ['防禦力'],
+  物理防禦力: ['防禦力'],
+  魔法防禦力: ['防禦力'],
   攻擊Boss怪物時傷害: ['BOSS怪物傷害'],
   BOSS怪物傷害: ['BOSS怪物傷害'],
   無視怪物防禦率: ['無視防禦率'],
   無視防禦率: ['無視防禦率'],
   爆擊傷害: ['爆擊傷害'],
+  STR: ['STR'],
+  DEX: ['DEX'],
+  INT: ['INT'],
+  LUK: ['LUK'],
 };
 
 const SET_MAIN_LABELS = new Set([
-  'STR', 'DEX', 'INT', 'LUK', '最大HP', '最大MP', '攻擊力', '魔法攻擊力', '防禦力', '魔法防禦力',
+  'STR', 'DEX', 'INT', 'LUK', '最大HP', '最大MP', '攻擊力', '魔法攻擊力', '防禦力',
 ]);
 
 function expandSetStatLabel(raw) {
@@ -291,7 +512,6 @@ function applySetEffectLine(line, acc) {
         acc.extraPercent[pctKey] = true;
         return;
       }
-      // 全屬性% 與套裝全屬性 flat 分 key，避免混進同一桶
       if (isPercent && label === '全屬性') {
         acc.extra['全屬性%'] = (acc.extra['全屬性%'] || 0) + value;
         acc.extraPercent['全屬性%'] = true;
@@ -311,7 +531,7 @@ function applySetEffectLine(line, acc) {
 function collectEquipSetBonuses(entries) {
   const wornList = wornListFromEntries(entries);
   const acc = { main: {}, extra: {}, extraPercent: {}, ied: [], details: [] };
-  Object.values(EQUIP_SET_DEFS).forEach((def) => {
+  listActiveEquipSetDefs(wornList).forEach((def) => {
     const snap = snapshotSetFromWornList(def, wornList);
     if (!snap.wornCount) return;
     const setAcc = { main: {}, extra: {}, extraPercent: {}, ied: [] };
@@ -331,4 +551,14 @@ function collectEquipSetBonuses(entries) {
     });
   });
   return acc;
+}
+
+/** 供標籤／除錯：常用套組顯示名（其餘走 SetItemInfo 名稱） */
+function getEquipSetLabel(setItemId) {
+  const id = Number(setItemId) || 0;
+  if (ETERNAL_SET_IDS.includes(id)) return '永恆套組';
+  if (ARCANE_SET_IDS.includes(id)) return '神祕冥界套裝';
+  if (typeof EQUIP_SET_LABELS !== 'undefined' && EQUIP_SET_LABELS[id]) return EQUIP_SET_LABELS[id];
+  const rec = getWzSetRecord(id);
+  return rec ? stripJobSetName(rec.name) || rec.name : '';
 }

@@ -1068,13 +1068,13 @@
 
 .inv-item-count {
   position: absolute;
-  right: 3px;
+  left: 2px;
   bottom: 1px;
   min-width: 12px;
   font-size: 10px;
   font-weight: bold;
   color: #ffffff;
-  text-align: right;
+  text-align: left;
   line-height: 1;
   pointer-events: none;
   text-shadow:

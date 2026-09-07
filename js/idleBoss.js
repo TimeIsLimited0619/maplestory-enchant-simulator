@@ -18,6 +18,13 @@ const IdleBoss = (() => {
   let selectedDiffId = 'easy';
   let arenaBossId = '';
   let arenaDiffId = 'easy';
+  /** 場地目前地圖 artId（龍王等會換圖；null 則用列表預設） */
+  let arenaArtId = null;
+  /** 當前圖的角色／怪錨點（龍王分圖覆寫） */
+  let arenaPlayerPos = null;
+  let arenaBossPos = null;
+  let arenaPlayerFlipX = false;
+  let arenaMapOffset = { x: 0, y: 0 };
   /** @type {Record<string, { role: string, hp: number, maxHp: number, dead: boolean, z: number }>|null} */
   let arenaParts = null;
   let spriteTimer = null;
@@ -36,6 +43,9 @@ const IdleBoss = (() => {
   let deathFxPlaying = false;
   const COMBAT_TICK_MS = 100;
   const MAP_FADE_MS = 500;
+  /** BOSS 挑戰消耗的入場券（其他欄） */
+  const BOSS_TICKET_ID = 'idle-ticket-boss';
+  const BOSS_TICKET_NAME_FALLBACK = 'BOSS 副本入場券';
   /** @type {ReturnType<typeof IdleUiTimer.create>|null} */
   let challengeTimer = null;
   /** 通關後離場倒數（共用 IdleUiTimer） */
@@ -43,6 +53,34 @@ const IdleBoss = (() => {
 
   function $(id) {
     return document.getElementById(id);
+  }
+
+  function bossTicketMeta() {
+    const fromStore = (typeof IdleDungeonStore !== 'undefined' && IdleDungeonStore.ticketById)
+      ? IdleDungeonStore.ticketById(BOSS_TICKET_ID)
+      : null;
+    const fromEtc = (typeof IdleEtcStore !== 'undefined' && IdleEtcStore.get)
+      ? IdleEtcStore.get(BOSS_TICKET_ID)
+      : null;
+    return {
+      id: BOSS_TICKET_ID,
+      name: fromStore?.name || fromEtc?.name || BOSS_TICKET_NAME_FALLBACK,
+    };
+  }
+
+  function ticketCount() {
+    if (typeof InventoryModule === 'undefined' || typeof InventoryModule.countEtc !== 'function') {
+      return 0;
+    }
+    return Math.max(0, Math.floor(Number(InventoryModule.countEtc(BOSS_TICKET_ID)) || 0));
+  }
+
+  function hasTicket() {
+    return ticketCount() >= 1;
+  }
+
+  function takeTicket() {
+    return !!(typeof InventoryModule !== 'undefined' && InventoryModule.takeEtc?.(BOSS_TICKET_ID, 1));
   }
 
   function list() {
@@ -178,14 +216,84 @@ const IdleBoss = (() => {
     return currentDiff(listId);
   }
 
+  function getBossPlayerEl() {
+    const field = $('idleBossField');
+    return field?.querySelector('.idle-actor--player')
+      || $('idleBossStagePlayer')?.querySelector('.idle-actor--player')
+      || null;
+  }
+
+  function applyArenaPlayerLayout() {
+    const el = getBossPlayerEl();
+    if (!el) return;
+    const p = arenaPlayerPos || getBoss(arenaBossId || selectedId).playerPos;
+    if (p) {
+      el.style.left = `${Math.round(Number(p.x) || 0)}px`;
+      el.style.top = `${Math.round(Number(p.y) || 0)}px`;
+    }
+    el.classList.toggle('is-flip-x', !!arenaPlayerFlipX);
+  }
+
+  function applyArenaMapOffset() {
+    const ox = Math.round(Number(arenaMapOffset?.x) || 0);
+    const oy = Math.round(Number(arenaMapOffset?.y) || 0);
+    const t = (ox || oy) ? `translate(${ox}px, ${oy}px)` : '';
+    ['idleBossMapBack', 'idleBossMap', 'idleBossMapObj'].forEach((id) => {
+      const el = $(id);
+      if (!el) return;
+      el.style.transform = t;
+    });
+  }
+
+  function setArenaStageLayout(layout = {}) {
+    const boss = getBoss(arenaBossId || selectedId);
+    if (layout.playerPos) {
+      arenaPlayerPos = {
+        x: Math.round(Number(layout.playerPos.x) || boss.playerPos.x),
+        y: Math.round(Number(layout.playerPos.y) || boss.playerPos.y),
+      };
+    }
+    if (layout.bossPos) {
+      arenaBossPos = {
+        x: Math.round(Number(layout.bossPos.x) || boss.bossPos.x),
+        y: Math.round(Number(layout.bossPos.y) || boss.bossPos.y),
+      };
+    }
+    if (layout.playerFlipX != null) {
+      arenaPlayerFlipX = !!layout.playerFlipX;
+    }
+    if (layout.mapOffset || layout.mapOffset === null) {
+      arenaMapOffset = {
+        x: Math.round(Number(layout.mapOffset?.x) || 0),
+        y: Math.round(Number(layout.mapOffset?.y) || 0),
+      };
+      applyArenaMapOffset();
+    }
+    applyArenaPlayerLayout();
+  }
+
+  function horntailStage0Layout(boss) {
+    const script = (typeof IDLE_BOSS_PHASE !== 'undefined' ? IDLE_BOSS_PHASE : {})[String(boss?.id || '')];
+    if (!(script && (script.kind === 'horntail' || Array.isArray(script.stages)))) return null;
+    return script.stages?.[0] || null;
+  }
+
   function fightHooks() {
     return {
       getStage: () => $('idleBossStage'),
-      getBossPos: () => getBoss(arenaBossId).bossPos,
+      getBossPos: () => arenaBossPos || getBoss(arenaBossId).bossPos,
       syncHud: () => syncBossHpHud(getBoss(arenaBossId)),
       syncPlayerHp: () => syncPlayerHpHud(),
       ensureDrops: () => ensureBossDrops(),
       fadeField: (opacity, ms) => fadeBossField(opacity, ms),
+      setMapArt: (artId) => {
+        if (artId == null || artId === '') return;
+        arenaArtId = String(artId);
+        const boss = getBoss(arenaBossId);
+        if (!boss) return;
+        applyMapLayers({ ...boss, artId: arenaArtId });
+      },
+      setStageLayout: (layout) => setArenaStageLayout(layout || {}),
       onPhase: (p) => {
         const title = $('idleBossArenaTitle');
         const boss = getBoss(arenaBossId);
@@ -587,12 +695,22 @@ const IdleBoss = (() => {
       return;
     }
     const need = reqLevelOf(selectedId);
-    const ok = meetsEntryLevel(selectedId);
+    const levelOk = meetsEntryLevel(selectedId);
+    if (need <= 0) {
+      el.textContent = '';
+      el.hidden = true;
+      el.classList.remove('is-unmet');
+      return;
+    }
     el.hidden = false;
-    el.classList.toggle('is-unmet', !ok);
-    el.textContent = ok
+    el.classList.toggle('is-unmet', !levelOk);
+    el.textContent = levelOk
       ? `入場等級: ${need}`
       : `入場等級: ${need}（目前 ${playerLevel()}）`;
+  }
+
+  function canEnterChallenge(listId) {
+    return !!listId && meetsEntryLevel(listId) && hasTicket() && !challengeLocked;
   }
 
   function renderDiffRow() {
@@ -825,16 +943,20 @@ const IdleBoss = (() => {
     const btn = $('idleBossEnter');
     if (!btn) return;
     const levelBlocked = !!selectedId && !meetsEntryLevel(selectedId);
-    const blocked = !!challengeLocked || levelBlocked;
+    const ticketBlocked = !!selectedId && !hasTicket();
+    const blocked = !!challengeLocked || levelBlocked || ticketBlocked || !selectedId;
     btn.disabled = blocked;
     btn.classList.toggle('is-locked', blocked);
     btn.setAttribute('aria-disabled', blocked ? 'true' : 'false');
+    const ticket = bossTicketMeta();
     if (challengeLocked) {
       btn.title = '副本進行中，請待結束後再挑戰';
     } else if (levelBlocked) {
       btn.title = `等級不足，需達 Lv.${reqLevelOf(selectedId)} 才能挑戰`;
+    } else if (ticketBlocked) {
+      btn.title = `需要【${ticket.name}】才能挑戰`;
     } else {
-      btn.title = '';
+      btn.title = `消耗 1 張【${ticket.name}】進入挑戰`;
     }
   }
 
@@ -1154,7 +1276,7 @@ const IdleBoss = (() => {
         hint.textContent = '';
       }
       if (usesPhaseFight(arenaBossId)) {
-        IdleBossFight.start(getBoss(arenaBossId).bossPos, { playIntro: true });
+        IdleBossFight.start(arenaBossPos || getBoss(arenaBossId).bossPos, { playIntro: true });
       } else {
         syncPartDeadClass();
         renderAnchors(getBoss(arenaBossId));
@@ -1218,19 +1340,37 @@ const IdleBoss = (() => {
     const mobStage = $('idleBossStage');
     const playerStage = $('idleBossStagePlayer') || mobStage;
     if (!mobStage || !boss) return;
-    const p = boss.playerPos;
+    const stage0 = horntailStage0Layout(boss);
+    const p = (arenaPlayerPos
+      || (stage0?.playerPos ? {
+        x: Math.round(Number(stage0.playerPos.x) || boss.playerPos.x),
+        y: Math.round(Number(stage0.playerPos.y) || boss.playerPos.y),
+      } : null)
+      || boss.playerPos);
+    const flipX = arenaPlayerFlipX || !!(stage0 && stage0.playerFlipX);
+    const startBossPos = arenaBossPos
+      || (stage0?.bossPos ? {
+        x: Math.round(Number(stage0.bossPos.x) || boss.bossPos.x),
+        y: Math.round(Number(stage0.bossPos.y) || boss.bossPos.y),
+      } : null)
+      || boss.bossPos;
+    if (!arenaPlayerPos && stage0?.playerPos) {
+      arenaPlayerPos = { ...p };
+      arenaBossPos = { ...startBossPos };
+      arenaPlayerFlipX = !!stage0.playerFlipX;
+    }
     if (playerStage !== mobStage) mobStage.innerHTML = '';
     playerStage.innerHTML = `
-      <div class="idle-actor idle-actor--player" data-sprite-slot="player" style="left:${p.x}px;top:${p.y}px;z-index:1">
-        <div class="idle-actor-name">${playerDisplayName()}</div>
+      <div class="idle-actor idle-actor--player${flipX ? ' is-flip-x' : ''}" data-sprite-slot="player" style="left:${p.x}px;top:${p.y}px;z-index:1">
         <img class="idle-actor-sprite" src="images/idle-mobs/player.png" alt="自身" draggable="false">
+        <div class="idle-actor-name">${playerDisplayName()}</div>
       </div>`;
     if (typeof Paperdoll !== 'undefined') {
       Paperdoll.initHunt(playerStage);
     }
     if (usesPhaseFight(boss.id)) {
       IdleBossFight.reset(boss.id, fightHooks());
-      IdleBossFight.start(boss.bossPos);
+      IdleBossFight.start(startBossPos);
       IdleBossFight.stop();
       ensureBossDamageFx();
       return;
@@ -1259,7 +1399,7 @@ const IdleBoss = (() => {
     const back = $('idleBossMapBack') || $('idleBossMap');
     const obj = $('idleBossMapObj');
     if (!back || !boss) return;
-    const artId = boss.artId;
+    const artId = (arenaArtId != null && arenaArtId !== '') ? arenaArtId : boss.artId;
     back.alt = boss.name || '';
     back.style.background = '#161A23';
     const flat = artFlatUrl(artId);
@@ -1389,6 +1529,17 @@ const IdleBoss = (() => {
     } else if (typeof IdlePotionPanel !== 'undefined') {
       IdlePotionPanel.syncVisible?.();
     }
+    // DamageNumber 進出 Arena 必須重綁 stage，否則怪傷會繼續畫在隱藏的 Boss 場
+    if (typeof DamageNumber !== 'undefined') {
+      DamageNumber.clear?.();
+      if (active) {
+        const bossStage = $('idleBossStage') || $('idleBossStagePlayer');
+        if (bossStage) DamageNumber.init(bossStage);
+      } else {
+        const huntStage = $('idleHuntField')?.querySelector('.idle-hunt-stage');
+        if (huntStage) DamageNumber.init(huntStage);
+      }
+    }
   }
 
   function render() {
@@ -1420,11 +1571,54 @@ const IdleBoss = (() => {
         renderReqLevel();
         return;
       }
+      if (!hasTicket()) {
+        syncChallengeBtn();
+        renderReqLevel();
+        if (typeof addLog === 'function') {
+          addLog(`需要【${bossTicketMeta().name}】才能挑戰。`, 'log-fail');
+        }
+        return;
+      }
+      if (!takeTicket()) {
+        syncChallengeBtn();
+        renderReqLevel();
+        if (typeof addLog === 'function') {
+          addLog('扣除入場券失敗。', 'log-fail');
+        }
+        return;
+      }
+      const bossName = getBoss(arenaBossId)?.name || 'BOSS';
+      if (typeof addLog === 'function') {
+        addLog(`已消耗【${bossTicketMeta().name}】，進入【${bossName}】挑戰。`, 'log-info');
+      }
       arenaOpen = true;
       open = true;
       arenaRunning = false;
       failModalOpen = false;
       deathFxPlaying = false;
+      arenaArtId = getBoss(arenaBossId).artId || null;
+      {
+        const b0 = getBoss(arenaBossId);
+        const s0 = horntailStage0Layout(b0);
+        arenaPlayerPos = s0?.playerPos
+          ? {
+            x: Math.round(Number(s0.playerPos.x) || b0.playerPos.x),
+            y: Math.round(Number(s0.playerPos.y) || b0.playerPos.y),
+          }
+          : { ...b0.playerPos };
+        arenaBossPos = s0?.bossPos
+          ? {
+            x: Math.round(Number(s0.bossPos.x) || b0.bossPos.x),
+            y: Math.round(Number(s0.bossPos.y) || b0.bossPos.y),
+          }
+          : { ...b0.bossPos };
+        arenaPlayerFlipX = !!s0?.playerFlipX;
+        arenaMapOffset = {
+          x: Math.round(Number(s0?.mapOffset?.x) || 0),
+          y: Math.round(Number(s0?.mapOffset?.y) || 0),
+        };
+        applyArenaMapOffset();
+      }
       if (typeof IdlePlayerDeathFx !== 'undefined') IdlePlayerDeathFx.cancel?.();
       clearBossDrops(false);
       initArenaParts(arenaBossId);
@@ -1445,6 +1639,12 @@ const IdleBoss = (() => {
     }
     arenaOpen = false;
     arenaBossId = '';
+    arenaArtId = null;
+    arenaPlayerPos = null;
+    arenaBossPos = null;
+    arenaPlayerFlipX = false;
+    arenaMapOffset = { x: 0, y: 0 };
+    applyArenaMapOffset();
     arenaParts = null;
     arenaRunning = false;
     failModalOpen = false;
@@ -1504,7 +1704,7 @@ const IdleBoss = (() => {
       if (e.target.closest('#idleBossEnter')) {
         e.preventDefault();
         if (challengeLocked) return;
-        if (!selectedId || !meetsEntryLevel(selectedId)) {
+        if (!selectedId || !canEnterChallenge(selectedId)) {
           syncChallengeBtn();
           renderReqLevel();
           return;

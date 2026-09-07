@@ -64,13 +64,17 @@ const SkillChannelCast = (() => {
   }
 
   function sidePointFromPlayer(fieldEl, playerEl, offset) {
+    const facingRight = (typeof SkillEffectPlayer !== 'undefined'
+      && SkillEffectPlayer.playerFacingRight)
+      ? SkillEffectPlayer.playerFacingRight(playerEl)
+      : !playerEl?.classList?.contains('is-flip-x');
     if (typeof SkillEffectPlayer !== 'undefined'
       && SkillEffectPlayer.fieldPointFromPlayer) {
       return SkillEffectPlayer.fieldPointFromPlayer(
         fieldEl,
         playerEl,
         offset || [150, -50],
-        true,
+        facingRight,
       );
     }
     return { x: 220, y: 180 };
@@ -107,6 +111,17 @@ const SkillChannelCast = (() => {
     if (typeof SkillEffectPlayer === 'undefined') {
       finish();
       return false;
+    }
+
+    // 背景：引導改為一次結算數波，避免長 timeout 鏈被節流
+    if (typeof document !== 'undefined' && document.hidden) {
+      const timing = evalPlanMs(skill, plan, level);
+      const waves = Math.max(1, Math.min(8, Math.round((timing.channelMs || 1000) / Math.max(120, timing.tickMs || 240))));
+      for (let i = 0; i < waves; i += 1) {
+        if (typeof onTick === 'function') onTick(mobs.slice(0, maxTargets), []);
+      }
+      finish();
+      return true;
     }
 
     const timing = evalPlanMs(skill, plan, level);
@@ -157,6 +172,10 @@ const SkillChannelCast = (() => {
 
       const sideList = sideFrames(fx, plan);
       if (sideList?.length) {
+        const facingRight = (typeof SkillEffectPlayer !== 'undefined'
+          && SkillEffectPlayer.playerFacingRight)
+          ? SkillEffectPlayer.playerFacingRight(playerEl)
+          : !playerEl?.classList?.contains('is-flip-x');
         const pt = sidePointFromPlayer(fieldEl, playerEl, plan.sideOffset);
         sideId = SkillEffectPlayer.playAtField({
           fieldEl,
@@ -165,7 +184,7 @@ const SkillChannelCast = (() => {
           y: pt.y,
           loop: true,
           className: 'idle-skill-fx-stage idle-skill-fx-stage--channel-side',
-          mirrorX: true,
+          mirrorX: facingRight,
         });
       }
 

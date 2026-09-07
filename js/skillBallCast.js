@@ -627,6 +627,26 @@ const SkillBallCast = (() => {
       return false;
     }
 
+    // 背景：略過飛行／orb 持續，立刻對目前目標結算（避免 setTimeout／rAF 被節流）
+    if (typeof document !== 'undefined' && document.hidden && !visualOnly) {
+      const list = (typeof getMobs === 'function' ? getMobs() : mobs) || [];
+      const victims = list.filter((m) => m && Number(m.hp) > 0).slice(0, Math.max(1, maxTargets));
+      victims.forEach((mob, i) => {
+        if (typeof onHit === 'function') onHit(mob, i, null);
+      });
+      // orb 在前景會多 tick；背景用 3 波近似，避免完全沒持續傷
+      if (plan.ballMode === 'orb') {
+        for (let wave = 1; wave < 3; wave += 1) {
+          victims.forEach((mob, i) => {
+            if (!mob || !(Number(mob.hp) > 0)) return;
+            if (typeof onHit === 'function') onHit(mob, i, null);
+          });
+        }
+      }
+      finish();
+      return true;
+    }
+
     const effectFrames = fx.effect || [];
 
     if (plan.ballMode === 'orb') {

@@ -8,9 +8,12 @@ const ItemDropController = (() => {
   const GRAVITY = 1800;
   const BOUNCE_RESTITUTION = 0.42;
   const BOUNCE_COUNT = 2;
-  const VY0 = -420;
+  const VY0 = -595; // 約為原 -420 的 √2 倍 → 飛起高度約 2×
   const VX_MIN = 90;
   const VX_STEP = 55;
+  const LAND_SPACING = 40;
+  const FIRST_LAND_SPACING = 24; // 首落地稍密，再往外彈到 LAND_SPACING
+  const LAND_MARGIN = 28;
   const FLOAT_AMP = 4;
   const FLOAT_PERIOD = 1.4;
   const LOOT_INTERVAL = 1;
@@ -221,27 +224,67 @@ const ItemDropController = (() => {
     while (items.length + need > MAX_ON_FIELD) {
       const oldest = items.find((it) => it.state !== STATE.LOOTING);
       if (!oldest) break;
-      destroyItem(oldest);
+      // 超過場上上限：強制撿取入包，不再直接刪除
+      finishLoot(oldest);
     }
   }
 
-  function createEntity(row, origin, groundY, index, count) {
+  function resolveLandXs(originX, count, spacing = LAND_SPACING) {
+    const n = Math.max(1, Math.floor(Number(count) || 1));
+    const stageW = Math.max(120, Number(stageEl?.clientWidth) || 720);
+    const margin = LAND_MARGIN;
+    const maxSpan = Math.max(0, stageW - margin * 2);
+    let gap = Math.max(1, Number(spacing) || LAND_SPACING);
+    if (n > 1 && (n - 1) * gap > maxSpan) {
+      gap = maxSpan / (n - 1);
+    }
+    const half = ((n - 1) / 2) * gap;
+    let center = Number.isFinite(originX) ? originX : stageW / 2;
+    center = Math.min(Math.max(center, margin + half), stageW - margin - half);
+    if (!(center >= margin && center <= stageW - margin)) {
+      center = stageW / 2;
+    }
+    const xs = [];
+    for (let i = 0; i < n; i += 1) {
+      xs.push(center + (i - (n - 1) / 2) * gap);
+    }
+    return xs;
+  }
+
+  function flightTimeToGround(originY, groundY, vY0) {
+    const dy = (Number.isFinite(groundY) ? groundY : 390) - (Number.isFinite(originY) ? originY : 350);
+    const a = 0.5 * GRAVITY;
+    const b = Number(vY0) || VY0;
+    const c = -Math.max(1, dy);
+    const disc = b * b - 4 * a * c;
+    if (!(disc >= 0)) return 0.7;
+    const t = (-b + Math.sqrt(disc)) / (2 * a);
+    return Math.max(0.2, t);
+  }
+
+  function bounceAirTime(vY) {
+    return Math.max(0.1, (2 * Math.abs(Number(vY) || 0)) / GRAVITY);
+  }
+
+  function steerVxToward(item, targetX) {
+    if (!Number.isFinite(targetX)) return;
+    const airT = bounceAirTime(item.vY);
+    item.vX = (targetX - item.x) / airT;
+  }
+
+  function createEntity(row, origin, groundY, index, count, landX, nearX) {
     const layer = ensureLayer();
     if (!layer) return null;
 
-    // 以死亡點為中心對稱散開：n=1 → 0；n=3 → -1,0,1
-    const n = Math.max(1, Math.floor(Number(count) || 1));
-    const slot = index - (n - 1) / 2;
-    const absSlot = Math.abs(slot);
-    let vX;
-    if (absSlot < 0.001) {
-      vX = (Math.random() - 0.5) * 36;
-    } else {
-      const sign = slot < 0 ? -1 : 1;
-      const tier = Math.max(0, absSlot - 0.5);
-      vX = sign * (VX_MIN * 0.55 + tier * VX_STEP) * (0.92 + Math.random() * 0.16);
-    }
-    const vY = VY0 * (0.9 + Math.random() * 0.2);
+    // 先飛向較密的首落點，彈跳時再往外到最終等距
+    const ox = Number(origin?.x) || 360;
+    const oy = Number(origin?.y) || 300;
+    const gy = Number.isFinite(groundY) ? groundY : (Number(origin?.y) || 390);
+    const finalX = Number.isFinite(landX) ? landX : ox;
+    const firstX = Number.isFinite(nearX) ? nearX : (ox + (finalX - ox) * 0.6);
+    const t0 = flightTimeToGround(oy, gy, VY0);
+    const vX = (firstX - ox) / t0;
+    const vY = VY0;
 
     const el = document.createElement('div');
     el.className = 'idle-drop-item';
@@ -282,11 +325,13 @@ const ItemDropController = (() => {
       el,
       img,
       state: STATE.SPAWNING,
-      x: Number(origin?.x) || 360,
-      y: Number(origin?.y) || 300,
+      x: ox,
+      y: oy,
       vX,
       vY,
-      groundY: Number.isFinite(groundY) ? groundY : (Number(origin?.y) || 390),
+      nearX: firstX,
+      landX: finalX,
+      groundY: gy,
       bounceLeft: BOUNCE_COUNT,
       floatT: Math.random() * FLOAT_PERIOD,
       floatBaseY: 0,
@@ -378,12 +423,14 @@ const ItemDropController = (() => {
       if (item.bounceLeft > 0) {
         item.bounceLeft -= 1;
         item.vY = -Math.abs(item.vY) * BOUNCE_RESTITUTION;
-        item.vX *= 0.7;
+        // 彈起時往最終等距位置外推（不再 vX*=0.7 造成過頭再被拉回）
+        steerVxToward(item, item.landX);
         if (Math.abs(item.vY) < SETTLE_VY) item.bounceLeft = 0;
       }
       if (item.bounceLeft <= 0) {
         item.vX = 0;
         item.vY = 0;
+        if (Number.isFinite(item.landX)) item.x = item.landX;
         item.y = item.groundY;
         item.floatBaseY = item.groundY;
         item.state = STATE.FLOATING;
@@ -572,8 +619,10 @@ const ItemDropController = (() => {
     const delayOverride = batchDelay != null
       ? Math.max(0, Number(batchDelay) || 0)
       : null;
+    const landXs = resolveLandXs(ox.x, list.length, LAND_SPACING);
+    const nearXs = resolveLandXs(ox.x, list.length, FIRST_LAND_SPACING);
     list.forEach((row, i) => {
-      const ent = createEntity(row, ox, gy, i, list.length);
+      const ent = createEntity(row, ox, gy, i, list.length, landXs[i], nearXs[i]);
       if (ent) {
         if (delayOverride != null) ent.lootAfter = delayOverride;
         items.push(ent);

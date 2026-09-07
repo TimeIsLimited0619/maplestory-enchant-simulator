@@ -67,6 +67,17 @@ const IdleHunt = (() => {
   let open = false;
   let timer = null;
   let spriteTimer = null;
+  /** @type {Worker|null} */
+  let huntWorker = null;
+  let huntWorkerBlobUrl = null;
+  /** 上次模擬牆鐘（performance.now）；用於背景補 tick */
+  let lastSimAt = 0;
+  let catchUpRaf = 0;
+  let visibilityBound = false;
+  /** 單次補算上限（牆鐘 ms），避免切回分頁時卡死 */
+  const MAX_CATCH_UP_MS = 120000;
+  /** 背景／補算每波最多跑幾步 */
+  const CATCH_UP_BURST = 40;
   let spawnSeq = 0;
   let mobWalkSeq = 0;
   let mobDamageSeq = 0;
@@ -84,6 +95,8 @@ const IdleHunt = (() => {
   let resumeAfterPanelClose = false;
   let transitionSeq = 0;
   let fieldTransition = null;
+  /** @type {ReturnType<typeof setTimeout>|null} */
+  let afkStepTimer = null;
   const MAP_FADE_MS = 500;
   const BOSS_WARNING_MS = 2000;
   /** 章節 BOSS 挑戰時限（秒） */
@@ -162,6 +175,40 @@ const IdleHunt = (() => {
       el.removeAttribute('data-intro-lock');
       el.removeAttribute('data-intro-action');
     });
+  }
+
+  /** 推圖連跳過圖可被暫停／改託管模式中斷 */
+  function isPushTransitionCancellable() {
+    return !!(fieldTransition
+      && fieldTransition.resumeAfter
+      && (fieldTransition.kind === 'map' || fieldTransition.kind === 'bossIntro'));
+  }
+
+  function pausePushOrCombat() {
+    const cancellable = isPushTransitionCancellable();
+    if (cancellable) {
+      if (fieldTransition) fieldTransition.resumeAfter = false;
+      cancelFieldTransition();
+    }
+    if (afkStepTimer != null) {
+      window.clearTimeout(afkStepTimer);
+      afkStepTimer = null;
+    }
+    if (state.afkMode === 'push') state.afkHoldAdvance = true;
+    stop(true);
+  }
+
+  function scheduleAfkStep(delayMs = 0) {
+    if (afkStepTimer != null) {
+      window.clearTimeout(afkStepTimer);
+      afkStepTimer = null;
+    }
+    const wait = Math.max(0, Number(delayMs) || 0);
+    afkStepTimer = window.setTimeout(() => {
+      afkStepTimer = null;
+      if (!state.running || !open) return;
+      tryAfkStep();
+    }, wait);
   }
 
   function waitMs(ms) {
@@ -635,9 +682,9 @@ const IdleHunt = (() => {
   async function runMapTransition(nextId, fromUser, opts = {}) {
     if (fieldTransition) return false;
     const seq = ++transitionSeq;
-    fieldTransition = { kind: 'map', seq };
     const wasRunning = state.running;
     const startAfter = opts.forceStart === true ? true : wasRunning;
+    fieldTransition = { kind: 'map', seq, resumeAfter: startAfter };
     if (wasRunning) stop(false);
     ensureFieldFx();
     const nextZone = IdleZones?.get?.(nextId);
@@ -670,8 +717,9 @@ const IdleHunt = (() => {
     await fadeField(0, MAP_FADE_MS);
     if (seq !== transitionSeq) return false;
 
+    const shouldResume = !!(fieldTransition && fieldTransition.resumeAfter);
     fieldTransition = null;
-    if (startAfter) start();
+    if (shouldResume) start();
     else render();
     return true;
   }
@@ -1072,10 +1120,18 @@ const IdleHunt = (() => {
     else if (state.afkMode === 'push') state.afkMode = 'farm';
     else state.afkMode = 'off';
     syncAfkFlag();
-    if (state.afkMode !== 'push') state.afkHoldAdvance = false;
+    if (state.afkMode !== 'push') {
+      state.afkHoldAdvance = false;
+      // 過圖途中改掉推圖：本趟淡入後不要自動開打／連跳
+      if (fieldTransition?.resumeAfter) fieldTransition.resumeAfter = false;
+      if (afkStepTimer != null) {
+        window.clearTimeout(afkStepTimer);
+        afkStepTimer = null;
+      }
+    }
     save();
     render();
-    if (isAfkActive() && state.running) tryAfkStep();
+    if (isAfkActive() && state.running) scheduleAfkStep(0);
   }
 
   function toggleAfk() {
@@ -1904,10 +1960,11 @@ const IdleHunt = (() => {
   let huntRenderRaf = 0;
   function scheduleHuntRender() {
     if (!open) return;
+    if (typeof document !== 'undefined' && document.hidden) return;
     if (huntRenderRaf) return;
     huntRenderRaf = requestAnimationFrame(() => {
       huntRenderRaf = 0;
-      if (open) render();
+      if (open && !(typeof document !== 'undefined' && document.hidden)) render();
     });
   }
 
@@ -1966,24 +2023,30 @@ const IdleHunt = (() => {
   }
 
   function huntCombatCtx(extra = {}) {
+    const quiet = !!extra.quietFx
+      || (typeof document !== 'undefined' && document.hidden);
+    const noop = () => {};
+    const rest = { ...extra };
+    delete rest.quietFx;
     return {
       mobs: state.queue.slice(),
       getMobs: () => state.queue.slice(),
       playerEl: $('idleHuntField')?.querySelector('.idle-actor--player'),
       fieldEl: $('idleHuntField'),
-      showMobDamage,
+      showMobDamage: quiet ? noop : showMobDamage,
       onDamage: (dmg) => {
         if (state.dungeon && typeof IdleDungeon !== 'undefined') {
           IdleDungeon.onHuntDamage?.(dmg);
         }
       },
-      flashHit,
-      flashDie,
+      flashHit: quiet ? noop : flashHit,
+      flashDie: quiet ? noop : flashDie,
       onProjectileResolve: applySkillMobStateSync,
       onMobStateSync: applySkillMobStateSync,
       onDeferMobKill: deferMobKill,
       onFlushDeferredKills: flushDeferredKills,
-      ...extra,
+      ...rest,
+      quietFx: quiet,
     };
   }
 
@@ -2279,10 +2342,14 @@ const IdleHunt = (() => {
     const y = Math.round(Number(point?.y) || 0);
     const pos = `style="left:${x}px;top:${y}px"`;
     if (kind === 'player') {
+      const playerName = (typeof AppNavSidebar !== 'undefined' && typeof AppNavSidebar.readName === 'function'
+        ? AppNavSidebar.readName()
+        : '') || '時閒人';
+      const safeName = String(playerName).replace(/[<>]/g, '');
       return `
         <div class="idle-actor idle-actor--player" data-sprite-slot="player" ${pos}>
-          <div class="idle-actor-name">時閒人</div>
           <img class="idle-actor-sprite" src="images/idle-mobs/player.png" alt="自身">
+          <div class="idle-actor-name">${safeName}</div>
         </div>`;
     }
     const hpPct = monster ? Math.max(0, Math.min(100, (monster.hp / monster.maxHp) * 100)) : 0;
@@ -2298,9 +2365,9 @@ const IdleHunt = (() => {
       <div class="idle-actor idle-actor--mob ${isFront ? 'is-front' : 'is-wait'}${isBoss ? ' is-boss' : ''}${isDying ? ' is-dying' : ''}${scaleCls}"
         data-sprite-slot="mob-${uid}" data-uid="${uid}" ${pos}>
         <div class="idle-actor-hud">
-          <div class="idle-actor-name">${name}</div>
           <div class="idle-actor-hp"${isDying ? ' hidden' : ''}><span style="width:${hpPct}%"></span></div>
         </div>
+        <div class="idle-actor-name">${name}</div>
         <div class="idle-actor-sprite-stage">
           <img class="idle-actor-sprite" alt="${name}">
         </div>
@@ -2664,21 +2731,28 @@ const IdleHunt = (() => {
     }
     const zone = currentZone();
     const deathLocked = isDeathUiLocked();
+    const canPauseTransition = isPushTransitionCancellable();
     if (startBtn) {
-      startBtn.disabled = transitioning || deathLocked || (!state.running && !fightReady);
-      setActLabel(startBtn, state.running ? '暫停' : '開始');
+      const showAsPause = state.running || canPauseTransition;
+      // 推圖連跳過圖時允許按暫停；一般過圖中不可按「開始」
+      startBtn.disabled = deathLocked
+        || (!showAsPause && (transitioning || !fightReady));
+      setActLabel(startBtn, showAsPause ? '暫停' : '開始');
     }
     const afkBtn = $('idleHuntAfk');
     if (afkBtn) {
       const on = isAfkActive();
-      afkBtn.disabled = transitioning || deathLocked;
+      // 託管模式切換在過圖中也要可按，才能中斷推圖連跳
+      afkBtn.disabled = deathLocked;
       afkBtn.classList.toggle('is-on', on);
       afkBtn.classList.toggle('is-afk-push', state.afkMode === 'push');
       afkBtn.classList.toggle('is-afk-farm', state.afkMode === 'farm');
       setActLabel(afkBtn, afkModeLabel());
       afkBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
       afkBtn.title = state.afkMode === 'push'
-        ? '自動推圖：打王並自動進下一關；死亡退回上一關並改為掛機（需手動復活）'
+        ? (state.afkHoldAdvance
+          ? '自動推圖（已暫停連跳）：按開始後會繼續推圖；或再點切換掛機／關閉'
+          : '自動推圖：打王並自動進下一關；過圖中可按暫停中斷連跳')
         : (state.afkMode === 'farm'
           ? '掛機：當地圖自動刷王；死亡可手動復活或 5 秒後自動復活'
           : '點一下開啟自動推圖；死亡可手動復活或 5 秒後自動復活');
@@ -2860,7 +2934,8 @@ const IdleHunt = (() => {
     const originOverride = opts.origin;
     const deadEl = mobActorEl(dead.uid);
     const visibleInQueue = idx >= 0 && idx < VISIBLE_QUEUE_LEN;
-    const showDeath = visibleInQueue || !!deadEl;
+    const showDeath = (visibleInQueue || !!deadEl)
+      && !(typeof document !== 'undefined' && document.hidden);
     const virtualPt = idx >= 0 ? queueMobPoint(idx) : null;
     const at = virtualPt || { x: 360, y: 390 };
     const fallX = originOverride?.x ?? parsePx(deadEl?.style.left);
@@ -3002,7 +3077,9 @@ const IdleHunt = (() => {
     });
   }
 
-  function tick() {
+  function tick(opts = {}) {
+    const skipVisual = !!opts.skipVisual
+      || (typeof document !== 'undefined' && document.hidden);
     if (isBlockingPanelOpen()) {
       if (state.running) {
         resumeAfterPanelClose = true;
@@ -3012,24 +3089,26 @@ const IdleHunt = (() => {
     }
     const dt = scaleDtSec(TICK_MS / 1000);
     if (fieldTransition) {
-      pruneDying();
-      advanceAllSprites(dt);
-      if (open) render();
+      if (!skipVisual) {
+        pruneDying();
+        advanceAllSprites(dt);
+        if (open) render();
+      }
       return;
     }
     if (!canFight()) {
       stop(false);
-      render();
+      if (!skipVisual) render();
       return;
     }
     if (tickChapterBossTimer(dt)) {
       onChapterBossTimeUp();
-      if (open) render();
+      if (!skipVisual && open) render();
       return;
     }
     state.power = readPower();
     fillQueue();
-    pruneDying();
+    if (!skipVisual) pruneDying();
     if (typeof SkillBuffRuntime !== 'undefined') {
       SkillBuffRuntime.tick?.(undefined, huntCombatCtx());
     }
@@ -3040,7 +3119,9 @@ const IdleHunt = (() => {
     state.atkAcc += dt;
     const delay = attackDelaySec();
     let hits = 0;
-    const playerEl = $('idleHuntField')?.querySelector('.idle-actor--player');
+    const playerEl = skipVisual
+      ? null
+      : $('idleHuntField')?.querySelector('.idle-actor--player');
     while (state.atkAcc >= delay && hits < 20) {
       if (typeof SkillCombat !== 'undefined' && SkillCombat.isCastLocked?.()) {
         break;
@@ -3057,6 +3138,8 @@ const IdleHunt = (() => {
         const result = SkillCombat.cast(picked, huntCombatCtx({
           wzAttackSpeed: currentWzAttackSpeed(),
           attackSpeedStage: currentWzAttackSpeed(),
+          // 背景：略過傷害數字／受擊閃光，保留結算
+          quietFx: skipVisual,
         }));
         state.atkAcc = 0;
         if (result?.cast && Array.isArray(result.kills) && result.kills.length) {
@@ -3069,14 +3152,14 @@ const IdleHunt = (() => {
           });
           state.queue = remain;
         }
-        syncComboOrbsUi();
+        if (!skipVisual) syncComboOrbsUi();
         break;
       }
 
-      if (state.preferSkillFirst && hasActiveLoadoutSkills()) {
-        state.preferSkillFirstWait = (state.preferSkillFirstWait || 0) + 1;
-        if (state.preferSkillFirstWait < 15) break;
+      // 開場優先技能：本 tick 已無技能可放就立刻普攻，勿空等造成超高速空揮
+      if (state.preferSkillFirst) {
         state.preferSkillFirst = false;
+        state.preferSkillFirstWait = 0;
       }
 
       const available = typeof SkillCombat !== 'undefined' && SkillCombat.filterChainAvailableMobs
@@ -3086,7 +3169,7 @@ const IdleHunt = (() => {
       if (!front) break;
       state.atkAcc -= delay;
       hits += 1;
-      if (typeof Paperdoll !== 'undefined' && typeof Paperdoll.playHuntSwing === 'function') {
+      if (!skipVisual && typeof Paperdoll !== 'undefined' && typeof Paperdoll.playHuntSwing === 'function') {
         Paperdoll.playHuntSwing(delay * 1000);
       }
       const hit = rollHitDamage(!!front.isBoss);
@@ -3097,7 +3180,7 @@ const IdleHunt = (() => {
       }
       const dmg = resolveMobHitDamage(front, rolled);
       if (!(dmg > 0)) break;
-      showMobDamage(front, dmg, hit.isCritical);
+      if (!skipVisual) showMobDamage(front, dmg, hit.isCritical);
       if (state.dungeon && typeof IdleDungeon !== 'undefined') IdleDungeon.onHuntDamage?.(dmg);
       front.hp -= dmg;
       if (typeof SkillMobStatus !== 'undefined'
@@ -3106,36 +3189,42 @@ const IdleHunt = (() => {
       }
       if (typeof SkillComboOrbs !== 'undefined') {
         SkillComboOrbs.onAttackHit?.();
-        syncComboOrbsUi();
+        if (!skipVisual) syncComboOrbsUi();
       }
       if (keepDamageTrialBossAlive(front)) {
-        flashHit(front.uid);
+        if (!skipVisual) flashHit(front.uid);
         continue;
       }
       if (front.hp <= 0) {
         applyKill(state.queue.shift());
         continue;
       }
-      flashHit(front.uid);
+      if (!skipVisual) flashHit(front.uid);
     }
-    pruneDying();
+    if (!skipVisual) pruneDying();
     tickMobAttacks(dt);
     if (state.dungeon && typeof IdleDungeon !== 'undefined') IdleDungeon.onHuntTick?.(dt);
     if (isPlayerDead()) {
-      pruneDying();
-      advanceAllSprites(dt);
-      if (open) render();
+      if (!skipVisual) {
+        pruneDying();
+        advanceAllSprites(dt);
+        if (open) render();
+      }
       return;
     }
-    pruneDying();
-    const huntPlayer = $('idleHuntField')?.querySelector('.idle-actor--player');
-    if (huntPlayer && typeof IdleMobAnim !== 'undefined' && typeof IdleMobAnim.tickAreaWarning === 'function') {
-      IdleMobAnim.tickAreaWarning(huntPlayer, dt);
+    if (!skipVisual) {
+      pruneDying();
+      const huntPlayer = $('idleHuntField')?.querySelector('.idle-actor--player');
+      if (huntPlayer && typeof IdleMobAnim !== 'undefined' && typeof IdleMobAnim.tickAreaWarning === 'function') {
+        IdleMobAnim.tickAreaWarning(huntPlayer, dt);
+      }
+      advanceAllSprites(dt);
     }
-    advanceAllSprites(dt);
     tryAfkStep();
-    syncHuntOverlayBars();
-    if (open) render();
+    if (!skipVisual) {
+      syncHuntOverlayBars();
+      if (open) render();
+    }
   }
 
   function startSpriteTimer() {
@@ -3159,14 +3248,146 @@ const IdleHunt = (() => {
   }
 
   function startTimer() {
+    bindVisibilityCatchUp();
+    lastSimAt = (typeof performance !== 'undefined' && performance.now)
+      ? performance.now()
+      : Date.now();
+    if (ensureHuntWorker()) {
+      if (timer != null) {
+        window.clearInterval(timer);
+        timer = null;
+      }
+      try {
+        huntWorker.postMessage({ type: 'start', ms: TICK_MS });
+        timer = 'worker';
+      } catch (_) {
+        timer = window.setInterval(() => onHuntHeartbeat(), TICK_MS);
+      }
+      return;
+    }
     if (timer != null) return;
-    timer = window.setInterval(tick, TICK_MS);
+    timer = window.setInterval(() => onHuntHeartbeat(), TICK_MS);
   }
 
   function stopTimer() {
+    if (catchUpRaf) {
+      cancelAnimationFrame(catchUpRaf);
+      catchUpRaf = 0;
+    }
+    if (huntWorker) {
+      try { huntWorker.postMessage({ type: 'stop' }); } catch (_) { /* ignore */ }
+    }
+    if (timer === 'worker') {
+      timer = null;
+      return;
+    }
     if (timer == null) return;
     window.clearInterval(timer);
     timer = null;
+  }
+
+  function ensureHuntWorker() {
+    if (huntWorker) return huntWorker;
+    if (typeof Worker === 'undefined' || typeof Blob === 'undefined') return null;
+    try {
+      const src = [
+        'let id=null;',
+        'onmessage=function(e){',
+        '  var d=e.data||{};',
+        '  if(d.type==="start"){',
+        '    if(id)clearInterval(id);',
+        '    var ms=Math.max(16,Number(d.ms)||100);',
+        '    id=setInterval(function(){postMessage({type:"tick",t:Date.now()});},ms);',
+        '  }else if(d.type==="stop"){',
+        '    if(id)clearInterval(id);id=null;',
+        '  }',
+        '};',
+      ].join('');
+      huntWorkerBlobUrl = URL.createObjectURL(new Blob([src], { type: 'application/javascript' }));
+      huntWorker = new Worker(huntWorkerBlobUrl);
+      huntWorker.onmessage = (e) => {
+        if (e?.data?.type === 'tick') onHuntHeartbeat();
+      };
+      huntWorker.onerror = () => {
+        try { huntWorker?.terminate(); } catch (_) { /* ignore */ }
+        huntWorker = null;
+        if (timer === 'worker' && state.running) {
+          timer = window.setInterval(() => onHuntHeartbeat(), TICK_MS);
+        }
+      };
+      return huntWorker;
+    } catch (_) {
+      huntWorker = null;
+      return null;
+    }
+  }
+
+  function onHuntHeartbeat() {
+    if (!state.running) return;
+    const now = (typeof performance !== 'undefined' && performance.now)
+      ? performance.now()
+      : Date.now();
+    if (!(lastSimAt > 0)) lastSimAt = now - TICK_MS;
+    let lag = now - lastSimAt;
+    const hidden = typeof document !== 'undefined' && document.hidden;
+    const burst = hidden ? CATCH_UP_BURST : 8;
+    let n = 0;
+    while (lag >= TICK_MS * 0.85 && n < burst) {
+      tick({ skipVisual: hidden || n > 0 });
+      lastSimAt += TICK_MS;
+      lag = now - lastSimAt;
+      n += 1;
+      if (!state.running) break;
+    }
+    // 長時間被節流：保留一段欠債給後續 heartbeat／回前景補算，避免一次爆量
+    if (lag > MAX_CATCH_UP_MS) {
+      lastSimAt = now - MAX_CATCH_UP_MS;
+    }
+  }
+
+  function scheduleCatchUp() {
+    if (!state.running) return;
+    if (catchUpRaf) return;
+    const step = () => {
+      catchUpRaf = 0;
+      if (!state.running) return;
+      const now = (typeof performance !== 'undefined' && performance.now)
+        ? performance.now()
+        : Date.now();
+      if (!(lastSimAt > 0)) {
+        lastSimAt = now;
+        if (open) render();
+        return;
+      }
+      let lag = Math.min(MAX_CATCH_UP_MS, now - lastSimAt);
+      let n = 0;
+      while (lag >= TICK_MS && n < CATCH_UP_BURST) {
+        tick({ skipVisual: true });
+        lastSimAt += TICK_MS;
+        lag -= TICK_MS;
+        n += 1;
+        if (!state.running) break;
+      }
+      if (state.running && lag >= TICK_MS) {
+        catchUpRaf = requestAnimationFrame(step);
+        return;
+      }
+      if (open && !(typeof document !== 'undefined' && document.hidden)) render();
+    };
+    catchUpRaf = requestAnimationFrame(step);
+  }
+
+  function bindVisibilityCatchUp() {
+    if (visibilityBound || typeof document === 'undefined') return;
+    visibilityBound = true;
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        if (state.running) scheduleCatchUp();
+      } else if (state.running) {
+        // 進背景立刻存一次進度（sessionPersistence 也會存）
+        try { save(); } catch (_) { /* ignore */ }
+      }
+    });
   }
 
   async function startBossFight() {
@@ -3190,8 +3411,8 @@ const IdleHunt = (() => {
     if (!forDungeon && (state.dungeon || fieldTransition)) return;
     if (forDungeon && (!state.dungeon || fieldTransition)) return;
     const seq = ++transitionSeq;
-    fieldTransition = { kind: 'bossIntro', seq, phase: 'warning' };
     const wasRunning = state.running;
+    fieldTransition = { kind: 'bossIntro', seq, phase: 'warning', resumeAfter: wasRunning || isAfkActive() };
     if (wasRunning) stop(false);
     startSpriteTimer();
 
@@ -3230,11 +3451,12 @@ const IdleHunt = (() => {
       }
     } finally {
       if (seq === transitionSeq) {
+        const shouldResume = !!(fieldTransition && fieldTransition.resumeAfter);
         fieldTransition = null;
         if (state.huntMode === 'boss' && !state.dungeon) {
           startChapterBossTimer();
         }
-        if (!state.running) start();
+        if (shouldResume && !state.running) start();
         else render();
         if (state.dungeon && typeof IdleDungeon !== 'undefined') IdleDungeon.renderHud?.();
       }
@@ -3282,16 +3504,23 @@ const IdleHunt = (() => {
       SkillCombat.reset?.({ keepBuffs: true, keepCombo: true, keepCooldowns: true });
     }
     state.running = true;
+    // 手動開始／恢復時解除推圖連跳鎖
+    state.afkHoldAdvance = false;
     startTimer();
     render();
     if (typeof Paperdoll !== 'undefined') Paperdoll.refresh?.();
     // github.io：戰鬥開始先暖機技能欄／連鎖圖，減少邊播邊載抽搐
     try { SkillEffectPlayer.warmUpCombatLoadout?.(); } catch (_) { /* ignore */ }
-    tryAfkStep();
+    // 略延遲再推圖，讓暫停／託管在連續過圖之間有機會接住
+    scheduleAfkStep(220);
   }
 
   function stop(doSave) {
     state.running = false;
+    if (afkStepTimer != null) {
+      window.clearTimeout(afkStepTimer);
+      afkStepTimer = null;
+    }
     stopTimer();
     try { SkillCombat.invalidateAsyncCasts?.(); } catch (_) { /* ignore */ }
     if (doSave !== false) save();
@@ -4047,7 +4276,7 @@ const IdleHunt = (() => {
     $('idleHuntStart')?.addEventListener('click', (event) => {
       event.preventDefault();
       if (isDeathUiLocked()) return;
-      if (state.running) stop();
+      if (state.running || isPushTransitionCancellable()) pausePushOrCombat();
       else start();
     });
     $('idleHuntFightBoss')?.addEventListener('click', (event) => {
@@ -4079,13 +4308,6 @@ const IdleHunt = (() => {
       event.preventDefault();
       if (isDeathUiLocked()) return;
       if (typeof IdleDungeon !== 'undefined') IdleDungeon.toggle?.();
-    });
-    $('idleHuntGmDrops')?.addEventListener('click', (event) => {
-      event.preventDefault();
-      if (typeof UiIdleGmDrops !== 'undefined') {
-        UiIdleGmDrops.syncHuntZone?.(state.zoneId);
-        UiIdleGmDrops.toggle?.();
-      }
     });
     $('idleHuntPickerClose')?.addEventListener('click', (event) => {
       event.preventDefault();
@@ -4342,6 +4564,7 @@ const IdleHunt = (() => {
     setOneHitKill,
     resolveMobHitDamage,
     setPickerOpen,
+    getZoneId: () => state.zoneId,
   };
 })();
 

@@ -615,7 +615,7 @@ const UiCharacterInfo = (() => {
     };
   }
 
-  /** 狩獵用玩家防禦／魔法防禦（裝備主屬 + 潛能／套裝等固定值） */
+  /** 狩獵用玩家防禦力（正式服已無獨立魔法防禦） */
   function getHuntDefense() {
     let snapshot = null;
     try {
@@ -625,15 +625,15 @@ const UiCharacterInfo = (() => {
     } catch (_) { snapshot = null; }
     let def = (Number(readValue(snapshot, { key: '防禦力', source: 'main' }, null)) || 0)
       + extraFlatStat(snapshot, '防禦力')
-      + extraFlatStat(snapshot, '物理防禦力');
-    let mdef = (Number(readValue(snapshot, { key: '魔法防禦力', source: 'main' }, null)) || 0)
+      + extraFlatStat(snapshot, '物理防禦力')
       + extraFlatStat(snapshot, '魔法防禦力');
     if (!snapshot && typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
       def += Number(SkillModifiers.getTotals().flatPdd) || 0;
     }
+    const value = Math.max(0, def);
     return {
-      def: Math.max(0, def),
-      mdef: Math.max(0, mdef),
+      def: value,
+      mdef: value,
     };
   }
 
@@ -771,7 +771,7 @@ const UiCharacterInfo = (() => {
         魔法攻擊力: ['魔法攻擊力', '攻擊力'],
         最大HP: HP_FLAT_KEYS,
         最大MP: MP_FLAT_KEYS,
-        防禦力: ['防禦力', '物理防禦力'],
+        防禦力: ['防禦力', '物理防禦力', '魔法防禦力'],
       }[key] || [key];
       let flat = base + ex + soul
         + ((key === 'STR' || key === 'DEX' || key === 'INT' || key === 'LUK')
@@ -864,7 +864,7 @@ const UiCharacterInfo = (() => {
       if (key === '爆擊傷害') n += Number(mods.critDmg) || 0;
       if (key === '最終傷害') n += Number(mods.finalDamR) || 0;
       if (key === '無視防禦率') n += Number(mods.ied) || 0;
-      if (key === '防禦力' || key === '物理防禦力') n += Number(mods.flatPdd) || 0;
+      if (key === '防禦力' || key === '物理防禦力' || key === '魔法防禦力') n += Number(mods.flatPdd) || 0;
       if (key === '格擋') n += Number(mods.blockPct) || 0;
     }
     // 格擋實戰過強：面板／狩獵統一減半

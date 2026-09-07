@@ -402,6 +402,16 @@ const SkillCombat = (() => {
     return live;
   }
 
+  function ctxFacingRight(ctx) {
+    if (ctx && ctx.facingRight != null) return !!ctx.facingRight;
+    if (typeof SkillEffectPlayer !== 'undefined' && SkillEffectPlayer.playerFacingRight) {
+      return SkillEffectPlayer.playerFacingRight(ctx?.playerEl);
+    }
+    const el = ctx?.playerEl;
+    if (el?.classList?.contains('is-flip-x')) return false;
+    return true;
+  }
+
   function tryBallCastAttack(skill, skillForFx, atkCommon, fx, ctx, form, picked, finishAfterDamage, opts = {}) {
     if (typeof SkillBallCast === 'undefined' || !SkillBallCast.isBallCastSkill(skill, fx)) {
       return null;
@@ -431,7 +441,7 @@ const SkillCombat = (() => {
         mobs: ballMobList(),
         getMobs: ballMobList,
         maxTargets,
-        facingRight: true,
+        facingRight: ctxFacingRight(ctx),
         visualOnly: false,
         onHit: (mob) => {
           if (!isAsyncCastLive(asyncId)) return;
@@ -467,7 +477,7 @@ const SkillCombat = (() => {
       mobs: ballMobList(),
       getMobs: ballMobList,
       maxTargets,
-      facingRight: true,
+      facingRight: ctxFacingRight(ctx),
       onChainBegin: plan.chain
         ? (path) => {
           if (!isAsyncCastLive(asyncId)) return;
@@ -1191,7 +1201,7 @@ const SkillCombat = (() => {
         maxTargets,
         moveList: shootMeta.moveList || null,
         bodyWH: shootMeta.bodyWH || [300, 300],
-        facingRight: true,
+        facingRight: ctxFacingRight(ctx),
         onHit: (mob) => {
           if (!mob || mob.hp <= 0) return;
           dealHitsOnMob(skillForFx, atkCommon, mob, ctx, {
@@ -1325,7 +1335,8 @@ const SkillCombat = (() => {
       lastNoCdAttackSlot = Number.isFinite(picked.slot) ? picked.slot : lastNoCdAttackSlot;
     }
 
-    if (typeof Paperdoll !== 'undefined' && typeof Paperdoll.playHuntSwing === 'function') {
+    if (!(ctx.quietFx || (typeof document !== 'undefined' && document.hidden))
+      && typeof Paperdoll !== 'undefined' && typeof Paperdoll.playHuntSwing === 'function') {
       // 揮砍時長對齊鎖定，避免動作被壓短後下一招搶跑
       Paperdoll.playHuntSwing(lockMs, skillAction);
     }
@@ -1427,7 +1438,7 @@ const SkillCombat = (() => {
         maxTargets,
         moveList: shootMeta.moveList || null,
         bodyWH: shootMeta.bodyWH || [300, 300],
-        facingRight: true,
+        facingRight: ctxFacingRight(ctx),
         onHit: (mob) => {
           if (!isAsyncCastLive(asyncId)) return;
           if (!mob || mob.hp <= 0) return;
