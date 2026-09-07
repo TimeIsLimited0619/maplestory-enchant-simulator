@@ -53,7 +53,7 @@ const EQUIP_CRAFT_ADVANCE_LINES = [
       },
       {
         id: 'adv_maple_heart_3',
-        label: '覺醒的楓葉之心 Lv.71',
+        label: '覺醒的楓葉之心(物攻) Lv.71',
         output: '01122034',
         baseEquip: '01122029',
         baseCount: 1,
@@ -62,7 +62,7 @@ const EQUIP_CRAFT_ADVANCE_LINES = [
       },
       {
         id: 'adv_maple_heart_3',
-        label: '覺醒的楓葉之心 Lv.71',
+        label: '覺醒的楓葉之心(魔攻) Lv.71',
         output: '01122035',
         baseEquip: '01122029',
         baseCount: 1,
@@ -82,7 +82,7 @@ const EQUIP_CRAFT_ADVANCE_LINES = [
         id: 'adv_maple_heart_5',
         label: '真. 楓葉之心(法師用) Lv.71',
         output: '01122123',
-        baseEquip: '01122034',
+        baseEquip: '01122035',
         baseCount: 1,
         materials: { maple_heart_magician: 1, nekopow: 100, meowcoin: 100 },
         meso: 500000,
