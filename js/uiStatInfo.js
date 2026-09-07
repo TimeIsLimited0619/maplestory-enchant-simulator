@@ -228,7 +228,7 @@ const UiStatInfo = (() => {
         pushRow(rows, 'desc', '技能', skillFlat, false);
       }
       if (key === '攻擊力' || key === '魔法攻擊力') {
-        pushRow(rows, 'desc', '技能攻魔', mods.flatPad, false);
+        pushRow(rows, 'desc', '技能攻魔', (Number(mods.flatPad) || 0) + (Number(mods.flatMad) || 0), false);
       }
       if (key === '傷害') pushRow(rows, 'desc', '技能傷害', mods.damR, true);
       if (key === 'BOSS怪物傷害') pushRow(rows, 'desc', '技能 B傷', mods.bdR, true);

@@ -220,6 +220,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "name": "紅色藥水",
         "chance": 10,
         "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_100",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_100",
+        "name": "武器魔力(智慧)卷軸100%",
+        "chance": 0.5,
+        "amount": 1
       }
     ],
     "bossDrops": [
@@ -271,6 +284,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "soulId": "",
         "catalogId": "consume-glory-scroll_normal_non_weapon_str_100",
         "name": "力量卷軸100%",
+        "chance": 5,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_100",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_100",
+        "name": "武器魔力(智慧)卷軸100%",
         "chance": 5,
         "amount": 1
       }
@@ -387,6 +413,32 @@ const IDLE_ZONE_BAND_DEFS = [
         "itemId": "01372004",
         "chance": 0.2,
         "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_100",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_100",
+        "name": "武器魔力(智慧)卷軸100%",
+        "chance": 2,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_70",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_70",
+        "name": "武器魔力(智慧)卷軸70%",
+        "chance": 0.5,
+        "amount": 1
       }
     ],
     "bossDrops": [
@@ -470,6 +522,32 @@ const IDLE_ZONE_BAND_DEFS = [
         "catalogId": "consume-glory-scroll_normal_weapon_atk_100",
         "name": "武器攻擊力(力量)卷軸100%",
         "chance": 4,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_100",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_100",
+        "name": "武器魔力(智慧)卷軸100%",
+        "chance": 4,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_70",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_70",
+        "name": "武器魔力(智慧)卷軸70%",
+        "chance": 2,
         "amount": 1
       }
     ]
@@ -585,6 +663,32 @@ const IDLE_ZONE_BAND_DEFS = [
         "itemId": "01372002",
         "chance": 0.2,
         "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_100",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_100",
+        "name": "武器魔力(智慧)卷軸100%",
+        "chance": 1,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_70",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_70",
+        "name": "武器魔力(智慧)卷軸70%",
+        "chance": 0.1,
+        "amount": 1
       }
     ],
     "bossDrops": [
@@ -681,6 +785,32 @@ const IDLE_ZONE_BAND_DEFS = [
         "catalogId": "consume-potion-potion-orange",
         "name": "橘色藥水",
         "chance": 50,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_100",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_100",
+        "name": "武器魔力(智慧)卷軸100%",
+        "chance": 5,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_70",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_70",
+        "name": "武器魔力(智慧)卷軸70%",
+        "chance": 0.5,
         "amount": 1
       }
     ]
@@ -814,6 +944,32 @@ const IDLE_ZONE_BAND_DEFS = [
         "itemId": "01372003",
         "chance": 0.1,
         "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_100",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_100",
+        "name": "武器魔力(智慧)卷軸100%",
+        "chance": 2,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_70",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_70",
+        "name": "武器魔力(智慧)卷軸70%",
+        "chance": 1,
+        "amount": 1
       }
     ],
     "bossDrops": [
@@ -860,6 +1016,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "kind": "equip",
         "itemId": "01112018",
         "chance": 5
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_70",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_70",
+        "name": "武器魔力(智慧)卷軸70%",
+        "chance": 5,
+        "amount": 1
       }
     ]
   },
@@ -952,6 +1121,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "kind": "equip",
         "itemId": "01112435",
         "chance": 0.2
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_30",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_30",
+        "name": "武器魔力(智慧)卷軸30%",
+        "chance": 2,
+        "amount": 1
       }
     ],
     "bossDrops": [
@@ -1117,6 +1299,32 @@ const IDLE_ZONE_BAND_DEFS = [
         "itemId": "01372014",
         "chance": 0.1,
         "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_30",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_30",
+        "name": "武器魔力(智慧)卷軸30%",
+        "chance": 2,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力(智慧)卷軸15%",
+        "chance": 1,
+        "amount": 1
       }
     ],
     "bossDrops": [
@@ -1189,6 +1397,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "kind": "equip",
         "itemId": "01112019",
         "chance": 5
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力(智慧)卷軸15%",
+        "chance": 2.5,
+        "amount": 1
       }
     ]
   },
@@ -1320,6 +1541,32 @@ const IDLE_ZONE_BAND_DEFS = [
         "kind": "equip",
         "itemId": "01112436",
         "chance": 0.2
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力(智慧)卷軸15%",
+        "chance": 1,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_30",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_30",
+        "name": "武器魔力(智慧)卷軸30%",
+        "chance": 2,
+        "amount": 1
       }
     ],
     "bossDrops": [
@@ -1432,6 +1679,32 @@ const IDLE_ZONE_BAND_DEFS = [
         "kind": "equip",
         "itemId": "01112436",
         "chance": 5
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力(智慧)卷軸15%",
+        "chance": 2.5,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_30",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_30",
+        "name": "武器魔力(智慧)卷軸30%",
+        "chance": 5,
+        "amount": 1
       }
     ]
   },
@@ -1527,6 +1800,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "itemId": "01372016",
         "chance": 0.1,
         "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力(智慧)卷軸15%",
+        "chance": 5,
+        "amount": 1
       }
     ],
     "bossDrops": [
@@ -1586,6 +1872,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "kind": "etc",
         "itemId": "idle-ticket-boss",
         "name": "BOSS 副本入場券",
+        "chance": 5,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力(智慧)卷軸15%",
         "chance": 5,
         "amount": 1
       }
@@ -1688,6 +1987,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "catalogId": "consume-potion-Reindeer-milk",
         "name": "馴鹿奶",
         "chance": 10,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力(智慧)卷軸15%",
+        "chance": 5,
         "amount": 1
       }
     ],
@@ -1792,6 +2104,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "name": "馴鹿奶",
         "chance": 10,
         "amount": 3
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力(智慧)卷軸15%",
+        "chance": 5,
+        "amount": 1
       }
     ],
     "bossDrops": [
@@ -1825,6 +2150,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "catalogId": "consume-glory-scroll_normal_non_weapon_str_15",
         "name": "力量卷軸15%",
         "chance": 10,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力(智慧)卷軸15%",
+        "chance": 5,
         "amount": 1
       }
     ]
@@ -1873,6 +2211,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "name": "武器攻擊力(力量)卷軸15%",
         "chance": 5,
         "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力(智慧)卷軸15%",
+        "chance": 5,
+        "amount": 1
       }
     ],
     "bossDrops": [
@@ -1914,6 +2265,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "name": "馴鹿奶",
         "chance": 100,
         "amount": 5
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力(智慧)卷軸15%",
+        "chance": 5,
+        "amount": 1
       }
     ]
   },
@@ -2155,6 +2519,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "kind": "equip",
         "itemId": "01112435",
         "chance": 0.2
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_30",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_30",
+        "name": "武器魔力(智慧)卷軸30%",
+        "chance": 1,
+        "amount": 1
       }
     ],
     "bossDrops": [
@@ -2201,6 +2578,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "kind": "equip",
         "itemId": "01112435",
         "chance": 5
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_30",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_30",
+        "name": "武器魔力(智慧)卷軸30%",
+        "chance": 2,
+        "amount": 1
       }
     ]
   },
@@ -2278,6 +2668,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "kind": "equip",
         "itemId": "01112018",
         "chance": 0.2
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_30",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_30",
+        "name": "武器魔力(智慧)卷軸30%",
+        "chance": 0.5,
+        "amount": 1
       }
     ],
     "bossDrops": [
@@ -2311,6 +2714,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "kind": "equip",
         "itemId": "01112018",
         "chance": 5
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_30",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_30",
+        "name": "武器魔力(智慧)卷軸30%",
+        "chance": 2,
+        "amount": 1
       }
     ]
   },
@@ -2416,6 +2832,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "kind": "equip",
         "itemId": "01112019",
         "chance": 0.2
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_30",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_30",
+        "name": "武器魔力(智慧)卷軸30%",
+        "chance": 1,
+        "amount": 1
       }
     ],
     "bossDrops": [
@@ -2475,6 +2904,32 @@ const IDLE_ZONE_BAND_DEFS = [
         "kind": "equip",
         "itemId": "01112019",
         "chance": 5
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_30",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_30",
+        "name": "武器魔力(智慧)卷軸30%",
+        "chance": 8,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力(智慧)卷軸15%",
+        "chance": 1,
+        "amount": 1
       }
     ]
   },
@@ -2612,6 +3067,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "itemId": "01102030",
         "chance": 0.1,
         "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力(智慧)卷軸15%",
+        "chance": 2,
+        "amount": 1
       }
     ],
     "bossDrops": [
@@ -2678,6 +3146,19 @@ const IDLE_ZONE_BAND_DEFS = [
         "kind": "etc",
         "itemId": "idle-ticket-boss",
         "name": "BOSS 副本入場券",
+        "chance": 5,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力(智慧)卷軸15%",
         "chance": 5,
         "amount": 1
       }

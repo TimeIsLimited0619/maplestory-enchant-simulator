@@ -162,6 +162,78 @@ const SkillCombat = (() => {
     return false;
   }
 
+  /**
+   * 本專案無 MP：技能 mpCon 改扣 HP。
+   * 魔力激發 costmpR：再額外提高耗血。
+   * 依最大 HP 比例換算（WZ 的 mpCon 是舊 MP 池量級，直接扣會幾乎看不出來）。
+   * 約略：mpCon 20 → ~1% 最大HP；mpCon 50＋激發50% → ~3.75% 最大HP。
+   */
+  let manaAbsorbCastGen = 0;
+  let manaAbsorbUsedGen = -1;
+
+  function beginSkillResourceCast() {
+    manaAbsorbCastGen += 1;
+  }
+
+  function resolveSkillHpCost(common) {
+    const mpCon = Math.max(0, Number(common?.mpCon) || 0);
+    if (!(mpCon > 0)) return 0;
+    const costR = (typeof SkillModifiers !== 'undefined'
+      && typeof SkillModifiers.getPassiveCostMpR === 'function')
+      ? SkillModifiers.getPassiveCostMpR()
+      : 0;
+    const base = mpCon * (1 + Math.max(0, costR) / 100);
+    let maxHp = 0;
+    if (typeof UiCharacterInfo !== 'undefined'
+      && typeof UiCharacterInfo.getHuntMaxHp === 'function') {
+      maxHp = Math.max(0, Math.floor(Number(UiCharacterInfo.getHuntMaxHp()) || 0));
+    }
+    if (!(maxHp > 0) && typeof IdleHunt !== 'undefined' && typeof IdleHunt.getPlayerHp === 'function') {
+      maxHp = Math.max(0, Number(IdleHunt.getPlayerHp()?.maxHp) || 0);
+    }
+    const scaled = maxHp > 0
+      ? Math.floor(maxHp * base / 2000)
+      : Math.floor(base);
+    return Math.max(1, scaled);
+  }
+
+  function spendSkillHpCost(common) {
+    const cost = resolveSkillHpCost(common);
+    if (!(cost > 0)) return 0;
+    if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.spendHuntHp === 'function') {
+      return IdleHunt.spendHuntHp(cost, { keepAlive: true, fromSkill: true });
+    }
+    return 0;
+  }
+
+  /** 魔力吸收：每次施放最多觸發一次（避免 AoE 多怪回血蓋過耗血） */
+  function tryManaAbsorbOnHit(mob) {
+    if (!mob) return;
+    if (manaAbsorbUsedGen === manaAbsorbCastGen) return;
+    if (typeof SkillModifiers === 'undefined'
+      || typeof SkillModifiers.getManaAbsorbPassive !== 'function') {
+      return;
+    }
+    const info = SkillModifiers.getManaAbsorbPassive();
+    if (!info?.stat) return;
+    const prop = Math.max(0, Number(info.stat.prop) || 0);
+    if (!(prop > 0) || Math.random() * 100 >= prop) return;
+    const pct = mob.isBoss
+      ? Math.max(0, Number(info.stat.y) || 0)
+      : Math.max(0, Number(info.stat.xVal) || 0);
+    if (!(pct > 0)) return;
+    manaAbsorbUsedGen = manaAbsorbCastGen;
+    if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.healPlayerFromMaxHpPct === 'function') {
+      IdleHunt.healPlayerFromMaxHpPct(pct);
+    }
+    if (info.skill?.fx?.effect?.length && typeof SkillEffectPlayer !== 'undefined') {
+      const playerEl = document.querySelector('.idle-actor--player');
+      if (playerEl) {
+        SkillEffectPlayer.playOnPlayer(info.skill.fx.effect, { playerEl });
+      }
+    }
+  }
+
   function evalSkill(skill, level) {
     if (typeof SkillModifiers !== 'undefined'
       && typeof SkillModifiers.resolveCastCommon === 'function') {
@@ -778,7 +850,8 @@ const SkillCombat = (() => {
     function makeCandidate(id, slot) {
       if (!id) return null;
       const skill = SkillCatalog.getSkill(id);
-      if (!skill || (skill.type !== 'active' && skill.type !== 'buff') || !skill.equipable) return null;
+      if (!skill || skill.skipPanel) return null;
+      if ((skill.type !== 'active' && skill.type !== 'buff') || !skill.equipable) return null;
       const level = CharacterSkills.getLevel(id);
       if (!(level > 0)) return null;
       const common = evalSkill(skill, level);
@@ -801,15 +874,27 @@ const SkillCombat = (() => {
       if (c) candidates.push(c);
     }
 
-    // 1) 有 CD 的 buff
-    const cdBuff = candidates.find((c) => c.isBuff && c.hasCd && c.ready);
+    // 1) 有 CD 的 buff（不含開關技：開關技走下方「未啟用才放」）
+    const cdBuff = candidates.find((c) => (
+      c.isBuff && c.hasCd && c.ready
+      && !(typeof SkillBuffRuntime !== 'undefined' && SkillBuffRuntime.isToggleBuffSkill?.(c.skill))
+    ));
     if (cdBuff) return cdBuff;
 
-    // 2) 無 CD 的 buff（持續時間內不重複）
+    // 2) 無 CD 的 buff／開關技（持續時間內不重複；開關技開啟後維持）
     const noCdBuff = candidates.find((c) => (
       c.isBuff && !c.hasCd && c.ready && !isBuffDurationActive(c.skill.id, t)
     ));
     if (noCdBuff) return noCdBuff;
+
+    // 2b) 有 CD 的開關技：僅在未開啟時施放
+    const toggleCdBuff = candidates.find((c) => (
+      c.isBuff && c.hasCd && c.ready
+      && typeof SkillBuffRuntime !== 'undefined'
+      && SkillBuffRuntime.isToggleBuffSkill?.(c.skill)
+      && !isBuffDurationActive(c.skill.id, t)
+    ));
+    if (toggleCdBuff) return toggleCdBuff;
 
     // 3) 有 CD 的攻擊
     const cdAtk = candidates.find((c) => !c.isBuff && c.hasCd && c.ready);
@@ -905,6 +990,7 @@ const SkillCombat = (() => {
       && typeof SkillMobStatus.afterPlayerDamagedMob === 'function') {
       SkillMobStatus.afterPlayerDamagedMob(mob, any, { skillId });
     }
+    if (any) tryManaAbsorbOnHit(mob);
     if (mob.hp > 0 && any && typeof flashHit === 'function') {
       flashHit(mob.uid);
     } else if (mob.hp <= 0 && any && typeof flashDie === 'function') {
@@ -1132,6 +1218,8 @@ const SkillCombat = (() => {
     const formCommon = form.common || baseCommon;
     const fx = skillForFx.fx || {};
     const atkCommon = combatCommonFor(skill, formCommon);
+    beginSkillResourceCast();
+    spendSkillHpCost(baseCommon);
     const attackCount = Math.max(1, atkCommon.attackCount || 1);
     const multiHit = attackCount > 1;
     // 跟隨技：傷害一次結清，數字用 stackIndex 疊；不再依攻速排段延遲（減少 timer／卡頓）
@@ -1340,6 +1428,10 @@ const SkillCombat = (() => {
       // 揮砍時長對齊鎖定，避免動作被壓短後下一招搶跑
       Paperdoll.playHuntSwing(lockMs, skillAction);
     }
+
+    // 無 MP：凡有 mpCon 的技能（含 buff）都扣 HP；依最大 HP 比例換算，魔力激發再加碼
+    beginSkillResourceCast();
+    spendSkillHpCost(baseCommon);
 
     const timedBuff = typeof SkillBuffRuntime !== 'undefined'
       && SkillBuffRuntime.isTimedBuffSkill?.(skill, baseCommon);

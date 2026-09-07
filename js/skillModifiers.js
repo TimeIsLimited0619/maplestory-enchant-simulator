@@ -157,7 +157,7 @@ const SkillModifiers = (() => {
       critRate: (Number(stat.indieCr) || 0) + (Number(stat.cr) || 0),
       ied: Number(stat.ignoreMobpdpR) || 0,
       flatPdd: Number(stat.pddX) || 0,
-      flatMad: Number(stat.madX) || 0,
+      flatMad: (Number(stat.madX) || 0) + (Number(stat.indieMad) || 0),
       mhpR: Number(stat.mhpR) || 0,
       flatHpPerLevel: Number(stat.lv2mhp) || 0,
       speedStages,
@@ -211,6 +211,45 @@ const SkillModifiers = (() => {
       out.basicStatUp += Number(st.basicStatUp) || 0;
     });
     return out;
+  }
+
+  /** 魔力激發等：攻擊技能耗血倍率用的 costmpR% 加總 */
+  function getPassiveCostMpR() {
+    if (typeof CharacterSkills === 'undefined' || typeof SkillCatalog === 'undefined') return 0;
+    if (typeof SkillFormula === 'undefined' || typeof SkillFormula.evalStatCommon !== 'function') {
+      return 0;
+    }
+    // 直接查技能 id，避免職業線 list 漏本
+    const ids = ['2110001', '2210001'];
+    let total = 0;
+    ids.forEach((id) => {
+      const level = CharacterSkills.getLevel?.(id) || 0;
+      if (!(level > 0)) return;
+      const skill = SkillCatalog.getSkill?.(id);
+      if (!skill?.common || skill.common.costmpR == null) return;
+      const st = SkillFormula.evalStatCommon(skill.common, level);
+      total += Number(st.costmpR) || 0;
+    });
+    return Math.max(0, total);
+  }
+
+  /** 魔力吸收：2100000／2200000 */
+  function getManaAbsorbPassive() {
+    if (typeof CharacterSkills === 'undefined' || typeof SkillCatalog === 'undefined') return null;
+    if (typeof SkillFormula === 'undefined' || typeof SkillFormula.evalStatCommon !== 'function') {
+      return null;
+    }
+    const ids = ['2100000', '2200000'];
+    for (let i = 0; i < ids.length; i += 1) {
+      const id = ids[i];
+      const level = CharacterSkills.getLevel?.(id) || 0;
+      if (!(level > 0)) continue;
+      const skill = SkillCatalog.getSkill?.(id);
+      if (!skill?.common) continue;
+      const st = SkillFormula.evalStatCommon(skill.common, level);
+      return { id, level, skill, stat: st };
+    }
+    return null;
   }
 
   /**
@@ -417,6 +456,8 @@ const SkillModifiers = (() => {
     emptyTotals,
     emptySkillEnhance,
     getPassiveTotals,
+    getPassiveCostMpR,
+    getManaAbsorbPassive,
     getBuffTotals,
     getComboTotals,
     getTotals,

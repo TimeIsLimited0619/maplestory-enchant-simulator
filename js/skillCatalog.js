@@ -3,6 +3,15 @@
  * 支援職業線 lines：同一線多本 skill book 合併到面板（依 rank 分頁）
  */
 const SkillCatalog = (() => {
+  /**
+   * 職業線額外共用技能（例：法師可學劍士「自身強化」）
+   * @type {Record<string, string[]>}
+   */
+  const LINE_EXTRA_SKILL_IDS = {
+    mage: ['1000003'],
+    magef: ['1000003'],
+  };
+
   function books() {
     return (typeof SkillJobData !== 'undefined' && SkillJobData.books) || {};
   }
@@ -59,6 +68,32 @@ const SkillCatalog = (() => {
     return null;
   }
 
+  /** 職業線額外掛入的技能（去重） */
+  function appendLineExtraSkills(jobId, out, opts = {}) {
+    const line = getJobLine(jobId);
+    const extras = LINE_EXTRA_SKILL_IDS[String(line?.id || '')] || [];
+    if (!extras.length) return;
+    const rank = opts.rank != null ? String(opts.rank) : null;
+    const type = opts.type != null ? String(opts.type) : null;
+    const includeHidden = !!opts.includeHidden;
+    const seen = new Set((out || []).map((s) => String(s.id)));
+    extras.forEach((sid) => {
+      const id = String(sid);
+      if (seen.has(id)) return;
+      const raw = getSkill(id);
+      if (!raw) return;
+      if (!includeHidden && raw.skipPanel) return;
+      if (rank != null && String(raw.rank) !== rank) return;
+      if (type != null && String(raw.type) !== type) return;
+      seen.add(id);
+      out.push({
+        ...raw,
+        sharedSkill: true,
+        sharedFromJob: raw.skillBook,
+      });
+    });
+  }
+
   function listSkills(jobId, opts = {}) {
     const bookList = booksForJob(jobId);
     if (!bookList.length) return [];
@@ -74,6 +109,7 @@ const SkillCatalog = (() => {
         out.push(withOverrides(s));
       });
     });
+    appendLineExtraSkills(jobId, out, opts);
     return out;
   }
 

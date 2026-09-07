@@ -215,13 +215,25 @@ const SkillFormula = (() => {
       criticaldamage: num('criticaldamage'),
       ignoreMobpdpR: num('ignoreMobpdpR'),
       pddX: num('pddX'),
-      mhpR: num('mhpR'),
-      lv2mhp: num('lv2mhp'),
+      mhpR: (() => {
+        const hp = num('mhpR');
+        if (hp > 0) return hp;
+        // 無 MP 專案：魔力增幅等 mmpR 視為 mhpR
+        return num('mmpR');
+      })(),
+      lv2mhp: (() => {
+        const hp = num('lv2mhp');
+        if (hp > 0) return hp;
+        return num('lv2mmp');
+      })(),
       indieCr: num('indieCr'),
+      indieMad: num('indieMad'),
+      madX: num('madX'),
       cr: num('cr'),
       prop: num('prop'),
       subProp: num('subProp'),
       mastery: num('mastery'),
+      costmpR: num('costmpR'),
       timeSec: Math.max(0, num('time')),
       cooltimeSec: Math.max(0, resolveCooltimeSec(c, x)),
       /** DoT／創傷持續秒數（烈焰翔斬等） */
@@ -287,19 +299,33 @@ const SkillFormula = (() => {
     if (!raw) return '';
     // WZ／匯出字串偶發殘留字面 \n
     raw = raw.replace(/\\r\\n|\\n|\\r/g, '\n');
+    // 本專案無 MP：說明統一改為消耗 HP
+    raw = raw.replace(/消耗\s*MP/gi, '消耗HP');
+    raw = raw.replace(/MP\s*#mpCon/gi, 'HP #mpCon');
+    raw = raw.replace(/每秒消耗\s*#mpCon\s*MP/gi, '每秒消耗HP #mpCon');
+    raw = raw.replace(/增加消耗MP/gi, '額外提高耗血');
+    raw = raw.replace(/消耗更多的MP/gi, '消耗更多的HP');
+    raw = raw.replace(/消耗更大量的MP/gi, '消耗更多的HP');
+    raw = raw.replace(/恢復HP與MP/gi, '恢復HP');
+    raw = raw.replace(/基本HP、MP/gi, '最大HP');
+    raw = raw.replace(/最大MP/gi, '最大HP');
+    raw = raw.replace(/吸收對方的MP/gi, '吸收對方的生命力');
+    raw = raw.replace(/吸收最大MP/gi, '吸收最大HP');
+
+    // 先替換 #cr / #costmpR 等占位符，再處理 #c…# 色碼
+    // （若先吃色碼，#costmpR%…#damR% 會被誤判成 #c…#）
+    raw = raw.replace(/#([a-zA-Z][a-zA-Z0-9]*)(%p|%)?/g, (match, key, suffix) => {
+      if (key.toLowerCase() === 'c') return match;
+      const val = evalPlaceholder(common, key, level);
+      if (val == null) return match;
+      return formatPlaceholderNumber(val) + (suffix || '');
+    });
 
     const marks = [];
     raw = raw.replace(/#c([^#]*)#/gi, (_, inner) => {
       const i = marks.length;
       marks.push(inner);
       return `\u0000C${i}\u0001`;
-    });
-
-    raw = raw.replace(/#([a-zA-Z][a-zA-Z0-9]*)(%p|%)?/g, (match, key, suffix) => {
-      if (key.toLowerCase() === 'c') return match;
-      const val = evalPlaceholder(common, key, level);
-      if (val == null) return match;
-      return formatPlaceholderNumber(val) + (suffix || '');
     });
 
     const escaped = raw

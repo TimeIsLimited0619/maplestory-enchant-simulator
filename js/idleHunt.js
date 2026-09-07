@@ -2200,6 +2200,36 @@ const IdleHunt = (() => {
     return state.hp - before;
   }
 
+  /** 依最大 HP 百分比回血（魔力吸收等） */
+  function healPlayerFromMaxHpPct(pct) {
+    const p = Math.max(0, Number(pct) || 0);
+    if (!(p > 0) || isPlayerDead()) return 0;
+    syncPlayerHp();
+    const max = Math.max(1, Number(state.maxHp) || playerMaxHp());
+    return healPlayer(Math.max(1, Math.floor(max * p / 100)));
+  }
+
+  /**
+   * 技能耗血（mpCon→HP；魔力激發加碼）。keepAlive 時至少留 1 HP。
+   * fromSkill：技能耗血不立刻觸發自動喝藥（避免剛扣完就被藥水蓋回去看不出耗血）
+   * @returns {number} 實際扣除量
+   */
+  function spendHuntHp(amount, opts = {}) {
+    const cost = Math.max(0, Math.floor(Number(amount) || 0));
+    if (!cost || isPlayerDead()) return 0;
+    if (gmGodMode) return 0;
+    syncPlayerHp();
+    const before = Math.max(0, Number(state.hp) || 0);
+    const floorHp = opts.keepAlive === false ? 0 : 1;
+    state.hp = Math.max(floorHp, before - cost);
+    renderPlayerHp();
+    syncHuntOverlayBars?.();
+    if (!opts.fromSkill && state.hp > 0 && typeof IdlePotionPanel !== 'undefined') {
+      IdlePotionPanel.tryAutoDrink?.();
+    }
+    return before - state.hp;
+  }
+
   function formatPowerText(power) {
     if (!(power > 0)) return '—';
     if (typeof formatPower === 'function') return formatPower(power);
@@ -3042,6 +3072,11 @@ const IdleHunt = (() => {
       id: '1110000', // 英雄三轉：強化恢復 — 每 u 秒回最大 HP 的 x%
       intervalSec: (st) => Math.max(1, Number(st.u) || 1),
       recoverPct: (st) => Math.max(0, Number(st.xVal) || 0),
+    },
+    {
+      id: '2120004', // 火毒四轉：魔力無限 — 每 x 秒回 s% HP
+      intervalSec: (st) => Math.max(1, Number(st.xVal) || 5),
+      recoverPct: (st) => Math.max(0, Number(st.s) || 0),
     },
     {
       id: '2220004', // 冰雷四轉：魔力無限 — 每 x 秒回 s%
@@ -4552,6 +4587,8 @@ const IdleHunt = (() => {
     revivePlayer,
     healToFull,
     healPlayer,
+    healPlayerFromMaxHpPct,
+    spendHuntHp,
     applyPlayerDamage: hurtPlayer,
     getAttackDelaySec: attackDelaySec,
     getWzAttackSpeed: currentWzAttackSpeed,

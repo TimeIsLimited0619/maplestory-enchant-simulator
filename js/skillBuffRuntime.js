@@ -232,15 +232,25 @@ const SkillBuffRuntime = (() => {
     return lastResult;
   }
 
+  function isToggleBuffSkill(skill) {
+    if (!skill) return false;
+    if (skill.toggle) return true;
+    const text = `${skill.desc || ''}${skill.h || ''}`;
+    return /開關技能/.test(text);
+  }
+
   function isTimedBuffSkill(skill, common) {
     if (!skill || !common) return false;
+    // 開關技：即使 time 很短也走 buff 管線（activate 內會拉長持續）
+    if (isToggleBuffSkill(skill)) return skill.type === 'buff' || skill.type === 'active';
     if (!(common.timeSec > 0)) return false;
     if (skill.summonSkillId || skill.fx?.summonAttacks?.length || skill.fx?.summonVisual) {
       return true;
     }
     if (typeof SkillFormula !== 'undefined' && SkillFormula.evalStatCommon) {
       const st = SkillFormula.evalStatCommon(skill.common, 1);
-      if (st.indiePad > 0 || st.indieCr > 0) return true;
+      if (st.indiePad > 0 || st.indieCr > 0 || st.indieMad > 0 || st.madX > 0) return true;
+      if ((Number(st.damAbsorbShieldR) || 0) > 0) return true;
     }
     return skill.type === 'buff';
   }
@@ -250,10 +260,23 @@ const SkillBuffRuntime = (() => {
    */
   function activateTimedBuff(skill, level, common, ctx = {}) {
     if (!skill || !common) return false;
+    const toggle = isToggleBuffSkill(skill);
+    if (toggle && typeof SkillModifiers !== 'undefined' && SkillModifiers.hasBuff?.(skill.id)) {
+      SkillModifiers.clearBuff?.(String(skill.id));
+      if (typeof CharacterCombatPanel !== 'undefined') {
+        CharacterCombatPanel.syncToCombatPower?.();
+      }
+      return { toggledOff: true };
+    }
+
     const stat = (typeof SkillFormula !== 'undefined' && SkillFormula.evalStatCommon)
       ? SkillFormula.evalStatCommon(skill.common, level)
       : null;
-    const durationBaseMs = Math.max(0, (common.timeSec || stat?.timeSec || 0) * 1000);
+    let durationBaseMs = Math.max(0, (common.timeSec || stat?.timeSec || 0) * 1000);
+    // 開關技：維持到再次施放／重置（自動選招不會在持續中重放）
+    if (toggle) {
+      durationBaseMs = Math.max(durationBaseMs, 24 * 60 * 60 * 1000);
+    }
     const durationMult = (typeof SkillModifiers !== 'undefined'
       && typeof SkillModifiers.getBuffDurationMultiplier === 'function')
       ? SkillModifiers.getBuffDurationMultiplier()
@@ -502,6 +525,7 @@ const SkillBuffRuntime = (() => {
     reset,
     tick,
     isTimedBuffSkill,
+    isToggleBuffSkill,
     activateTimedBuff,
     onSwordSkillCast,
     getAfterimageState,
