@@ -90,6 +90,9 @@ const UiToadsHammer = (() => {
     const data = typeof ITEM_DATABASE !== 'undefined' ? ITEM_DATABASE[itemId] : null;
     if (!data) return false;
     if (data.exceptToadsHammer) return false;
+    // 尊貴裝備（Superior／暴君等）不可使用蟾蜍鐵鎚
+    if (typeof isSuperiorStarForceItem === 'function' && isSuperiorStarForceItem(data)) return false;
+    if (data.superiorEqp || data.superiorStarForce) return false;
     if (typeof isEnhancementLockedItem === 'function' && isEnhancementLockedItem(data)) return false;
     return true;
   }

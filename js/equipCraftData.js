@@ -61,7 +61,7 @@ const EQUIP_CRAFT_ADVANCE_LINES = [
         meso: 250000,
       },
       {
-        id: 'adv_maple_heart_3',
+        id: 'adv_maple_heart_6',
         label: '覺醒的楓葉之心(魔攻) Lv.71',
         output: '01122035',
         baseEquip: '01122029',
