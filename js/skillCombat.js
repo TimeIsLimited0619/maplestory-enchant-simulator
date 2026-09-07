@@ -175,7 +175,23 @@ const SkillCombat = (() => {
     manaAbsorbCastGen += 1;
   }
 
+  /** 技能耗血僅法師線（冰雷／火毒）；劍士等不扣 */
+  function isMageJobForHpCost() {
+    const jobId = (typeof CharacterSkills !== 'undefined')
+      ? CharacterSkills.currentJobId?.()
+      : null;
+    if (jobId == null) return false;
+    if (typeof SkillCatalog !== 'undefined' && typeof SkillCatalog.getJobLine === 'function') {
+      const lineId = String(SkillCatalog.getJobLine(jobId)?.id || '');
+      return lineId === 'mage' || lineId === 'magef';
+    }
+    const id = String(jobId);
+    // 後援：法師技能書 200／210／211／212／220／221／222
+    return /^(200|210|211|212|220|221|222)$/.test(id);
+  }
+
   function resolveSkillHpCost(common) {
+    if (!isMageJobForHpCost()) return 0;
     const mpCon = Math.max(0, Number(common?.mpCon) || 0);
     if (!(mpCon > 0)) return 0;
     const costR = (typeof SkillModifiers !== 'undefined'
@@ -201,7 +217,7 @@ const SkillCombat = (() => {
     const cost = resolveSkillHpCost(common);
     if (!(cost > 0)) return 0;
     if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.spendHuntHp === 'function') {
-      return IdleHunt.spendHuntHp(cost, { keepAlive: true, fromSkill: true });
+      return IdleHunt.spendHuntHp(cost, { keepAlive: true });
     }
     return 0;
   }

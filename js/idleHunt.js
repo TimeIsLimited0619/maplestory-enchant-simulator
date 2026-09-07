@@ -2211,7 +2211,6 @@ const IdleHunt = (() => {
 
   /**
    * 技能耗血（mpCon→HP；魔力激發加碼）。keepAlive 時至少留 1 HP。
-   * fromSkill：技能耗血不立刻觸發自動喝藥（避免剛扣完就被藥水蓋回去看不出耗血）
    * @returns {number} 實際扣除量
    */
   function spendHuntHp(amount, opts = {}) {
@@ -2224,7 +2223,7 @@ const IdleHunt = (() => {
     state.hp = Math.max(floorHp, before - cost);
     renderPlayerHp();
     syncHuntOverlayBars?.();
-    if (!opts.fromSkill && state.hp > 0 && typeof IdlePotionPanel !== 'undefined') {
+    if (state.hp > 0 && typeof IdlePotionPanel !== 'undefined') {
       IdlePotionPanel.tryAutoDrink?.();
     }
     return before - state.hp;
