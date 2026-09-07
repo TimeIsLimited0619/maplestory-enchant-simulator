@@ -37,6 +37,88 @@ const EquipCraftPanel = (() => {
     return v.toLocaleString('zh-TW');
   }
 
+  function tipAttr(kind, itemId) {
+    const id = String(itemId || '').trim();
+    if (!kind || !id) return '';
+    return ` data-craft-tip="${kind}" data-item-id="${id}"`;
+  }
+
+  function hideCraftTips() {
+    if (typeof EquipTooltipModule !== 'undefined') EquipTooltipModule.hide?.();
+    if (typeof InventoryModule !== 'undefined') {
+      InventoryModule.hideEtcTooltip?.();
+      InventoryModule.hideConsumeTooltip?.();
+    }
+  }
+
+  function showCraftTip(anchorEl, kind, itemId) {
+    const id = String(itemId || '').trim();
+    if (!anchorEl || !kind || !id) return;
+    if (typeof EquipTooltipModule !== 'undefined'
+      && (EquipTooltipModule.pinned || EquipTooltipModule.dragging)) return;
+
+    hideCraftTips();
+
+    if (kind === 'equip') {
+      if (typeof ITEM_DATABASE === 'undefined' || !ITEM_DATABASE[id]) return;
+      if (typeof EquipTooltipModule !== 'undefined') {
+        EquipTooltipModule.show(anchorEl, id, -1);
+      }
+      return;
+    }
+
+    if (kind === 'etc' && typeof InventoryModule !== 'undefined') {
+      const catalog = typeof IdleEtcStore !== 'undefined' ? IdleEtcStore.get(id) : null;
+      InventoryModule.showEtcTooltip?.(
+        anchorEl,
+        catalog?.name || id,
+        catalog?.desc || '',
+        catalog?.icon || '',
+      );
+      return;
+    }
+
+    if ((kind === 'potion' || kind === 'consume') && typeof InventoryModule !== 'undefined') {
+      const potion = typeof IdlePotionStore !== 'undefined' ? IdlePotionStore.get(id) : null;
+      if (potion) {
+        InventoryModule.showPotionTooltip?.(anchorEl, potion);
+        return;
+      }
+      const catalog = typeof IdleEtcStore !== 'undefined' ? IdleEtcStore.get(id) : null;
+      InventoryModule.showEtcTooltip?.(
+        anchorEl,
+        catalog?.name || id,
+        catalog?.desc || '',
+        catalog?.icon || '',
+      );
+    }
+  }
+
+  function bindCraftTooltips() {
+    const body = $('equipCraftBody');
+    if (!body || body.dataset.craftTooltipReady) return;
+    body.addEventListener('mouseover', (event) => {
+      const tipEl = event.target.closest?.('[data-craft-tip][data-item-id]');
+      if (!tipEl || !body.contains(tipEl)) return;
+      if (body._craftTipEl === tipEl) return;
+      body._craftTipEl = tipEl;
+      showCraftTip(
+        tipEl,
+        tipEl.getAttribute('data-craft-tip') || '',
+        tipEl.getAttribute('data-item-id') || '',
+      );
+    });
+    body.addEventListener('mouseout', (event) => {
+      const tipEl = event.target.closest?.('[data-craft-tip][data-item-id]');
+      if (!tipEl || body._craftTipEl !== tipEl) return;
+      const related = event.relatedTarget;
+      if (related instanceof Node && tipEl.contains(related)) return;
+      body._craftTipEl = null;
+      hideCraftTips();
+    });
+    body.dataset.craftTooltipReady = '1';
+  }
+
   function panelMarkup() {
     return `<div id="equipCraftPanel" class="equip-craft-panel" role="dialog" aria-labelledby="equipCraftTitle" aria-hidden="true">
       <div class="equip-craft-head">
@@ -95,7 +177,7 @@ const EquipCraftPanel = (() => {
       const icon = s.equipIcon(line.iconItemId);
       const count = (line.recipes || []).length;
       return `<button type="button" class="equip-craft-row" data-action="open-line" data-line-id="${line.id}">
-        <img class="equip-craft-row__icon" src="${icon}" alt="" draggable="false" onerror="this.style.opacity='0.3'">
+        <img class="equip-craft-row__icon" src="${icon}" alt="" draggable="false"${tipAttr('equip', line.iconItemId)} onerror="this.style.opacity='0.3'">
         <span class="equip-craft-row__text">
           <span class="equip-craft-row__name">${line.name}</span>
           <span class="equip-craft-row__meta">${count} 個進階配方</span>
@@ -108,7 +190,7 @@ const EquipCraftPanel = (() => {
         const icon = s.equipIcon(entry.iconItemId);
         const count = (entry.categories || []).length;
         return `<button type="button" class="equip-craft-row" data-action="open-series" data-series-id="${entry.id}">
-          <img class="equip-craft-row__icon" src="${icon}" alt="" draggable="false" onerror="this.style.opacity='0.3'">
+          <img class="equip-craft-row__icon" src="${icon}" alt="" draggable="false"${tipAttr('equip', entry.iconItemId)} onerror="this.style.opacity='0.3'">
           <span class="equip-craft-row__text">
             <span class="equip-craft-row__name">${entry.name}</span>
             <span class="equip-craft-row__meta">${count} 個部位大分類</span>
@@ -117,7 +199,7 @@ const EquipCraftPanel = (() => {
       }
       const icon = s.equipIcon(entry.output);
       return `<button type="button" class="equip-craft-row" data-action="open-make" data-recipe-id="${entry.id}">
-        <img class="equip-craft-row__icon" src="${icon}" alt="" draggable="false" onerror="this.style.opacity='0.3'">
+        <img class="equip-craft-row__icon" src="${icon}" alt="" draggable="false"${tipAttr('equip', entry.output)} onerror="this.style.opacity='0.3'">
         <span class="equip-craft-row__text">
           <span class="equip-craft-row__name">${entry.label || s.equipName(entry.output)}</span>
           <span class="equip-craft-row__meta">裝備製作</span>
@@ -146,7 +228,7 @@ const EquipCraftPanel = (() => {
     const rows = (line.recipes || []).map((recipe) => {
       const icon = s.equipIcon(recipe.output);
       return `<button type="button" class="equip-craft-row" data-action="open-advance" data-line-id="${line.id}" data-recipe-id="${recipe.id}">
-        <img class="equip-craft-row__icon" src="${icon}" alt="" draggable="false" onerror="this.style.opacity='0.3'">
+        <img class="equip-craft-row__icon" src="${icon}" alt="" draggable="false"${tipAttr('equip', recipe.output)} onerror="this.style.opacity='0.3'">
         <span class="equip-craft-row__text">
           <span class="equip-craft-row__name">${recipe.label || s.equipName(recipe.output)}</span>
           <span class="equip-craft-row__meta">${s.equipName(recipe.baseEquip)} → ${s.equipName(recipe.output)}</span>
@@ -165,10 +247,11 @@ const EquipCraftPanel = (() => {
     if (!series) return '<div class="equip-craft-empty">找不到製作系列。</div>';
 
     const rows = (series.categories || []).map((cat) => {
-      const icon = s.equipIcon(cat.iconItemId || cat.variants?.[0]?.output);
+      const iconId = cat.iconItemId || cat.variants?.[0]?.output;
+      const icon = s.equipIcon(iconId);
       const count = (cat.variants || []).length;
       return `<button type="button" class="equip-craft-row" data-action="open-category" data-series-id="${series.id}" data-category-id="${cat.id}">
-        <img class="equip-craft-row__icon" src="${icon}" alt="" draggable="false" onerror="this.style.opacity='0.3'">
+        <img class="equip-craft-row__icon" src="${icon}" alt="" draggable="false"${tipAttr('equip', iconId)} onerror="this.style.opacity='0.3'">
         <span class="equip-craft-row__text">
           <span class="equip-craft-row__name">${cat.name}</span>
           <span class="equip-craft-row__meta">${count} 個職業變體 · 共用材料</span>
@@ -185,11 +268,23 @@ const EquipCraftPanel = (() => {
     const s = store();
     if (!s || !category) return '';
     const mats = s.materialsMap(category);
-    const parts = Object.entries(mats).map(([id, amt]) => `${s.etcName(id)} ×${amt}`);
+    const chips = Object.entries(mats).map(([id, amt]) => {
+      const icon = s.etcIcon(id);
+      const name = s.etcName(id);
+      return `<span class="equip-craft-mat-chip"${tipAttr('etc', id)} title="">
+        <img class="equip-craft-mat-chip__icon" src="${icon}" alt="${name}" draggable="false" onerror="this.style.opacity='0.3'">
+        <span class="equip-craft-mat-chip__qty">×${amt}</span>
+      </span>`;
+    });
     const meso = Math.max(0, Math.floor(Number(category.meso) || 0));
-    if (meso > 0) parts.push(`楓幣 ×${formatMeso(meso)}`);
-    if (!parts.length) return '';
-    return `<p class="equip-craft-shared-mats">共用材料：${parts.join('、')}</p>`;
+    if (meso > 0) {
+      chips.push(`<span class="equip-craft-mat-chip equip-craft-mat-chip--meso">
+        <img class="equip-craft-mat-chip__icon" src="images/npcshop/PointInfo__Meso__iconShop.png" alt="楓幣" draggable="false">
+        <span class="equip-craft-mat-chip__qty">×${formatMeso(meso)}</span>
+      </span>`);
+    }
+    if (!chips.length) return '';
+    return `<div class="equip-craft-shared-mats"><span class="equip-craft-shared-mats__label">共用材料</span>${chips.join('')}</div>`;
   }
 
   function categoryMarkup(sid, cid) {
@@ -203,7 +298,7 @@ const EquipCraftPanel = (() => {
         ? `${variant.label} · ${s.equipName(variant.output)}`
         : s.equipName(variant.output);
       return `<button type="button" class="equip-craft-row" data-action="open-variant" data-series-id="${sid}" data-category-id="${cid}" data-variant-id="${variant.id}">
-        <img class="equip-craft-row__icon" src="${icon}" alt="" draggable="false" onerror="this.style.opacity='0.3'">
+        <img class="equip-craft-row__icon" src="${icon}" alt="" draggable="false"${tipAttr('equip', variant.output)} onerror="this.style.opacity='0.3'">
         <span class="equip-craft-row__text">
           <span class="equip-craft-row__name">${name}</span>
           <span class="equip-craft-row__meta">點擊製作</span>
@@ -216,10 +311,10 @@ const EquipCraftPanel = (() => {
       : '<div class="equip-craft-empty">此大分類尚無職業變體。</div>'}`;
   }
 
-  function reqItemMarkup(icon, label, have, need) {
+  function reqItemMarkup(icon, label, have, need, tipKind, tipId) {
     const ok = have >= need;
     return `<li class="equip-craft-req-item ${ok ? 'is-ok' : 'is-short'}">
-      <img class="equip-craft-req-item__icon equip-craft-req-item__icon--native" src="${icon}" alt="" draggable="false" onerror="this.style.opacity='0.3'">
+      <img class="equip-craft-req-item__icon equip-craft-req-item__icon--native" src="${icon}" alt="" draggable="false"${tipAttr(tipKind, tipId)} onerror="this.style.opacity='0.3'">
       <span class="equip-craft-req-item__label">${label}</span>
       <span class="equip-craft-req-item__qty">${have.toLocaleString('zh-TW')} / ${need.toLocaleString('zh-TW')}</span>
     </li>`;
@@ -260,13 +355,15 @@ const EquipCraftPanel = (() => {
         s.equipName(recipe.baseEquip),
         have,
         need,
+        'equip',
+        recipe.baseEquip,
       ));
     }
 
     const materials = s.materialsMap(recipe);
     Object.entries(materials).forEach(([id, amt]) => {
       const have = typeof InventoryModule !== 'undefined' ? InventoryModule.countEtc(id) : 0;
-      reqs.push(reqItemMarkup(s.etcIcon(id), s.etcName(id), have, amt));
+      reqs.push(reqItemMarkup(s.etcIcon(id), s.etcName(id), have, amt, 'etc', id));
     });
 
     const meso = Math.max(0, Math.floor(Number(recipe.meso) || 0));
@@ -281,7 +378,7 @@ const EquipCraftPanel = (() => {
 
     return `<div class="equip-craft-detail" data-craft-kind="${craftKind}">
       <div class="equip-craft-output">
-        <img class="equip-craft-output__icon" src="${s.equipIcon(recipe.output)}" alt="" draggable="false" onerror="this.style.opacity='0.3'">
+        <img class="equip-craft-output__icon" src="${s.equipIcon(recipe.output)}" alt="" draggable="false"${tipAttr('equip', recipe.output)} onerror="this.style.opacity='0.3'">
         <span class="equip-craft-output__name">${title}</span>
       </div>
       ${detail.kind === 'advance'
@@ -296,6 +393,7 @@ const EquipCraftPanel = (() => {
   function render() {
     ensureDom();
     syncChrome();
+    hideCraftTips();
 
     const title = $('equipCraftTitle');
     const body = $('equipCraftBody');
@@ -349,6 +447,8 @@ const EquipCraftPanel = (() => {
       }
       if (typeof IdleDungeon !== 'undefined') IdleDungeon.setOpen?.(false);
       if (typeof IdleBoss !== 'undefined') IdleBoss.closeAll?.();
+    } else {
+      hideCraftTips();
     }
     render();
   }
@@ -483,6 +583,7 @@ const EquipCraftPanel = (() => {
     inited = true;
     ensureDom();
     bindEvents();
+    bindCraftTooltips();
     render();
   }
 

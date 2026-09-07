@@ -393,12 +393,33 @@ const CombatPower = (() => {
     const pctOf = (label) => {
       let n = Number(extra[label]?.total) || 0;
       if (label === 'BOSS怪物傷害') n += Number(ex[label]) || 0;
-      if (soulOpt[label] != null) n += Number(soulOpt[label]) || 0;
-      // 同時查「傷害」與「傷害%」（潛能固定／％分 key 後）
-      const potKeys = label.endsWith('%')
+
+      // 潛能／靈魂詞條別名（武器 B傷顯示名 ≠ 火焰「BOSS怪物傷害」）
+      const potKeyMap = {
+        傷害: ['傷害', '傷害%', '總傷害', '總傷害%'],
+        BOSS怪物傷害: [
+          'BOSS怪物傷害', 'BOSS怪物傷害%', 'Boss怪物傷害', 'BOSS傷害', 'BOSS傷害%',
+          '攻擊Boss怪物時傷害', '攻擊Boss怪物時傷害%',
+          '攻擊BOSS怪物時傷害增加', '攻擊BOSS怪物時傷害增加%',
+          'BOSS怪物攻擊時傷害', 'BOSS怪物攻擊時傷害%',
+        ],
+        爆擊傷害: ['爆擊傷害', '爆擊傷害%'],
+      };
+      const potKeys = potKeyMap[label] || (label.endsWith('%')
         ? [label, label.slice(0, -1)]
-        : [label, `${label}%`];
+        : [label, `${label}%`]);
+
+      const seenSoul = new Set();
       potKeys.forEach((key) => {
+        if (soulOpt[key] == null || seenSoul.has(key)) return;
+        seenSoul.add(key);
+        n += Number(soulOpt[key]) || 0;
+      });
+
+      const seenPot = new Set();
+      potKeys.forEach((key) => {
+        if (seenPot.has(key)) return;
+        seenPot.add(key);
         [potMain[key], potAdd[key]].forEach((pot) => {
           if (!pot?.value) return;
           if (pot.suffix === '%' || key.endsWith('%')) {

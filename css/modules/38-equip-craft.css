@@ -292,6 +292,10 @@
 }
 
 .equip-craft-shared-mats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 10px;
   padding: 10px 12px;
   border-radius: 8px;
@@ -299,4 +303,31 @@
   font-size: 12px;
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.65);
+}
+
+.equip-craft-shared-mats__label {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.equip-craft-mat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px 2px 2px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.22);
+  cursor: help;
+}
+
+.equip-craft-mat-chip__icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.equip-craft-mat-chip__qty {
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.75);
 }

@@ -639,9 +639,98 @@ const IdleBoss = (() => {
     return out;
   }
 
+  function hideRewardTips() {
+    if (typeof EquipTooltipModule !== 'undefined') EquipTooltipModule.hide?.();
+    if (typeof InventoryModule !== 'undefined') {
+      InventoryModule.hideEtcTooltip?.();
+      InventoryModule.hideConsumeTooltip?.();
+    }
+  }
+
+  function rewardTipKind(row) {
+    const kind = String(row?.kind || '').trim();
+    const id = String(row?.itemId || row?.id || '').trim();
+    if (kind === 'equip') return 'equip';
+    if (kind === 'etc') return 'etc';
+    if (kind === 'consume' || kind === 'potion') {
+      if (typeof IdlePotionStore !== 'undefined' && IdlePotionStore.isPotionId?.(id)) return 'potion';
+      return 'consume';
+    }
+    if (typeof ITEM_DATABASE !== 'undefined' && ITEM_DATABASE[id]) return 'equip';
+    if (typeof IdlePotionStore !== 'undefined' && IdlePotionStore.isPotionId?.(id)) return 'potion';
+    if (typeof IdleEtcStore !== 'undefined' && IdleEtcStore.get?.(id)) return 'etc';
+    return '';
+  }
+
+  function showRewardTip(anchorEl, kind, itemId) {
+    const id = String(itemId || '').trim();
+    if (!anchorEl || !kind || !id) return;
+    if (typeof EquipTooltipModule !== 'undefined'
+      && (EquipTooltipModule.pinned || EquipTooltipModule.dragging)) return;
+
+    hideRewardTips();
+
+    if (kind === 'equip') {
+      if (typeof ITEM_DATABASE === 'undefined' || !ITEM_DATABASE[id]) return;
+      EquipTooltipModule?.show?.(anchorEl, id, -1);
+      return;
+    }
+    if (kind === 'etc' && typeof InventoryModule !== 'undefined') {
+      const catalog = typeof IdleEtcStore !== 'undefined' ? IdleEtcStore.get(id) : null;
+      InventoryModule.showEtcTooltip?.(
+        anchorEl,
+        catalog?.name || id,
+        catalog?.desc || '',
+        catalog?.icon || '',
+      );
+      return;
+    }
+    if ((kind === 'potion' || kind === 'consume') && typeof InventoryModule !== 'undefined') {
+      const potion = typeof IdlePotionStore !== 'undefined' ? IdlePotionStore.get(id) : null;
+      if (potion) {
+        InventoryModule.showPotionTooltip?.(anchorEl, potion);
+        return;
+      }
+      const catalog = typeof IdleEtcStore !== 'undefined' ? IdleEtcStore.get(id) : null;
+      InventoryModule.showEtcTooltip?.(
+        anchorEl,
+        catalog?.name || id,
+        catalog?.desc || '',
+        catalog?.icon || '',
+      );
+    }
+  }
+
+  function bindRewardTooltips() {
+    const box = $('idleBossRewardPreview');
+    if (!box || box.dataset.bossTipReady) return;
+    box.addEventListener('mouseover', (event) => {
+      const tipEl = event.target.closest?.('[data-boss-tip][data-item-id]');
+      if (!tipEl || !box.contains(tipEl)) return;
+      if (box._bossTipEl === tipEl) return;
+      box._bossTipEl = tipEl;
+      showRewardTip(
+        tipEl,
+        tipEl.getAttribute('data-boss-tip') || '',
+        tipEl.getAttribute('data-item-id') || '',
+      );
+    });
+    box.addEventListener('mouseout', (event) => {
+      const tipEl = event.target.closest?.('[data-boss-tip][data-item-id]');
+      if (!tipEl || box._bossTipEl !== tipEl) return;
+      const related = event.relatedTarget;
+      if (related instanceof Node && tipEl.contains(related)) return;
+      box._bossTipEl = null;
+      hideRewardTips();
+    });
+    box.dataset.bossTipReady = '1';
+  }
+
   function renderRewardPreview() {
     const box = $('idleBossRewardPreview');
     if (!box) return;
+    hideRewardTips();
+    box._bossTipEl = null;
     if (!selectedId) {
       box.innerHTML = '';
       renderReqLevel();
@@ -656,7 +745,12 @@ const IdleBoss = (() => {
         const icon = rewardPreviewIcon(row);
         const name = rewardPreviewName(row);
         const safeName = String(name || '').replace(/[<>]/g, '');
-        return `<div class="idle-boss-reward-item">
+        const id = String(row?.itemId || row?.id || '').trim();
+        const tipKind = rewardTipKind(row);
+        const tipAttr = tipKind && id
+          ? ` data-boss-tip="${tipKind}" data-item-id="${id}"`
+          : '';
+        return `<div class="idle-boss-reward-item"${tipAttr}>
           <img src="${icon}" alt="" draggable="false" onerror="this.style.visibility='hidden'">
           <span class="idle-boss-reward-name">${safeName}</span>
         </div>`;
@@ -1684,6 +1778,7 @@ const IdleBoss = (() => {
       if (typeof DisassemblePanel !== 'undefined') DisassemblePanel.setOpen?.(false);
       render();
     } else {
+      hideRewardTips();
       if (arenaOpen) setArenaOpen(false);
       syncChrome();
     }
@@ -1694,6 +1789,7 @@ const IdleBoss = (() => {
     ensureDom();
     ensureArenaDom();
     inited = true;
+    bindRewardTooltips();
     const root = $('idleBossRoot');
     root?.addEventListener('click', (e) => {
       if (e.target.closest('#idleBossClose')) {
