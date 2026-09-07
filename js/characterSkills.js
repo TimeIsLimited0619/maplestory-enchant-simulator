@@ -5,7 +5,7 @@
 const CharacterSkills = (() => {
   const STORAGE_KEY = 'ui.characterSkills.v4';
   const DEFAULT_JOB_ID = 222;
-  const JOB_LINE_ORDER = ['warrior', 'mage', 'magef'];
+  const JOB_LINE_ORDER = ['warrior', 'mage'];
   const COMBAT_JOB_BY_LINE = {
     warrior: '英雄',
     mage: '大魔導士（冰、雷）',

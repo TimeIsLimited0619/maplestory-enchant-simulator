@@ -4129,6 +4129,7 @@ const IdleHunt = (() => {
         <div class="idle-hunt-jobline-picker__box">
           <p id="idleHuntJobLinePickerTitle" class="idle-hunt-jobline-picker__title">選擇職業路線</p>
           <p class="idle-hunt-jobline-picker__hint">選完後才會開始放置冒險</p>
+          <p class="idle-hunt-jobline-picker__notice">建議先玩英雄線，整體流程較為完善。低等法師裝尚未加入，可能造成嚴重卡關。</p>
           <div id="idleHuntJobLineList" class="idle-hunt-jobline-picker__list"></div>
         </div>
       </div>`;
