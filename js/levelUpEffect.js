@@ -200,7 +200,11 @@ const LevelUpEffect = (() => {
     ensurePreloaded();
   }
 
-  // 進頁後背景預載，降低首次升級閃爍
+  function collectPreloadUrls() {
+    return frameUrls();
+  }
+
+  // 進頁後背景預載，降低首次升級閃爍（開頁 boot 也會納入 critical 清單）
   warmUp();
 
   return {
@@ -208,6 +212,7 @@ const LevelUpEffect = (() => {
     playOnHuntPlayer,
     stopAll,
     warmUp,
+    collectPreloadUrls,
   };
 })();
 

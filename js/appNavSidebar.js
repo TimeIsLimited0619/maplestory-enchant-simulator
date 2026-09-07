@@ -5,6 +5,7 @@ const AppNavSidebar = (() => {
   const COLLAPSE_KEY = 'app.nav.collapsed.v1';
   const NAME_KEY = 'character.displayName.v1';
   const ICON_BASE = 'images/menubtn';
+  const ICON_STATES = ['normal', 'mouseOver', 'pressed', 'disabled'];
 
   const MAIN_ITEMS_BEFORE_CRAFT = [
     { id: 'btnViewEnchant', label: '強化', icon: 'enchant', title: '開關強化台' },
@@ -39,6 +40,9 @@ const AppNavSidebar = (() => {
     { id: 'idleHuntBoss', label: 'BOSS', icon: 'boss', title: 'BOSS' },
   ];
 
+  /** 模式切換／重置等非 list 按鈕的 icon 目錄 */
+  const EXTRA_ICON_DIRS = ['modeSim', 'modeIdle', 'idlehuntreset'];
+
   let inited = false;
   let buttonsLocked = false;
 
@@ -48,6 +52,25 @@ const AppNavSidebar = (() => {
 
   function iconUrl(folder, state) {
     return `${ICON_BASE}/${folder}/${state}/0.png`;
+  }
+
+  /** 側欄所有選項（含模擬／放置子選單）× 四態，供開頁預載避免 hover 閃爍 */
+  function collectPreloadUrls() {
+    const dirs = new Set(EXTRA_ICON_DIRS);
+    [
+      ...MAIN_ITEMS_BEFORE_CRAFT,
+      ...MAIN_DRAWER_ITEMS,
+      ...MAIN_ITEMS_AFTER_CRAFT,
+      ...SIM_ITEMS,
+      ...IDLE_ITEMS,
+    ].forEach((item) => {
+      if (item?.icon) dirs.add(item.icon);
+    });
+    const urls = [];
+    dirs.forEach((dir) => {
+      ICON_STATES.forEach((state) => urls.push(iconUrl(dir, state)));
+    });
+    return urls;
   }
 
   function itemButtonMarkup(item, extraClass) {
@@ -328,6 +351,7 @@ const AppNavSidebar = (() => {
     readName,
     setButtonsLocked,
     isButtonsLocked: () => buttonsLocked,
+    collectPreloadUrls,
   };
 })();
 

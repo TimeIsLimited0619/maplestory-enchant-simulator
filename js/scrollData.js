@@ -1110,7 +1110,7 @@ registerNormalScrollFamily({
 
 registerNormalScrollFamily({
   idPrefix: 'scroll_normal_non_weapon_str',
-  name: '力量卷軸',
+  name: '裝備卷軸',
   slotStart: 8,
   equipTarget: SCROLL_EQUIP_TARGET.NON_WEAPON,
   icon: 'images/scroll/100.png',
@@ -1121,10 +1121,10 @@ registerNormalScrollFamily({
     15: 'images/scroll/15.png',
   },
   statsByRate: {
-    100: [{ label: 'STR', val: 3 }, { label: '最大HP', val: 30 }, { label: '防禦力', val: 10 }],
-    70: [{ label: 'STR', val: 4 }, { label: '最大HP', val: 70 }, { label: '防禦力', val: 20 }],
-    30: [{ label: 'STR', val: 7 }, { label: '最大HP', val: 120 }, { label: '防禦力', val: 40 }],
-    15: [{ label: 'STR', val: 10 }, { label: '最大HP', val: 170 }, { label: '防禦力', val: 80 }],
+    100: [{ label: 'STR', val: 3 },{label:'INT',val:3},{label:'LUK',val:3},{label:'DEX',val:3}, { label: '最大HP', val: 30 }, { label: '防禦力', val: 10 }],
+    70: [{ label: 'STR', val: 4 },{label:'INT',val:4},{label:'LUK',val:4},{label:'DEX',val:4}, { label: '最大HP', val: 70 }, { label: '防禦力', val: 20 }],
+    30: [{ label: 'STR', val: 7 },{label:'INT',val:7},{label:'LUK',val:7},{label:'DEX',val:7}, { label: '最大HP', val: 120 }, { label: '防禦力', val: 40 }],
+    15: [{ label: 'STR', val: 10 },{label:'INT',val:10},{label:'LUK',val:10},{label:'DEX',val:10}, { label: '最大HP', val: 170 }, { label: '防禦力', val: 80 }],
   },
   priceByRate: {
     100: 500,

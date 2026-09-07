@@ -1206,11 +1206,86 @@ const ENCHANT_UI_CHROME_EXTRAS = [
   'images/UIEquip/EquipTab/SlotName/SlotName_35.png',
 ];
 
+/** 放置殼層首屏 UI（進放置模式立刻可見；hover 態一併預載） */
+const IDLE_HUNT_UI_CHROME = [
+  'images/Uiidelhunt/idelhunt_backgrnd.png',
+  'images/Uiidelhunt/title.png',
+  'images/Uiidelhunt/bar_exp_bg.png',
+  'images/Uiidelhunt/bar_exe_fill.png',
+  'images/Uiidelhunt/bar_hp_bg.png',
+  'images/Uiidelhunt/bar_hp_fill.png',
+  'images/Uiidelhunt/bar_kill.png',
+  'images/Uiidelhunt/bar_coin.png',
+  'images/Uiidelhunt/icon_atp.png',
+  'images/Uiidelhunt/icon_exp_crystal.png',
+  'images/Uiidelhunt/icon_time.png',
+  'images/Uiidelhunt/btn_action_blue.png',
+  'images/Uiidelhunt/btn_action_green.png',
+  'images/Uiidelhunt/btn_action_red.png',
+  'images/Uiidelhunt/btn_chosemap.png',
+  'images/Uiidelhunt/btn_dungon.png',
+  'images/Uiidelhunt/btn_gm.png',
+  'images/Uiidelhunt/button_shop.png',
+  'images/Uiidelhunt/warning.png',
+  'images/Uiidelhunt/btn_tab_normal.png',
+  'images/Uiidelhunt/btn_tab_mouseOver.png',
+  'images/Uiidelhunt/btn_tab_pressed.png',
+  'images/Uiidelhunt/btn_tab_disabled.png',
+  'images/Uiidelhunt/btn2_tab_normal.png',
+  'images/Uiidelhunt/btn2_tab_mouseOver.png',
+  'images/Uiidelhunt/btn2_tab_pressed.png',
+  'images/Uiidelhunt/btn2_tab_disabled.png',
+];
+
+/** 死亡演示圖（首次死亡才載入會閃一下） */
+const IDLE_PLAYER_DEATH_CHROME = [
+  'images/playerdeath/idlezone_death_cao.png',
+  'images/playerdeath/idlezone_death_death.png',
+  'images/playerdeath/idlezone_death_noob.png',
+  'images/playerdeath/bossidlezone_death_cao.png',
+  'images/playerdeath/bossidlezone_death_death.png',
+  'images/playerdeath/bossidlezone_death_noob.png',
+];
+
+/** BOSS／副本計時器數字與底圖 */
+const IDLE_UI_TIMER_CHROME = [
+  'images/UItimer/backgrnd.png',
+  'images/UItimer/timerNum.0.png',
+  'images/UItimer/timerNum.1.png',
+  'images/UItimer/timerNum.2.png',
+  'images/UItimer/timerNum.3.png',
+  'images/UItimer/timerNum.4.png',
+  'images/UItimer/timerNum.5.png',
+  'images/UItimer/timerNum.6.png',
+  'images/UItimer/timerNum.7.png',
+  'images/UItimer/timerNum.8.png',
+  'images/UItimer/timerNum.9.png',
+];
+
+function collectAppNavAndLevelUpUrls() {
+  const urls = [];
+  if (typeof AppNavSidebar !== 'undefined' && typeof AppNavSidebar.collectPreloadUrls === 'function') {
+    AppNavSidebar.collectPreloadUrls().forEach((src) => urls.push(src));
+  }
+  if (typeof LevelUpEffect !== 'undefined' && typeof LevelUpEffect.collectPreloadUrls === 'function') {
+    LevelUpEffect.collectPreloadUrls().forEach((src) => urls.push(src));
+  } else if (typeof LEVEL_UP_EFFECT !== 'undefined' && Array.isArray(LEVEL_UP_EFFECT?.frames)) {
+    LEVEL_UP_EFFECT.frames.forEach((f) => {
+      if (f?.src) urls.push(f.src);
+    });
+  }
+  return urls;
+}
+
 function collectEssentialEnchantChromeUrls() {
   const urls = [];
 
   Object.values(MAIN_PANEL_BG_BY_CATEGORY).forEach((src) => urls.push(src));
   ENCHANT_UI_CHROME_EXTRAS.forEach((src) => urls.push(src));
+  IDLE_HUNT_UI_CHROME.forEach((src) => urls.push(src));
+  IDLE_PLAYER_DEATH_CHROME.forEach((src) => urls.push(src));
+  IDLE_UI_TIMER_CHROME.forEach((src) => urls.push(src));
+  collectAppNavAndLevelUpUrls().forEach((src) => urls.push(src));
 
   ENCHANT_TAB_BUTTON_PREFIXES.forEach((prefix) => {
     ENCHANT_TAB_BUTTON_STATES.forEach((state) => {
@@ -1224,12 +1299,13 @@ function collectEssentialEnchantChromeUrls() {
   return [...new Set(urls.filter(Boolean))];
 }
 
-/** 開頁阻擋層只等首屏（強化台待機／背包／裝備欄），全螢幕與 hover 圖改背景載入 */
+/** 開頁阻擋層：首屏強化台／背包／裝備欄＋左側完整選單四態＋升級動畫 */
 function collectCriticalChromeUrls() {
   const urls = [];
 
   Object.values(MAIN_PANEL_BG_BY_CATEGORY).forEach((src) => urls.push(src));
   ENCHANT_UI_CHROME_EXTRAS.forEach((src) => urls.push(src));
+  collectAppNavAndLevelUpUrls().forEach((src) => urls.push(src));
 
   ENCHANT_TAB_BUTTON_PREFIXES.forEach((prefix) => {
     ENCHANT_TAB_BUTTON_STATES.forEach((state) => {
