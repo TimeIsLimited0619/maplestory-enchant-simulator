@@ -421,7 +421,16 @@ const ScrollModule = {
     if (btn) btn.removeAttribute('aria-busy');
   },
 
-  canUseScrollAutoEnhance() {
+  isNormalFixedScroll(scroll) {
+    if (!scroll) return false;
+    if (isChaosScroll(scroll) || isRandomRollScroll(scroll) || isMultiStatRollScroll(scroll)) {
+      return false;
+    }
+    return scroll.tab === 'normal'
+      || scroll.scrollType === (typeof SCROLL_TYPE !== 'undefined' ? SCROLL_TYPE.FIXED : 'fixed');
+  },
+
+  canUseDiceScrollAutoEnhance() {
     const scroll = this.getSelectedScroll();
     if (!scroll) return false;
     return Boolean(
@@ -431,6 +440,26 @@ const ScrollModule = {
       && (isChaosScroll(scroll) || isRandomRollScroll(scroll) || isMultiStatRollScroll(scroll))
       && !this.getScrollEquipError()
     );
+  },
+
+  canUseNormalScrollAutoEnhance() {
+    const scroll = this.getSelectedScroll();
+    if (!scroll || !this.isNormalFixedScroll(scroll)) return false;
+    if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+      if (typeof getPlayerGloryScrollCount === 'function' && getPlayerGloryScrollCount(scroll.id) <= 0) {
+        return false;
+      }
+    }
+    return Boolean(
+      this.itemData
+      && this.getRemainingUses() > 0
+      && this.isCatalogTab()
+      && !this.getScrollEquipError()
+    );
+  },
+
+  canUseScrollAutoEnhance() {
+    return this.canUseDiceScrollAutoEnhance() || this.canUseNormalScrollAutoEnhance();
   },
 
   getAutoTargetDefs(scroll) {
@@ -503,9 +532,10 @@ const ScrollModule = {
     const autoCheck = document.getElementById('chkScrollAutoEnhance');
     const mainPanel = document.getElementById('mainContentPanel');
 
+    const canDiceAuto = this.canUseDiceScrollAutoEnhance();
     const canAuto = this.canUseScrollAutoEnhance();
     const autoOn = Boolean(autoCheck?.checked);
-    const showTargets = canAuto && autoOn;
+    const showTargets = canDiceAuto && autoOn;
     const hasEquip = Boolean(this.itemData);
     optionsWrap?.classList.toggle('hidden', !hasEquip);
     optionsLeftWrap?.classList.toggle('hidden', !hasEquip);
@@ -520,7 +550,7 @@ const ScrollModule = {
     if (!list) return;
 
     if (!showTargets) {
-      if (!canAuto) {
+      if (!canDiceAuto) {
         list.innerHTML = '';
         delete list.dataset.signature;
       }
@@ -623,7 +653,7 @@ const ScrollModule = {
     if (this.autoRunning || !this.itemData) return;
 
     const scroll = this.getSelectedScroll();
-    if (!this.canUseScrollAutoEnhance()) {
+    if (!this.canUseDiceScrollAutoEnhance()) {
       return addLog('⚠️ 自動強化僅適用可骰數值的專用卷軸。', 'log-fail');
     }
 
@@ -774,6 +804,171 @@ const ScrollModule = {
     }
   },
 
+  tryConsumeScrollForAuto(scroll) {
+    if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+      if (typeof consumeGloryScroll === 'function' && !consumeGloryScroll(scroll.id, 1)) {
+        return false;
+      }
+    }
+    return true;
+  },
+
+  applyOneNormalScrollForAuto(scroll) {
+    if (!this.tryConsumeScrollForAuto(scroll)) return 'no_scroll';
+
+    trackScrollGloryCost();
+    const success = Math.random() * 100 < scroll.rate;
+    if (!success) {
+      incrementScrollUsedCountOnly(this.itemData, false);
+      this.itemData.scrollFailUses = (this.itemData.scrollFailUses || 0) + 1;
+      if (typeof trackScrollCatValleyCost === 'function') {
+        trackScrollCatValleyCost('scrollUse', this.itemData, scroll, { usedRecovery: false });
+      }
+      return 'fail';
+    }
+
+    applyFixedScrollStats(this.itemData, scroll.stats);
+    incrementScrollUsedCountOnly(this.itemData);
+    if (typeof trackScrollCatValleyCost === 'function') {
+      trackScrollCatValleyCost('scrollUse', this.itemData, scroll, { usedRecovery: false });
+    }
+    return 'success';
+  },
+
+  tryAutoPureWhiteRestore() {
+    const restore = typeof getRestoreScrollById === 'function'
+      ? getRestoreScrollById('scroll_white_recover')
+      : null;
+    if (!restore || !(this.itemData.scrollFailUses > 0)) return 'none';
+
+    const cost = getSpellTraceCostAmount(restore.cost);
+    if (typeof canAffordSpellTrace === 'function' && !canAffordSpellTrace(cost)) {
+      return 'no_trace';
+    }
+    if (typeof consumeSpellTrace === 'function' && !consumeSpellTrace(cost)) {
+      return 'no_trace';
+    }
+
+    applyRestoreScroll(this.itemData, restore);
+    return 'ok';
+  },
+
+  async runAutoNormalScrollEnhance() {
+    if (this.autoRunning || !this.itemData) return;
+
+    const scroll = this.getSelectedScroll();
+    if (!this.canUseNormalScrollAutoEnhance()) {
+      return addLog('⚠️ 普通卷軸自動強化需選擇可用的普通卷軸，且尚有剩餘強化次數。', 'log-fail');
+    }
+
+    this.autoRunning = true;
+    this.autoCancelled = false;
+    const btn = document.getElementById('btnScrollUse');
+    if (btn) btn.setAttribute('aria-busy', 'true');
+    this.updateUseButtonState();
+    this.bindAutoCancelListener();
+
+    let scrollAttempts = 0;
+    let successCount = 0;
+    let failCount = 0;
+    let whiteUsed = 0;
+    let stopReason = null;
+
+    try {
+      const batchSize = Math.max(1, Number(this.AUTO_ENHANCE_BATCH_SIZE) || 1);
+      while (this.autoRunning && this.itemData && !stopReason) {
+        let stopBatch = false;
+
+        for (let step = 0; step < batchSize; step++) {
+          if (!this.autoRunning || !this.itemData) {
+            stopBatch = true;
+            break;
+          }
+
+          const remaining = this.getRemainingUses();
+          const failUses = this.itemData.scrollFailUses || 0;
+
+          if (remaining > 0) {
+            const result = this.applyOneNormalScrollForAuto(scroll);
+            if (result === 'no_scroll') {
+              stopReason = 'no_scroll';
+              stopBatch = true;
+              break;
+            }
+            scrollAttempts++;
+            if (result === 'success') successCount++;
+            else failCount++;
+          } else if (failUses > 0) {
+            const whiteResult = this.tryAutoPureWhiteRestore();
+            if (whiteResult === 'no_trace') {
+              stopReason = 'no_trace';
+              stopBatch = true;
+              break;
+            }
+            if (whiteResult === 'ok') {
+              whiteUsed++;
+            } else {
+              stopReason = 'full';
+              stopBatch = true;
+              break;
+            }
+          } else {
+            stopReason = 'full';
+            stopBatch = true;
+            break;
+          }
+
+          if (scrollAttempts + whiteUsed > 10000) {
+            stopReason = 'limit';
+            stopBatch = true;
+            break;
+          }
+        }
+
+        this.updateUI();
+        updateStatusPanel();
+
+        if (stopReason || stopBatch || !this.autoRunning) break;
+        await new Promise((resolve) => setTimeout(resolve, this.AUTO_ENHANCE_DELAY_MS));
+      }
+
+      if (!stopReason && this.autoRunning && this.itemData) {
+        if (this.getRemainingUses() <= 0 && !(this.itemData.scrollFailUses > 0)) {
+          stopReason = 'full';
+        }
+      }
+    } finally {
+      this.unbindAutoCancelListener();
+    }
+
+    const wasCancelled = this.autoCancelled;
+    this.autoRunning = false;
+    this.autoCancelled = false;
+    if (btn) btn.removeAttribute('aria-busy');
+    this.updateUI();
+    this.updateUseButtonState();
+    updateStatusPanel();
+
+    const summary = `成功 ${successCount}／失敗 ${failCount}，用卷 ${scrollAttempts}、純白 ${whiteUsed}`;
+    if (wasCancelled) {
+      addLog(`⏹️ 已取消普通卷軸自動強化（任意鍵）：${summary}`, 'log-info');
+      return;
+    }
+    if (stopReason === 'no_scroll') {
+      addLog(`⚠️ 卷軸不足，自動強化停止（${summary}）`, 'log-fail');
+      return;
+    }
+    if (stopReason === 'no_trace') {
+      addLog(`⚠️ 咒文的痕跡不足，無法使用純白的卷軸（${summary}）`, 'log-fail');
+      return;
+    }
+    if (stopReason === 'limit') {
+      addLog(`⚠️ 自動強化達到上限次數，已停止（${summary}）`, 'log-fail');
+      return;
+    }
+    addLog(`⚡ 普通卷軸自動強化完成：${summary}`, 'log-success');
+  },
+
   isCatalogTab() {
     return this.selectedTab === 'special' || this.selectedTab === 'normal';
   },
@@ -895,6 +1090,8 @@ const ScrollModule = {
   },
 
   syncExhaustedScrollState() {
+    if (this.autoRunning) return;
+
     if (this.selectedScrollId) {
       const selected = getScrollById(this.selectedScrollId);
       if (!selected || getScrollEquipError(selected, this.itemData)) {
@@ -1692,8 +1889,11 @@ const ScrollModule = {
     if (this.isCatalogTab()) {
       const auto = document.getElementById('chkScrollAutoEnhance')?.checked;
       if (auto) {
-        const scroll = this.getSelectedScroll();
-        if (!this.canUseScrollAutoEnhance()) {
+        if (this.canUseNormalScrollAutoEnhance()) {
+          this.runAutoNormalScrollEnhance();
+          return;
+        }
+        if (!this.canUseDiceScrollAutoEnhance()) {
           return addLog('⚠️ 目前卷軸無法使用自動強化。', 'log-fail');
         }
         this.runAutoScrollEnhance();

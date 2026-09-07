@@ -107,6 +107,10 @@ const IdleHunt = (() => {
   /** 死亡演示播放中（結束後才跑 stop／復活流程） */
   let deathFxPending = false;
   /** 章節死亡彈窗 */
+  /** 暫停後再開始：保留怪攻 CD，避免連點暫停無傷 */
+  let combatPaused = false;
+  let lastStartPauseAt = 0;
+  const START_PAUSE_CD_MS = 800;
   let deathModalOpen = false;
   let deathModalMsg = '';
   /** 防止復活流程重入 */
@@ -699,6 +703,7 @@ const IdleHunt = (() => {
     state.huntMode = 'mob';
     state.atkAcc = 0;
     resetMobAtk();
+    combatPaused = false;
     state.dying = [];
     state.queue = [];
     clearFieldDrops(true);
@@ -1552,9 +1557,11 @@ const IdleHunt = (() => {
   function syncPlayerHp(opts) {
     const max = playerMaxHp();
     const prevMax = Number(state.maxHp) || 0;
+    const wasDead = (Number(state.hp) || 0) <= 0 && state.hp != null;
     if (opts?.fill || state.hp == null || !(Number(state.hp) >= 0)) {
       state.hp = max;
-    } else if (max > prevMax && prevMax > 0) {
+    } else if (!wasDead && max > prevMax && prevMax > 0) {
+      // 死亡中不因換裝加血而「假復活」，避免死亡 UI 卡死
       state.hp += max - prevMax;
     }
     state.maxHp = max;
@@ -2053,7 +2060,7 @@ const IdleHunt = (() => {
   function scheduleMobDamage(delayMs, fn) {
     const seq = ++mobDamageSeq;
     const run = () => {
-      if (seq !== mobDamageSeq || !open) return;
+      if (seq !== mobDamageSeq || !open || !state.running) return;
       fn();
     };
     const ms = scaleDelayMs(Math.max(0, Number(delayMs) || 0));
@@ -3526,17 +3533,23 @@ const IdleHunt = (() => {
         failBossFight();
       }
       revivePlayer();
+      combatPaused = false;
     }
     hideChapterDeathModal();
-    resetMobAtk();
-    fillQueue();
-    state.atkAcc = attackDelaySec();
-    state.preferSkillFirst = true;
-    state.preferSkillFirstWait = 0;
-    state.deferredKills = [];
-    if (typeof SkillCombat !== 'undefined') {
-      SkillCombat.reset?.({ keepBuffs: true, keepCombo: true, keepCooldowns: true });
+    const resume = combatPaused;
+    combatPaused = false;
+    if (!resume) {
+      // 全新開始才重置怪攻節奏；暫停恢復則保留累計，避免連點無傷
+      resetMobAtk();
+      state.atkAcc = attackDelaySec();
+      state.preferSkillFirst = true;
+      state.preferSkillFirstWait = 0;
+      state.deferredKills = [];
+      if (typeof SkillCombat !== 'undefined') {
+        SkillCombat.reset?.({ keepBuffs: true, keepCombo: true, keepCooldowns: true });
+      }
     }
+    fillQueue();
     state.running = true;
     // 手動開始／恢復時解除推圖連跳鎖
     state.afkHoldAdvance = false;
@@ -3550,7 +3563,10 @@ const IdleHunt = (() => {
   }
 
   function stop(doSave) {
+    if (state.running) combatPaused = true;
     state.running = false;
+    // 取消尚未結算的延遲怪傷（暫停中不應續打）
+    mobDamageSeq += 1;
     if (afkStepTimer != null) {
       window.clearTimeout(afkStepTimer);
       afkStepTimer = null;
@@ -4104,10 +4120,13 @@ const IdleHunt = (() => {
       if (typeof PanelDrag !== 'undefined') PanelDrag.bringFront(root);
     } else {
       resumeAfterPanelClose = false;
+      combatPaused = false;
       cancelFieldTransition();
       // 保留懲罰文案，重開面板時可還原復活彈窗
       hideChapterDeathModal({ keepMsg: true });
       stop();
+      // leaveIdle／關面板：下次開始視為全新戰鬥
+      combatPaused = false;
       stopSpriteTimer();
       clearFieldDrops(true);
     }
@@ -4311,6 +4330,9 @@ const IdleHunt = (() => {
     $('idleHuntStart')?.addEventListener('click', (event) => {
       event.preventDefault();
       if (isDeathUiLocked()) return;
+      const now = Date.now();
+      if (now - lastStartPauseAt < START_PAUSE_CD_MS) return;
+      lastStartPauseAt = now;
       if (state.running || isPushTransitionCancellable()) pausePushOrCombat();
       else start();
     });
@@ -4583,6 +4605,7 @@ const IdleHunt = (() => {
     respawnMobs,
     getPlayerHp: () => ({ hp: Number(state.hp) || 0, maxHp: Number(state.maxHp) || 0 }),
     isPlayerDead,
+    isDeathUiLocked,
     revivePlayer,
     healToFull,
     healPlayer,

@@ -8552,15 +8552,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "killGold": 4000,
     "bossKillExp": 4000,
     "bossKillGold": 4000,
-    "mobDrops": [
-      {
-        "kind": "etc",
-        "itemId": "maple_heart_magician",
-        "name": "智慧之心",
-        "chance": 5,
-        "amount": 1
-      }
-    ],
+    "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,

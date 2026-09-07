@@ -178,7 +178,10 @@ const CharacterProgression = (() => {
     if (typeof UiCharacterInfo !== 'undefined') UiCharacterInfo.refresh?.();
     if (typeof UiHyperStat !== 'undefined') UiHyperStat.refresh?.();
     if (typeof UiApDistribution !== 'undefined') UiApDistribution.refresh?.();
-    if (typeof IdleHunt !== 'undefined') IdleHunt.refreshDisplay?.();
+    if (typeof IdleHunt !== 'undefined'
+      && (typeof AppMode === 'undefined' || AppMode.isIdle?.())) {
+      IdleHunt.refreshDisplay?.();
+    }
     // 等級變動時刷新商店可購清單
     if (typeof UiNpcShop !== 'undefined' && UiNpcShop.isOpen?.()) UiNpcShop.render?.();
   }

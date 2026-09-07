@@ -259,6 +259,8 @@ const IdleZones = {
     const found = this.get(id);
     const foundId = found ? this.id(found) : '';
     if (found && foundId && this.isUnlocked(found) && foundId === String(id || '')) return foundId;
+    // 地圖仍存在但暫時未解鎖時保留原 ID（避免切模式讀到模擬器等級被 clamp 成「第 4 狩獵場」）
+    if (found && foundId) return foundId;
     let pick = this.list[0] || this.orderedMaps?.()[0];
     this.list.forEach((z) => {
       if (this.isUnlocked(z)) pick = z;

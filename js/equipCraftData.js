@@ -61,7 +61,7 @@ const EQUIP_CRAFT_ADVANCE_LINES = [
         meso: 250000,
       },
       {
-        id: 'adv_maple_heart_6',
+        id: 'adv_maple_heart_4',
         label: '覺醒的楓葉之心(魔攻) Lv.71',
         output: '01122035',
         baseEquip: '01122029',
@@ -70,7 +70,7 @@ const EQUIP_CRAFT_ADVANCE_LINES = [
         meso: 250000,
       },
       {
-        id: 'adv_maple_heart_4',
+        id: 'adv_maple_heart_5',
         label: '真. 楓葉之心(劍士用) Lv.71',
         output: '01122122',
         baseEquip: '01122034',
@@ -79,7 +79,7 @@ const EQUIP_CRAFT_ADVANCE_LINES = [
         meso: 500000,
       },
       {
-        id: 'adv_maple_heart_5',
+        id: 'adv_maple_heart_6',
         label: '真. 楓葉之心(法師用) Lv.71',
         output: '01122123',
         baseEquip: '01122035',

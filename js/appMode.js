@@ -61,6 +61,11 @@ const AppMode = (() => {
     const want = next === 'idle' ? 'idle' : 'sim';
     const prev = mode;
     if (want === prev) return;
+    // 離開放置：先關狩獵再換角色進度，避免模擬器等級觸發 clamp 把地圖改掉
+    if (want !== 'idle' && prev === 'idle' && typeof IdleHunt !== 'undefined') {
+      IdleHunt.leaveIdleMode?.();
+      if (typeof IdlePotionPanel !== 'undefined') IdlePotionPanel.syncVisible?.();
+    }
     if (typeof CharacterProgression !== 'undefined') CharacterProgression.save?.();
     if (typeof CharacterCombatPanel !== 'undefined') CharacterCombatPanel.save?.();
     if (typeof SessionPersistenceModule !== 'undefined') {
@@ -78,9 +83,6 @@ const AppMode = (() => {
       if (typeof IdleHunt !== 'undefined') {
         IdleHunt.enterIdleMode?.();
       }
-      if (typeof IdlePotionPanel !== 'undefined') IdlePotionPanel.syncVisible?.();
-    } else if (prev === 'idle' && typeof IdleHunt !== 'undefined') {
-      IdleHunt.leaveIdleMode?.();
       if (typeof IdlePotionPanel !== 'undefined') IdlePotionPanel.syncVisible?.();
     }
   }

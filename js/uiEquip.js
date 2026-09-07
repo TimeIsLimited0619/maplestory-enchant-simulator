@@ -23,6 +23,20 @@ const UiEquipModule = (() => {
     5000: '圖騰', 5001: '圖騰', 5002: '圖騰', 5250: '珠寶',
   };
 
+  /** 放置死亡／復活流程中禁止換裝（加血裝會把死亡狀態卡死） */
+  function isIdleDeathEquipLocked() {
+    if (typeof IdleHunt === 'undefined') return false;
+    if (typeof IdleHunt.isDeathUiLocked === 'function' && IdleHunt.isDeathUiLocked()) return true;
+    if (typeof IdleHunt.isPlayerDead === 'function' && IdleHunt.isPlayerDead()) return true;
+    return false;
+  }
+
+  function warnDeathEquipLocked() {
+    if (typeof addLog === 'function') {
+      addLog('[裝備欄] 死亡中無法更換裝備。', 'log-fail');
+    }
+  }
+
   const ISLOT_TO_SLOTS = {
     Cp: ['1'],
     Af: ['2'], Am: ['2'], Face: ['2'],
@@ -323,6 +337,10 @@ const UiEquipModule = (() => {
    * 穿上：從背包取出 → 放入身體槽；原槽有裝備則放回背包
    */
   function wearFromBag(itemId, bagIndex, preferredSlotId = null) {
+    if (isIdleDeathEquipLocked()) {
+      warnDeathEquipLocked();
+      return false;
+    }
     if (typeof EquipTooltipModule !== 'undefined') {
       EquipTooltipModule.hide(true);
     }
@@ -403,6 +421,10 @@ const UiEquipModule = (() => {
   }
 
   function unequipSlot(uiSlotId, { silent = false } = {}) {
+    if (isIdleDeathEquipLocked()) {
+      if (!silent) warnDeathEquipLocked();
+      return false;
+    }
     if (typeof EquipTooltipModule !== 'undefined') {
       EquipTooltipModule.hide(true);
     }
@@ -528,6 +550,10 @@ const UiEquipModule = (() => {
 
   /** Application：切到 pending preset 並顯示其穿著（不拆其他 preset） */
   function applyPendingPreset() {
+    if (isIdleDeathEquipLocked()) {
+      warnDeathEquipLocked();
+      return;
+    }
     if (!PRESET_POS[pendingPreset]) return;
     setActivePreset(pendingPreset);
     if (typeof addLog === 'function') {
@@ -695,6 +721,10 @@ const UiEquipModule = (() => {
   }
 
   function handleBodyDrop(e, uiSlotId) {
+    if (isIdleDeathEquipLocked()) {
+      warnDeathEquipLocked();
+      return;
+    }
     const raw = e.dataTransfer.getData('text/plain');
     if (!raw) return;
     try {
