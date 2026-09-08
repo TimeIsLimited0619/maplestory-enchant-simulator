@@ -1334,9 +1334,9 @@ const IDLE_DUNGEON_LIST = [
     "diffs": [],
     "damageTiers": [
       {
-        "minDamage": 100000000,
+        "minDamage": 1000000000,
         "gold": 1000000,
-        "name": "1 億",
+        "name": "10 億",
         "rewards": [
           {
             "kind": "etc",
@@ -1348,9 +1348,9 @@ const IDLE_DUNGEON_LIST = [
         ]
       },
       {
-        "minDamage": 500000000,
+        "minDamage": 5000000000,
         "gold": 5000000,
-        "name": "5 億",
+        "name": "50 億",
         "rewards": [
           {
             "kind": "etc",
@@ -1362,9 +1362,9 @@ const IDLE_DUNGEON_LIST = [
         ]
       },
       {
-        "minDamage": 1000000000,
+        "minDamage": 10000000000,
         "gold": 10000000,
-        "name": "10 億",
+        "name": "100 億",
         "rewards": [
           {
             "kind": "etc",
@@ -1376,9 +1376,9 @@ const IDLE_DUNGEON_LIST = [
         ]
       },
       {
-        "minDamage": 2000000000,
+        "minDamage": 20000000000,
         "gold": 20000000,
-        "name": "20 億",
+        "name": "200 億",
         "rewards": [
           {
             "kind": "etc",
@@ -1390,9 +1390,9 @@ const IDLE_DUNGEON_LIST = [
         ]
       },
       {
-        "minDamage": 5000000000,
+        "minDamage": 50000000000,
         "gold": 50000000,
-        "name": "50 億",
+        "name": "500 億",
         "rewards": [
           {
             "kind": "etc",
@@ -1404,9 +1404,9 @@ const IDLE_DUNGEON_LIST = [
         ]
       },
       {
-        "minDamage": 10000000000,
+        "minDamage": 100000000000,
         "gold": 100000000,
-        "name": "100 億",
+        "name": "1000 億",
         "rewards": [
           {
             "kind": "etc",

@@ -106,6 +106,27 @@
   min-width: 160px;
 }
 
+.idle-dungeon-enter .idle-dungeon-repeat {
+  flex: 0 0 auto;
+  min-width: 110px;
+  max-width: 140px;
+}
+
+.idle-dungeon-enter .idle-dungeon-repeat input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #111;
+  color: #eee;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 5px 6px;
+  font-family: inherit;
+}
+
+.idle-dungeon-enter .idle-dungeon-repeat input:disabled {
+  opacity: 0.55;
+}
+
 .idle-dungeon-enter select,
 .idle-dungeon-gm input,
 .idle-dungeon-gm select,

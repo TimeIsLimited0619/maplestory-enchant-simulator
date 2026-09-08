@@ -11,6 +11,11 @@ const IdleDungeon = (() => {
   let lastHudKey = '';
   /** @type {ReturnType<typeof IdleUiTimer.create>|null} */
   let dungeonTimer = null;
+  /** 自動重複：本批總場數／剩餘（含尚未開始）／取消旗標／偏好次數 */
+  let repeatTotal = 0;
+  let repeatLeft = 0;
+  let repeatCancel = false;
+  let repeatWanted = 1;
   let pickerView = 'cats';
   let pickerCat = 'gold';
   let selectedId = '';
@@ -120,6 +125,19 @@ const IdleDungeon = (() => {
       .filter((tier) => dmg >= (tier.minDamage || 0))
       .slice()
       .sort((a, b) => (a.minDamage || 0) - (b.minDamage || 0));
+  }
+
+  function topDamageTier(dungeon) {
+    const list = (dungeon?.damageTiers || [])
+      .slice()
+      .sort((a, b) => (a.minDamage || 0) - (b.minDamage || 0));
+    return list.length ? list[list.length - 1] : null;
+  }
+
+  function reachedMaxDamageTier(dungeon, damage) {
+    const top = topDamageTier(dungeon);
+    if (!top) return false;
+    return Math.max(0, Number(damage) || 0) >= (top.minDamage || 0);
   }
 
   function escapeHtml(text) {
@@ -266,7 +284,8 @@ const IdleDungeon = (() => {
     const lines = [
       `傷害${formatN(damage)}  獎勵階段${tierCount}`,
     ];
-    if (reason === 'death') lines.unshift('角色倒下。');
+    if (reason === 'max') lines.unshift('已達最高階獎勵，提早離場。');
+    else if (reason === 'death') lines.unshift('角色倒下。');
     const gained = [];
     if (gold > 0) gained.push(`楓幣 X ${formatN(gold)}`);
     gained.push(...formatItemTotalsLines(itemTotals));
@@ -315,12 +334,77 @@ const IdleDungeon = (() => {
     const startBtn = $('idleDungeonStart');
     if (!startBtn) return;
     const busy = !!run();
+    const tickets = dungeon ? ticketCount(dungeon.ticketId) : 0;
     const levelBlocked = !busy && dungeon && !meetsEntryLevel(dungeon, diff);
-    startBtn.disabled = busy || levelBlocked;
-    startBtn.classList.toggle('is-locked', levelBlocked);
-    startBtn.title = levelBlocked
-      ? `等級不足，需達 Lv.${entryReqLevel(dungeon, diff)} 才能進入`
-      : '';
+    const noTicket = !busy && tickets < 1;
+    startBtn.disabled = busy || levelBlocked || noTicket;
+    startBtn.classList.toggle('is-locked', levelBlocked || noTicket);
+    if (levelBlocked) {
+      startBtn.title = `等級不足，需達 Lv.${entryReqLevel(dungeon, diff)} 才能進入`;
+    } else if (noTicket) {
+      startBtn.title = '入場券不足';
+    } else {
+      startBtn.title = '';
+    }
+    const planned = clampRepeatCount(readRepeatInputRaw(), tickets);
+    startBtn.textContent = !busy && planned > 1 ? `進入 ×${planned}` : '進入';
+  }
+
+  function readRepeatInputRaw() {
+    const el = $('idleDungeonRepeat');
+    if (el) return el.value;
+    return repeatWanted;
+  }
+
+  function clampRepeatCount(raw, maxTickets) {
+    const max = Math.max(0, Math.floor(Number(maxTickets) || 0));
+    let n = Math.floor(Number(raw) || 0);
+    if (!Number.isFinite(n) || n < 1) n = 1;
+    if (max <= 0) return 0;
+    return Math.min(n, max);
+  }
+
+  function syncRepeatInput(dungeon) {
+    const el = $('idleDungeonRepeat');
+    if (!el || !dungeon) return;
+    const max = ticketCount(dungeon.ticketId);
+    const busy = !!run();
+    el.max = String(Math.max(1, max || 1));
+    el.disabled = busy || max < 1;
+    const next = clampRepeatCount(el.value || repeatWanted, max);
+    if (max < 1) {
+      el.value = '0';
+      repeatWanted = 1;
+    } else {
+      el.value = String(next || 1);
+      repeatWanted = next || 1;
+    }
+  }
+
+  function clearRepeatState() {
+    repeatTotal = 0;
+    repeatLeft = 0;
+    repeatCancel = false;
+  }
+
+  function repeatHudTag() {
+    if (repeatTotal <= 1) return '';
+    const curIdx = Math.max(1, repeatTotal - repeatLeft);
+    return `自動 ${curIdx}/${repeatTotal}`;
+  }
+
+  function bindRepeatInput(dungeon) {
+    const el = $('idleDungeonRepeat');
+    if (!el || !dungeon) return;
+    const apply = () => {
+      syncRepeatInput(dungeon);
+      const diff = dungeon.type === 'damage'
+        ? null
+        : (typeof IdleDungeonStore !== 'undefined' ? IdleDungeonStore.getDiff(dungeon, selectedDiffId) : null);
+      syncEnterStartBtn(dungeon, diff);
+    };
+    el.addEventListener('input', apply);
+    el.addEventListener('change', apply);
   }
 
   function updateEnterReqLevel(dungeon, diff) {
@@ -423,15 +507,20 @@ const IdleDungeon = (() => {
     const isNormal = d.type === 'normal';
     const tierLines = formatDamageTierPreview(d.damageTiers);
     const leadHint = isDamage
-      ? '在時間內造成的傷害越高，獎勵越高，王的傷害也會越來越高。'
+      ? '在時間內造成的傷害越高，獎勵越高；達最高階會自動提早離場。'
       : (isNormal
         ? '達成擊殺數後召喚頭目，擊敗頭目才可獲得通關獎勵。'
         : '限定時間內擊殺的怪物越多，獲得的楓幣越多。');
+    const repeatVal = n < 1 ? 0 : clampRepeatCount(repeatWanted, n);
+    const repeatField = `<label class="idle-dungeon-repeat">挑戰次數
+      <input id="idleDungeonRepeat" type="number" min="1" max="${Math.max(1, n)}" step="1" value="${repeatVal}" title="最多 ${n}（身上入場券）">
+    </label>`;
     wrap.innerHTML = isDamage
       ? `<p class="idle-dungeon-lead">${typeLabel(d.type)} · ${d.ticketName} × ${n}<br>${leadHint}</p>
         <p id="idleDungeonReqLevel" class="idle-dungeon-req-level" hidden></p>
         <div class="idle-dungeon-tier-preview">${tierLines}</div>
         <div class="idle-dungeon-enter">
+          ${repeatField}
           <button type="button" id="idleDungeonStart" class="idle-hunt-btn idle-hunt-btn--boss">進入</button>
           <button type="button" id="idleDungeonLeave" class="idle-hunt-btn idle-hunt-btn--ghost">離開／結算</button>
         </div>
@@ -441,6 +530,7 @@ const IdleDungeon = (() => {
           <label>難度
             <select id="idleDungeonDiff"></select>
           </label>
+          ${repeatField}
           <button type="button" id="idleDungeonStart" class="idle-hunt-btn idle-hunt-btn--boss">進入</button>
           <button type="button" id="idleDungeonLeave" class="idle-hunt-btn idle-hunt-btn--ghost">離開／結算</button>
         </div>
@@ -457,8 +547,15 @@ const IdleDungeon = (() => {
         updateEnterReqLevel(d, diff);
       });
     }
+    syncRepeatInput(d);
+    bindRepeatInput(d);
     const leave = $('idleDungeonLeave');
-    if (leave) leave.disabled = !run();
+    if (leave) {
+      leave.disabled = !run();
+      leave.textContent = (run() && repeatTotal > 1)
+        ? '離開／取消自動'
+        : '離開／結算';
+    }
     const enterDiff = isDamage
       ? null
       : (typeof IdleDungeonStore !== 'undefined' ? IdleDungeonStore.getDiff(d, selectedDiffId) : null);
@@ -548,6 +645,7 @@ const IdleDungeon = (() => {
     const hasTimer = (cur.durationSec || 0) > 0;
     bar.classList.toggle('has-timer', hasTimer);
     const d = typeof IdleDungeonStore !== 'undefined' ? IdleDungeonStore.get(cur.id) : null;
+    const autoTag = repeatHudTag();
     let text = '';
     if (cur.type === 'damage') {
       const ramp = typeof IdleDungeonStore !== 'undefined' && IdleDungeonStore.damageRampMult
@@ -556,15 +654,17 @@ const IdleDungeon = (() => {
       const reached = reachedDamageTiers(d, cur.damage).length;
       text = [
         cur.name || d?.name || '副本',
+        autoTag,
         `累積傷害 ${formatN(cur.damage)}`,
         `已達到 ${reached} 階傷害獎勵`,
         `boss傷害 x${ramp.toFixed(2)}`,
-      ].join(' | ');
+      ].filter(Boolean).join(' | ');
     } else {
       const parts = [`${cur.name || d?.name || '副本'}${cur.diffName ? ` · ${cur.diffName}` : ''}`];
+      if (autoTag) parts.push(autoTag);
       if (cur.type === 'timed') {
         parts.push(`擊殺 ${cur.kills}`);
-        parts.push(`總計 ${formatN(cur.kills * (cur.settleGoldPerKill || 0))} 楓幣`);
+        parts.push(`結算 ${formatN(cur.kills * (cur.settleGoldPerKill || 0))} 楓幣`);
       } else if (cur.type === 'normal') {
         const hunt = typeof IdleHunt !== 'undefined' ? IdleHunt.getState?.() : null;
         if (cur.bossSummoned || hunt?.huntMode === 'boss') {
@@ -588,14 +688,15 @@ const IdleDungeon = (() => {
     renderHud();
   }
 
-  async function enter() {
-    if (entering) return;
-    if (typeof IdleDungeonStore === 'undefined' || typeof IdleHunt === 'undefined') return;
+  async function enter(opts = {}) {
+    if (entering) return false;
+    if (typeof IdleDungeonStore === 'undefined' || typeof IdleHunt === 'undefined') return false;
+    const fromAuto = !!opts.fromAuto;
     const d = IdleDungeonStore.get(selectedId);
     if (!d) {
       resultText = '請先選擇副本。';
-      render();
-      return;
+      if (!fromAuto) render();
+      return false;
     }
     const isDamage = d.type === 'damage';
     const diff = isDamage
@@ -603,35 +704,52 @@ const IdleDungeon = (() => {
       : IdleDungeonStore.getDiff(d, $('idleDungeonDiff')?.value || selectedDiffId);
     if (!isDamage && !diff) {
       resultText = '請先選擇副本與難度。';
-      render();
-      return;
+      if (!fromAuto) render();
+      return false;
     }
     if (run()) {
       resultText = '已在副本中。';
-      render();
-      return;
+      if (!fromAuto) render();
+      return false;
     }
     if (IdleHunt.isFieldTransitionActive?.()) {
       resultText = '過圖中，請稍候再進場。';
-      render();
-      return;
+      if (!fromAuto) render();
+      return false;
     }
-    if (ticketCount(d.ticketId) < 1) {
+    const tickets = ticketCount(d.ticketId);
+    if (tickets < 1) {
       resultText = `需要【${d.ticketName}】，請先在野外地圖刷。`;
-      render();
-      return;
+      if (!fromAuto) render();
+      return false;
     }
     if (!meetsEntryLevel(d, diff)) {
       const need = entryReqLevel(d, diff);
       resultText = `等級不足，需達 Lv.${need}（目前 ${playerLevel()}）才能進入。`;
-      render();
-      return;
+      if (!fromAuto) render();
+      return false;
     }
     if (!IdleHunt.canFight?.()) {
       resultText = '屬性攻擊力需大於 0 才能入場。';
-      render();
-      return;
+      if (!fromAuto) render();
+      return false;
     }
+
+    if (!fromAuto) {
+      const planned = clampRepeatCount(readRepeatInputRaw(), tickets);
+      if (planned < 1) {
+        resultText = `需要【${d.ticketName}】，請先在野外地圖刷。`;
+        render();
+        return false;
+      }
+      repeatWanted = planned;
+      repeatTotal = planned;
+      repeatLeft = planned;
+      repeatCancel = false;
+    } else if (repeatCancel || repeatLeft <= 0) {
+      return false;
+    }
+
     entering = true;
     selectedDiffId = diff.id;
     const durationSec = (d.type === 'timed' || d.type === 'damage') ? (d.durationSec || 0) : 0;
@@ -670,25 +788,32 @@ const IdleDungeon = (() => {
       if (ok === false) {
         if (run()) await IdleHunt.endDungeon?.({ skipFade: true });
         resultText = '進場失敗，請再試一次。';
+        clearRepeatState();
         setOpen(true, { keepView: true });
         render();
-        return;
+        return false;
       }
       if (!takeTicket(d.ticketId)) {
         await IdleHunt.endDungeon?.({ skipFade: true });
         resultText = '扣除入場券失敗。';
+        clearRepeatState();
         setOpen(true, { keepView: true });
         render();
-        return;
+        return false;
       }
+      repeatLeft = Math.max(0, repeatLeft - 1);
+      const autoHint = repeatTotal > 1
+        ? `（自動 ${repeatTotal - repeatLeft}/${repeatTotal}${repeatLeft > 0 ? `，還剩 ${repeatLeft} 場` : ''}）`
+        : '';
       resultText = isDamage
-        ? `已消耗【${d.ticketName}】，開始【${d.name}】傷害試煉。`
-        : `已消耗【${d.ticketName}】，開始【${d.name}／${diff.name}】。`;
+        ? `已消耗【${d.ticketName}】，開始【${d.name}】傷害試煉。${autoHint}`
+        : `已消耗【${d.ticketName}】，開始【${d.name}／${diff.name}】。${autoHint}`;
       startDungeonTimer(run());
       renderHud(true);
       if (d.type === 'normal' && (diff.killNeed || 0) <= 0) {
         IdleHunt.startDungeonBossFight?.();
       }
+      return true;
     } finally {
       entering = false;
     }
@@ -697,10 +822,35 @@ const IdleDungeon = (() => {
   async function finishSettleUi(cur, d, line) {
     stopDungeonTimer();
     await IdleHunt.endDungeon?.();
-    resultText = line;
     selectedId = cur.id;
     if (d?.category && d.category !== 'boss') pickerCat = d.category;
     pickerView = 'enter';
+
+    const doneCount = Math.max(0, repeatTotal - repeatLeft);
+    const canContinue = !repeatCancel
+      && repeatLeft > 0
+      && d
+      && ticketCount(d.ticketId) >= 1
+      && !IdleHunt.isFieldTransitionActive?.();
+
+    if (canContinue) {
+      resultText = `${line}\n自動挑戰：接著第 ${doneCount + 1}/${repeatTotal} 場…`;
+      const ok = await enter({ fromAuto: true });
+      if (ok) return;
+      resultText = `${line}\n自動挑戰中斷（進場失敗或入場券不足）。共完成 ${doneCount} 場。`;
+      clearRepeatState();
+      setOpen(true, { keepView: true });
+      return;
+    }
+
+    if (repeatCancel && repeatTotal > 1) {
+      resultText = `${line}\n已取消自動挑戰。共完成 ${doneCount} 場。`;
+    } else if (repeatTotal > 1) {
+      resultText = `${line}\n自動挑戰結束。共完成 ${doneCount} 場。`;
+    } else {
+      resultText = line;
+    }
+    clearRepeatState();
     setOpen(true, { keepView: true });
   }
 
@@ -779,7 +929,10 @@ const IdleDungeon = (() => {
     const cur = run();
     if (!cur || cur.status !== 'running') return;
     cur.damage = (cur.damage || 0) + Math.max(0, Math.floor(Number(amount) || 0));
-    if (cur.type === 'damage') renderHud();
+    if (cur.type !== 'damage') return;
+    renderHud();
+    const d = typeof IdleDungeonStore !== 'undefined' ? IdleDungeonStore.get(cur.id) : null;
+    if (reachedMaxDamageTier(d, cur.damage)) settle('max');
   }
 
   function onHuntTick(dt) {
@@ -1697,7 +1850,10 @@ const IdleDungeon = (() => {
       }
       if (e.target.closest('#idleDungeonLeave')) {
         e.preventDefault();
-        if (run()) settle('leave');
+        if (run()) {
+          repeatCancel = true;
+          settle('leave');
+        }
       }
     });
     root?.addEventListener('change', (e) => {
