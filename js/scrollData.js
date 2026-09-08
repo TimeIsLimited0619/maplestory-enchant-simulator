@@ -1058,7 +1058,7 @@ function registerNormalScrollFamily(spec) {
 // —— 範本：武器／武器以外（改這裡或往下再貼一段）——
 registerNormalScrollFamily({
   idPrefix: 'scroll_normal_weapon_atk',
-  name: '武器攻擊力(力量)卷軸',
+  name: '武器攻擊力卷軸',
   slotStart: 0,
   equipTarget: SCROLL_EQUIP_TARGET.WEAPON,
   icon: 'images/scroll/100.png',
@@ -1069,10 +1069,10 @@ registerNormalScrollFamily({
     15: 'images/scroll/15.png',
   },
   statsByRate: {
-    100: [{ label: '攻擊力', val: 3 }, { label: 'STR', val: 1 }],
-    70: [{ label: '攻擊力', val: 5 }, { label: 'STR', val: 2 }],
-    30: [{ label: '攻擊力', val: 7 }, { label: 'STR', val: 3 }],
-    15: [{ label: '攻擊力', val: 9 }, { label: 'STR', val: 4 }],
+    100: [{ label: '攻擊力', val: 3 }, { label: 'STR', val: 1 },{label:'DEX',val:1},{label:'INT',val:1},{label:'LUK',val:1}],
+    70: [{ label: '攻擊力', val: 5 }, { label: 'STR', val: 2 },{label:'DEX',val:2},{label:'INT',val:2},{label:'LUK',val:2}],
+    30: [{ label: '攻擊力', val: 7 }, { label: 'STR', val: 3 },{label:'DEX',val:3},{label:'INT',val:3},{label:'LUK',val:3}],
+    15: [{ label: '攻擊力', val: 9 }, { label: 'STR', val: 4 },{label:'DEX',val:4},{label:'INT',val:4},{label:'LUK',val:4}],
   },
   priceByRate: {
     100: 1000,
@@ -1084,7 +1084,7 @@ registerNormalScrollFamily({
 
 registerNormalScrollFamily({
   idPrefix: 'scroll_normal_weapon_matk',
-  name: '武器魔力(智慧)卷軸',
+  name: '武器魔力卷軸',
   slotStart: 4,
   equipTarget: SCROLL_EQUIP_TARGET.WEAPON,
   icon: 'images/scroll/100.png',
@@ -1095,10 +1095,10 @@ registerNormalScrollFamily({
     15: 'images/scroll/15.png',
   },
   statsByRate: {
-    100: [{ label: '魔法攻擊力', val: 3 }, { label: 'INT', val: 1 }],
-    70: [{ label: '魔法攻擊力', val: 5 }, { label: 'INT', val: 2 }],
-    30: [{ label: '魔法攻擊力', val: 7 }, { label: 'INT', val: 3 }],
-    15: [{ label: '魔法攻擊力', val: 9 }, { label: 'INT', val: 4 }],
+    100: [{ label: '魔法攻擊力', val: 3 }, { label: 'INT', val: 1 },{label:'DEX',val:1},{label:'STR',val:1},{label:'LUK',val:1}],
+    70: [{ label: '魔法攻擊力', val: 5 }, { label: 'INT', val: 2 },{label:'DEX',val:2},{label:'STR',val:2},{label:'LUK',val:2}],
+    30: [{ label: '魔法攻擊力', val: 7 }, { label: 'INT', val: 3 },{label:'DEX',val:3},{label:'STR',val:3},{label:'LUK',val:3}],
+    15: [{ label: '魔法攻擊力', val: 9 }, { label: 'INT', val: 4 },{label:'DEX',val:4},{label:'STR',val:4},{label:'LUK',val:4}],
   },
   priceByRate: {
     100: 1000,
