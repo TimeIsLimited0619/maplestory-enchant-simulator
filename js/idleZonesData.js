@@ -29,28 +29,28 @@ const IDLE_ZONE_GLOBAL_DROPS = {
       "kind": "etc",
       "itemId": "idle-ticket-timed",
       "name": "計時副本入場券",
-      "chance": 0.05,
+      "chance": 0.1,
       "amount": 1
     },
     {
       "kind": "etc",
       "itemId": "idle-ticket-normal",
       "name": "地下城入場券",
-      "chance": 0.05,
+      "chance": 0.1,
       "amount": 1
     },
     {
       "kind": "etc",
       "itemId": "idle-ticket-damage",
       "name": "傷害副本入場券",
-      "chance": 0.05,
+      "chance": 0.1,
       "amount": 1
     },
     {
       "kind": "etc",
       "itemId": "idle-ticket-boss",
       "name": "BOSS 副本入場券",
-      "chance": 0.05,
+      "chance": 0.1,
       "amount": 1
     }
   ],
@@ -94,7 +94,7 @@ const IDLE_ZONE_GLOBAL_DROPS = {
       "kind": "etc",
       "itemId": "idle-ticket-damage",
       "name": "傷害副本入場券",
-      "chance": 10,
+      "chance": 20,
       "amount": 1
     },
     {

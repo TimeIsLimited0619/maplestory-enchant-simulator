@@ -451,7 +451,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-restore",
             "name": "恢復方塊",
-            "amount": 10,
+            "amount": 1,
             "chance": 100
           }
         ]
@@ -471,7 +471,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-restore",
             "name": "恢復方塊",
-            "amount": 20,
+            "amount": 2,
             "chance": 100
           }
         ]
@@ -491,7 +491,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-restore",
             "name": "恢復方塊",
-            "amount": 30,
+            "amount": 3,
             "chance": 100
           }
         ]
@@ -511,7 +511,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-restore",
             "name": "恢復方塊",
-            "amount": 40,
+            "amount": 4,
             "chance": 100
           }
         ]
@@ -531,7 +531,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-restore",
             "name": "恢復方塊",
-            "amount": 50,
+            "amount": 5,
             "chance": 100
           },
           {
@@ -544,7 +544,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-shiningMirror",
             "name": "閃耀鏡射方塊",
-            "amount": 10,
+            "amount": 1,
             "chance": 100
           }
         ]
@@ -564,7 +564,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-restore",
             "name": "恢復方塊",
-            "amount": 100,
+            "amount": 10,
             "chance": 100
           },
           {
@@ -577,7 +577,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-shiningMirror",
             "name": "閃耀鏡射方塊",
-            "amount": 20,
+            "amount": 2,
             "chance": 100
           }
         ]
@@ -597,7 +597,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-restore",
             "name": "恢復方塊",
-            "amount": 150,
+            "amount": 15,
             "chance": 100
           },
           {
@@ -610,7 +610,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-shiningMirror",
             "name": "閃耀鏡射方塊",
-            "amount": 30,
+            "amount": 3,
             "chance": 100
           },
           {
@@ -623,7 +623,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-dazzling",
             "name": "閃炫方塊",
-            "amount": 10,
+            "amount": 1,
             "chance": 100
           }
         ]
@@ -643,7 +643,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-restore",
             "name": "恢復方塊",
-            "amount": 200,
+            "amount": 20,
             "chance": 100
           },
           {
@@ -656,7 +656,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-shiningMirror",
             "name": "閃耀鏡射方塊",
-            "amount": 40,
+            "amount": 4,
             "chance": 100
           },
           {
@@ -669,7 +669,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-dazzling",
             "name": "閃炫方塊",
-            "amount": 20,
+            "amount": 2,
             "chance": 100
           }
         ]
@@ -689,7 +689,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-restore",
             "name": "恢復方塊",
-            "amount": 300,
+            "amount": 30,
             "chance": 100
           },
           {
@@ -702,7 +702,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-shiningMirror",
             "name": "閃耀鏡射方塊",
-            "amount": 50,
+            "amount": 5,
             "chance": 100
           },
           {
@@ -715,7 +715,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-dazzling",
             "name": "閃炫方塊",
-            "amount": 30,
+            "amount": 3,
             "chance": 100
           },
           {
@@ -728,7 +728,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-equal",
             "name": "新對等方塊",
-            "amount": 10,
+            "amount": 1,
             "chance": 100
           }
         ]
@@ -748,7 +748,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-shiningMirror",
             "name": "閃耀鏡射方塊",
-            "amount": 60,
+            "amount": 6,
             "chance": 100
           },
           {
@@ -761,7 +761,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-dazzling",
             "name": "閃炫方塊",
-            "amount": 40,
+            "amount": 4,
             "chance": 100
           },
           {
@@ -774,7 +774,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-equal",
             "name": "新對等方塊",
-            "amount": 20,
+            "amount": 2,
             "chance": 100
           }
         ]
@@ -794,7 +794,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-shiningMirror",
             "name": "閃耀鏡射方塊",
-            "amount": 80,
+            "amount": 8,
             "chance": 100
           },
           {
@@ -807,7 +807,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-dazzling",
             "name": "閃炫方塊",
-            "amount": 50,
+            "amount": 5,
             "chance": 100
           },
           {
@@ -820,7 +820,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-equal",
             "name": "新對等方塊",
-            "amount": 30,
+            "amount": 3,
             "chance": 100
           }
         ]
@@ -840,7 +840,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-shiningMirror",
             "name": "閃耀鏡射方塊",
-            "amount": 100,
+            "amount": 10,
             "chance": 100
           },
           {
@@ -853,7 +853,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-dazzling",
             "name": "閃炫方塊",
-            "amount": 100,
+            "amount": 10,
             "chance": 100
           },
           {
@@ -866,7 +866,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-cube-equal",
             "name": "新對等方塊",
-            "amount": 50,
+            "amount": 5,
             "chance": 100
           }
         ]
@@ -1133,7 +1133,7 @@ const IDLE_DUNGEON_LIST = [
     "damageTiers": [
       {
         "minDamage": 10000000,
-        "gold": 100000,
+        "gold": 10000,
         "name": "1 千萬",
         "rewards": [
           {
@@ -1152,28 +1152,8 @@ const IDLE_DUNGEON_LIST = [
         ]
       },
       {
-        "minDamage": 50000000,
-        "gold": 500000,
-        "name": "5 千萬",
-        "rewards": [
-          {
-            "kind": "consume",
-            "consumeType": "hammer",
-            "scrollId": "",
-            "cubeId": "",
-            "hammerId": "platinum",
-            "soulId": "",
-            "itemId": "",
-            "catalogId": "consume-hammer-platinum",
-            "name": "白金鐵鎚",
-            "amount": 5,
-            "chance": 100
-          }
-        ]
-      },
-      {
         "minDamage": 100000000,
-        "gold": 1000000,
+        "gold": 50000,
         "name": "1 億",
         "rewards": [
           {
@@ -1186,34 +1166,14 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-hammer-platinum",
             "name": "白金鐵鎚",
-            "amount": 10,
-            "chance": 100
-          }
-        ]
-      },
-      {
-        "minDamage": 200000000,
-        "gold": 2000000,
-        "name": "2 億",
-        "rewards": [
-          {
-            "kind": "consume",
-            "consumeType": "hammer",
-            "scrollId": "",
-            "cubeId": "",
-            "hammerId": "platinum",
-            "soulId": "",
-            "itemId": "",
-            "catalogId": "consume-hammer-platinum",
-            "name": "白金鐵鎚",
-            "amount": 15,
+            "amount": 1,
             "chance": 100
           }
         ]
       },
       {
         "minDamage": 500000000,
-        "gold": 5000000,
+        "gold": 100000,
         "name": "5 億",
         "rewards": [
           {
@@ -1226,15 +1186,15 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-hammer-platinum",
             "name": "白金鐵鎚",
-            "amount": 20,
+            "amount": 1,
             "chance": 100
           }
         ]
       },
       {
-        "minDamage": 1000000000,
-        "gold": 10000000,
-        "name": "10 億",
+        "minDamage": 2000000000,
+        "gold": 200000,
+        "name": "20 億",
         "rewards": [
           {
             "kind": "consume",
@@ -1246,7 +1206,47 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-hammer-platinum",
             "name": "白金鐵鎚",
-            "amount": 25,
+            "amount": 2,
+            "chance": 100
+          }
+        ]
+      },
+      {
+        "minDamage": 5000000000,
+        "gold": 500000,
+        "name": "50 億",
+        "rewards": [
+          {
+            "kind": "consume",
+            "consumeType": "hammer",
+            "scrollId": "",
+            "cubeId": "",
+            "hammerId": "platinum",
+            "soulId": "",
+            "itemId": "",
+            "catalogId": "consume-hammer-platinum",
+            "name": "白金鐵鎚",
+            "amount": 2,
+            "chance": 100
+          }
+        ]
+      },
+      {
+        "minDamage": 10000000000,
+        "gold": 1000000,
+        "name": "100 億",
+        "rewards": [
+          {
+            "kind": "consume",
+            "consumeType": "hammer",
+            "scrollId": "",
+            "cubeId": "",
+            "hammerId": "platinum",
+            "soulId": "",
+            "itemId": "",
+            "catalogId": "consume-hammer-platinum",
+            "name": "白金鐵鎚",
+            "amount": 3,
             "chance": 100
           },
           {
@@ -1260,6 +1260,26 @@ const IDLE_DUNGEON_LIST = [
             "catalogId": "consume-hammer-golden",
             "name": "黃金鐵鎚",
             "amount": 1,
+            "chance": 100
+          }
+        ]
+      },
+      {
+        "minDamage": 20000000000,
+        "gold": 2000000,
+        "name": "200 億",
+        "rewards": [
+          {
+            "kind": "consume",
+            "consumeType": "hammer",
+            "scrollId": "",
+            "cubeId": "",
+            "hammerId": "golden",
+            "soulId": "",
+            "itemId": "",
+            "catalogId": "consume-hammer-golden",
+            "name": "黃金鐵鎚",
+            "amount": 2,
             "chance": 100
           }
         ]
