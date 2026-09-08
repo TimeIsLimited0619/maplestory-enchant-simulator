@@ -195,6 +195,31 @@
   padding-top: 10px;
 }
 
+.idle-boss-repeat {
+  display: grid;
+  gap: 4px;
+  width: min(160px, 100%);
+  font-size: 12px;
+  color: #b8c4a0;
+  text-align: center;
+}
+
+.idle-boss-repeat input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #111;
+  color: #eee;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 5px 6px;
+  font-family: inherit;
+  text-align: center;
+}
+
+.idle-boss-repeat input:disabled {
+  opacity: 0.55;
+}
+
 .idle-boss-reward-empty {
   color: #8a9480;
 }

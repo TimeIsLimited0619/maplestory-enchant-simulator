@@ -50,6 +50,12 @@ const IdleBoss = (() => {
   let challengeTimer = null;
   /** 通關後離場倒數（共用 IdleUiTimer） */
   let exitCountdownActive = false;
+  /** 自動重複挑戰 */
+  let repeatTotal = 0;
+  let repeatLeft = 0;
+  let repeatCancel = false;
+  let repeatWanted = 1;
+  let autoReenterBusy = false;
 
   function $(id) {
     return document.getElementById(id);
@@ -81,6 +87,74 @@ const IdleBoss = (() => {
 
   function takeTicket() {
     return !!(typeof InventoryModule !== 'undefined' && InventoryModule.takeEtc?.(BOSS_TICKET_ID, 1));
+  }
+
+  function clearRepeatState() {
+    repeatTotal = 0;
+    repeatLeft = 0;
+    repeatCancel = false;
+  }
+
+  function clampRepeatCount(raw, maxTickets) {
+    const max = Math.max(0, Math.floor(Number(maxTickets) || 0));
+    let n = Math.floor(Number(raw) || 0);
+    if (!Number.isFinite(n) || n < 1) n = 1;
+    if (max <= 0) return 0;
+    return Math.min(n, max);
+  }
+
+  function readRepeatInputRaw() {
+    const el = $('idleBossRepeat');
+    if (el) return el.value;
+    return repeatWanted;
+  }
+
+  function syncRepeatInput() {
+    ensureRepeatField();
+    const el = $('idleBossRepeat');
+    if (!el) return;
+    const max = ticketCount();
+    el.max = String(Math.max(1, max || 1));
+    el.disabled = !!challengeLocked || max < 1;
+    const next = clampRepeatCount(el.value || repeatWanted, max);
+    if (max < 1) {
+      el.value = '0';
+      repeatWanted = 1;
+    } else {
+      el.value = String(next || 1);
+      repeatWanted = next || 1;
+    }
+  }
+
+  function bindRepeatInput() {
+    const el = $('idleBossRepeat');
+    if (!el || el.dataset.bound === '1') return;
+    el.dataset.bound = '1';
+    const apply = () => {
+      syncRepeatInput();
+      syncChallengeBtn();
+    };
+    el.addEventListener('input', apply);
+    el.addEventListener('change', apply);
+  }
+
+  function ensureRepeatField() {
+    if ($('idleBossRepeat')) return;
+    const enter = $('idleBossEnter');
+    if (!enter || !enter.parentElement) return;
+    enter.insertAdjacentHTML('beforebegin', `<label class="idle-boss-repeat">挑戰次數
+      <input id="idleBossRepeat" type="number" min="1" max="1" step="1" value="1" title="最多為身上 BOSS 入場券數量">
+    </label>`);
+  }
+
+  function repeatHudTag() {
+    if (repeatTotal <= 1) return '';
+    const curIdx = Math.max(1, repeatTotal - repeatLeft);
+    return `自動 ${curIdx}/${repeatTotal}`;
+  }
+
+  function shouldAutoContinue() {
+    return !repeatCancel && repeatLeft > 0 && hasTicket() && !!selectedId && meetsEntryLevel(selectedId);
   }
 
   function list() {
@@ -413,7 +487,10 @@ const IdleBoss = (() => {
         const t = ensureChallengeTimer();
         if (!t) return;
         exitCountdownActive = true;
-        t.reset(Math.max(1, Math.floor(Number(sec) || 30)));
+        // 自動下一場時縮短離場等待，仍留一點時間撿掉落
+        let wait = Math.max(1, Math.floor(Number(sec) || 30));
+        if (repeatLeft > 0 && !repeatCancel) wait = Math.min(wait, 5);
+        t.reset(wait);
         t.setVisible(true);
         t.start();
         syncArenaCloseBtn();
@@ -484,6 +561,9 @@ const IdleBoss = (() => {
         <div id="idleBossReqLevel" class="idle-boss-req-level" aria-live="polite"></div>
         <div class="idle-boss-challenge-foot">
           <div id="idleBossDiffRow" class="idle-boss-diff-row" role="group" aria-label="難度"></div>
+          <label class="idle-boss-repeat">挑戰次數
+            <input id="idleBossRepeat" type="number" min="1" max="1" step="1" value="1" title="最多為身上 BOSS 入場券數量">
+          </label>
           <button type="button" id="idleBossEnter" class="idle-boss-enter">挑戰</button>
         </div>
       </div>
@@ -648,7 +728,7 @@ const IdleBoss = (() => {
     } finally {
       exitConfirmPending = false;
     }
-    if (ok) setArenaOpen(false);
+    if (ok) setArenaOpen(false, null, { cancelRepeat: true });
   }
 
   function bindBtStates(btn) {
@@ -922,6 +1002,8 @@ const IdleBoss = (() => {
       img.removeAttribute('src');
       img.alt = '';
     }
+    ensureRepeatField();
+    bindRepeatInput();
     renderDiffRow();
     renderRewardPreview();
     syncChallengeBtn();
@@ -1124,19 +1206,29 @@ const IdleBoss = (() => {
   function syncChallengeBtn() {
     const btn = $('idleBossEnter');
     if (!btn) return;
+    syncRepeatInput();
     const levelBlocked = !!selectedId && !meetsEntryLevel(selectedId);
-    const ticketBlocked = !!selectedId && !hasTicket();
+    const tickets = ticketCount();
+    const ticketBlocked = !!selectedId && tickets < 1;
     const blocked = !!challengeLocked || levelBlocked || ticketBlocked || !selectedId;
     btn.disabled = blocked;
     btn.classList.toggle('is-locked', blocked);
     btn.setAttribute('aria-disabled', blocked ? 'true' : 'false');
     const ticket = bossTicketMeta();
+    const planned = clampRepeatCount(readRepeatInputRaw(), tickets);
+    if (!challengeLocked) {
+      btn.textContent = planned > 1 ? `挑戰 ×${planned}` : '挑戰';
+    } else {
+      btn.textContent = '挑戰';
+    }
     if (challengeLocked) {
       btn.title = '副本進行中，請待結束後再挑戰';
     } else if (levelBlocked) {
       btn.title = `等級不足，需達 Lv.${reqLevelOf(selectedId)} 才能挑戰`;
     } else if (ticketBlocked) {
       btn.title = `需要【${ticket.name}】才能挑戰`;
+    } else if (planned > 1) {
+      btn.title = `消耗 ${planned} 張【${ticket.name}】，自動挑戰 ${planned} 場`;
     } else {
       btn.title = `消耗 1 張【${ticket.name}】進入挑戰`;
     }
@@ -1368,7 +1460,14 @@ const IdleBoss = (() => {
 
   function onCombatEnd(result, opts) {
     if (result === 'lose' && opts?.death) {
-      failModalOpen = true;
+      if (shouldAutoContinue()) {
+        if (typeof IdleHunt !== 'undefined') IdleHunt.healToFull?.();
+        window.setTimeout(() => {
+          if (arenaOpen) setArenaOpen(false);
+        }, 200);
+      } else {
+        failModalOpen = true;
+      }
     }
     setArenaRunning(false);
     const title = $('idleBossArenaTitle');
@@ -1378,14 +1477,26 @@ const IdleBoss = (() => {
         ? IdleBossDiff.meta(arenaDiffId).name
         : '';
       const tag = diffName ? `${diffName}｜` : '';
-      if (result === 'win') title.textContent = `${boss.name}｜${tag}通關`;
-      else if (result === 'lose') title.textContent = `${boss.name}｜${tag}失敗`;
+      const auto = repeatHudTag();
+      const autoTag = auto ? `｜${auto}` : '';
+      if (result === 'win') title.textContent = `${boss.name}｜${tag}通關${autoTag}`;
+      else if (result === 'lose') title.textContent = `${boss.name}｜${tag}失敗${autoTag}`;
     }
     // 通關（無離場倒數）立刻解鎖；死亡失敗維持鎖定直到退出／關場
     if (result === 'win' && !usesPhaseFight(arenaBossId)) {
       setChallengeLocked(false);
+      if (shouldAutoContinue()) {
+        window.setTimeout(() => {
+          if (arenaOpen) setArenaOpen(false);
+        }, 400);
+      }
     } else if (result === 'lose' && !opts?.death) {
       setChallengeLocked(false);
+      if (shouldAutoContinue()) {
+        window.setTimeout(() => {
+          if (arenaOpen) setArenaOpen(false);
+        }, 400);
+      }
     }
     syncStartBtn();
   }
@@ -1753,7 +1864,9 @@ const IdleBoss = (() => {
       const diffName = (typeof IdleBossDiff !== 'undefined' && IdleBossDiff.meta)
         ? IdleBossDiff.meta(arenaDiffId).name
         : '';
-      title.textContent = diffName ? `${boss.name}｜${diffName}` : boss.name;
+      const auto = repeatHudTag();
+      const base = diffName ? `${boss.name}｜${diffName}` : boss.name;
+      title.textContent = auto ? `${base}｜${auto}` : base;
     }
     applyMapLayers(boss);
     syncBossOverlayBars();
@@ -1800,18 +1913,20 @@ const IdleBoss = (() => {
     render();
   }
 
-  function setArenaOpen(next, bossId) {
+  function setArenaOpen(next, bossId, opts = {}) {
     ensureArenaDom();
     init();
     const want = !!next;
+    const fromAuto = !!opts.fromAuto;
+    const cancelRepeat = !!opts.cancelRepeat;
     if (want) {
-      if (challengeLocked) return;
+      if (challengeLocked) return false;
       arenaBossId = String(bossId || selectedId || '');
-      if (!arenaBossId) return;
+      if (!arenaBossId) return false;
       if (!meetsEntryLevel(arenaBossId)) {
         syncChallengeBtn();
         renderReqLevel();
-        return;
+        return false;
       }
       if (!hasTicket()) {
         syncChallengeBtn();
@@ -1819,7 +1934,8 @@ const IdleBoss = (() => {
         if (typeof addLog === 'function') {
           addLog(`需要【${bossTicketMeta().name}】才能挑戰。`, 'log-fail');
         }
-        return;
+        if (fromAuto) clearRepeatState();
+        return false;
       }
       if (!takeTicket()) {
         syncChallengeBtn();
@@ -1827,11 +1943,16 @@ const IdleBoss = (() => {
         if (typeof addLog === 'function') {
           addLog('扣除入場券失敗。', 'log-fail');
         }
-        return;
+        if (fromAuto) clearRepeatState();
+        return false;
       }
+      repeatLeft = Math.max(0, repeatLeft - 1);
       const bossName = getBoss(arenaBossId)?.name || 'BOSS';
+      const autoHint = repeatTotal > 1
+        ? `（自動 ${repeatTotal - repeatLeft}/${repeatTotal}${repeatLeft > 0 ? `，還剩 ${repeatLeft} 場` : ''}）`
+        : '';
       if (typeof addLog === 'function') {
-        addLog(`已消耗【${bossTicketMeta().name}】，進入【${bossName}】挑戰。`, 'log-info');
+        addLog(`已消耗【${bossTicketMeta().name}】，進入【${bossName}】挑戰。${autoHint}`, 'log-info');
       }
       arenaOpen = true;
       open = true;
@@ -1881,6 +2002,7 @@ const IdleBoss = (() => {
       syncChrome();
       syncStartBtn();
       const warmId = arenaBossId;
+      const shouldAutoStart = fromAuto || repeatTotal > 1;
       fadeBossField(1, 0);
       warmFightAssets(warmId).finally(() => {
         if (!arenaOpen || arenaBossId !== warmId) return;
@@ -1890,9 +2012,18 @@ const IdleBoss = (() => {
         render();
         syncStartBtn();
         fadeBossField(0, MAP_FADE_MS);
+        if (shouldAutoStart) {
+          window.setTimeout(() => {
+            if (!arenaOpen || arenaBossId !== warmId || arenaRunning || failModalOpen) return;
+            if (!arenaAssetsReady) return;
+            setArenaRunning(true);
+          }, MAP_FADE_MS + 80);
+        }
       });
-      return;
+      return true;
     }
+    if (cancelRepeat) repeatCancel = true;
+    const wantRetry = !repeatCancel && !cancelRepeat && repeatLeft > 0;
     arenaOpen = false;
     arenaBossId = '';
     arenaArtId = null;
@@ -1926,9 +2057,50 @@ const IdleBoss = (() => {
     // 關閉 Arena 時若仍死亡，先復活再還原放置（否則會鎖面板且無彈窗）
     if (typeof IdleHunt !== 'undefined') {
       if (IdleHunt.isPlayerDead?.()) IdleHunt.healToFull?.();
-      IdleHunt.resumeAfterExternal?.();
+      // 自動下一場時先不 resume，避免狩獵短暫醒來
+      if (!wantRetry) IdleHunt.resumeAfterExternal?.();
+    }
+    if (wantRetry && hasTicket() && selectedId && meetsEntryLevel(selectedId)) {
+      scheduleAutoReenter();
+    } else {
+      if (repeatTotal > 1 && typeof addLog === 'function') {
+        const done = Math.max(0, repeatTotal - repeatLeft);
+        if (repeatCancel) addLog(`已取消 BOSS 自動挑戰。共完成 ${done} 場。`, 'log-info');
+        else if (done > 0) addLog(`BOSS 自動挑戰結束。共完成 ${done} 場。`, 'log-info');
+      }
+      clearRepeatState();
+      syncChallengeBtn();
     }
     if (open) render();
+    return true;
+  }
+
+  function scheduleAutoReenter() {
+    if (autoReenterBusy) return;
+    autoReenterBusy = true;
+    const id = selectedId;
+    window.setTimeout(() => {
+      autoReenterBusy = false;
+      const failResume = () => {
+        if (typeof IdleHunt !== 'undefined') IdleHunt.resumeAfterExternal?.();
+        clearRepeatState();
+        syncChallengeBtn();
+        if (open) render();
+      };
+      if (repeatCancel || repeatLeft <= 0 || arenaOpen || challengeLocked) {
+        failResume();
+        return;
+      }
+      if (!hasTicket() || !meetsEntryLevel(id)) {
+        if (typeof addLog === 'function') {
+          addLog('BOSS 自動挑戰中斷（入場券不足或等級不足）。', 'log-fail');
+        }
+        failResume();
+        return;
+      }
+      const ok = setArenaOpen(true, id, { fromAuto: true });
+      if (!ok) failResume();
+    }, 350);
   }
 
   function setOpen(next) {
@@ -1936,7 +2108,7 @@ const IdleBoss = (() => {
     ensureDom();
     init();
     if (open) {
-      if (arenaOpen) setArenaOpen(false);
+      if (arenaOpen) setArenaOpen(false, null, { cancelRepeat: true });
       if (typeof IdleHunt !== 'undefined') IdleHunt.setPickerOpen?.(false);
       if (typeof IdleDungeon !== 'undefined') IdleDungeon.setOpen?.(false);
       if (typeof EquipCraftPanel !== 'undefined') EquipCraftPanel.setOpen?.(false);
@@ -1949,7 +2121,8 @@ const IdleBoss = (() => {
       });
     } else {
       hideRewardTips();
-      if (arenaOpen) setArenaOpen(false);
+      if (arenaOpen) setArenaOpen(false, null, { cancelRepeat: true });
+      else clearRepeatState();
       syncChrome();
     }
   }
@@ -1976,6 +2149,17 @@ const IdleBoss = (() => {
           renderReqLevel();
           return;
         }
+        const tickets = ticketCount();
+        const planned = clampRepeatCount(readRepeatInputRaw(), tickets);
+        if (planned < 1) {
+          syncChallengeBtn();
+          renderReqLevel();
+          return;
+        }
+        repeatWanted = planned;
+        repeatTotal = planned;
+        repeatLeft = planned;
+        repeatCancel = false;
         setArenaOpen(true, selectedId);
         return;
       }
@@ -2012,7 +2196,7 @@ const IdleBoss = (() => {
           requestCloseArena();
           return;
         }
-        setArenaOpen(false);
+        setArenaOpen(false, null, { cancelRepeat: true });
         setOpen(false);
         return;
       }
@@ -2025,7 +2209,7 @@ const IdleBoss = (() => {
     setRunning: setArenaRunning,
     closeAll() {
       exitConfirmPending = false;
-      setArenaOpen(false);
+      setArenaOpen(false, null, { cancelRepeat: true });
       setOpen(false);
     },
     getBoss,

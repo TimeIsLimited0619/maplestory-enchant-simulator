@@ -2308,7 +2308,21 @@ const IDLE_ZONE_BAND_DEFS = [
     "min": 130,
     "max": 140,
     "name": "騎士團要塞",
-    "mobDrops": [],
+    "mobDrops": [
+      {
+        "kind": "consume",
+        "consumeType": "potion",
+        "scrollId": "",
+        "cubeId": "",
+        "itemId": "special-potion",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-potion-special-potion",
+        "name": "特殊藥水",
+        "chance": 5,
+        "amount": 1
+      }
+    ],
     "bossDrops": []
   },
   {
@@ -3183,7 +3197,21 @@ const IDLE_ZONE_BAND_DEFS = [
     "min": 140,
     "max": 150,
     "name": "地球防衛隊本部",
-    "mobDrops": [],
+    "mobDrops": [
+      {
+        "kind": "consume",
+        "consumeType": "potion",
+        "scrollId": "",
+        "cubeId": "",
+        "itemId": "special-potion",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-potion-special-potion",
+        "name": "特殊藥水",
+        "chance": 5,
+        "amount": 1
+      }
+    ],
     "bossDrops": []
   },
   {
@@ -3191,7 +3219,21 @@ const IDLE_ZONE_BAND_DEFS = [
     "min": 150,
     "max": 160,
     "name": "星光之塔",
-    "mobDrops": [],
+    "mobDrops": [
+      {
+        "kind": "consume",
+        "consumeType": "potion",
+        "scrollId": "",
+        "cubeId": "",
+        "itemId": "special-potion",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-potion-special-potion",
+        "name": "特殊藥水",
+        "chance": 5,
+        "amount": 1
+      }
+    ],
     "bossDrops": []
   },
   {
@@ -3199,7 +3241,21 @@ const IDLE_ZONE_BAND_DEFS = [
     "min": 170,
     "max": 180,
     "name": "黃昏勇士之村",
-    "mobDrops": [],
+    "mobDrops": [
+      {
+        "kind": "consume",
+        "consumeType": "potion",
+        "scrollId": "",
+        "cubeId": "",
+        "itemId": "special-potion",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-potion-special-potion",
+        "name": "特殊藥水",
+        "chance": 5,
+        "amount": 1
+      }
+    ],
     "bossDrops": []
   },
   {
@@ -3207,7 +3263,21 @@ const IDLE_ZONE_BAND_DEFS = [
     "min": 180,
     "max": 190,
     "name": "黑暗天堂",
-    "mobDrops": [],
+    "mobDrops": [
+      {
+        "kind": "consume",
+        "consumeType": "potion",
+        "scrollId": "",
+        "cubeId": "",
+        "itemId": "special-potion",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-potion-special-potion",
+        "name": "特殊藥水",
+        "chance": 5,
+        "amount": 1
+      }
+    ],
     "bossDrops": []
   },
   {
@@ -3215,7 +3285,21 @@ const IDLE_ZONE_BAND_DEFS = [
     "min": 190,
     "max": 200,
     "name": "世界樹",
-    "mobDrops": [],
+    "mobDrops": [
+      {
+        "kind": "consume",
+        "consumeType": "potion",
+        "scrollId": "",
+        "cubeId": "",
+        "itemId": "special-potion",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-potion-special-potion",
+        "name": "特殊藥水",
+        "chance": 5,
+        "amount": 1
+      }
+    ],
     "bossDrops": []
   }
 ];
@@ -15011,21 +15095,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "killGold": 91,
     "bossKillExp": 227000,
     "bossKillGold": 732,
-    "mobDrops": [
-      {
-        "kind": "consume",
-        "consumeType": "bonus_stat",
-        "scrollId": "",
-        "cubeId": "",
-        "itemId": "eternalFlame",
-        "hammerId": "",
-        "soulId": "",
-        "catalogId": "consume-bonus-eternalFlame",
-        "name": "永遠的輪迴星火",
-        "chance": 5,
-        "amount": 1
-      }
-    ],
+    "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
