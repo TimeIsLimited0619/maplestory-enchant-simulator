@@ -790,18 +790,29 @@ const EquipCraftStore = (() => {
     return !!(row && row.output && !row.categories);
   }
 
-  function countEquipInBag(itemId) {
+  function isBagEquipLocked(slotIndex) {
+    return typeof InventoryModule !== 'undefined'
+      && typeof InventoryModule.isEquipItemLocked === 'function'
+      && InventoryModule.isEquipItemLocked(slotIndex);
+  }
+
+  function countEquipInBag(itemId, { includeLocked = true } = {}) {
     const id = String(itemId || '');
     if (!id || typeof playerInventoryEquip === 'undefined') return 0;
-    return playerInventoryEquip.reduce((sum, entry) => sum + (entry === id ? 1 : 0), 0);
+    return playerInventoryEquip.reduce((sum, entry, index) => {
+      if (entry !== id) return sum;
+      if (!includeLocked && isBagEquipLocked(index)) return sum;
+      return sum + 1;
+    }, 0);
   }
 
   function takeEquipFromBag(itemId, amount = 1) {
     const id = String(itemId || '');
     let need = Math.max(1, Math.floor(Number(amount) || 1));
-    if (!id || countEquipInBag(id) < need) return false;
+    if (!id || countEquipInBag(id, { includeLocked: false }) < need) return false;
     for (let i = 0; i < playerInventoryEquip.length && need > 0; i++) {
       if (playerInventoryEquip[i] !== id) continue;
+      if (isBagEquipLocked(i)) continue;
       playerInventoryEquip[i] = null;
       if (typeof playerInventoryState !== 'undefined') playerInventoryState[i] = null;
       need -= 1;
@@ -839,6 +850,7 @@ const EquipCraftStore = (() => {
     let bestScore = -1;
     for (let i = 0; i < playerInventoryEquip.length; i++) {
       if (playerInventoryEquip[i] !== id) continue;
+      if (isBagEquipLocked(i)) continue;
       const saved = typeof playerInventoryState !== 'undefined' ? playerInventoryState[i] : null;
       const state = saved && saved.itemId === id
         ? saved
@@ -903,7 +915,7 @@ const EquipCraftStore = (() => {
   function canCraftAdvance(recipe) {
     if (!recipe?.output || !recipe?.baseEquip) return false;
     const baseCount = Math.max(1, Math.floor(Number(recipe.baseCount) || 1));
-    if (countEquipInBag(recipe.baseEquip) < baseCount) return false;
+    if (countEquipInBag(recipe.baseEquip, { includeLocked: false }) < baseCount) return false;
     if (!canAffordMaterials(materialsMap(recipe))) return false;
     if (!canAffordMeso(recipe.meso)) return false;
     if (typeof ITEM_DATABASE === 'undefined' || !ITEM_DATABASE[recipe.output]) return false;
@@ -958,6 +970,7 @@ const EquipCraftStore = (() => {
       for (let i = 0; i < playerInventoryEquip.length && extra > 0; i++) {
         if (i === slot) continue;
         if (playerInventoryEquip[i] !== recipe.baseEquip) continue;
+        if (isBagEquipLocked(i)) continue;
         playerInventoryEquip[i] = null;
         if (typeof playerInventoryState !== 'undefined') playerInventoryState[i] = null;
         extra -= 1;

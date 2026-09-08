@@ -33,6 +33,7 @@ const SkillChannelCast = (() => {
   }
 
   function isChannelCastSkill(skill, fx) {
+    if (skill?.channelCast === false) return false;
     return !!buildPlan(skill, fx);
   }
 
@@ -46,7 +47,6 @@ const SkillChannelCast = (() => {
       }
       return Number(c[key]) || fallback;
     };
-    const channelSec = Math.max(0.5, expr(plan.channelSecKey || 'q', 2));
     let tickMs = Number(plan.tickMs);
     if (!(tickMs > 0)) {
       tickMs = expr(plan.tickMsKey || 's', 0);
@@ -56,10 +56,25 @@ const SkillChannelCast = (() => {
         tickMs = Math.round(tickMs * 1000);
       }
     }
+    const prepareMs = Math.max(60, Number(plan.prepareMs) || 240);
+    const tick = Math.max(50, Math.round(tickMs));
+    // sustain：按住持續射，不依 channelSec 自動結束（伊修塔爾等）
+    if (plan.sustain) {
+      return {
+        prepareMs,
+        channelMs: Number.POSITIVE_INFINITY,
+        tickMs: tick,
+        sustain: true,
+      };
+    }
+    const channelSec = Number(plan.channelSec) > 0
+      ? Number(plan.channelSec)
+      : Math.max(0.5, expr(plan.channelSecKey || 'q', 2));
     return {
-      prepareMs: Math.max(60, Number(plan.prepareMs) || 240),
+      prepareMs,
       channelMs: Math.round(channelSec * 1000),
-      tickMs: Math.max(50, Math.round(tickMs)),
+      tickMs: tick,
+      sustain: false,
     };
   }
 
@@ -113,20 +128,24 @@ const SkillChannelCast = (() => {
       return false;
     }
 
+    const timing = evalPlanMs(skill, plan, level);
+    const sustain = !!(plan.sustain || timing.sustain);
+
     // 背景：引導改為一次結算數波，避免長 timeout 鏈被節流
     if (typeof document !== 'undefined' && document.hidden) {
-      const timing = evalPlanMs(skill, plan, level);
-      const waves = Math.max(1, Math.min(8, Math.round((timing.channelMs || 1000) / Math.max(120, timing.tickMs || 240))));
+      const batchMs = Number.isFinite(timing.channelMs) ? timing.channelMs : 2000;
+      const waves = Math.max(1, Math.min(8, Math.round((batchMs || 1000) / Math.max(120, timing.tickMs || 240))));
       for (let i = 0; i < waves; i += 1) {
         if (typeof onTick === 'function') onTick(mobs.slice(0, maxTargets), []);
       }
       finish();
-      return true;
+      return { ok: true, stop: () => {}, sustain };
     }
 
-    const timing = evalPlanMs(skill, plan, level);
     const prepareMs = scaleRealMs(timing.prepareMs);
-    const channelMs = scaleRealMs(timing.channelMs);
+    const channelMs = Number.isFinite(timing.channelMs)
+      ? scaleRealMs(timing.channelMs)
+      : Number.POSITIVE_INFINITY;
     const tickMs = scaleRealMs(timing.tickMs);
     const kills = [];
     let keydownId = null;
@@ -188,10 +207,12 @@ const SkillChannelCast = (() => {
         });
       }
 
-      const channelEnd = performance.now() + channelMs;
+      const channelEnd = Number.isFinite(channelMs)
+        ? performance.now() + channelMs
+        : Number.POSITIVE_INFINITY;
       const runTick = () => {
         if (ended) return;
-        if (performance.now() >= channelEnd) {
+        if (Number.isFinite(channelEnd) && performance.now() >= channelEnd) {
           endChannel();
           return;
         }
@@ -203,13 +224,14 @@ const SkillChannelCast = (() => {
       runTick();
     }, prepareMs);
 
-    return true;
+    return { ok: true, stop: endChannel, sustain };
   }
 
   return {
     buildPlan,
     isChannelCastSkill,
     playChannelCast,
+    evalPlanMs,
     framesDurationMs,
   };
 })();

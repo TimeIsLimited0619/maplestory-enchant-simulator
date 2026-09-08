@@ -57,8 +57,14 @@ const CharacterCombatPanel = (() => {
     if (typeof CombatJobs === 'undefined') {
       return { name: state.jobName, category: 'normal' };
     }
-    return CombatJobs.getJobByName(state.jobName)
-      || CombatJobs.getDefaultJobByCategory('normal');
+    const byName = CombatJobs.getJobByName(state.jobName);
+    if (byName) return byName;
+    // 有主副屬對應但尚未列入 jobOptions 的顯示名：勿回落成預設劍士
+    const labels = CombatJobs.getJobStatLabelsByName?.(state.jobName);
+    if (labels?.main) {
+      return { name: state.jobName, category: 'normal' };
+    }
+    return CombatJobs.getDefaultJobByCategory('normal');
   }
 
   function labels() {
@@ -236,6 +242,11 @@ const CharacterCombatPanel = (() => {
       if (pad) {
         addField('noApplyAtk', pad);
         addField('skillNoApplyAtk', pad);
+      }
+      const padR = Number(mods.padR) || 0;
+      if (padR) {
+        addField('percentAtk', padR);
+        addField('skillPercentAtk', padR);
       }
       mirrorSkillBase('dmg', 'skillDmg', mods.damR);
       mirrorSkillBase('bossDmg', 'skillBossDmg', mods.bdR);

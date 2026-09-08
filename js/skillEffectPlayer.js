@@ -3,6 +3,8 @@
  */
 const SkillEffectPlayer = (() => {
   const instances = new Set();
+  /** @type {Set<{ cancel: (settleHits?: boolean) => void }>} */
+  const projectiles = new Set();
   const preloadCache = new Map();
   let nextId = 1;
 
@@ -323,7 +325,7 @@ const SkillEffectPlayer = (() => {
           return null;
         }
         if (typeof opts.resolveAnchor === 'function') {
-          const local = opts.resolveAnchor();
+          const local = opts.resolveAnchor(live);
           const pt = localAnchorToField(fieldEl, live, local);
           if (pt) return pt;
         }
@@ -331,6 +333,32 @@ const SkillEffectPlayer = (() => {
         if (!pt) return null;
         return { x: pt.x, y: pt.y };
       },
+    });
+  }
+
+  /** 掛在怪物頭頂上方（落葉旋風等騰空技特效） */
+  function playOnMobHead(mob, frames, opts = {}) {
+    if (!mob || !frames?.length) return null;
+    const fieldEl = opts.fieldEl || activeCombatField();
+    const pt = fieldPointFromMob(fieldEl, mob);
+    if (!pt) {
+      return playOnMob(mob, frames, {
+        ...opts,
+        className: opts.className || 'idle-skill-fx-stage idle-skill-fx-stage--cast',
+      });
+    }
+    const actorH = pt.actor?.clientHeight || pt.actor?.offsetHeight || 96;
+    const headGap = Number.isFinite(opts.headGapPx) ? Number(opts.headGapPx) : 20;
+    // 自怪身中心上移到頭頂，再往上 headGap px
+    const y = pt.y - Math.round(actorH * 0.5) - headGap;
+    return playAtField({
+      fieldEl,
+      frames,
+      x: pt.x,
+      y,
+      className: opts.className || 'idle-skill-fx-stage idle-skill-fx-stage--cast',
+      mirrorX: !!opts.mirrorX,
+      forcePlay: !!opts.forcePlay,
     });
   }
 
@@ -407,7 +435,10 @@ const SkillEffectPlayer = (() => {
     const list = (frames || []).filter((f) => f && f.src);
     const targets = (mobs || []).filter(Boolean).slice(0, Math.max(1, maxTargets));
 
+    let finished = false;
     const finish = () => {
+      if (finished) return;
+      finished = true;
       if (typeof onDone === 'function') onDone();
     };
 
@@ -440,7 +471,44 @@ const SkillEffectPlayer = (() => {
     const maxRange = Math.max(200, Math.hypot(step.pos?.[0] || 560, step.pos?.[1] || 0));
     const hitHalfW = Math.max(40, (Number(bodyWH?.[0]) || 300) * 0.15);
 
+    /** @type {{ cancel: (settleHits?: boolean) => void, stage: HTMLElement|null, rafId: number|null, launchTimer: ReturnType<typeof setTimeout>|null, done: boolean, hitSet: Set<any>, targetIdx: number }} */
+    const proj = {
+      stage: null,
+      rafId: null,
+      launchTimer: null,
+      done: false,
+      hitSet: new Set(),
+      targetIdx: 0,
+      cancel(settleHits) {
+        if (proj.done) return;
+        proj.done = true;
+        if (proj.launchTimer != null) {
+          clearTimeout(proj.launchTimer);
+          proj.launchTimer = null;
+        }
+        if (proj.rafId != null) {
+          cancelAnimationFrame(proj.rafId);
+          proj.rafId = null;
+        }
+        if (settleHits && typeof onHit === 'function') {
+          for (let i = proj.targetIdx; i < targets.length; i += 1) {
+            const mob = targets[i];
+            if (!mob || proj.hitSet.has(mob)) continue;
+            proj.hitSet.add(mob);
+            onHit(mob, i);
+            if (!pierce) break;
+          }
+        }
+        proj.stage?.remove();
+        proj.stage = null;
+        projectiles.delete(proj);
+        finish();
+      },
+    };
+    projectiles.add(proj);
+
     const launch = () => {
+      if (proj.done) return;
       const stage = document.createElement('div');
       stage.className = 'idle-skill-fx-stage idle-skill-fx-stage--shootobj';
       const img = document.createElement('img');
@@ -450,6 +518,7 @@ const SkillEffectPlayer = (() => {
       img.decoding = 'sync';
       stage.appendChild(img);
       fxLayer.appendChild(stage);
+      proj.stage = stage;
 
       const spawn = fieldPointFromPlayer(fieldEl, playerEl, startOffset, facingRight);
       // 固定高度：只沿 X 飛，Y 鎖在初始 start
@@ -463,10 +532,7 @@ const SkillEffectPlayer = (() => {
       let frameIdx = 0;
       let frameAcc = 0;
       let lastTs = 0;
-      let done = false;
       let traveled = 0;
-      const hitSet = new Set();
-      let targetIdx = 0;
 
       const applyProjFrame = () => {
         const frame = list[frameIdx % list.length];
@@ -480,28 +546,39 @@ const SkillEffectPlayer = (() => {
         img.hidden = false;
       };
 
+      const endFlight = () => {
+        if (proj.done) return;
+        proj.done = true;
+        if (proj.rafId != null) {
+          cancelAnimationFrame(proj.rafId);
+          proj.rafId = null;
+        }
+        stage.remove();
+        proj.stage = null;
+        projectiles.delete(proj);
+        finish();
+      };
+
       const tryHit = () => {
-        while (targetIdx < targets.length) {
-          const mob = targets[targetIdx];
-          if (!mob || hitSet.has(mob)) {
-            targetIdx += 1;
+        while (proj.targetIdx < targets.length) {
+          const mob = targets[proj.targetIdx];
+          if (!mob || proj.hitSet.has(mob)) {
+            proj.targetIdx += 1;
             continue;
           }
           const mp = fieldPointFromMob(fieldEl, mob);
           if (!mp) {
-            targetIdx += 1;
+            proj.targetIdx += 1;
             continue;
           }
           // 水平飛近怪物 X 才命中（不要求 Y 對齊）
           const reached = facingRight ? (x >= mp.x - hitHalfW) : (x <= mp.x + hitHalfW);
           if (!reached) break;
-          hitSet.add(mob);
-          if (typeof onHit === 'function') onHit(mob, targetIdx);
-          targetIdx += 1;
+          proj.hitSet.add(mob);
+          if (typeof onHit === 'function') onHit(mob, proj.targetIdx);
+          proj.targetIdx += 1;
           if (!pierce) {
-            done = true;
-            stage.remove();
-            finish();
+            endFlight();
             return true;
           }
         }
@@ -509,9 +586,10 @@ const SkillEffectPlayer = (() => {
       };
 
       ensurePreloaded(list).then(() => {
+        if (proj.done) return;
         applyProjFrame();
         const stepFrame = (ts) => {
-          if (done) return;
+          if (proj.done) return;
           if (!lastTs) lastTs = ts;
           const dt = Math.min(50, Math.max(0, ts - lastTs));
           lastTs = ts;
@@ -532,24 +610,18 @@ const SkillEffectPlayer = (() => {
 
           if (tryHit()) return;
 
-          if (traveled >= maxRange || targetIdx >= targets.length) {
-            // 穿透飛完或已打完目標
-            if (pierce && targetIdx < targets.length) {
-              // 射程內沒碰到的略過
-            }
-            done = true;
-            stage.remove();
-            finish();
+          if (traveled >= maxRange || proj.targetIdx >= targets.length) {
+            endFlight();
             return;
           }
-          requestAnimationFrame(stepFrame);
+          proj.rafId = requestAnimationFrame(stepFrame);
         };
-        requestAnimationFrame(stepFrame);
+        proj.rafId = requestAnimationFrame(stepFrame);
       });
     };
 
     const delay = scaleRealMs(Math.max(0, Number(startDelayMs) || 0));
-    if (delay > 0) setTimeout(launch, delay);
+    if (delay > 0) proj.launchTimer = setTimeout(launch, delay);
     else launch();
     return true;
   }
@@ -577,7 +649,10 @@ const SkillEffectPlayer = (() => {
     const targets = (mobs || []).filter(Boolean).slice(0, Math.max(1, maxTargets));
     const flySpeed = (Number(speedPxPerMs) || 18 / 30) * gameSpeedMult();
 
+    let finished = false;
     const finish = () => {
+      if (finished) return;
+      finished = true;
       if (typeof onDone === 'function') onDone();
     };
 
@@ -591,7 +666,44 @@ const SkillEffectPlayer = (() => {
       return null;
     }
 
+    /** @type {{ cancel: (settleHits?: boolean) => void, stage: HTMLElement|null, rafId: number|null, launchTimer: ReturnType<typeof setTimeout>|null, done: boolean, hitSet: Set<any>, targetIdx: number }} */
+    const proj = {
+      stage: null,
+      rafId: null,
+      launchTimer: null,
+      done: false,
+      hitSet: new Set(),
+      targetIdx: 0,
+      cancel(settleHits) {
+        if (proj.done) return;
+        proj.done = true;
+        if (proj.launchTimer != null) {
+          clearTimeout(proj.launchTimer);
+          proj.launchTimer = null;
+        }
+        if (proj.rafId != null) {
+          cancelAnimationFrame(proj.rafId);
+          proj.rafId = null;
+        }
+        if (settleHits && typeof onHit === 'function') {
+          for (let i = proj.targetIdx; i < targets.length; i += 1) {
+            const mob = targets[i];
+            if (!mob || proj.hitSet.has(mob) || !(mob.hp > 0)) continue;
+            proj.hitSet.add(mob);
+            onHit(mob, i);
+            if (!pierce) break;
+          }
+        }
+        proj.stage?.remove();
+        proj.stage = null;
+        projectiles.delete(proj);
+        finish();
+      },
+    };
+    projectiles.add(proj);
+
     const launch = () => {
+      if (proj.done) return;
       const stage = document.createElement('div');
       stage.className = 'idle-skill-fx-stage idle-skill-fx-stage--ball';
       const img = document.createElement('img');
@@ -601,6 +713,7 @@ const SkillEffectPlayer = (() => {
       img.decoding = 'sync';
       stage.appendChild(img);
       fxLayer.appendChild(stage);
+      proj.stage = stage;
 
       const spawn = fieldPointFromPlayer(fieldEl, playerEl, startOffset, facingRight);
       let x = spawn.x;
@@ -612,9 +725,6 @@ const SkillEffectPlayer = (() => {
       let frameIdx = 0;
       let frameAcc = 0;
       let lastTs = 0;
-      let done = false;
-      const hitSet = new Set();
-      let targetIdx = 0;
       const hitRadius = 36;
 
       const applyProjFrame = () => {
@@ -629,16 +739,29 @@ const SkillEffectPlayer = (() => {
         img.hidden = false;
       };
 
+      const endFlight = () => {
+        if (proj.done) return;
+        proj.done = true;
+        if (proj.rafId != null) {
+          cancelAnimationFrame(proj.rafId);
+          proj.rafId = null;
+        }
+        stage.remove();
+        proj.stage = null;
+        projectiles.delete(proj);
+        finish();
+      };
+
       const currentTargetPoint = () => {
-        while (targetIdx < targets.length) {
-          const mob = targets[targetIdx];
-          if (!mob || hitSet.has(mob) || !(mob.hp > 0)) {
-            targetIdx += 1;
+        while (proj.targetIdx < targets.length) {
+          const mob = targets[proj.targetIdx];
+          if (!mob || proj.hitSet.has(mob) || !(mob.hp > 0)) {
+            proj.targetIdx += 1;
             continue;
           }
           const mp = fieldPointFromMob(fieldEl, mob);
           if (!mp) {
-            targetIdx += 1;
+            proj.targetIdx += 1;
             continue;
           }
           return { mob, mp };
@@ -647,9 +770,10 @@ const SkillEffectPlayer = (() => {
       };
 
       ensurePreloaded(list).then(() => {
+        if (proj.done) return;
         applyProjFrame();
         const stepFrame = (ts) => {
-          if (done) return;
+          if (proj.done) return;
           if (!lastTs) lastTs = ts;
           const dt = Math.min(50, Math.max(0, ts - lastTs));
           lastTs = ts;
@@ -664,9 +788,7 @@ const SkillEffectPlayer = (() => {
 
           const cur = currentTargetPoint();
           if (!cur) {
-            done = true;
-            stage.remove();
-            finish();
+            endFlight();
             return;
           }
 
@@ -680,25 +802,23 @@ const SkillEffectPlayer = (() => {
           stage.style.top = `${y}px`;
 
           if (dist <= hitRadius) {
-            hitSet.add(cur.mob);
-            if (typeof onHit === 'function') onHit(cur.mob, targetIdx);
-            targetIdx += 1;
+            proj.hitSet.add(cur.mob);
+            if (typeof onHit === 'function') onHit(cur.mob, proj.targetIdx);
+            proj.targetIdx += 1;
             if (!pierce) {
-              done = true;
-              stage.remove();
-              finish();
+              endFlight();
               return;
             }
           }
 
-          requestAnimationFrame(stepFrame);
+          proj.rafId = requestAnimationFrame(stepFrame);
         };
-        requestAnimationFrame(stepFrame);
+        proj.rafId = requestAnimationFrame(stepFrame);
       });
     };
 
     const delay = scaleRealMs(Math.max(0, Number(startDelayMs) || 0));
-    if (delay > 0) setTimeout(launch, delay);
+    if (delay > 0) proj.launchTimer = setTimeout(launch, delay);
     else launch();
     return true;
   }
@@ -735,6 +855,7 @@ const SkillEffectPlayer = (() => {
       className,
       mirrorX,
       zIndex,
+      forcePlay: !!opts.forcePlay,
     });
     if (!loop && id != null && typeof onDone === 'function') {
       const dur = framesDurationMs(list);
@@ -770,6 +891,64 @@ const SkillEffectPlayer = (() => {
 
   function stopAll() {
     [...instances].forEach(destroy);
+    [...projectiles].forEach((p) => {
+      try { p.cancel(false); } catch (_) { /* ignore */ }
+    });
+    projectiles.clear();
+    scrubTransientFxDom({ includeLoop: true });
+  }
+
+  /**
+   * 掛機軟釋放：清投射物／單次特效，保留 loop（召喚／掛怪狀態）。
+   * settleHits=true 時未命中目標會立刻結算，避免 GC 吃掉傷害。
+   */
+  function stopTransientFx(opts = {}) {
+    const settleHits = opts.settleHits !== false;
+    [...projectiles].forEach((p) => {
+      try { p.cancel(settleHits); } catch (_) { /* ignore */ }
+    });
+    projectiles.clear();
+    [...instances].forEach((inst) => {
+      if (inst.loop) return;
+      destroy(inst);
+    });
+    scrubTransientFxDom({ includeLoop: false });
+  }
+
+  function scrubTransientFxDom({ includeLoop = false } = {}) {
+    const sel = includeLoop
+      ? '.idle-hunt-skill-fx'
+      : [
+        '.idle-skill-fx-stage--shootobj',
+        '.idle-skill-fx-stage--ball',
+        '.idle-skill-fx-stage--hit',
+        '.idle-skill-fx-stage--cast',
+        '.idle-skill-fx-stage--blizzard-tile',
+        '.idle-skill-fx-stage--blizzard-fa',
+        '.idle-skill-fx-stage--blizzard-fa-hit',
+        '.idle-skill-fx-stage--blizzard-fa-fallback',
+      ].join(',');
+    try {
+      document.querySelectorAll(sel).forEach((el) => {
+        if (includeLoop) {
+          el.replaceChildren();
+          return;
+        }
+        // 保留仍在 instances 的 loop stage
+        if (el.classList?.contains('idle-skill-fx-stage--summon')) return;
+        const keep = [...instances].some((inst) => inst.stage === el);
+        if (keep) return;
+        el.remove();
+      });
+    } catch (_) { /* ignore */ }
+  }
+
+  function clearLocalPreloadCache() {
+    preloadCache.clear();
+  }
+
+  function activeInstanceCount() {
+    return instances.size + projectiles.size;
   }
 
   function collectFrameUrls(frames, into) {
@@ -866,6 +1045,7 @@ const SkillEffectPlayer = (() => {
     playFrames,
     playOnPlayer,
     playOnMob,
+    playOnMobHead,
     playShootObj,
     playBall,
     playAtField,
@@ -873,8 +1053,12 @@ const SkillEffectPlayer = (() => {
     framesDurationMs,
     stopFx,
     stopAll,
+    stopTransientFx,
+    clearLocalPreloadCache,
+    activeInstanceCount,
     ensurePreloaded,
     collectFxUrls,
+    collectSkillUrls,
     warmUpSkills,
     warmUpCombatLoadout,
     resolveMobCenterLocal,

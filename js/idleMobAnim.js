@@ -993,6 +993,36 @@ const IdleMobAnim = (() => {
     return Promise.all(tasks);
   }
 
+  /** 收集該 mob 資料裡所有有圖的幀 URL（含 attack/info/effect 等巢狀動作） */
+  function collectFrameUrls(iconId) {
+    const entry = getMobEntry(iconId);
+    if (!entry) return [];
+    const urls = [];
+    Object.keys(entry).forEach((key) => {
+      const frames = entry[key];
+      if (!Array.isArray(frames)) return;
+      frames.forEach((f) => {
+        if (f?.src) urls.push(f.src);
+      });
+    });
+    return [...new Set(urls)];
+  }
+
+  /** 預載整隻 mob 全部動作幀，避免入場後換幀卡住 */
+  function preloadMob(iconId) {
+    const urls = collectFrameUrls(iconId);
+    if (!urls.length) return Promise.resolve();
+    if (typeof EnchantImagePreload !== 'undefined' && EnchantImagePreload.preloadMany) {
+      return EnchantImagePreload.preloadMany(urls).catch(() => {});
+    }
+    return Promise.all(urls.map((url) => new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = url;
+    }))).then(() => {});
+  }
+
   function isSticker() {
     return false;
   }
@@ -1259,6 +1289,8 @@ const IdleMobAnim = (() => {
     getRange,
     actionDurationMs,
     preloadAction,
+    collectFrameUrls,
+    preloadMob,
     isSticker,
     actorBodyImg,
     spriteKind,

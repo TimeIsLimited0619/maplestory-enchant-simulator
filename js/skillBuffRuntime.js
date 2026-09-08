@@ -250,6 +250,8 @@ const SkillBuffRuntime = (() => {
     if (typeof SkillFormula !== 'undefined' && SkillFormula.evalStatCommon) {
       const st = SkillFormula.evalStatCommon(skill.common, 1);
       if (st.indiePad > 0 || st.indieCr > 0 || st.indieMad > 0 || st.madX > 0) return true;
+      if ((Number(st.indiePadR) || 0) > 0 || (Number(st.indieDamR) || 0) > 0) return true;
+      if ((Number(st.emhp) || 0) > 0) return true;
       if ((Number(st.damAbsorbShieldR) || 0) > 0) return true;
     }
     return skill.type === 'buff';
@@ -460,7 +462,9 @@ const SkillBuffRuntime = (() => {
       }
       if (typeof SkillMobStatus !== 'undefined'
         && typeof SkillMobStatus.afterPlayerDamagedMob === 'function') {
-        SkillMobStatus.afterPlayerDamagedMob(mob, any);
+        SkillMobStatus.afterPlayerDamagedMob(mob, any, {
+          skillId: state.parentSkillId || state.summonSkillId || null,
+        });
       }
       if (mob.hp <= 0) {
         kills.push(mob);

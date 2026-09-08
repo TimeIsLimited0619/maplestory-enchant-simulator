@@ -1,7 +1,7 @@
 /**
  * 楓之谷風格傷害數字：三階段 easing。
- * 同目標短時間內：stackIndex 往上疊（含技能連鎖多招）。
- * 間隔過久才從基準（0）重來。
+ * 同目標同一次施放（stackGroup）：依 stackIndex 往上疊（技能連鎖共用一組）。
+ * 無 stackGroup：短時間自動遞增；間隔過久從頭疊。
  */
 const DamageNumber = (() => {
   const PHASE1_END = 0.15;
@@ -14,10 +14,10 @@ const DamageNumber = (() => {
   const STACK_Y_STEP = 25;
   const STACK_DELAY_MIN = 0.05;
   const STACK_DELAY_MAX = 0.08;
-  /** 同目標超過此間隔視為新一輪攻擊（從頭疊） */
+  /** 同目標超過此間隔視為新一輪攻擊（從頭疊；僅無 stackGroup 時） */
   const STACK_BURST_GAP_MS = 280;
-  /** 單輪視覺最多往上疊幾段（避免單次超多段飛出畫面） */
-  const STACK_Y_CAP = 15;
+  /** 單輪視覺往上疊上限（技能連鎖多段可較高） */
+  const STACK_Y_CAP = 48;
 
   /**
    * 場上同時存在的數字上限。
@@ -144,15 +144,20 @@ const DamageNumber = (() => {
     }
   }
 
-  /** 開新一輪堆疊（下一次技能／攻擊） */
+  /** 開新一輪堆疊（下一次技能／攻擊；無 stackGroup 路徑用） */
   function beginBurst(stackKey) {
     const key = String(stackKey || 'default');
     targetStacks.set(key, { count: 0, lastMs: performance.now() });
   }
 
+  function randomStackDelay(stackIndex) {
+    const idx = Math.max(0, Math.floor(Number(stackIndex) || 0));
+    return idx * (STACK_DELAY_MIN + Math.random() * (STACK_DELAY_MAX - STACK_DELAY_MIN));
+  }
+
   /**
    * 自動堆疊：同一輪內遞增；間隔過久或呼叫 beginBurst 後從 0 重來。
-   * 同目標新技能若傳 stackIndex===0，接在上一技能數字上方（技能連鎖用）。
+   * 有 forcedIndex 且無 stackGroup 時仍用時間窗接續（舊路徑）。
    */
   function nextStackForTarget(stackKey, forcedIndex) {
     const key = String(stackKey || 'default');
@@ -164,15 +169,13 @@ const DamageNumber = (() => {
       if (!st || now - st.lastMs > STACK_BURST_GAP_MS) {
         st = { count: 0, base: 0, lastMs: now };
       } else if (idx === 0) {
-        // 同目標新一招：從目前最高段往上接
         st.base = st.count;
       }
       const visualIndex = (Number(st.base) || 0) + idx;
       st.count = Math.max(st.count, visualIndex + 1);
       st.lastMs = now;
       targetStacks.set(key, st);
-      const delay = visualIndex * (STACK_DELAY_MIN + Math.random() * (STACK_DELAY_MAX - STACK_DELAY_MIN));
-      return { stackIndex: visualIndex, delay };
+      return { stackIndex: visualIndex, delay: randomStackDelay(visualIndex) };
     }
 
     if (!st || now - st.lastMs > STACK_BURST_GAP_MS) {
@@ -182,8 +185,25 @@ const DamageNumber = (() => {
     st.count += 1;
     st.lastMs = now;
     targetStacks.set(key, st);
-    const delay = stackIndex * (STACK_DELAY_MIN + Math.random() * (STACK_DELAY_MAX - STACK_DELAY_MIN));
-    return { stackIndex, delay };
+    return { stackIndex, delay: randomStackDelay(stackIndex) };
+  }
+
+  /**
+   * 施放組堆疊：stackIndex 即視覺層（同 mob + 同 stackGroup 內由戰鬥端分配）。
+   * 不同 stackGroup 互不接續，避免高頻引導一直往天上疊。
+   */
+  function resolveGroupedStack(stackKey, opts) {
+    const idx = Math.max(0, Math.floor(Number(opts.stackIndex) || 0));
+    const now = performance.now();
+    const prev = targetStacks.get(stackKey);
+    targetStacks.set(stackKey, {
+      count: Math.max(prev?.count || 0, idx + 1),
+      lastMs: now,
+    });
+    const delay = Number.isFinite(opts.delay)
+      ? Math.max(0, Number(opts.delay))
+      : randomStackDelay(idx);
+    return { stackIndex: idx, delay };
   }
 
   function poseAt(animAge, stackIndex) {
@@ -478,10 +498,19 @@ const DamageNumber = (() => {
   }
 
   /**
-   * 多段：用 stackIndex 往上疊；同目標短時間內新技能從上一招上方接續。
-   * 單段：同目標短時間內同樣往上疊（技能連鎖單段招不會蓋住）。
+   * 有 stackGroup：一次施放／一波 tick 內的絕對層數。
+   * 無 stackGroup：沿用時間窗自動／多段接續。
    */
-  function resolveStackOpts(opts = {}, stackKey) {
+  function resolveStackOpts(opts = {}, baseKey) {
+    const group = opts.stackGroup != null && String(opts.stackGroup) !== ''
+      ? String(opts.stackGroup)
+      : '';
+    const stackKey = group ? `${baseKey}:g:${group}` : baseKey;
+
+    if (group && Number.isFinite(opts.stackIndex)) {
+      return resolveGroupedStack(stackKey, opts);
+    }
+
     if (!opts.multiHit) {
       return nextStackForTarget(stackKey);
     }
@@ -531,8 +560,28 @@ const DamageNumber = (() => {
   function spawnOnMob(mob, damageValue, isCritical = false, opts = {}) {
     if (!mob) return null;
     const uid = mob.uid != null ? String(mob.uid) : '';
-    const view = getMobView(uid);
-    if (!view) return null;
+    let view = getMobView(uid);
+    if (!view) {
+      // actor 已被清掉時：退回場上座標，避免有傷無字
+      let pt = null;
+      if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.mobFieldPoint === 'function') {
+        pt = IdleHunt.mobFieldPoint(mob);
+      }
+      if ((!pt || !Number.isFinite(pt.x) || !Number.isFinite(pt.y))
+        && Number.isFinite(Number(mob.x)) && Number.isFinite(Number(mob.y))) {
+        pt = { x: Number(mob.x), y: Number(mob.y) - 64 };
+      }
+      if (!pt || !Number.isFinite(pt.x) || !Number.isFinite(pt.y)) return null;
+      const jitter = (Math.random() - 0.5) * 8;
+      const { stackIndex, delay } = resolveStackOpts(opts, uid ? `mob:${uid}` : 'mob:orphan');
+      return spawn(
+        damageValue,
+        pt.x + jitter,
+        pt.y,
+        isCritical,
+        { skinId: playerSkinId(), stackIndex, delay, zIndex: 6 },
+      );
+    }
     const jitter = (Math.random() - 0.5) * 8;
     const { stackIndex, delay } = resolveStackOpts(opts, `mob:${uid}`);
     return spawn(
@@ -660,6 +709,18 @@ const DamageNumber = (() => {
     layerEl?.replaceChildren?.();
   }
 
+  /** 清掉過久未用的堆疊鍵（掛機擊殺 uid 會無限增長） */
+  function pruneStaleStacks(maxAgeMs = 8000) {
+    const maxAge = Math.max(1000, Number(maxAgeMs) || 8000);
+    const now = performance.now();
+    for (const [key, st] of targetStacks) {
+      if (!st || now - (Number(st.lastMs) || 0) > maxAge) {
+        targetStacks.delete(key);
+      }
+    }
+    if (mobViewCache.size > 64) mobViewCache.clear();
+  }
+
   warmUp();
 
   return {
@@ -671,6 +732,8 @@ const DamageNumber = (() => {
     beginBurst,
     warmUp,
     clear,
+    pruneStaleStacks,
+    activeCount: () => instances.size,
   };
 })();
 

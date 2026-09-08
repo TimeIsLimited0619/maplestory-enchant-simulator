@@ -1,0 +1,475 @@
+/* ==========================================
+   43. Inventory Trunk（倉庫）— WZ AutoBuild 669×523
+   ========================================== */
+.ms-trunk {
+  position: fixed;
+  left: 180px;
+  top: 72px;
+  width: 669px;
+  height: 523px;
+  box-sizing: border-box;
+  background-image: url('../../images/iventory/Trunk/backgrnd.png');
+  background-size: 669px 523px;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  z-index: 12050;
+  overflow: visible;
+}
+
+#trunkDragHandle {
+  position: absolute;
+  left: 8px;
+  top: 0;
+  width: 580px;
+  height: 28px;
+  z-index: 6;
+}
+
+.trunk-close-btn {
+  position: absolute;
+  left: 642px;
+  top: 8px;
+  width: 19px;
+  height: 19px;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  z-index: 7;
+  color: transparent;
+  font-size: 0;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 19px 19px;
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_close__normal__0.png');
+  image-rendering: pixelated;
+}
+
+.trunk-close-btn:hover {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_close__mouseOver__0.png');
+}
+
+.trunk-close-btn:active {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_close__pressed__0.png');
+}
+
+.trunk-btn {
+  position: absolute;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  z-index: 5;
+  color: transparent;
+  font-size: 0;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
+}
+
+.trunk-btn:disabled {
+  cursor: default;
+  pointer-events: none;
+}
+
+.trunk-btn-sort {
+  left: 21px;
+  top: 41px;
+  width: 68px;
+  height: 22px;
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_sort__normal__0.png');
+}
+
+.trunk-btn-sort:hover {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_sort__mouseOver__0.png');
+}
+
+.trunk-btn-sort:active {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_sort__pressed__0.png');
+}
+
+.trunk-btn-sort:disabled {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_sort__disabled__0.png');
+}
+
+.trunk-btn-get-all {
+  left: 21px;
+  top: 456px;
+  width: 73px;
+  height: 26px;
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_getAll__normal__0.png');
+}
+
+.trunk-btn-get-all:hover {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_getAll__mouseOver__0.png');
+}
+
+.trunk-btn-get-all:active {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_getAll__pressed__0.png');
+}
+
+.trunk-btn-keep-auto {
+  left: 97px;
+  top: 456px;
+  width: 73px;
+  height: 26px;
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_keepAuto__disabled__0.png');
+  cursor: default;
+  pointer-events: none;
+}
+
+.trunk-btn-meso-out {
+  left: 203px;
+  top: 456px;
+  width: 39px;
+  height: 24px;
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_mesoOut__normal__0.png');
+}
+
+.trunk-btn-meso-out:hover {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_mesoOut__mouseOver__0.png');
+}
+
+.trunk-btn-meso-out:active {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_mesoOut__pressed__0.png');
+}
+
+.trunk-btn-meso-out:disabled {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_mesoOut__disabled__0.png');
+}
+
+.trunk-btn-meso-in {
+  left: 446px;
+  top: 456px;
+  width: 39px;
+  height: 24px;
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_mesoIn__normal__0.png');
+}
+
+.trunk-btn-meso-in:hover {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_mesoIn__mouseOver__0.png');
+}
+
+.trunk-btn-meso-in:active {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_mesoIn__pressed__0.png');
+}
+
+.trunk-btn-meso-in:disabled {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__button_mesoIn__disabled__0.png');
+}
+
+.trunk-slot-count {
+  position: absolute;
+  left: 354px;
+  top: 43px;
+  min-width: 64px;
+  height: 16px;
+  font-size: 12px;
+  line-height: 16px;
+  color: #ffffff;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* 對齊 .inv-meso-balance：灰字右對齊，含「楓幣」單位 */
+.trunk-meso {
+  position: absolute;
+  top: 461px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: #4b4b4b;
+  pointer-events: none;
+  z-index: 4;
+  white-space: nowrap;
+}
+
+.trunk-meso-storage {
+  left: 250px;
+  width: 146px; /* → vector:storageMeso 396 */
+}
+
+.trunk-meso-bag {
+  left: 490px;
+  width: 149px; /* → vector:inventoryMeso 639 */
+}
+
+.trunk-bag-tabs {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 0;
+  z-index: 5;
+}
+
+.trunk-tab {
+  position: absolute;
+  top: 31px;
+  width: 54px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 54px 22px;
+  image-rendering: pixelated;
+  color: transparent;
+  font-size: 0;
+}
+
+.trunk-tab-0 { left: 438px; }
+.trunk-tab-1 { left: 494px; }
+.trunk-tab-2 { left: 549px; }
+.trunk-tab-3 {
+  left: 604px;
+  cursor: default;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.trunk-tab-0 {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__tab_inventory__normal__0.png');
+}
+.trunk-tab-1 {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__tab_inventory__normal__1.png');
+}
+.trunk-tab-2 {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__tab_inventory__normal__2.png');
+}
+.trunk-tab-3 {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__tab_inventory__normal__3.png');
+}
+
+.trunk-tab-0.checked {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__tab_inventory__selected__0.png');
+}
+.trunk-tab-1.checked {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__tab_inventory__selected__1.png');
+}
+.trunk-tab-2.checked {
+  background-image: url('../../images/iventory/Trunk/AutoBuild__tab_inventory__selected__2.png');
+}
+
+.trunk-pane {
+  position: absolute;
+  overflow: visible;
+}
+
+/* 倉庫：8 欄；+3px 修正左偏；捲軸 lt≈395 */
+.trunk-pane-storage {
+  left: 28px;
+  top: 78px;
+  width: 381px;
+  height: 364px;
+}
+
+/* 背包鏡像：4 欄；+10px 修正左偏；捲軸 lt≈641 */
+.trunk-pane-bag {
+  left: 455px;
+  top: 78px;
+  width: 203px;
+  height: 242px;
+}
+
+/* 對齊 inventory：viewport right:10px；scrollbar top:-8 / right:9 */
+.trunk-viewport {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 10px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.trunk-grid {
+  display: grid;
+  grid-auto-rows: 42px;
+  column-gap: 4px;
+  row-gap: 4px;
+  will-change: transform;
+}
+
+.trunk-grid-storage {
+  grid-template-columns: repeat(8, 42px);
+}
+
+.trunk-grid-bag {
+  grid-template-columns: repeat(4, 42px);
+}
+
+.trunk-scrollbar {
+  position: absolute;
+  top: -8px;
+  right: 9px;
+  width: 5px;
+  height: 364px;
+  z-index: 3;
+}
+
+.trunk-pane-bag .trunk-scrollbar {
+  height: 242px;
+}
+
+.trunk-scroll-track {
+  position: absolute;
+  inset: 0;
+  background: url('../../images/iventory/scroll_slot.enabled.base.png') repeat-y center top;
+  background-size: 5px auto;
+  cursor: pointer;
+}
+
+.trunk-scroll-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 28px;
+  background: url('../../images/iventory/scroll_slot.enabled.thumb0.png') no-repeat center;
+  background-size: 5px 100%;
+  cursor: grab;
+}
+
+.trunk-scroll-thumb:active {
+  cursor: grabbing;
+  background-image: url('../../images/iventory/scroll_slot.enabled.thumb1.png');
+}
+
+/* 楓幣存提 popup（對齊 ms-confirm 語彙） */
+.trunk-meso-popup {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(8, 10, 14, 0.55);
+}
+
+.trunk-meso-popup.hidden {
+  display: none !important;
+}
+
+.trunk-meso-popup-card {
+  width: min(320px, 100%);
+  background: #1e222d;
+  border: 2px solid #545c75;
+  border-radius: 8px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 0 1px #11141c;
+  color: #e1e4ed;
+  font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+  overflow: hidden;
+}
+
+.trunk-meso-popup-header {
+  background: linear-gradient(180deg, #32384a 0%, #252a38 100%);
+  padding: 10px 16px;
+  border-bottom: 2px solid #434a61;
+}
+
+.trunk-meso-popup-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #ffd966;
+  text-shadow: 0 1px 2px #000;
+}
+
+.trunk-meso-popup-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trunk-meso-popup-hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #ccd2e3;
+}
+
+.trunk-meso-popup-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.trunk-meso-popup-input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  border: 1px solid #4f5b7a;
+  border-radius: 6px;
+  background: #12151c;
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.trunk-meso-popup-input:focus {
+  outline: 1px solid #8a7340;
+}
+
+.trunk-meso-popup-all {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid #4f5b7a;
+  background: linear-gradient(180deg, #3a4256 0%, #2a3142 100%);
+  color: #d7deef;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.trunk-meso-popup-all:hover {
+  background: linear-gradient(180deg, #465270 0%, #343c52 100%);
+}
+
+.trunk-meso-popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.trunk-meso-popup-btn {
+  min-width: 80px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid #4f5b7a;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.trunk-meso-popup-cancel {
+  background: linear-gradient(180deg, #3a4256 0%, #2a3142 100%);
+  color: #d7deef;
+}
+
+.trunk-meso-popup-cancel:hover {
+  background: linear-gradient(180deg, #465270 0%, #343c52 100%);
+}
+
+.trunk-meso-popup-ok {
+  background: linear-gradient(180deg, #5a4a28 0%, #3f341c 100%);
+  border-color: #8a7340;
+  color: #ffd966;
+}
+
+.trunk-meso-popup-ok:hover {
+  background: linear-gradient(180deg, #6b5832 0%, #4a3d22 100%);
+}

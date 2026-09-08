@@ -1,0 +1,221 @@
+/* 自由轉職側欄（自導覽欄右緣滑出） */
+.job-change-panel {
+  position: fixed;
+  top: 0;
+  left: var(--app-nav-current-width, var(--app-nav-width));
+  z-index: 13998;
+  width: min(360px, calc(100vw - var(--app-nav-current-width, var(--app-nav-width)) - 12px));
+  height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: #161A23;
+  border-right: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.80);
+  font-family: 'Microsoft JhengHei', 'PingFang TC', 'Segoe UI', sans-serif;
+  transform: translateX(-100%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.24s ease, opacity 0.24s ease, visibility 0.24s ease, left 0.2s ease;
+}
+
+.job-change-panel.is-open {
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.job-change-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 16px 14px 12px;
+  border-bottom: 2px solid #2D2F39;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.job-change-head span {
+  flex: 1;
+  min-width: 0;
+}
+
+.job-change-nav {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.job-change-nav:hover {
+  background: #2D2F39;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.job-change-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #3a3d48 transparent;
+}
+
+.job-change-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.job-change-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.job-change-body::-webkit-scrollbar-thumb {
+  background: #3a3d48;
+  border-radius: 6px;
+}
+
+.job-change-section-title {
+  margin: 0 0 8px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.50);
+}
+
+.job-change-cost {
+  margin-bottom: 16px;
+}
+
+.job-change-cost-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.job-change-cost-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.job-change-cost-item.is-ok {
+  border-color: rgba(80, 180, 120, 0.28);
+}
+
+.job-change-cost-item.is-short {
+  border-color: rgba(220, 90, 90, 0.35);
+}
+
+.job-change-cost-item__icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.job-change-cost-item__label {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.job-change-cost-item__qty {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.job-change-cost-item.is-short .job-change-cost-item__qty {
+  color: #e07a7a;
+}
+
+.job-change-hint {
+  margin: 10px 4px 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.job-change-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.job-change-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.job-change-row:hover:not(:disabled) {
+  background: #2D2F39;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.job-change-row.is-current,
+.job-change-row:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.job-change-row__icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.job-change-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.job-change-row__name {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.job-change-row__meta {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.job-change-empty {
+  padding: 16px 12px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+}

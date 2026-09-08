@@ -513,9 +513,19 @@ const UiCharacterInfo = (() => {
       isBoss ? 'boss' : 'normal',
     );
     const pct = Number(opts?.damagePct);
-    const scaled = Number.isFinite(pct) && pct > 0
+    let scaled = Number.isFinite(pct) && pct > 0
       ? Math.max(0, Math.floor(base * pct / 100))
       : base;
+    // 武器／魔法熟練度：傷害落在 [mastery%, 100%]（無熟練度時維持固定值）
+    if (scaled > 0 && typeof SkillModifiers !== 'undefined'
+      && typeof SkillModifiers.getTotals === 'function') {
+      const masteryPct = Math.max(0, Math.min(95, Number(SkillModifiers.getTotals().mastery) || 0));
+      if (masteryPct > 0) {
+        const floor = masteryPct / 100;
+        const factor = floor + Math.random() * (1 - floor);
+        scaled = Math.max(1, Math.floor(scaled * factor));
+      }
+    }
     const critMult = Number(pack.combat?.resolved?.rawCritSum) || 1.35;
     const isCritical = scaled > 0 && (
       !!opts.forceCritical || Math.random() < readHuntCritRateFromPack(pack, opts.critRateBonus)
@@ -566,7 +576,8 @@ const UiCharacterInfo = (() => {
     let skillPct = 0;
     if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
       const mods = SkillModifiers.getTotals();
-      skillFlat = (Number(mods.flatHpPerLevel) || 0) * level;
+      skillFlat = (Number(mods.flatHpPerLevel) || 0) * level
+        + (Number(mods.flatHp) || 0);
       skillPct = Number(mods.mhpR) || 0;
     }
     const pct = sumPercentSources(snapshot, HP_PERCENT_KEYS)
@@ -637,15 +648,12 @@ const UiCharacterInfo = (() => {
     };
   }
 
-  /** 迴避率（對怪物普攻／技能）：DEX/LUK 換算 + 裝備 flat 迴避 */
+  /**
+   * 迴避率：本模擬一律不套用（含 DEX/LUK／裝備 EVA／技能 er），
+   * 避免精靈遊俠等職業生存過強。
+   */
   function getHuntAvoidability() {
-    const { snapshot, combat } = resolveHuntCombat();
-    const dex = Number(readValue(snapshot, { key: 'DEX', source: 'main' }, combat)) || 0;
-    const luk = Number(readValue(snapshot, { key: 'LUK', source: 'main' }, combat)) || 0;
-    let avoid = dex * 0.423 + luk * 0.423;
-    avoid += extraFlatStat(snapshot, '迴避');
-    avoid += extraFlatStat(snapshot, 'EVA');
-    return Math.max(0, avoid);
+    return 0;
   }
 
   function getHuntBlockPct() {
@@ -663,14 +671,9 @@ const UiCharacterInfo = (() => {
     return lv * 10;
   }
 
-  /** 怪物命中玩家：先 Miss（迴避），再 guard（格擋），否則命中 */
+  /** 怪物命中玩家：不判定 Miss（迴避關閉），僅 guard（格擋）／命中 */
   function rollMobHitOutcome(mobLevel) {
-    const avoid = getHuntAvoidability();
-    const acc = mobAccuracyForLevel(mobLevel);
-    if (avoid > 0 || acc > 0) {
-      const missChance = (avoid / (avoid + acc)) * 100;
-      if (missChance > 0 && Math.random() * 100 < missChance) return 'miss';
-    }
+    void mobLevel;
     const block = getHuntBlockPct();
     if (block > 0 && Math.random() * 100 < block) return 'block';
     return 'hit';

@@ -190,9 +190,44 @@
   border: none;
   background: url('../../images/UIskillboard/btn_skill_preset_set.png') no-repeat center;
   background-color: transparent;
-  cursor: default;
+  cursor: pointer;
   opacity: 0.85;
   flex-shrink: 0;
+  position: relative;
+  z-index: 3;
+}
+
+.skb-settings-pop {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  z-index: 20;
+  min-width: 168px;
+  padding: 8px 10px;
+  border: 1px solid rgba(180, 190, 160, 0.55);
+  border-radius: 4px;
+  background: rgba(18, 22, 28, 0.94);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  color: #e8ecd8;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.skb-settings-pop[hidden] {
+  display: none !important;
+}
+
+.skb-settings-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.skb-settings-row input {
+  margin: 0;
 }
 
 .skb-equip-grid {

@@ -17,6 +17,12 @@ const SkillCombat = (() => {
   let asyncCastEpoch = 1;
   /** @type {Set<{ epoch: number }>} */
   const activeAsyncCasts = new Set();
+  /** 持續引導（伊修塔爾等）：{ skillId, stop, asyncId } */
+  let activeSustainChannel = null;
+  /** 傷害數字施放組序號（一次 cast／一波 channel tick） */
+  let damageStackSeq = 1;
+  /** 精靈遊俠技能連鎖 2–4：下次可觸發時間（最低間隔＝光速雙擊節奏） */
+  let mercedesLinkFollowerReadyAt = 0;
 
   function nowMs() {
     return (typeof performance !== 'undefined' && performance.now)
@@ -32,7 +38,71 @@ const SkillCombat = (() => {
     return Math.max(0, Number(ms) || 0);
   }
 
+  function stopActiveSustainChannel() {
+    const cur = activeSustainChannel;
+    activeSustainChannel = null;
+    castLockUntil = Math.min(castLockUntil, nowMs());
+    if (typeof Paperdoll !== 'undefined') Paperdoll.stopHuntSwingLoop?.();
+    if (typeof cur?.stop === 'function') {
+      try { cur.stop(); } catch (_) { /* ignore */ }
+    }
+  }
+
+  /**
+   * 開新一輪傷害數字堆疊組。技能連鎖共用同一組；引導每一 tick 開一組。
+   * 不影響目標分攤（_skillLinkTargetPlan）。
+   */
+  function beginDamageStackSession(ctx) {
+    if (!ctx || typeof ctx !== 'object') return null;
+    const session = {
+      id: damageStackSeq++,
+      nextIndex: 0,
+      bySkill: Object.create(null),
+    };
+    ctx._damageStack = session;
+    return session;
+  }
+
+  /** 非同步命中時暫時掛回該波施放組，避免被下一 tick／下一招覆寫 */
+  function runWithDamageStackSession(ctx, session, fn) {
+    if (typeof fn !== 'function') return undefined;
+    if (!ctx || !session) return fn();
+    const prev = ctx._damageStack;
+    ctx._damageStack = session;
+    try {
+      return fn();
+    } finally {
+      ctx._damageStack = prev;
+    }
+  }
+
+  /**
+   * 為某個技能在本施放組內分配連續 stackIndex。
+   * 多段招（attackCount>1）：同技能打多隻怪共用同一段 index。
+   * 單段招：每次命中往上加一層（多箭等）。
+   */
+  function damageStackSlotsForSkill(ctx, skillId, attackCount, opts = {}) {
+    const n = Math.max(1, Math.floor(Number(attackCount) || 1));
+    if (opts.isolateStack) {
+      return { stackGroup: damageStackSeq++, startIndex: 0, count: n };
+    }
+    let session = opts.session || (ctx && ctx._damageStack);
+    if (!session) session = beginDamageStackSession(ctx);
+    if (!session) {
+      return { stackGroup: damageStackSeq++, startIndex: 0, count: n };
+    }
+    const key = skillId != null ? String(skillId) : `_anon:${session.nextIndex}`;
+    const reuse = opts.forceReserve || n > 1;
+    if (reuse && session.bySkill[key]) return session.bySkill[key];
+    const startIndex = session.nextIndex;
+    session.nextIndex += n;
+    const slots = { stackGroup: session.id, startIndex, count: n };
+    if (reuse) session.bySkill[key] = slots;
+    return slots;
+  }
+
   function invalidateAsyncCasts() {
+    stopActiveSustainChannel();
     asyncCastEpoch += 1;
     activeAsyncCasts.clear();
   }
@@ -105,10 +175,12 @@ const SkillCombat = (() => {
 
   function reset(opts = {}) {
     invalidateAsyncCasts();
+    if (typeof Paperdoll !== 'undefined') Paperdoll.setComboMoveHold?.(false);
     if (!opts.keepCooldowns) {
       Object.keys(cooldowns).forEach((k) => { delete cooldowns[k]; });
     }
     castLockUntil = 0;
+    mercedesLinkFollowerReadyAt = 0;
     if (!opts.keepCooldowns) lastNoCdAttackSlot = -1;
     chainReservations.clear();
     nextChainReservationId = 1;
@@ -163,10 +235,8 @@ const SkillCombat = (() => {
   }
 
   /**
-   * 本專案無 MP：技能 mpCon 改扣 HP。
-   * 魔力激發 costmpR：再額外提高耗血。
-   * 依最大 HP 比例換算（WZ 的 mpCon 是舊 MP 池量級，直接扣會幾乎看不出來）。
-   * 約略：mpCon 20 → ~1% 最大HP；mpCon 50＋激發50% → ~3.75% 最大HP。
+   * 本專案無 MP：技能 mpCon 改扣 HP（僅法師）。
+   * HP = floor(mpCon × 5 × (1 + costmpR/100))；魔力激發再加碼。
    */
   let manaAbsorbCastGen = 0;
   let manaAbsorbUsedGen = -1;
@@ -186,8 +256,56 @@ const SkillCombat = (() => {
       return lineId === 'mage' || lineId === 'magef';
     }
     const id = String(jobId);
-    // 後援：法師技能書 200／210／211／212／220／221／222
     return /^(200|210|211|212|220|221|222)$/.test(id);
+  }
+
+  function isMercedesJob() {
+    const jobId = (typeof CharacterSkills !== 'undefined')
+      ? CharacterSkills.currentJobId?.()
+      : null;
+    if (jobId == null) return false;
+    if (typeof SkillCatalog !== 'undefined' && typeof SkillCatalog.getJobLine === 'function') {
+      const lineId = String(SkillCatalog.getJobLine(jobId)?.id || '');
+      if (lineId === 'mercedes') return true;
+    }
+    return /^231/.test(String(jobId));
+  }
+
+  /**
+   * 精靈技能連鎖 2–4 最低間隔：對齊光速雙擊／進階的施放節奏（攻速＋動作＋特效）。
+   * 不改 1 號頭技（如伊修塔爾）本身射速。
+   */
+  function resolveMercedesLinkFollowerGapMs(ctx = {}) {
+    const dualId = (typeof CharacterSkills !== 'undefined'
+      && typeof CharacterSkills.resolveCombatSkillId === 'function')
+      ? CharacterSkills.resolveCombatSkillId('23111000')
+      : '23111000';
+    const skill = (typeof SkillCatalog !== 'undefined')
+      ? SkillCatalog.getSkill(dualId)
+      : null;
+    if (!skill) {
+      return scaleGameDelayMs(360);
+    }
+    const level = Math.max(
+      1,
+      (typeof CharacterSkills !== 'undefined'
+        ? CharacterSkills.getLevel?.(dualId)
+        : 0) || 1,
+    );
+    const common = evalSkill(skill, level) || {};
+    const wzForDelay = ctx.wzAttackSpeed ?? ctx.attackSpeedStage;
+    const actionDelayMs = resolveActionDelayMs(common.attackDelayBaseMs, wzForDelay);
+    const skillAction = (typeof Paperdoll !== 'undefined'
+      && typeof Paperdoll.resolveSkillActionName === 'function')
+      ? Paperdoll.resolveSkillActionName(skill.actions)
+      : (Array.isArray(skill.actions) ? skill.actions[0] : '');
+    const instructionNaturalMs = (typeof Paperdoll !== 'undefined'
+      && typeof Paperdoll.getInstructionDurationMs === 'function')
+      ? (Paperdoll.getInstructionDurationMs(skillAction) || 0)
+      : 0;
+    const instructionMs = scaleDurationByAttackSpeed(instructionNaturalMs, wzForDelay);
+    const effectMs = scaleDurationByAttackSpeed(skillFxDurationMs(skill.fx || {}), wzForDelay);
+    return scaleGameDelayMs(Math.max(actionDelayMs, instructionMs, effectMs, 30));
   }
 
   function resolveSkillHpCost(common) {
@@ -198,19 +316,7 @@ const SkillCombat = (() => {
       && typeof SkillModifiers.getPassiveCostMpR === 'function')
       ? SkillModifiers.getPassiveCostMpR()
       : 0;
-    const base = mpCon * (1 + Math.max(0, costR) / 100);
-    let maxHp = 0;
-    if (typeof UiCharacterInfo !== 'undefined'
-      && typeof UiCharacterInfo.getHuntMaxHp === 'function') {
-      maxHp = Math.max(0, Math.floor(Number(UiCharacterInfo.getHuntMaxHp()) || 0));
-    }
-    if (!(maxHp > 0) && typeof IdleHunt !== 'undefined' && typeof IdleHunt.getPlayerHp === 'function') {
-      maxHp = Math.max(0, Number(IdleHunt.getPlayerHp()?.maxHp) || 0);
-    }
-    const scaled = maxHp > 0
-      ? Math.floor(maxHp * base / 2000)
-      : Math.floor(base);
-    return Math.max(1, scaled);
+    return Math.max(1, Math.floor(mpCon * 5 * (1 + Math.max(0, costR) / 100)));
   }
 
   function spendSkillHpCost(common) {
@@ -330,11 +436,17 @@ const SkillCombat = (() => {
 
   function isProjectileSkill(skill) {
     if (!skill) return false;
-    if (skill.channelCast || skill.blizzardCast) return false;
+    if (skill.blizzardCast === false) {
+      /* keep checking other paths */
+    } else if (skill.channelCast || skill.blizzardCast) {
+      return false;
+    }
     if (typeof SkillChannelCast !== 'undefined' && SkillChannelCast.isChannelCastSkill(skill, skill.fx)) {
       return false;
     }
-    if (typeof SkillBlizzardCast !== 'undefined' && SkillBlizzardCast.isBlizzardCastSkill(skill, skill.fx)) {
+    if (skill.blizzardCast !== false
+      && typeof SkillBlizzardCast !== 'undefined'
+      && SkillBlizzardCast.isBlizzardCastSkill(skill, skill.fx)) {
       return false;
     }
     if (skill.areaCast || skill.areaAttack) return false;
@@ -364,6 +476,7 @@ const SkillCombat = (() => {
     const plan = skill.areaCast || SkillAreaCast.buildPlan(skill, fx);
     if (!plan) return null;
     const kills = [];
+    const hitMobs = [];
     const asyncId = registerAsyncCast();
     SkillAreaCast.playAreaCast({
       playerEl: ctx.playerEl,
@@ -371,20 +484,19 @@ const SkillCombat = (() => {
       plan,
       onHit: () => {
         if (!isAsyncCastLive(asyncId)) return;
-        const hitKills = dealSkillDamage(skill, formCommon, ctx, {
+        const result = dealSkillDamage(skill, formCommon, ctx, {
           segmentGapSec: opts.segmentGapSec,
           normalMobBonusPct: opts.normalMobBonusPct,
           skillForFx,
           forceCritTail: form.forceCritTail || 0,
         });
-        hitKills.forEach((m) => {
-          if (m && !kills.includes(m)) kills.push(m);
-        });
+        (result.kills || []).forEach((m) => pushUniqueMob(kills, m));
+        (result.hitMobs || []).forEach((m) => pushUniqueMob(hitMobs, m));
       },
       onDone: () => {
         if (!isAsyncCastLive(asyncId)) return;
         releaseAsyncCast(asyncId);
-        finishAfterDamage(kills);
+        finishAfterDamage(kills, hitMobs);
         if (typeof ctx.onProjectileResolve === 'function') {
           ctx.onProjectileResolve(kills);
         }
@@ -402,11 +514,74 @@ const SkillCombat = (() => {
     const plan = skill.channelCast || SkillChannelCast.buildPlan(skill, fx);
     if (!plan) return null;
     const level = picked?.level || 1;
-    const kills = [];
-    // 引導持續傷害在背景跑；施放鎖只沿用 cast() 的 lockMs，不佔滿 channel 時間（刻意可並行下一招）
-    const asyncId = registerAsyncCast();
+    const timing = typeof SkillChannelCast.evalPlanMs === 'function'
+      ? SkillChannelCast.evalPlanMs(skill, plan, level)
+      : { prepareMs: 240, channelMs: 2000, tickMs: 240 };
+    const sustain = !!(plan.sustain || timing.sustain);
 
-    SkillChannelCast.playChannelCast({
+    // 同一持續引導已在跑：勿重播 prepare
+    if (sustain && activeSustainChannel
+      && String(activeSustainChannel.skillId) === String(skill.id)) {
+      return {
+        kills: [],
+        deferredKills: true,
+        channel: true,
+        sustain: true,
+        alreadyActive: true,
+        channelLockMs: Math.max(80, Number(timing.tickMs) || 120),
+      };
+    }
+
+    const kills = [];
+    const hitMobs = [];
+    const asyncId = registerAsyncCast();
+    const endFxMs = (() => {
+      const frames = skillForFx?.fx?.keydownend || skill?.fx?.keydownend || [];
+      if (!frames.length) return 120;
+      if (typeof SkillChannelCast.framesDurationMs === 'function') {
+        return SkillChannelCast.framesDurationMs(frames) || 120;
+      }
+      return 120;
+    })();
+    // 持續引導：鎖＝prepare+一 tick（之後每 tick 延長）；有限引導：整段時長
+    const channelLockMs = sustain
+      ? Math.max(300, (Number(timing.prepareMs) || 0) + (Number(timing.tickMs) || 120))
+      : Math.max(
+        300,
+        (Number(timing.prepareMs) || 0)
+          + (Number(timing.channelMs) || 0)
+          + Math.max(60, endFxMs),
+      );
+
+    const ballPlan = (typeof SkillBallCast !== 'undefined' && SkillBallCast.isBallCastSkill?.(skill, fx))
+      ? (skill.ballCast || SkillBallCast.buildPlan(skill, fx))
+      : null;
+    const fireBallOnTick = !!(ballPlan && fx?.ball);
+
+    const applyChannelHit = (mob) => {
+      const live = resolveLiveMob(mob, ctx) || (mob && Number(mob.hp) > 0 ? mob : null);
+      if (!live) {
+        if (mob && mob.hp <= 0) {
+          pushUniqueMob(kills, mob);
+          syncMobStateAfterDamage([mob], ctx);
+        }
+        return;
+      }
+      const hit = dealHitsOnMob(skillForFx, atkCommon, live, ctx, {
+        segmentGapSec: opts.segmentGapSec,
+        normalMobBonusPct: opts.normalMobBonusPct,
+        forceCritTail: form.forceCritTail || 0,
+        fxHit: fireBallOnTick ? undefined : null,
+      });
+      if (hit) pushUniqueMob(hitMobs, live);
+      if (live.hp <= 0) {
+        pushUniqueMob(kills, live);
+        syncMobStateAfterDamage([live], ctx);
+      }
+    };
+
+    let stopChannel = null;
+    const handle = SkillChannelCast.playChannelCast({
       fieldEl,
       playerEl: ctx.playerEl,
       fx,
@@ -418,28 +593,120 @@ const SkillCombat = (() => {
       onTick: () => {
         if (!isAsyncCastLive(asyncId)) return;
         const maxTargets = Math.max(1, atkCommon.mobCount || 1);
-        liveMobTargets(resolveCastMobs(ctx), maxTargets, ctx, skill.id).forEach((mob) => {
-          dealHitsOnMob(skillForFx, atkCommon, mob, ctx, {
-            segmentGapSec: opts.segmentGapSec,
-            normalMobBonusPct: opts.normalMobBonusPct,
-            forceCritTail: form.forceCritTail || 0,
-            fxHit: null,
-          });
-          if (mob.hp <= 0 && !kills.includes(mob)) kills.push(mob);
+        const list = () => liveMobTargets(resolveCastMobs(ctx), maxTargets, ctx, skill.id);
+        const targets = list();
+
+        // 持續引導：無攻擊目標（王死亡／轉階段無敵／清場）立刻中斷，避免空放鎖死
+        if (sustain && !targets.length) {
+          castLockUntil = nowMs();
+          if (typeof Paperdoll !== 'undefined') Paperdoll.stopHuntSwingLoop?.();
+          if (activeSustainChannel && activeSustainChannel.asyncId === asyncId) {
+            activeSustainChannel = null;
+          }
+          if (typeof stopChannel === 'function') stopChannel();
+          return;
+        }
+
+        // 每一波引導結算＝一組傷害數字（含同 tick 的連鎖）
+        const tickSession = beginDamageStackSession(ctx);
+        // 先佔主技能層數，避免連鎖先結算時搶到 0 起跳
+        damageStackSlotsForSkill(ctx, skill.id, Math.max(1, atkCommon.attackCount || 1), {
+          forceReserve: true,
+          session: tickSession,
         });
-        syncMobStateAfterDamage(kills, ctx);
-      },
-      onDone: () => {
-        if (!isAsyncCastLive(asyncId)) return;
-        releaseAsyncCast(asyncId);
-        finishAfterDamage(kills);
-        if (typeof ctx.onProjectileResolve === 'function') {
-          ctx.onProjectileResolve(kills);
+        if (sustain) {
+          const extend = scaleGameDelayMs((Number(timing.tickMs) || 120) + 40);
+          castLockUntil = Math.max(castLockUntil, nowMs() + extend);
+        }
+        const visualBall = fireBallOnTick && usesBallVisualDamage(skill, ballPlan);
+
+        // 伊修塔爾等：傷害先依目標數即時結算；投射物可改純動畫
+        if (visualBall && typeof SkillBallCast.playBallCast === 'function') {
+          runWithDamageStackSession(ctx, tickSession, () => {
+            targets.forEach((mob) => applyChannelHit(mob));
+          });
+          if (!(ctx.quietFx || (typeof document !== 'undefined' && document.hidden))) {
+            SkillBallCast.playBallCast({
+              fieldEl,
+              playerEl: ctx.playerEl,
+              fx: { ball: fx.ball, hit: fx.hit },
+              plan: { ...ballPlan, launchMs: 0 },
+              skill,
+              level,
+              mobs: targets,
+              getMobs: () => targets.filter((m) => m && Number(m.hp) > 0),
+              maxTargets,
+              facingRight: ctxFacingRight(ctx),
+              omitPlayerEffect: true,
+              visualOnly: true,
+              onDone: () => {},
+            });
+          }
+        } else if (fireBallOnTick && typeof SkillBallCast.playBallCast === 'function') {
+          SkillBallCast.playBallCast({
+            fieldEl,
+            playerEl: ctx.playerEl,
+            fx: { ball: fx.ball, hit: fx.hit },
+            plan: { ...ballPlan, launchMs: 0 },
+            skill,
+            level,
+            mobs: targets,
+            getMobs: list,
+            maxTargets,
+            facingRight: ctxFacingRight(ctx),
+            omitPlayerEffect: true,
+            onHit: (mob) => {
+              if (!isAsyncCastLive(asyncId)) return;
+              runWithDamageStackSession(ctx, tickSession, () => applyChannelHit(mob));
+            },
+            onDone: () => {},
+          });
+        } else {
+          runWithDamageStackSession(ctx, tickSession, () => {
+            targets.forEach((mob) => applyChannelHit(mob));
+          });
+        }
+        // 連鎖 2–4：每個 tick 都追加，避免整段引導只放一次
+        if (opts.mergeLink && picked?.isSkillLink) {
+          runWithDamageStackSession(ctx, tickSession, () => {
+            mergeLinkFollowers(picked, ctx, []);
+          });
         }
       },
+      onDone: () => {
+        if (activeSustainChannel && activeSustainChannel.asyncId === asyncId) {
+          activeSustainChannel = null;
+        }
+        if (sustain && typeof Paperdoll !== 'undefined') {
+          Paperdoll.stopHuntSwingLoop?.();
+        }
+        if (!isAsyncCastLive(asyncId)) return;
+        releaseAsyncCast(asyncId);
+        syncMobStateAfterDamage(kills, ctx);
+        finishAfterDamage(kills, hitMobs);
+      },
     });
-    if (opts.mergeLink && picked) mergeLinkFollowers(picked, ctx, []);
-    return { kills: [], deferredKills: true, channel: true };
+
+    stopChannel = (handle && typeof handle.stop === 'function') ? handle.stop : null;
+    if (sustain && stopChannel) {
+      activeSustainChannel = {
+        skillId: String(skill.id),
+        stop: stopChannel,
+        asyncId,
+      };
+    }
+
+    // 引導技不在開頭 merge 連鎖（改由每 tick），一般有 CD 引導仍開頭帶一次
+    if (opts.mergeLink && picked && !picked.isSkillLink) {
+      mergeLinkFollowers(picked, ctx, []);
+    }
+    return {
+      kills: [],
+      deferredKills: true,
+      channel: true,
+      sustain,
+      channelLockMs,
+    };
   }
 
   function tryBlizzardCastAttack(skill, skillForFx, formCommon, fx, ctx, form, picked, finishAfterDamage, opts = {}) {
@@ -450,35 +717,43 @@ const SkillCombat = (() => {
     const plan = skill.blizzardCast || SkillBlizzardCast.buildPlan(skill, fx);
     if (!plan) return null;
     const kills = [];
+    const hitMobs = [];
     const asyncId = registerAsyncCast();
+    const stackSession = ctx._damageStack || beginDamageStackSession(ctx);
     SkillBlizzardCast.playBlizzardCast({
       playerEl: ctx.playerEl,
       fieldEl,
       fx,
       plan,
       mobs: ctx.mobs,
+      getMobs: typeof ctx.getMobs === 'function' ? ctx.getMobs : (() => ctx.mobs || []),
       onHit: () => {
         if (!isAsyncCastLive(asyncId)) return;
-        const hitKills = dealSkillDamage(skill, formCommon, ctx, {
-          segmentGapSec: opts.segmentGapSec,
-          normalMobBonusPct: opts.normalMobBonusPct,
-          skillForFx,
-          forceCritTail: form.forceCritTail || 0,
-        });
-        hitKills.forEach((m) => {
-          if (m && !kills.includes(m)) kills.push(m);
+        runWithDamageStackSession(ctx, stackSession, () => {
+          const result = dealSkillDamage(skill, formCommon, ctx, {
+            segmentGapSec: opts.segmentGapSec,
+            normalMobBonusPct: opts.normalMobBonusPct,
+            skillForFx,
+            forceCritTail: form.forceCritTail || 0,
+          });
+          (result.kills || []).forEach((m) => pushUniqueMob(kills, m));
+          (result.hitMobs || []).forEach((m) => pushUniqueMob(hitMobs, m));
         });
       },
       onDone: () => {
         if (!isAsyncCastLive(asyncId)) return;
         releaseAsyncCast(asyncId);
-        finishAfterDamage(kills);
+        finishAfterDamage(kills, hitMobs);
         if (typeof ctx.onProjectileResolve === 'function') {
           ctx.onProjectileResolve(kills);
         }
       },
     });
-    if (opts.mergeLink && picked) mergeLinkFollowers(picked, ctx, []);
+    if (opts.mergeLink && picked) {
+      runWithDamageStackSession(ctx, stackSession, () => {
+        mergeLinkFollowers(picked, ctx, []);
+      });
+    }
     return { kills: [], deferredKills: true };
   }
 
@@ -500,6 +775,48 @@ const SkillCombat = (() => {
     return true;
   }
 
+  /**
+   * 飛箭改純動畫：傷害依 mobCount 即時結算（無視飛行距離）。
+   * 連鎖／orb／instantBeam 仍走投射物判定。
+   */
+  function usesBallVisualDamage(skill, plan) {
+    if (!skill) return false;
+    if (skill.ballVisualDamage === false) return false;
+    if (plan?.chain || plan?.ballMode === 'orb' || plan?.instantBeam) return false;
+    if (skill.ballVisualDamage === true) return true;
+    // 精靈遊俠一般 sprite 飛箭：預設即時結算，避免清怪被飛行拖慢
+    return isMercedesJob();
+  }
+
+  /** 施放特效：預設掛玩家；castFxAt=targetHead 掛第一個目標頭頂 */
+  function playSkillCastFx(skill, fx, ctx, opts = {}) {
+    if (!fx || ctx?.quietFx || (typeof document !== 'undefined' && document.hidden)) return;
+    if (typeof SkillEffectPlayer === 'undefined') return;
+    const mode = String(skill?.castFxAt || '');
+    if (mode === 'targetHead') {
+      const list = Array.isArray(opts.targets) && opts.targets.length
+        ? opts.targets
+        : resolveSkillTargets(ctx, skill?.id, 1);
+      const mob = (list || []).find((m) => m && Number(m.hp) > 0) || null;
+      if (mob) {
+        const fieldEl = ctx.fieldEl || document.getElementById('idleHuntField');
+        if (fx.effect?.length && typeof SkillEffectPlayer.playOnMobHead === 'function') {
+          SkillEffectPlayer.playOnMobHead(mob, fx.effect, { fieldEl });
+        }
+        if (fx.effect0?.length && typeof SkillEffectPlayer.playOnMobHead === 'function') {
+          SkillEffectPlayer.playOnMobHead(mob, fx.effect0, { fieldEl });
+        }
+        return;
+      }
+    }
+    if (fx.effect?.length) {
+      SkillEffectPlayer.playOnPlayer(fx.effect, { playerEl: ctx.playerEl });
+    }
+    if (fx.effect0?.length) {
+      SkillEffectPlayer.playOnPlayer(fx.effect0, { playerEl: ctx.playerEl });
+    }
+  }
+
   function tryBallCastAttack(skill, skillForFx, atkCommon, fx, ctx, form, picked, finishAfterDamage, opts = {}) {
     if (typeof SkillBallCast === 'undefined' || !SkillBallCast.isBallCastSkill(skill, fx)) {
       return null;
@@ -507,6 +824,14 @@ const SkillCombat = (() => {
     const fieldEl = ctx.fieldEl || document.getElementById('idleHuntField');
     const plan = skill.ballCast || SkillBallCast.buildPlan(skill, fx);
     if (!plan) return null;
+    const level = picked?.level || 1;
+    const volleys = typeof SkillBallCast.resolveBulletVolleys === 'function'
+      ? SkillBallCast.resolveBulletVolleys(skill, plan, level)
+      : null;
+    // 多箭 volley：每發只結算 1 段，總段數＝bulletCount（避免 attackCount×volley 翻倍）
+    const hitCommon = volleys
+      ? { ...atkCommon, attackCount: 1 }
+      : atkCommon;
     const targetBudget = getSkillTargetBudget(skill, atkCommon);
     const maxTargets = plan.instantBeam
       ? Math.max(1, Number(plan.instantTargets) || targetBudget)
@@ -517,7 +842,81 @@ const SkillCombat = (() => {
         : resolveCastMobs(ctx)
     );
     const kills = [];
+    const hitMobs = [];
     const asyncId = registerAsyncCast();
+    const stackSession = ctx._damageStack || beginDamageStackSession(ctx);
+    const headStackHits = volleys
+      ? Math.max(1, Number(volleys.count) || 1)
+      : Math.max(1, hitCommon.attackCount || 1);
+    // 主技能層數先佔位，讓同步的連鎖接在上方（飛彈／多箭稍後命中仍用同層）
+    const headStack = damageStackSlotsForSkill(ctx, skill.id, headStackHits, {
+      forceReserve: true,
+      session: stackSession,
+    });
+
+    // 飛箭純動畫：依目標數即時結算（技能連鎖分攤仍用 resolveSkillTargets）
+    if (usesBallVisualDamage(skill, plan)) {
+      const targets = (ballMobList() || [])
+        .filter((m) => m && Number(m.hp) > 0)
+        .slice(0, maxTargets);
+      const dmgCommon = volleys
+        ? { ...atkCommon, attackCount: Math.max(1, Number(volleys.count) || 1) }
+        : hitCommon;
+
+      runWithDamageStackSession(ctx, stackSession, () => {
+        targets.forEach((mob) => {
+          const live = resolveLiveMob(mob, ctx) || mob;
+          if (!live || !(Number(live.hp) > 0)) {
+            if (mob && mob.hp <= 0) {
+              pushUniqueMob(kills, mob);
+              syncMobStateAfterDamage([mob], ctx);
+            }
+            return;
+          }
+          const hit = dealHitsOnMob(skillForFx, dmgCommon, live, ctx, {
+            segmentGapSec: opts.segmentGapSec,
+            normalMobBonusPct: opts.normalMobBonusPct,
+            forceCritTail: form.forceCritTail || 0,
+            stackGroup: headStack.stackGroup,
+            stackStartIndex: headStack.startIndex,
+            stackSession,
+          });
+          if (hit) pushUniqueMob(hitMobs, live);
+          if (live.hp <= 0) {
+            pushUniqueMob(kills, live);
+            syncMobStateAfterDamage([live], ctx);
+          }
+        });
+      });
+
+      if (!(ctx.quietFx || (typeof document !== 'undefined' && document.hidden))) {
+        SkillBallCast.playBallCast({
+          fieldEl,
+          playerEl: ctx.playerEl,
+          fx,
+          plan,
+          skill,
+          level,
+          mobs: targets,
+          getMobs: () => targets.filter((m) => m && Number(m.hp) > 0),
+          maxTargets,
+          facingRight: ctxFacingRight(ctx),
+          visualOnly: true,
+          onDone: () => {},
+        });
+      }
+
+      if (opts.mergeLink && picked) {
+        runWithDamageStackSession(ctx, stackSession, () => {
+          mergeLinkFollowers(picked, ctx, []);
+        });
+      }
+
+      releaseAsyncCast(asyncId);
+      if (kills.length) syncMobStateAfterDamage(kills, ctx);
+      finishAfterDamage(kills, hitMobs);
+      return { kills: [], deferredKills: true };
+    }
 
     if (plan.ballMode === 'orb') {
       // 傷害與落點視覺同一時間軸（到達後 tick）
@@ -526,33 +925,61 @@ const SkillCombat = (() => {
         playerEl: ctx.playerEl,
         fx,
         plan,
+        skill,
+        level,
         mobs: ballMobList(),
         getMobs: ballMobList,
         maxTargets,
         facingRight: ctxFacingRight(ctx),
         visualOnly: false,
-        onHit: (mob) => {
+        onHit: (mob, _hitIndex, _pt, meta) => {
           if (!isAsyncCastLive(asyncId)) return;
-          const live = resolveLiveMob(mob, ctx);
-          if (!live) return;
-          dealHitsOnMob(skillForFx, atkCommon, live, ctx, {
-            segmentGapSec: opts.segmentGapSec,
-            normalMobBonusPct: opts.normalMobBonusPct,
-            forceCritTail: form.forceCritTail || 0,
+          runWithDamageStackSession(ctx, stackSession, () => {
+            const live = resolveLiveMob(mob, ctx);
+            if (!live) {
+              // 可能已在先前箭矢被擊殺：仍清出佇列，避免屍體占槽
+              if (mob && mob.hp <= 0) {
+                pushUniqueMob(kills, mob);
+                syncMobStateAfterDamage([mob], ctx);
+              }
+              return;
+            }
+            const volleyIndex = meta && Number.isFinite(meta.volleyIndex)
+              ? Math.max(0, Math.floor(meta.volleyIndex))
+              : null;
+            const stackStartIndex = (volleys && volleyIndex != null)
+              ? headStack.startIndex + volleyIndex
+              : headStack.startIndex;
+            const hit = dealHitsOnMob(skillForFx, hitCommon, live, ctx, {
+              segmentGapSec: opts.segmentGapSec,
+              normalMobBonusPct: opts.normalMobBonusPct,
+              forceCritTail: form.forceCritTail || 0,
+              stackGroup: headStack.stackGroup,
+              stackStartIndex,
+              stackSession,
+            });
+            if (hit) pushUniqueMob(hitMobs, live);
+            if (live.hp <= 0) {
+              pushUniqueMob(kills, live);
+              // 多箭／多目標：擊殺當下移出佇列，否則占滿 QUEUE 無法刷新
+              syncMobStateAfterDamage([live], ctx);
+            }
           });
-          if (live.hp <= 0 && !kills.includes(live)) kills.push(live);
-          syncMobStateAfterDamage(kills, ctx);
         },
         onDone: () => {
           if (!isAsyncCastLive(asyncId)) return;
           releaseAsyncCast(asyncId);
-          finishAfterDamage(kills);
-          if (typeof ctx.onProjectileResolve === 'function') {
-            ctx.onProjectileResolve(kills);
-          }
+          // 掃一次佇列殘留 hp<=0（保險）
+          if (kills.length) syncMobStateAfterDamage(kills, ctx);
+          else syncMobStateAfterDamage([], ctx);
+          finishAfterDamage(kills, hitMobs);
         },
       });
-      if (opts.mergeLink && picked) mergeLinkFollowers(picked, ctx, []);
+      if (opts.mergeLink && picked) {
+        runWithDamageStackSession(ctx, stackSession, () => {
+          mergeLinkFollowers(picked, ctx, []);
+        });
+      }
       return { kills: [], deferredKills: true };
     }
 
@@ -562,6 +989,8 @@ const SkillCombat = (() => {
       playerEl: ctx.playerEl,
       fx,
       plan,
+      skill,
+      level,
       mobs: ballMobList(),
       getMobs: ballMobList,
       maxTargets,
@@ -578,20 +1007,38 @@ const SkillCombat = (() => {
           chainReservationId = reserveChainMobs(path.map((p) => p.mob), ttl);
         }
         : undefined,
-      onHit: (mob) => {
+      onHit: (mob, _hitIndex, _pt, meta) => {
         if (!isAsyncCastLive(asyncId)) return;
-        if (plan.chain) releaseMobFromChainReservation(chainReservationId, mob);
-        const live = resolveLiveMob(mob, ctx);
-        if (!live) {
-          if (mob && mob.hp <= 0 && !kills.includes(mob)) kills.push(mob);
-          return;
-        }
-        dealHitsOnMob(skillForFx, atkCommon, live, ctx, {
-          segmentGapSec: opts.segmentGapSec,
-          normalMobBonusPct: opts.normalMobBonusPct,
-          forceCritTail: form.forceCritTail || 0,
+        runWithDamageStackSession(ctx, stackSession, () => {
+          if (plan.chain) releaseMobFromChainReservation(chainReservationId, mob);
+          const live = resolveLiveMob(mob, ctx);
+          if (!live) {
+            if (mob && mob.hp <= 0) {
+              pushUniqueMob(kills, mob);
+              syncMobStateAfterDamage([mob], ctx);
+            }
+            return;
+          }
+          const volleyIndex = meta && Number.isFinite(meta.volleyIndex)
+            ? Math.max(0, Math.floor(meta.volleyIndex))
+            : null;
+          const stackStartIndex = (volleys && volleyIndex != null)
+            ? headStack.startIndex + volleyIndex
+            : headStack.startIndex;
+          const hit = dealHitsOnMob(skillForFx, hitCommon, live, ctx, {
+            segmentGapSec: opts.segmentGapSec,
+            normalMobBonusPct: opts.normalMobBonusPct,
+            forceCritTail: form.forceCritTail || 0,
+            stackGroup: headStack.stackGroup,
+            stackStartIndex,
+            stackSession,
+          });
+          if (hit) pushUniqueMob(hitMobs, live);
+          if (live.hp <= 0) {
+            pushUniqueMob(kills, live);
+            syncMobStateAfterDamage([live], ctx);
+          }
         });
-        if (live.hp <= 0 && !kills.includes(live)) kills.push(live);
       },
       onDone: () => {
         if (chainReservationId != null) {
@@ -600,14 +1047,16 @@ const SkillCombat = (() => {
         }
         if (!isAsyncCastLive(asyncId)) return;
         releaseAsyncCast(asyncId);
-        if (kills.length) syncMobStateAfterDamage(kills, ctx);
-        finishAfterDamage(kills);
-        if (!plan.chain && !plan.instantBeam && typeof ctx.onProjectileResolve === 'function') {
-          ctx.onProjectileResolve(kills);
-        }
+        // 掃殘留；已同步過的擊殺不會重複發獎（不在佇列內）
+        syncMobStateAfterDamage(kills, ctx);
+        finishAfterDamage(kills, hitMobs);
       },
     });
-    if (opts.mergeLink && picked) mergeLinkFollowers(picked, ctx, []);
+    if (opts.mergeLink && picked) {
+      runWithDamageStackSession(ctx, stackSession, () => {
+        mergeLinkFollowers(picked, ctx, []);
+      });
+    }
     return { kills: [], deferredKills: true };
   }
 
@@ -646,6 +1095,15 @@ const SkillCombat = (() => {
     const normalBonus = Number(opts.normalMobBonusPct) || 0;
     const bonus = (!mob.isBoss && normalBonus > 0) ? normalBonus : 0;
     const critRateBonus = resolveCritRateBonus(skill, common, opts.critRateBonus);
+    const stackSlots = (opts.stackGroup != null && Number.isFinite(opts.stackStartIndex))
+      ? {
+        stackGroup: opts.stackGroup,
+        startIndex: Math.max(0, Math.floor(opts.stackStartIndex)),
+      }
+      : damageStackSlotsForSkill(ctx, skill?.id, attackCount, {
+        isolateStack: !!opts.isolateStack,
+        session: opts.stackSession,
+      });
     return applyHitsToMob(mob, {
       damagePct: common.damagePct,
       damagePctBonus: bonus,
@@ -660,6 +1118,8 @@ const SkillCombat = (() => {
       forceCritTail: opts.forceCritTail || 0,
       critRateBonus,
       skillId: skill?.id,
+      stackGroup: stackSlots.stackGroup,
+      stackStartIndex: stackSlots.startIndex,
     });
   }
 
@@ -769,8 +1229,11 @@ const SkillCombat = (() => {
   }
 
   function skillLinkEntry(skillId) {
-    const id = String(skillId || '');
+    let id = String(skillId || '');
     if (!id || typeof SkillCatalog === 'undefined') return null;
+    if (typeof CharacterSkills.resolveCombatSkillId === 'function') {
+      id = CharacterSkills.resolveCombatSkillId(id);
+    }
     const skill = SkillCatalog.getSkill(id);
     if (!skill) return null;
     const level = CharacterSkills.getLevel?.(id) || 0;
@@ -854,7 +1317,9 @@ const SkillCombat = (() => {
       return null;
     }
     const t = nowMs();
-    if (isCastLocked(t)) return null;
+    const sustainActive = !!activeSustainChannel;
+    // 持續引導中：仍可挑有 CD 的招來打斷；其餘維持引導
+    if (isCastLocked(t) && !sustainActive) return null;
 
     const loadout = CharacterSkills.currentLoadout?.() || [];
     const linkIds = (typeof CharacterSkills.currentSkillLink === 'function'
@@ -865,10 +1330,15 @@ const SkillCombat = (() => {
 
     function makeCandidate(id, slot) {
       if (!id) return null;
-      const skill = SkillCatalog.getSkill(id);
+      const resolvedId = typeof CharacterSkills.resolveCombatSkillId === 'function'
+        ? CharacterSkills.resolveCombatSkillId(id)
+        : String(id);
+      const skill = SkillCatalog.getSkill(resolvedId);
       if (!skill || skill.skipPanel) return null;
       if ((skill.type !== 'active' && skill.type !== 'buff') || !skill.equipable) return null;
-      const level = CharacterSkills.getLevel(id);
+      if (typeof CharacterSkills.isSkillSuperseded === 'function'
+        && CharacterSkills.isSkillSuperseded(resolvedId)) return null;
+      const level = CharacterSkills.getLevel(resolvedId);
       if (!(level > 0)) return null;
       const common = evalSkill(skill, level);
       if (!common) return null;
@@ -888,6 +1358,29 @@ const SkillCombat = (() => {
     for (let i = 0; i < loadout.length; i += 1) {
       const c = makeCandidate(loadout[i], i);
       if (c) candidates.push(c);
+    }
+
+    function pickReadyCdCast() {
+      const cdBuff = candidates.find((c) => (
+        c.isBuff && c.hasCd && c.ready
+        && !(typeof SkillBuffRuntime !== 'undefined' && SkillBuffRuntime.isToggleBuffSkill?.(c.skill))
+      ));
+      if (cdBuff) return cdBuff;
+      const toggleCdBuff = candidates.find((c) => (
+        c.isBuff && c.hasCd && c.ready
+        && typeof SkillBuffRuntime !== 'undefined'
+        && SkillBuffRuntime.isToggleBuffSkill?.(c.skill)
+        && !isBuffDurationActive(c.skill.id, t)
+      ));
+      if (toggleCdBuff) return toggleCdBuff;
+      const cdAtk = candidates.find((c) => !c.isBuff && c.hasCd && c.ready);
+      if (cdAtk) return cdAtk;
+      return null;
+    }
+
+    // 持續引導中：只允許有 CD 的招打斷，其餘維持射擊
+    if (sustainActive) {
+      return pickReadyCdCast();
     }
 
     // 1) 有 CD 的 buff（不含開關技：開關技走下方「未啟用才放」）
@@ -963,6 +1456,10 @@ const SkillCombat = (() => {
       forceCritTail = 0,
       critRateBonus = 0,
       skillId = null,
+      stackGroup: stackGroupOpt,
+      stackStartIndex: stackStartOpt,
+      isolateStack = false,
+      ctx = null,
     } = opts;
     if (!mob) return false;
     const pct = (Number(damagePct) || 0) + (Number(damagePctBonus) || 0);
@@ -972,27 +1469,51 @@ const SkillCombat = (() => {
     if (hitFx?.length && typeof SkillEffectPlayer !== 'undefined') {
       SkillEffectPlayer.playOnMob(mob, hitFx);
     }
+
+    let stackGroup = stackGroupOpt;
+    let startIndex = Number.isFinite(stackStartOpt) ? Math.max(0, Math.floor(stackStartOpt)) : null;
+    if (stackGroup == null || startIndex == null) {
+      const slots = damageStackSlotsForSkill(ctx, skillId, n, { isolateStack });
+      if (stackGroup == null) stackGroup = slots.stackGroup;
+      if (startIndex == null) startIndex = slots.startIndex;
+    }
+
     let any = false;
     for (let i = 0; i < n; i += 1) {
       const forceCritical = critTail > 0 && i >= n - critTail;
       const hit = rollSkillHit(!!mob.isBoss, pct, { forceCritical, critRateBonus });
       let dmg = hit.dmg;
       if (!(dmg > 0)) continue;
+      // 技能專屬超技：B傷／無視防禦（以乘算近似，與結凍粉碎 IED 同路徑）
+      const skillEn = (skillId && typeof SkillModifiers !== 'undefined'
+        && typeof SkillModifiers.getSkillEnhance === 'function')
+        ? SkillModifiers.getSkillEnhance(skillId)
+        : null;
+      if (skillEn) {
+        if (mob.isBoss && (Number(skillEn.bdR) || 0) > 0) {
+          dmg = Math.max(0, Math.floor(dmg * (1 + Number(skillEn.bdR) / 100)));
+        }
+        if ((Number(skillEn.ied) || 0) > 0) {
+          dmg = Math.max(0, Math.floor(dmg * (1 + Number(skillEn.ied) / 100)));
+        }
+      }
       if (typeof SkillMobStatus !== 'undefined'
         && typeof SkillMobStatus.applyOutgoingDamageMods === 'function') {
-        dmg = SkillMobStatus.applyOutgoingDamageMods(mob, dmg);
+        dmg = SkillMobStatus.applyOutgoingDamageMods(mob, dmg, {
+          isCritical: !!hit.isCritical,
+          skillId,
+        });
       }
       if (!(dmg > 0)) continue;
       any = true;
-      const dmgOpts = multiHit
-        ? {
-          multiHit: true,
-          stackIndex: i,
-          ...(segmentGapSec != null
-            ? { delay: i * segmentGapSec }
-            : {}),
-        }
-        : {};
+      const dmgOpts = {
+        multiHit: true,
+        stackIndex: startIndex + i,
+        stackGroup,
+        ...(segmentGapSec != null
+          ? { delay: i * segmentGapSec }
+          : {}),
+      };
       if (typeof showMobDamage === 'function') {
         showMobDamage(mob, dmg, hit.isCritical, dmgOpts);
       }
@@ -1072,14 +1593,131 @@ const SkillCombat = (() => {
     }
   }
 
+  /**
+   * 接技 addAttack：依優先序選下一段；CD 中跳過，改走下一條路線。
+   * 優先序：skill.addAttackPrefer（覆寫）→ skillPlus 高階優先 → base skill。
+   */
+  function isAddAttackCandidateReady(skillId, common, t) {
+    const cdSec = Number(common?.cooltimeSec) || 0;
+    if (!(cdSec > 0)) return true;
+    return (cooldowns[String(skillId)] || 0) <= t;
+  }
+
+  function resolveAddAttackFollowupOrder(fromSkill) {
+    const aa = fromSkill?.addAttack;
+    if (!aa?.skill) return [];
+    const prefer = Array.isArray(fromSkill.addAttackPrefer) && fromSkill.addAttackPrefer.length
+      ? fromSkill.addAttackPrefer.map(String)
+      : null;
+    if (prefer) {
+      const rest = [];
+      const plus = Array.isArray(aa.skillPlus) ? aa.skillPlus.map(String) : [];
+      const base = String(aa.skill);
+      [...plus].reverse().concat([base]).forEach((id) => {
+        if (!prefer.includes(id) && !rest.includes(id)) rest.push(id);
+      });
+      return prefer.concat(rest);
+    }
+    const plus = Array.isArray(aa.skillPlus) ? aa.skillPlus : [];
+    return [...plus].reverse().map(String).concat([String(aa.skill)]);
+  }
+
+  function resolveAddAttackFollowup(fromSkill) {
+    const aa = fromSkill?.addAttack;
+    if (!aa?.skill || typeof SkillCatalog === 'undefined') return null;
+    const ordered = resolveAddAttackFollowupOrder(fromSkill);
+    const fromLevel = CharacterSkills.getLevel?.(fromSkill.id) || 0;
+    const t = nowMs();
+    for (const id of ordered) {
+      const skill = SkillCatalog.getSkill(id);
+      if (!skill) continue;
+      let level = CharacterSkills.getLevel?.(id) || 0;
+      if (!(level > 0) && skill.skipPanel) {
+        level = fromLevel || 1;
+      }
+      if (!(level > 0)) continue;
+      const common = evalSkill(skill, level);
+      if (common && !isAddAttackCandidateReady(id, common, t)) continue;
+      return { skill, level, meta: aa };
+    }
+    return null;
+  }
+
+  function scheduleAddAttackFollowup(fromSkill, ctx, depth = 0) {
+    if (depth > 5 || !fromSkill?.addAttack?.skill) {
+      if (typeof Paperdoll !== 'undefined') Paperdoll.setComboMoveHold?.(false);
+      return;
+    }
+    // 技能連鎖同幀多段時不另開接技，避免兩套連段互相搶節奏
+    if (ctx?.skipAddAttack) {
+      if (typeof Paperdoll !== 'undefined') Paperdoll.setComboMoveHold?.(false);
+      return;
+    }
+    const aa = fromSkill.addAttack;
+    // 首段僅 isAuto／type=1；鏈上後續一律接
+    if (depth === 0 && !aa.isAuto && Number(aa.type) !== 1) {
+      if (typeof Paperdoll !== 'undefined') Paperdoll.setComboMoveHold?.(false);
+      return;
+    }
+    const next = resolveAddAttackFollowup(fromSkill);
+    if (!next) {
+      if (typeof Paperdoll !== 'undefined') Paperdoll.setComboMoveHold?.(false);
+      return;
+    }
+    let delayMs = Number(aa.activeTime) || 0;
+    if (delayMs > 0 && delayMs <= 60) delayMs *= 30;
+    if (!(delayMs > 0)) delayMs = 120;
+    // idle 自動接技：不必等完整 permit 窗口
+    delayMs = Math.max(90, Math.min(delayMs, 450));
+    // 接技期間鎖住選招，避免連鎖／飛箭插入連段中間
+    castLockUntil = Math.max(castLockUntil, nowMs() + scaleGameDelayMs(delayMs + 80));
+    // 頭技開始接技鏈：保留紙娃娃 move 直到整段結束
+    if (typeof Paperdoll !== 'undefined') Paperdoll.setComboMoveHold?.(true);
+    window.setTimeout(() => {
+      castAddAttackFollowup(next, ctx, depth + 1);
+    }, scaleGameDelayMs(delayMs));
+  }
+
+  function castAddAttackFollowup(next, ctx, depth) {
+    if (!next?.skill) {
+      if (typeof Paperdoll !== 'undefined') Paperdoll.setComboMoveHold?.(false);
+      return;
+    }
+    const baseCommon = evalSkill(next.skill, next.level);
+    if (!baseCommon || isBuffSkill(next.skill, baseCommon)) {
+      if (typeof Paperdoll !== 'undefined') Paperdoll.setComboMoveHold?.(false);
+      return;
+    }
+    const picked = {
+      skill: next.skill,
+      level: next.level,
+      common: baseCommon,
+      slot: -1,
+      isAddAttack: true,
+    };
+    // 接技略過選招鎖但仍保持短鎖，讓連段特效銜接且不被其他招插入
+    castLockUntil = 0;
+    if (typeof Paperdoll !== 'undefined') Paperdoll.setComboMoveHold?.(true);
+    cast(picked, { ...ctx, addAttackDepth: depth, skipAddAttack: false });
+  }
+
   const FINAL_ATTACK_BASIC_ID = '1100002';
   const FINAL_ATTACK_ADV_ID = '1120013';
+  const FINAL_ATTACK_MERCEDES_BASIC_ID = '23100006';
+  const FINAL_ATTACK_MERCEDES_ADV_ID = '23120012';
   const FINAL_ATTACK_WEAPON_TYPES = new Set(['單手劍', '單手斧', '雙手劍', '雙手斧']);
+  const FINAL_ATTACK_MERCEDES_WEAPON_TYPES = new Set(['雙弩槍']);
   /** WZ finalAttack→1100002 的英雄直接攻擊技（110／111／112.img） */
   const FINAL_ATTACK_TRIGGER_IDS = new Set([
     '1101011', '1101014',
     '1111010', '1111012', '1111016',
     '1121008', '1121052',
+  ]);
+  const FINAL_ATTACK_SELF_IDS = new Set([
+    FINAL_ATTACK_BASIC_ID,
+    FINAL_ATTACK_ADV_ID,
+    FINAL_ATTACK_MERCEDES_BASIC_ID,
+    FINAL_ATTACK_MERCEDES_ADV_ID,
   ]);
 
   function resolveEquippedWeaponType() {
@@ -1095,38 +1733,61 @@ const SkillCombat = (() => {
     return WeaponTypeMap.JOB_DEFAULT_WEAPON_TYPE?.[jobName] || '';
   }
 
-  function isFinalAttackWeaponEquipped() {
-    return FINAL_ATTACK_WEAPON_TYPES.has(resolveEquippedWeaponType());
-  }
-
-  function skillTriggersFinalAttack(triggerSkillId) {
-    const id = String(triggerSkillId || '');
-    if (!id) return false;
-    const skill = typeof SkillCatalog !== 'undefined' ? SkillCatalog.getSkill(id) : null;
-    if (skill?.finalAttackId) return true;
-    return FINAL_ATTACK_TRIGGER_IDS.has(id);
-  }
-
   function resolveFinalAttackPassive() {
     if (typeof CharacterSkills === 'undefined' || typeof SkillCatalog === 'undefined') {
       return null;
     }
-    if (CharacterSkills.getLevel(FINAL_ATTACK_ADV_ID) > 0) {
-      return {
-        skill: SkillCatalog.getSkill(FINAL_ATTACK_ADV_ID),
-        level: CharacterSkills.getLevel(FINAL_ATTACK_ADV_ID),
-      };
-    }
-    if (CharacterSkills.getLevel(FINAL_ATTACK_BASIC_ID) > 0) {
-      return {
-        skill: SkillCatalog.getSkill(FINAL_ATTACK_BASIC_ID),
-        level: CharacterSkills.getLevel(FINAL_ATTACK_BASIC_ID),
-      };
-    }
-    return null;
+    const pick = (id) => {
+      const level = CharacterSkills.getLevel(id) || 0;
+      if (!(level > 0)) return null;
+      const skill = SkillCatalog.getSkill(id);
+      return skill ? { skill, level } : null;
+    };
+    return pick(FINAL_ATTACK_MERCEDES_ADV_ID)
+      || pick(FINAL_ATTACK_MERCEDES_BASIC_ID)
+      || pick(FINAL_ATTACK_ADV_ID)
+      || pick(FINAL_ATTACK_BASIC_ID);
   }
 
-  /** 優先最大 HP 的 Boss；無 Boss 時取最大 HP 的一般怪 */
+  function isMercedesFinalAttackPassive(passive) {
+    const id = String(passive?.skill?.id || '');
+    return id === FINAL_ATTACK_MERCEDES_BASIC_ID || id === FINAL_ATTACK_MERCEDES_ADV_ID;
+  }
+
+  function isFinalAttackWeaponEquipped() {
+    const wt = resolveEquippedWeaponType();
+    const passive = resolveFinalAttackPassive();
+    if (isMercedesFinalAttackPassive(passive)) {
+      return FINAL_ATTACK_MERCEDES_WEAPON_TYPES.has(wt);
+    }
+    return FINAL_ATTACK_WEAPON_TYPES.has(wt);
+  }
+
+  function skillTriggersFinalAttack(triggerSkillId) {
+    const id = String(triggerSkillId || '');
+    if (!id || FINAL_ATTACK_SELF_IDS.has(id)) return false;
+    const skill = typeof SkillCatalog !== 'undefined' ? SkillCatalog.getSkill(id) : null;
+    if (skill?.finalAttackId) return true;
+    const passive = resolveFinalAttackPassive();
+    if (!passive) return false;
+    if (isMercedesFinalAttackPassive(passive)) {
+      if (!skill || skill.type === 'passive') return false;
+      if (skill.skipPanel) return false;
+      // 有傷害的主動／召喚技可觸發
+      const lv = typeof CharacterSkills !== 'undefined'
+        ? (CharacterSkills.getLevel?.(id) || 0)
+        : 0;
+      if (!(lv > 0) && skill.type !== 'active') return false;
+      const common = typeof SkillFormula !== 'undefined'
+        ? SkillFormula.evalStatCommon(skill.common || {}, Math.max(1, lv || 1))
+        : null;
+      return (Number(common?.damagePct) || 0) > 0
+        || (skill.common?.damage != null && String(skill.common.damage) !== '');
+    }
+    return FINAL_ATTACK_TRIGGER_IDS.has(id);
+  }
+
+  /** 優先最大 HP 的 Boss；無 Boss 時取最大 HP 的一般怪（無命中清單時的後備） */
   function resolveFinalAttackTarget(ctx) {
     const alive = filterChainAvailableMobs(resolveCastMobs(ctx))
       .filter((m) => m && m.hp > 0);
@@ -1142,8 +1803,41 @@ const SkillCombat = (() => {
     }, null);
   }
 
-  /** 終極攻擊／進階終極攻擊追擊 */
-  function tryFinalAttack(ctx, triggerSkillId) {
+  function pushUniqueMob(list, mob) {
+    if (!mob || !list) return list;
+    if (!list.includes(mob)) list.push(mob);
+    return list;
+  }
+
+  /**
+   * 終極攻擊類目標池：優先本次技能命中且仍存活的怪；
+   * 無命中清單時才退回場上優先目標。
+   */
+  function resolveFinalAttackTargets(ctx, hitMobs) {
+    const fromHits = (Array.isArray(hitMobs) ? hitMobs : [])
+      .filter((m) => m && Number(m.hp) > 0);
+    if (fromHits.length) return fromHits;
+    const one = resolveFinalAttackTarget(ctx);
+    return one ? [one] : [];
+  }
+
+  /** 英雄終極攻擊：在命中池中挑一隻（優先最大 HP Boss），再以 prop% 判定一次 */
+  function pickHeroFinalAttackTarget(ctx, hitMobs) {
+    const pool = resolveFinalAttackTargets(ctx, hitMobs);
+    if (!pool.length) return null;
+    const prefer = pool.some((m) => m.isBoss)
+      ? pool.filter((m) => m.isBoss)
+      : pool;
+    return prefer.reduce((best, mob) => {
+      if (!best) return mob;
+      const hpA = Math.max(Number(mob.maxHp) || 0, Number(mob.hp) || 0);
+      const hpB = Math.max(Number(best.maxHp) || 0, Number(best.hp) || 0);
+      return hpA > hpB ? mob : best;
+    }, null);
+  }
+
+  /** 終極攻擊／進階終極攻擊追擊：單目標 prop%（武器門檻＋觸發技白名單） */
+  function tryFinalAttack(ctx, triggerSkillId, hitMobs) {
     if (typeof SkillFormula === 'undefined') return [];
     if (!skillTriggersFinalAttack(triggerSkillId)) return [];
     if (!isFinalAttackWeaponEquipped()) return [];
@@ -1156,26 +1850,134 @@ const SkillCombat = (() => {
       ? SkillModifiers.getSkillEnhance(skill.id)
       : { damR: 0, prop: 0, attackCount: 0 };
     const prop = (Number(st.prop) || 0) + (Number(en.prop) || 0);
-    if (!(prop > 0) || Math.random() * 100 >= prop) return [];
+    if (!(prop > 0)) return [];
+    if (Math.random() * 100 >= prop) return [];
 
-    const mob = resolveFinalAttackTarget(ctx);
-    if (!mob) return [];
+    const mob = pickHeroFinalAttackTarget(ctx, hitMobs);
+    if (!mob || !(Number(mob.hp) > 0)) return [];
 
     const attackCount = Math.max(1, (Number(st.attackCount) || 1) + (Number(en.attackCount) || 0));
     const damagePct = (Number(st.damagePct) || 0) * (1 + (Number(en.damR) || 0) / 100);
-    const kills = [];
     applyHitsToMob(mob, {
       damagePct,
       attackCount,
       fxHit: skill.fx?.hit,
       multiHit: attackCount > 1,
-      showMobDamage: ctx.showMobDamage,
+      showMobDamage: (m, dmg, crit, dmgOpts) => {
+        showFinalAttackDamage(ctx, m, dmg, crit, dmgOpts);
+      },
       onDamage: ctx.onDamage,
       flashHit: ctx.flashHit,
       flashDie: ctx.flashDie,
+      isolateStack: true,
+      skillId: skill?.id,
     });
-    if (mob.hp <= 0) kills.push(mob);
-    return kills;
+    return mob.hp <= 0 ? [mob] : [];
+  }
+
+  /** FA／暴風雪追加：安靜 tick 仍要跳出傷害數字（特效已 forcePlay） */
+  function showFinalAttackDamage(ctx, mob, dmg, isCritical, opts) {
+    if (!(dmg > 0) || !mob) return;
+    if (ctx?.quietFx && typeof DamageNumber !== 'undefined') {
+      DamageNumber.spawnOnMob(mob, dmg, !!isCritical, opts || {});
+      return;
+    }
+    if (typeof ctx?.showMobDamage === 'function') {
+      ctx.showMobDamage(mob, dmg, !!isCritical, opts);
+    } else if (typeof DamageNumber !== 'undefined') {
+      DamageNumber.spawnOnMob(mob, dmg, !!isCritical, opts || {});
+    }
+  }
+
+  const BLIZZARD_SKILL_ID = '2221007';
+
+  /** 暴風雪被動［終極攻擊類］：對命中的每隻怪各自 prop%；落地時才結算傷害＋數字 */
+  function tryBlizzardFinalAttack(ctx, triggerSkillId, hitMobs) {
+    if (typeof SkillFormula === 'undefined' || typeof SkillCatalog === 'undefined') return [];
+    const trigger = String(triggerSkillId || '');
+    if (!trigger || trigger === BLIZZARD_SKILL_ID) return [];
+    const triggerSkill = SkillCatalog.getSkill?.(trigger);
+    if (!triggerSkill || triggerSkill.type === 'passive') return [];
+    if (triggerSkill.type === 'buff') {
+      const lv = CharacterSkills.getLevel?.(trigger) || 0;
+      const common = lv > 0 ? evalSkill(triggerSkill, lv) : null;
+      if (!common || !(Number(common.damagePct) > 0)) return [];
+    }
+
+    const level = CharacterSkills.getLevel?.(BLIZZARD_SKILL_ID) || 0;
+    if (!(level > 0)) return [];
+    const skill = SkillCatalog.getSkill(BLIZZARD_SKILL_ID);
+    if (!skill?.common) return [];
+    const st = SkillFormula.evalStatCommon(skill.common, level);
+    const prop = Math.max(0, Number(st.prop) || 0);
+    if (!(prop > 0)) return [];
+
+    let damagePct = Math.max(0, Number(st.xVal) || 0);
+    if (!(damagePct > 0) && skill.common.x != null) {
+      damagePct = Math.max(0, SkillFormula.evalExpr(skill.common.x, { x: level }) || 0);
+    }
+    if (!(damagePct > 0)) return [];
+
+    const targets = resolveFinalAttackTargets(ctx, hitMobs);
+    if (!targets.length) return [];
+
+    const chosen = targets.filter((mob) => mob && Number(mob.hp) > 0 && Math.random() * 100 < prop);
+    if (!chosen.length) return [];
+
+    const asyncId = registerAsyncCast();
+    const applyFaHit = (mobRef) => {
+      if (!isAsyncCastLive(asyncId)) return;
+      const live = resolveLiveMob(mobRef, ctx) || (
+        mobRef && Number(mobRef.hp) > 0 ? mobRef : null
+      );
+      if (!live || !(Number(live.hp) > 0)) return;
+
+      applyHitsToMob(live, {
+        damagePct,
+        attackCount: 1,
+        fxHit: null,
+        multiHit: false,
+        showMobDamage: (m, dmg, crit, dmgOpts) => {
+          showFinalAttackDamage(ctx, m, dmg, crit, dmgOpts);
+        },
+        onDamage: ctx.onDamage,
+        flashHit: ctx.flashHit,
+        flashDie: ctx.flashDie,
+        skillId: BLIZZARD_SKILL_ID,
+        isolateStack: true,
+      });
+      if (live.hp <= 0) {
+        syncMobStateAfterDamage([live], ctx);
+      }
+    };
+
+    chosen.forEach((mob) => {
+      if (typeof SkillBlizzardCast !== 'undefined'
+        && typeof SkillBlizzardCast.playFinalAttackFx === 'function') {
+        const delayShowDamage = Number(skill.blizzardCast?.delayShowDamage)
+          || Number(SkillBlizzardCast.DEFAULT_DELAY_SHOW_DAMAGE_MS)
+          || 960;
+        SkillBlizzardCast.playFinalAttackFx({
+          mob,
+          fx: skill.fx || {},
+          fieldEl: ctx.fieldEl,
+          playerEl: ctx.playerEl,
+          delayShowDamage,
+          onHit: applyFaHit,
+        });
+      } else {
+        if (typeof SkillEffectPlayer !== 'undefined' && skill.fx?.hit?.length) {
+          SkillEffectPlayer.playOnMob(mob, skill.fx.hit, { forcePlay: true });
+        }
+        applyFaHit(mob);
+      }
+    });
+
+    // 傷害延遲到 delayShowDamage；擊殺由 onHit 內 sync
+    window.setTimeout(() => {
+      if (isAsyncCastLive(asyncId)) releaseAsyncCast(asyncId);
+    }, scaleGameDelayMs(2200));
+    return [];
   }
 
   function dealSkillDamage(skill, common, ctx, opts = {}) {
@@ -1190,11 +1992,12 @@ const SkillCombat = (() => {
     const normalBonus = Number(opts.normalMobBonusPct) || 0;
     const critRateBonus = resolveCritRateBonus(skill, atkCommon, opts.critRateBonus);
     const kills = [];
+    const hitMobs = [];
 
     mobs.forEach((mob) => {
       if (!mob) return;
       const bonus = (!mob.isBoss && normalBonus > 0) ? normalBonus : 0;
-      applyHitsToMob(mob, {
+      const hit = applyHitsToMob(mob, {
         damagePct: atkCommon.damagePct,
         damagePctBonus: bonus,
         attackCount,
@@ -1208,10 +2011,12 @@ const SkillCombat = (() => {
         forceCritTail: opts.forceCritTail || 0,
         critRateBonus,
         skillId: skill?.id,
+        ctx,
       });
-      if (mob.hp <= 0) kills.push(mob);
+      if (hit) pushUniqueMob(hitMobs, mob);
+      if (mob.hp <= 0) pushUniqueMob(kills, mob);
     });
-    return kills;
+    return { kills, hitMobs };
   }
 
   /**
@@ -1228,6 +2033,11 @@ const SkillCombat = (() => {
     if (!baseCommon) return { kills: [] };
     if (isBuffSkill(skill, baseCommon)) return { kills: [] };
     if (baseCommon.cooltimeSec > 0) return { kills: [] };
+
+    if (typeof SkillModifiers !== 'undefined'
+      && typeof SkillModifiers.tryProcIgnisRoar === 'function') {
+      SkillModifiers.tryProcIgnisRoar({ fromLink: true });
+    }
 
     const form = resolveComboEnhancedForm(skill, level, baseCommon);
     const skillForFx = form.skillForFx || skill;
@@ -1257,21 +2067,20 @@ const SkillCombat = (() => {
     // 跟隨技仍播施放／命中特效（帥度）；效能靠狩獵傷害快取與 render 合併
     const playCastFx = linkOpts.playCastFx !== false;
 
-    const finishAfterDamage = (kills) => {
+    const finishAfterDamage = (kills, hitMobs) => {
+      if (!Array.isArray(kills)) kills = [];
       if (!linkOpts.silentCombo) notifyComboAndSync();
-      const faKills = tryFinalAttack(ctx, skillId);
-      faKills.forEach((m) => {
-        if (m && !kills.includes(m)) kills.push(m);
-      });
+      const faKills = tryFinalAttack(ctx, skillId, hitMobs);
+      faKills.forEach((m) => pushUniqueMob(kills, m));
+      const bzKills = tryBlizzardFinalAttack(ctx, skillId, hitMobs);
+      bzKills.forEach((m) => pushUniqueMob(kills, m));
       // 意念只由主技能／非 silent 路徑觸發，避免連鎖同幀連續 proc
       if (!linkOpts.silentCombo
         && typeof SkillBuffRuntime !== 'undefined'
         && typeof SkillBuffRuntime.onSwordSkillCast === 'function') {
         const extra = SkillBuffRuntime.onSwordSkillCast(skill, ctx);
         if (extra?.kills?.length) {
-          extra.kills.forEach((m) => {
-            if (m && !kills.includes(m)) kills.push(m);
-          });
+          extra.kills.forEach((m) => pushUniqueMob(kills, m));
         }
       }
       return kills;
@@ -1294,6 +2103,7 @@ const SkillCombat = (() => {
       const maxTargets = pierce ? Math.max(1, atkCommon.mobCount || 1) : 1;
       const targets = resolveSkillTargets(ctx, skillId, maxTargets);
       const kills = [];
+      const hitMobs = [];
       SkillEffectPlayer.playShootObj({
         fieldEl,
         playerEl: ctx.playerEl,
@@ -1308,15 +2118,16 @@ const SkillCombat = (() => {
         facingRight: ctxFacingRight(ctx),
         onHit: (mob) => {
           if (!mob || mob.hp <= 0) return;
-          dealHitsOnMob(skillForFx, atkCommon, mob, ctx, {
+          const hit = dealHitsOnMob(skillForFx, atkCommon, mob, ctx, {
             segmentGapSec,
             normalMobBonusPct,
             forceCritTail: form.forceCritTail || 0,
           });
-          if (mob.hp <= 0 && !kills.includes(mob)) kills.push(mob);
+          if (hit) pushUniqueMob(hitMobs, mob);
+          if (mob.hp <= 0) pushUniqueMob(kills, mob);
         },
         onDone: () => {
-          finishAfterDamage(kills);
+          finishAfterDamage(kills, hitMobs);
           if (typeof ctx.onProjectileResolve === 'function') {
             ctx.onProjectileResolve(kills);
           }
@@ -1365,40 +2176,58 @@ const SkillCombat = (() => {
     if (ballResult) return ballResult;
 
     if (playCastFx && typeof SkillEffectPlayer !== 'undefined') {
-      if (fx.effect?.length) SkillEffectPlayer.playOnPlayer(fx.effect, { playerEl: ctx.playerEl });
-      if (fx.effect0?.length) SkillEffectPlayer.playOnPlayer(fx.effect0, { playerEl: ctx.playerEl });
+      playSkillCastFx(skillForFx || skill, fx, ctx, {
+        targets: resolveSkillTargets(ctx, skill.id, Math.max(1, atkCommon.mobCount || 1)),
+      });
     }
-    const kills = finishAfterDamage(dealSkillDamage(skill, formCommon, ctx, {
+    const dmgResult = dealSkillDamage(skill, formCommon, ctx, {
       segmentGapSec,
       normalMobBonusPct,
       skillForFx,
       forceCritTail: form.forceCritTail || 0,
-    }));
+    });
+    const kills = finishAfterDamage(dmgResult.kills, dmgResult.hitMobs);
+    // 即時傷害跟隨技：各自結算死亡
+    if (kills.length) syncMobStateAfterDamage(kills, ctx);
     return { kills };
   }
 
   function mergeLinkFollowers(picked, ctx, intoKills) {
     const followers = picked?.skillLinkFollowers;
     if (!picked?.isSkillLink || !Array.isArray(followers) || !followers.length) return intoKills;
+
+    // 精靈遊俠：2–4 號最低延遲跟光速雙擊，避免伊修塔爾等高頻頭技每 tick 狂放連鎖
+    if (isMercedesJob()) {
+      const t = nowMs();
+      if (t < mercedesLinkFollowerReadyAt) return intoKills;
+      mercedesLinkFollowerReadyAt = t + resolveMercedesLinkFollowerGapMs(ctx);
+    }
+
     const kills = Array.isArray(intoKills) ? intoKills : [];
     let anyFollower = false;
     followers.forEach((id) => {
       anyFollower = true;
       const extra = castLinkFollower(id, ctx, { silentCombo: true });
-      (extra.kills || []).forEach((m) => {
+      const fk = Array.isArray(extra?.kills) ? extra.kills : [];
+      // castLinkFollower 同步路徑已各自 sync；此處只彙總供呼叫端參考
+      fk.forEach((m) => {
         if (m && !kills.includes(m)) kills.push(m);
       });
     });
     if (anyFollower) notifyComboAndSync();
-    // 延遲主技能路徑：follower 即時擊殺立刻清佇列，避免普攻打到屍體
-    if (kills.length) syncMobStateAfterDamage(kills, ctx);
     return kills;
   }
 
   function cast(picked, ctx = {}) {
     if (!picked?.skill || !picked.common) return { cast: false };
     const t = nowMs();
-    if (isCastLocked(t)) return { cast: false };
+    const interruptSustain = !!(activeSustainChannel
+      && String(activeSustainChannel.skillId) !== String(picked.skill.id));
+    if (isCastLocked(t) && !interruptSustain) return { cast: false };
+    if (interruptSustain) stopActiveSustainChannel();
+
+    // 一次施放（含技能連鎖）共用一組傷害數字堆疊
+    beginDamageStackSession(ctx);
 
     // 連鎖／多段同一施放週期共用傷害公式快取
     if (typeof UiCharacterInfo !== 'undefined') {
@@ -1411,6 +2240,23 @@ const SkillCombat = (() => {
     const form = resolveComboEnhancedForm(skill, level, baseCommon);
     const skillForFx = form.skillForFx || skill;
     const formCommon = form.common || baseCommon;
+
+    // 依古尼斯：連接技／接技／可連接主動／精靈攻擊技皆可疊層
+    if (typeof SkillModifiers !== 'undefined'
+      && typeof SkillModifiers.tryProcIgnisRoar === 'function') {
+      const jobId = typeof CharacterSkills !== 'undefined'
+        ? Number(CharacterSkills.currentJobId?.()) || 0
+        : 0;
+      const isMercedes = jobId === 2300 || jobId === 2310 || jobId === 2311 || jobId === 2312
+        || (jobId >= 2300 && jobId < 2400);
+      const fromLink = !!(picked.isSkillLink
+        || (Number(ctx.addAttackDepth) || 0) > 0
+        || skill.addAttack
+        || (isMercedes && skill.type === 'active'
+          && ((Number(formCommon?.damagePct) || 0) > 0
+            || (skill.common?.damage != null && String(skill.common.damage) !== ''))));
+      if (fromLink) SkillModifiers.tryProcIgnisRoar({ fromLink: true });
+    }
 
     const wzForDelay = ctx.wzAttackSpeed ?? ctx.attackSpeedStage;
     const actionDelayMs = resolveActionDelayMs(
@@ -1439,8 +2285,24 @@ const SkillCombat = (() => {
       lastNoCdAttackSlot = Number.isFinite(picked.slot) ? picked.slot : lastNoCdAttackSlot;
     }
 
+    const willSustainChannel = !!(skill.channelCast?.sustain)
+      && !(baseCommon.cooltimeSec > 0)
+      && typeof SkillChannelCast !== 'undefined'
+      && SkillChannelCast.isChannelCastSkill?.(skill, fx);
+
     if (!(ctx.quietFx || (typeof document !== 'undefined' && document.hidden))
-      && typeof Paperdoll !== 'undefined' && typeof Paperdoll.playHuntSwing === 'function') {
+      && typeof Paperdoll !== 'undefined' && typeof Paperdoll.playHuntSwing === 'function'
+      && !willSustainChannel
+      && skill.castFxAt !== 'targetHead') {
+      // 接技頭／鏈上：先鎖住 move，避免 instruction 結束瞬間歸位
+      const aa = skill?.addAttack;
+      const willComboMove = !ctx.skipAddAttack && aa?.skill && (
+        picked?.isAddAttack
+        || aa.isAuto
+        || Number(aa.type) === 1
+        || (Number(ctx.addAttackDepth) || 0) > 0
+      );
+      if (willComboMove) Paperdoll.setComboMoveHold?.(true);
       // 揮砍時長對齊鎖定，避免動作被壓短後下一招搶跑
       Paperdoll.playHuntSwing(lockMs, skillAction);
     }
@@ -1486,32 +2348,40 @@ const SkillCombat = (() => {
       ? (SkillFormula.resolveNormalMobBonusPct?.(skill, level) || 0)
       : 0;
 
-    const finishAfterDamage = (kills) => {
+    const finishAfterDamage = (kills, hitMobs) => {
+      if (!Array.isArray(kills)) kills = [];
       notifyComboAndSync();
-      const faKills = tryFinalAttack(ctx, skill.id);
-      faKills.forEach((m) => {
-        if (m && !kills.includes(m)) kills.push(m);
-      });
+      const faKills = tryFinalAttack(ctx, skill.id, hitMobs);
+      faKills.forEach((m) => pushUniqueMob(kills, m));
+      const bzKills = tryBlizzardFinalAttack(ctx, skill.id, hitMobs);
+      bzKills.forEach((m) => pushUniqueMob(kills, m));
       if (typeof SkillBuffRuntime !== 'undefined'
         && typeof SkillBuffRuntime.onSwordSkillCast === 'function') {
         const extra = SkillBuffRuntime.onSwordSkillCast(skill, ctx);
         if (extra?.kills?.length) {
-          extra.kills.forEach((m) => {
-            if (m && !kills.includes(m)) kills.push(m);
-          });
+          extra.kills.forEach((m) => pushUniqueMob(kills, m));
         }
       }
+      scheduleAddAttackFollowup(
+        skill,
+        {
+          ...ctx,
+          // 技能連鎖與接技互斥：連鎖同幀多段時不另跑 addAttack
+          skipAddAttack: !!(picked?.isSkillLink || ctx.skipAddAttack),
+        },
+        Number(ctx.addAttackDepth) || 0,
+      );
       return kills;
     };
 
     const finishDamage = () => {
-      const kills = dealSkillDamage(skill, formCommon, ctx, {
+      const dmgResult = dealSkillDamage(skill, formCommon, ctx, {
         segmentGapSec,
         normalMobBonusPct,
         skillForFx,
         forceCritTail: form.forceCritTail || 0,
       });
-      return finishAfterDamage(kills);
+      return finishAfterDamage(dmgResult.kills, dmgResult.hitMobs);
     };
 
     // 投擲物：自身 effect → shootobj 飛出 → 命中目標 hit（可穿透）
@@ -1533,6 +2403,7 @@ const SkillCombat = (() => {
         : 1;
       const targets = resolveSkillTargets(ctx, skill.id, maxTargets);
       const kills = [];
+      const hitMobs = [];
       const asyncId = registerAsyncCast();
 
       SkillEffectPlayer.playShootObj({
@@ -1550,17 +2421,18 @@ const SkillCombat = (() => {
         onHit: (mob) => {
           if (!isAsyncCastLive(asyncId)) return;
           if (!mob || mob.hp <= 0) return;
-          dealHitsOnMob(skillForFx, atkCommon, mob, ctx, {
+          const hit = dealHitsOnMob(skillForFx, atkCommon, mob, ctx, {
             segmentGapSec,
             normalMobBonusPct,
             forceCritTail: form.forceCritTail || 0,
           });
-          if (mob.hp <= 0 && !kills.includes(mob)) kills.push(mob);
+          if (hit) pushUniqueMob(hitMobs, mob);
+          if (mob.hp <= 0) pushUniqueMob(kills, mob);
         },
         onDone: () => {
           if (!isAsyncCastLive(asyncId)) return;
           releaseAsyncCast(asyncId);
-          finishAfterDamage(kills);
+          finishAfterDamage(kills, hitMobs);
           if (typeof ctx.onProjectileResolve === 'function') {
             ctx.onProjectileResolve(kills);
           }
@@ -1661,15 +2533,51 @@ const SkillCombat = (() => {
       },
     );
     if (channelResult) {
+      if (channelResult.alreadyActive) {
+        return {
+          cast: true,
+          skillId: skill.id,
+          level,
+          actionDelayMs,
+          lockMs: Number(channelResult.channelLockMs) || lockMs,
+          kills: [],
+          deferredKills: true,
+          channel: true,
+          sustain: true,
+          enhanced: !!form.enhanced,
+          skillLink: !!picked.isSkillLink,
+        };
+      }
+      if (channelResult.sustain) {
+        const channelLock = scaleGameDelayMs(channelResult.channelLockMs);
+        castLockUntil = Math.max(castLockUntil, t + channelLock);
+        if (!(ctx.quietFx || (typeof document !== 'undefined' && document.hidden))
+          && typeof Paperdoll !== 'undefined') {
+          if (typeof Paperdoll.playHuntSwingLoop === 'function') {
+            Paperdoll.playHuntSwingLoop(skillAction);
+          } else {
+            Paperdoll.playHuntSwing?.(channelLock, skillAction);
+          }
+        }
+      } else if (!(baseCommon.cooltimeSec > 0) && Number(channelResult.channelLockMs) > 0) {
+        // 無 CD 有限引導：延長施放鎖，避免一直重播 prepare
+        const channelLock = scaleGameDelayMs(channelResult.channelLockMs);
+        castLockUntil = Math.max(castLockUntil, t + channelLock);
+        if (!(ctx.quietFx || (typeof document !== 'undefined' && document.hidden))
+          && typeof Paperdoll !== 'undefined' && typeof Paperdoll.playHuntSwing === 'function') {
+          Paperdoll.playHuntSwing(channelLock, skillAction);
+        }
+      }
       return {
         cast: true,
         skillId: skill.id,
         level,
         actionDelayMs,
-        lockMs,
+        lockMs: Math.max(lockMs, Number(channelResult.channelLockMs) || 0),
         kills: [],
         deferredKills: true,
         channel: true,
+        sustain: !!channelResult.sustain,
         enhanced: !!form.enhanced,
         skillLink: !!picked.isSkillLink,
       };
@@ -1707,12 +2615,20 @@ const SkillCombat = (() => {
     }
 
     if (typeof SkillEffectPlayer !== 'undefined') {
-      if (fx.effect?.length) SkillEffectPlayer.playOnPlayer(fx.effect, { playerEl: ctx.playerEl });
-      if (fx.effect0?.length) SkillEffectPlayer.playOnPlayer(fx.effect0, { playerEl: ctx.playerEl });
+      playSkillCastFx(skillForFx, fx, ctx, {
+        targets: resolveSkillTargets(ctx, skill.id, Math.max(1, atkCommon.mobCount || 1)),
+      });
     }
 
     let kills = finishDamage();
-    kills = mergeLinkFollowers(picked, ctx, kills);
+    // 連接技：主技能先結算，跟隨技在 castLinkFollower 內各自結算；勿把 kills 交回 idleHunt 重套
+    if (picked.isSkillLink) {
+      if (kills.length) syncMobStateAfterDamage(kills, ctx);
+      mergeLinkFollowers(picked, ctx, []);
+      kills = [];
+    } else {
+      kills = mergeLinkFollowers(picked, ctx, kills);
+    }
     return {
       cast: true,
       skillId: skill.id,
@@ -1728,6 +2644,7 @@ const SkillCombat = (() => {
   return {
     reset,
     invalidateAsyncCasts,
+    stopSustainChannel: stopActiveSustainChannel,
     isCastLocked,
     pickNextCast,
     cast,

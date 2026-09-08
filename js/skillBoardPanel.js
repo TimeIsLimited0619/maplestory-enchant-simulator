@@ -61,7 +61,13 @@ const SkillBoardPanel = (() => {
               <button type="button" class="skb-preset-btn" data-preset="2" aria-label="技能預設 2"></button>
               <button type="button" class="skb-preset-btn" data-preset="3" aria-label="技能預設 3"></button>
             </div>
-            <button type="button" class="skb-preset-set" id="skbPresetSet" aria-label="預設設定" title="預設設定（尚未實作）"></button>
+            <button type="button" class="skb-preset-set" id="skbPresetSet" aria-label="技能設定" title="技能設定"></button>
+            <div class="skb-settings-pop" id="skbSettingsPop" hidden>
+              <label class="skb-settings-row">
+                <input type="checkbox" id="skbShowStackBuffs" checked>
+                <span>堆疊 Buff 顯示層數</span>
+              </label>
+            </div>
           </div>
           <div class="skb-equip-grid" id="skbEquipGrid"></div>
           <div class="skb-skill-link" id="skbSkillLink" aria-label="技能連鎖">
@@ -351,25 +357,39 @@ const SkillBoardPanel = (() => {
       const canLink = typeof CharacterSkills !== 'undefined'
         ? CharacterSkills.canPlaceInSkillLink?.(skill.id)
         : false;
-      const showEquip = skill.equipable === true;
+      const noCdAtk = typeof CharacterSkills !== 'undefined'
+        ? CharacterSkills.isNoCdActiveAttackSkill?.(skill.id)
+        : false;
+      const isFollowup = typeof CharacterSkills !== 'undefined'
+        ? CharacterSkills.isAddAttackFollowup?.(skill.id)
+        : false;
+      const isSuperseded = typeof CharacterSkills !== 'undefined'
+        ? CharacterSkills.isSkillSuperseded?.(skill.id)
+        : false;
+      const showEquip = skill.equipable === true && !isFollowup && !isSuperseded;
       const req = typeof SkillPoints !== 'undefined'
         ? SkillPoints.skillReqLevel(skill)
         : 0;
       const lockHint = !unlocked && req > 0 ? `Lv.${req} 解鎖` : '';
       const noSp = unlocked && !maxed && rankSp <= 0;
+      const equipLabel = noCdAtk
+        ? (equipped ? '自技能連鎖卸下' : '裝備至技能連鎖')
+        : (equipped ? '卸下' : '裝備');
+      const followHint = isFollowup ? '接技後續：由頭技自動施放，不可裝備／連鎖' : '';
+      const replacedHint = isSuperseded ? '已被強化技取代，不可同時使用' : '';
       return `
         <div class="skb-skill-row${unlocked ? '' : ' is-skill-locked'}" data-skill-id="${skill.id}">
           <div class="skb-skill-icon-frame${canLink ? ' is-draggable' : ''}"
             ${canLink ? `draggable="true" data-drag-skill="${skill.id}" title="拖曳至技能連鎖"` : ''}>
             ${iconHtml(skill, 'skill')}
           </div>
-          <div class="skb-skill-name">${skill.name}${lockHint ? `<span class="skb-skill-req">${lockHint}</span>` : ''}</div>
+          <div class="skb-skill-name">${skill.name}${lockHint ? `<span class="skb-skill-req">${lockHint}</span>` : ''}${followHint ? `<span class="skb-skill-req" title="${followHint}">接技</span>` : ''}${replacedHint ? `<span class="skb-skill-req" title="${replacedHint}">已取代</span>` : ''}</div>
           <div class="skb-skill-lv">${lv}</div>
           <div class="skb-skill-max">${skill.maxLevel}</div>
           ${equipped ? '<div class="skb-skill-equipped" aria-label="裝備中"></div>' : ''}
           ${linked ? '<div class="skb-skill-linked" aria-label="連鎖中" title="技能連鎖中"></div>' : ''}
           <div class="skb-skill-actions">
-            ${showEquip ? `<button type="button" class="skb-btn-equip" data-action="equip" data-skill-id="${skill.id}" aria-label="${equipped ? '卸下' : '裝備'} ${skill.name}" ${!unlocked || lv <= 0 ? 'disabled' : ''}></button>` : ''}
+            ${showEquip ? `<button type="button" class="skb-btn-equip" data-action="equip" data-skill-id="${skill.id}" aria-label="${equipLabel} ${skill.name}" title="${equipLabel}" ${!unlocked || lv <= 0 ? 'disabled' : ''}></button>` : ''}
             <button type="button" class="skb-btn-levelup ${maxed ? 'is-max' : ''}" data-action="levelup" data-skill-id="${skill.id}" aria-label="升級 ${skill.name}" ${maxed || !unlocked || noSp ? 'disabled' : ''}></button>
           </div>
         </div>
@@ -421,10 +441,39 @@ const SkillBoardPanel = (() => {
     });
 
     $('skbPresets')?.addEventListener('click', (e) => {
+      const setBtn = e.target.closest('#skbPresetSet');
+      if (setBtn) {
+        e.stopPropagation();
+        const pop = $('skbSettingsPop');
+        if (!pop) return;
+        const nextHidden = !pop.hidden;
+        pop.hidden = nextHidden;
+        if (!nextHidden) {
+          const cb = $('skbShowStackBuffs');
+          if (cb && typeof SkillModifiers !== 'undefined') {
+            cb.checked = SkillModifiers.getShowStackBuffCounts?.() !== false;
+          }
+        }
+        return;
+      }
       const btn = e.target.closest('.skb-preset-btn');
       if (!btn) return;
       CharacterSkills.setActivePreset(Number(btn.dataset.preset) || 1);
       render();
+    });
+
+    $('skbShowStackBuffs')?.addEventListener('change', (e) => {
+      if (typeof SkillModifiers === 'undefined') return;
+      SkillModifiers.setShowStackBuffCounts?.(!!e.target.checked);
+      if (typeof IdleHunt !== 'undefined') IdleHunt.syncHuntOverlayBars?.();
+      if (typeof IdleBoss !== 'undefined') IdleBoss.syncBossOverlayBars?.();
+    });
+
+    document.addEventListener('click', (e) => {
+      const pop = $('skbSettingsPop');
+      if (!pop || pop.hidden) return;
+      if (e.target.closest('#skbSettingsPop') || e.target.closest('#skbPresetSet')) return;
+      pop.hidden = true;
     });
 
     $('skbTypeTabs')?.addEventListener('click', (e) => {

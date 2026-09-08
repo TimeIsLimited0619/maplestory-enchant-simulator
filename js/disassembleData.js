@@ -16,36 +16,6 @@ function disassembleFillIds(ids, materials) {
 }
 
 const EQUIP_DISASSEMBLE_LIST = {
-  // 永恆防具 → 永恆粉塵
-  ...disassembleFillIds([
-    '01005980', '01005981', '01005982', '01005983', '01005984',
-    '01042433', '01042434', '01042435', '01042436', '01042437',
-    '01062285', '01062286', '01062287', '01062288', '01062289',
-    '01152212', '01152213', '01152214', '01152215', '01152216',
-    '01082760', '01082761', '01082762', '01082763', '01082764',
-    '01073629', '01073630', '01073631', '01073632', '01073633',
-    '01103433', '01103434', '01103435', '01103436', '01103437',
-  ], { eternalpcs: 10 }),
-
-  // 神祕冥界防具 → 神祕粉塵
-  ...disassembleFillIds([
-    '01004808', '01004809', '01004810', '01004811', '01004812',
-    '01053063', '01053064', '01053065', '01053066', '01053067',
-    '01152174', '01152175', '01152176', '01152177', '01152178',
-    '01082695', '01082696', '01082697', '01082698', '01082699',
-    '01073158', '01073159', '01073160', '01073161', '01073162',
-    '01102940', '01102941', '01102942', '01102943', '01102944',
-  ], { arcanepcs: 5 }),
-
-  // 漆黑 BOSS 套 → 漆黑粉塵
-  ...disassembleFillIds([
-    '01012632', '01022278', '01132308', '01122430', '01182285',
-    '01032316', '01113306',
-    '01162080', '01162081', '01162082', '01162083',
-    '01190566', '01190567', '01190568', '01190569', '01190570',
-    '01672101',
-  ], { darkpcs: 5 }),
-
   // 濃姬副武 → 濃姬粉塵（在此加 ID）
 
   //蓋世無雙 → 蓋世無雙碎片
@@ -102,7 +72,6 @@ const EQUIP_DISASSEMBLE_LIST = {
     '01082295', '01082296', '01082297', '01082298', '01082299',
     '01052314', '01052315', '01052316', '01052317', '01052318',
     '01072485', '01072486', '01072487', '01072488', '01072489',
-    '01213015', '01213016', '01213017', '01213018', '01213019',
     '01152108', '01152110', '01152111', '01152112', '01152113',
   ], { '140armor_pcs': 1 }),
 
@@ -111,6 +80,35 @@ const EQUIP_DISASSEMBLE_LIST = {
   ...disassembleFillIds([
     '01402095', '01372084',
   ], { '140weapon_pcs': 1 }),
+
+    // 永恆防具 → 永恆粉塵
+    ...disassembleFillIds([
+      '01005980', '01005981', '01005982', '01005983', '01005984',
+      '01042433', '01042434', '01042435', '01042436', '01042437',
+      '01062285', '01062286', '01062287', '01062288', '01062289',
+      '01152212', '01152213', '01152214', '01152215', '01152216',
+      '01082760', '01082761', '01082762', '01082763', '01082764',
+      '01073629', '01073630', '01073631', '01073632', '01073633',
+      '01103433', '01103434', '01103435', '01103436', '01103437',
+    ], { eternalpcs: 10 }),
+  
+    // 神祕冥界防具 → 神祕粉塵
+    ...disassembleFillIds([
+      '01004808', '01004809', '01004810', '01004811', '01004812',
+      '01053063',
+      '01082695', '01082696', '01082697', '01082698', '01082699',
+      '01073158', '01073159', '01073160', '01073161', '01073162',
+      '01102940', '01102941', '01102942', '01102943', '01102944',
+    ], { arcanepcs: 5 }),
+  
+    // 漆黑 BOSS 套 → 漆黑粉塵
+    ...disassembleFillIds([
+      '01012632', '01022278', '01132308', '01122430', '01182285',
+      '01032316', '01113306',
+      '01162080', '01162081', '01162082', '01162083',
+      '01190566', '01190567', '01190568', '01190569', '01190570',
+      '01672101',
+    ], { darkpcs: 5 }),
 };
   
 const SCROLL_DISASSEMBLE_LIST = {
@@ -228,6 +226,46 @@ const DisassembleStore = {
     return item?.icon || (itemId ? `images/equip/${itemId}.png` : '');
   },
 
+  scrollMeta(scrollId) {
+    return typeof getScrollById === 'function' ? getScrollById(scrollId) : null;
+  },
+
+  scrollName(scrollId) {
+    return this.scrollMeta(scrollId)?.name || scrollId;
+  },
+
+  scrollIcon(scrollId) {
+    return this.scrollMeta(scrollId)?.icon || '';
+  },
+
+  listEquipRecipes() {
+    return Object.keys(EQUIP_DISASSEMBLE_LIST).map((itemId) => {
+      const materials = this.equipMaterials(itemId);
+      if (!materials) return null;
+      return {
+        kind: 'equip',
+        itemId,
+        name: this.equipName(itemId),
+        icon: this.equipIcon(itemId),
+        materials,
+      };
+    }).filter(Boolean);
+  },
+
+  listScrollRecipes() {
+    return Object.keys(SCROLL_DISASSEMBLE_LIST).map((scrollId) => {
+      const materials = this.scrollMaterials(scrollId);
+      if (!materials) return null;
+      return {
+        kind: 'scroll',
+        scrollId,
+        name: this.scrollName(scrollId),
+        icon: this.scrollIcon(scrollId),
+        materials,
+      };
+    }).filter(Boolean);
+  },
+
   materialsLabel(mats) {
     return Object.entries(mats || {}).map(([id, amt]) => (
       `${this.etcName(id)} ×${amt}`
@@ -309,6 +347,10 @@ const DisassembleStore = {
     const itemId = playerInventoryEquip[slotIndex];
     const materials = this.equipMaterials(itemId);
     if (!itemId || !materials) return false;
+    if (typeof InventoryModule !== 'undefined' && InventoryModule.isEquipItemLocked?.(slotIndex)) {
+      if (typeof addLog === 'function') addLog('[分解] 此裝備已便利鎖定，無法分解。', 'log-fail');
+      return false;
+    }
     if (!this.canGrantEtc(materials)) {
       if (typeof addLog === 'function') addLog('[分解] 其他欄空間不足。', 'log-fail');
       return false;

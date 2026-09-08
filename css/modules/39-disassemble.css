@@ -1,173 +1,260 @@
-/* 分解中心側欄（自導覽欄右緣滑出，與裝備製作同型） */
-.disassemble-panel {
-  position: fixed;
-  top: 0;
-  left: var(--app-nav-current-width, var(--app-nav-width));
-  z-index: 13997;
-  width: min(360px, calc(100vw - var(--app-nav-current-width, var(--app-nav-width)) - 12px));
-  height: 100vh;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  background: #161A23;
-  border-right: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.35);
-  color: rgba(255, 255, 255, 0.80);
-  font-family: 'Microsoft JhengHei', 'PingFang TC', 'Segoe UI', sans-serif;
-  transform: translateX(-100%);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: transform 0.24s ease, opacity 0.24s ease, visibility 0.24s ease, left 0.2s ease;
-}
-
-.disassemble-panel.is-open {
-  transform: translateX(0);
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-
-.disassemble-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  padding: 16px 14px 12px;
-  border-bottom: 2px solid #2D2F39;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.disassemble-head span {
-  flex: 1;
-  min-width: 0;
-}
-
-.disassemble-nav {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 12px;
-  font-family: inherit;
-  padding: 6px 10px;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.disassemble-nav:hover {
-  background: #2D2F39;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.disassemble-body {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  padding: 12px;
-  scrollbar-width: thin;
-  scrollbar-color: #3a3d48 transparent;
-}
-
-.disassemble-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 12px;
-}
-
-.disassemble-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 10px 12px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 13px;
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.disassemble-row:hover {
-  background: rgba(45, 47, 57, 0.6);
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.disassemble-row__icon {
-  width: 32px;
-  height: 32px;
-  object-fit: contain;
-  image-rendering: pixelated;
-  flex-shrink: 0;
-}
-
-.disassemble-row__text {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.disassemble-row__name {
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 13px;
-}
-
-.disassemble-row__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 10px;
-  color: rgba(255, 255, 255, 0.45);
-  font-size: 11px;
-}
-
-.disassemble-mat {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.disassemble-mat-icon {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
-  image-rendering: pixelated;
-}
-
-.disassemble-hint {
-  margin: 0 0 10px;
-  padding: 0 4px;
-  font-size: 11px;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.40);
-}
-
-.disassemble-empty {
-  padding: 16px 8px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.40);
-  text-align: center;
-}
-
-.ms-inv-slot.is-disassemble-ok {
-  outline: 1px solid rgba(138, 166, 74, 0.85);
-  outline-offset: -1px;
-  cursor: pointer;
-}
-
-.ms-inv-slot.is-disassemble-dim {
-  opacity: 0.28;
-  pointer-events: none;
-}
-
-body.inv-disassemble-pick .ms-inv-slot.is-disassemble-ok .inv-item-frame img {
-  cursor: pointer;
-}
+/* 分解中心：主欄 + 右側配方預覽（自導覽欄右緣滑出） */
+.disassemble-root {
+  position: fixed;
+  top: 0;
+  left: var(--app-nav-current-width, var(--app-nav-width));
+  z-index: 13997;
+  display: flex;
+  align-items: stretch;
+  height: 100vh;
+  pointer-events: none;
+  visibility: hidden;
+  transition: left 0.2s ease, visibility 0.24s ease;
+}
+
+.disassemble-root.is-open {
+  visibility: visible;
+}
+
+.disassemble-panel {
+  box-sizing: border-box;
+  width: min(360px, calc(100vw - var(--app-nav-current-width, var(--app-nav-width)) - 12px));
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #161A23;
+  border-right: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.80);
+  font-family: 'Microsoft JhengHei', 'PingFang TC', 'Segoe UI', sans-serif;
+  transform: translateX(-100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.24s ease, opacity 0.24s ease;
+  flex-shrink: 0;
+}
+
+.disassemble-root.is-open .disassemble-panel {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.disassemble-recipe-panel {
+  box-sizing: border-box;
+  width: min(400px, calc(100vw - var(--app-nav-current-width, var(--app-nav-width)) - 360px - 12px));
+  max-width: 400px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: rgba(22, 26, 35, 0.96);
+  border-right: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 8px 0 28px rgba(0, 0, 0, 0.30);
+  color: rgba(255, 255, 255, 0.80);
+  font-family: 'Microsoft JhengHei', 'PingFang TC', 'Segoe UI', sans-serif;
+  transform: translateX(-24px);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.22s ease, opacity 0.22s ease;
+  flex-shrink: 0;
+}
+
+.disassemble-recipe-panel.is-open {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.disassemble-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 16px 14px 12px;
+  border-bottom: 2px solid #2D2F39;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.disassemble-head span {
+  flex: 1;
+  min-width: 0;
+}
+
+.disassemble-nav {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.disassemble-nav:hover {
+  background: #2D2F39;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.disassemble-nav.is-active {
+  background: #2D2F39;
+  color: rgba(255, 255, 255, 0.92);
+  border-color: rgba(138, 166, 74, 0.55);
+}
+
+.disassemble-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #3a3d48 transparent;
+}
+
+.disassemble-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.disassemble-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.disassemble-body::-webkit-scrollbar-thumb {
+  background: #3a3d48;
+  border-radius: 6px;
+}
+
+.disassemble-section-title {
+  margin: 12px 0 8px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.50);
+}
+
+.disassemble-section-title:first-child {
+  margin-top: 0;
+}
+
+.disassemble-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.disassemble-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.disassemble-row:hover {
+  background: rgba(45, 47, 57, 0.6);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.disassemble-row--static {
+  cursor: default;
+}
+
+.disassemble-row--static:hover {
+  background: rgba(45, 47, 57, 0.35);
+}
+
+.disassemble-row__icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.disassemble-row__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.disassemble-row__name {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 13px;
+}
+
+.disassemble-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 11px;
+}
+
+.disassemble-mat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: help;
+}
+
+.disassemble-mat-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.disassemble-hint {
+  margin: 0 0 10px;
+  padding: 0 4px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.40);
+}
+
+.disassemble-empty {
+  padding: 16px 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.40);
+  text-align: center;
+}
+
+.ms-inv-slot.is-disassemble-ok {
+  outline: 1px solid rgba(138, 166, 74, 0.85);
+  outline-offset: -1px;
+  cursor: pointer;
+}
+
+.ms-inv-slot.is-disassemble-dim {
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+body.inv-disassemble-pick .ms-inv-slot.is-disassemble-ok .inv-item-frame img {
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .disassemble-recipe-panel {
+    width: min(320px, calc(100vw - var(--app-nav-current-width, var(--app-nav-width)) - 12px));
+  }
+}
+

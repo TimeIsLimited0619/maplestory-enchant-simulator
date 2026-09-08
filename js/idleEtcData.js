@@ -27,6 +27,12 @@ const IDLE_ETC_DATABASE = [
     desc: '進入【BOSS 副本】所需的入場券。擊殺野外首領後有機會掉落。',
   },
   {
+    id: 'job_change_ticket',
+    name: '自由轉職硬幣',
+    icon: 'images/ETCicon/04310086.png',
+    desc: '進行【自由轉職】時所需的道具。可於XXXXXX途徑獲得。',
+  },
+  {
     id: 'idle-etc-sample-mushroom',
     name: '橘色菇菇孢子（範例）',
     icon: 'images/ETCicon/01000001.png',

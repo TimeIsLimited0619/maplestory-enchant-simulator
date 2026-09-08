@@ -1399,6 +1399,16 @@ const EquipTooltipModule = {
     iconImg.alt = item.name;
     this.scaleEquipIcon(iconImg);
     iconWrap.appendChild(iconImg);
+
+    if (item.itemLocked) {
+      const lockImg = document.createElement('img');
+      lockImg.className = 'eq-tip-itemlock';
+      lockImg.src = 'images/iventory/itemlock.png';
+      lockImg.alt = '';
+      lockImg.draggable = false;
+      iconWrap.appendChild(lockImg);
+    }
+
     headRow.appendChild(iconWrap);
 
     const headMeta = document.createElement('div');

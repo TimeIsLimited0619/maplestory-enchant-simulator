@@ -14,6 +14,8 @@ const InventoryModule = {
   panelOpen: false,
   /** 分解中心點選中：equip | scroll | null */
   disassemblePick: null,
+  /** 鎖定模式：null | 'slot' | 'item' */
+  lockMode: null,
 
   SLOT_COUNT: INVENTORY_SLOT_COUNT,
   /** 小背包：4 欄 × 32 列 */
@@ -46,6 +48,7 @@ const InventoryModule = {
     this.bindEvents();
     this.bindPanelControls();
     this.bindPotentialScrollUseGuards();
+    this.bindLockModeGuards();
     this.ensureConsumeTooltip();
     if (typeof ensurePotentialScrollConsumeInventory === 'function') {
       ensurePotentialScrollConsumeInventory();
@@ -54,6 +57,7 @@ const InventoryModule = {
       stripLegacyStarterPotentialsFromInventory();
     }
     this.syncTabUi();
+    this.syncLockButtons();
     this.render();
     this.updateSlotCount();
     this.updateMesoDisplay();
@@ -71,6 +75,11 @@ const InventoryModule = {
     document.getElementById('invBtnMin')?.addEventListener('click', () => this.setMode('min'));
     document.getElementById('invBtnSortEquip')?.addEventListener('click', () => this.sortCurrentInventory());
 
+    document.getElementById('invBtnSlotLock')?.addEventListener('click', () => this.setLockMode('slot'));
+    document.getElementById('invBtnSlotLockActive')?.addEventListener('click', () => this.clearLockMode());
+    document.getElementById('invBtnItemLock')?.addEventListener('click', () => this.setLockMode('item'));
+    document.getElementById('invBtnItemLockActive')?.addEventListener('click', () => this.clearLockMode());
+
     document.getElementById('invBtnUpgrade')?.addEventListener('click', () => {
       if (typeof UiEquipModule !== 'undefined') UiEquipModule.toggleEnchant?.();
     });
@@ -86,14 +95,17 @@ const InventoryModule = {
       else if (typeof addLog === 'function') addLog('[背包] 裝備繼承尚未載入。', 'log-fail');
     });
 
+    document.getElementById('invBtnTrunk')?.addEventListener('click', () => {
+      if (typeof TrunkModule !== 'undefined') TrunkModule.toggle();
+      else if (typeof addLog === 'function') addLog('[背包] 倉庫尚未載入。', 'log-fail');
+    });
+
     // AutoBuild 其餘按鈕：版面已上，功能待實作
     const stubIds = [
-      'invBtnSlotLock', 'invBtnSlotLockActive',
-      'invBtnItemLock', 'invBtnItemLockActive',
       'invBtnFilter', 'invBtnFilterApplied',
       'invBtnMeso',
       'invBtnItemAlchemy',
-      'invBtnHelp', 'invBtnTrunk', 'invBtnBossReward', 'invBtnBag',
+      'invBtnHelp', 'invBtnBossReward', 'invBtnBag',
       'invBtnSearch', 'invBtnSearchCancel',
     ];
     stubIds.forEach((id) => {
@@ -147,6 +159,214 @@ const InventoryModule = {
       const itemId = currentEnchantItem.itemId || currentEnchantItem.id;
       this.applyPendingPotentialScrollToEquip(itemId, -1);
     });
+  },
+
+  bindLockModeGuards() {
+    if (this._lockModeGuardsBound) return;
+    this._lockModeGuardsBound = true;
+
+    document.addEventListener('pointerdown', (event) => {
+      if (!this.lockMode) return;
+      if (event.button !== 0) return;
+      const t = event.target;
+      if (!(t instanceof Element)) return;
+      if (t.closest('#invBtnSlotLock, #invBtnSlotLockActive, #invBtnItemLock, #invBtnItemLockActive')) {
+        return;
+      }
+      if (t.closest('.ms-inv-slot')) return;
+      this.clearLockMode();
+    }, true);
+  },
+
+  /** 位置鎖定跟著道具（非格子） */
+  isSlotLocked(slotIndex, tab = this.tab) {
+    if (!Number.isInteger(slotIndex) || slotIndex < 0) return false;
+    if (tab === 'equip') {
+      if (typeof playerInventoryEquip === 'undefined' || !playerInventoryEquip[slotIndex]) {
+        return false;
+      }
+      return Boolean(playerInventoryState?.[slotIndex]?.slotLocked);
+    }
+    const inventory = tab === 'consume'
+      ? (typeof playerInventoryConsume !== 'undefined' ? playerInventoryConsume : null)
+      : (typeof playerInventoryEtc !== 'undefined' ? playerInventoryEtc : null);
+    const entry = inventory?.[slotIndex];
+    return Boolean(entry && typeof entry === 'object' && entry.slotLocked);
+  },
+
+  isEquipItemLocked(slotIndex) {
+    if (!Number.isInteger(slotIndex) || slotIndex < 0) return false;
+    if (typeof playerInventoryEquip === 'undefined' || !playerInventoryEquip[slotIndex]) {
+      return false;
+    }
+    return Boolean(playerInventoryState?.[slotIndex]?.itemLocked);
+  },
+
+  isEquipEntryLocked(entry) {
+    return Boolean(entry?.state?.itemLocked || entry?.itemLocked);
+  },
+
+  syncLockButtons() {
+    const slotOn = this.lockMode === 'slot';
+    const itemOn = this.lockMode === 'item';
+    document.getElementById('invBtnSlotLock')?.classList.toggle('hidden', slotOn);
+    document.getElementById('invBtnSlotLockActive')?.classList.toggle('hidden', !slotOn);
+    document.getElementById('invBtnItemLock')?.classList.toggle('hidden', itemOn);
+    document.getElementById('invBtnItemLockActive')?.classList.toggle('hidden', !itemOn);
+  },
+
+  setLockMode(mode) {
+    if (mode !== 'slot' && mode !== 'item') return;
+    if (this.lockMode === mode) {
+      this.clearLockMode();
+      return;
+    }
+
+    if (this.pendingPotentialScrollId) this.cancelPotentialScrollUse();
+    if (this.disassemblePick) this.setDisassemblePick(null);
+
+    this.lockMode = mode;
+    document.body.classList.toggle('inv-slot-lock-mode', mode === 'slot');
+    document.body.classList.toggle('inv-item-lock-mode', mode === 'item');
+    this.syncLockButtons();
+
+    if (typeof addLog === 'function') {
+      addLog(
+        mode === 'slot'
+          ? '[背包] 格子鎖定：點選道具以固定／解除位置，點空白處結束。'
+          : '[背包] 便利鎖定：點選裝備以鎖定／解除，點空白處結束。',
+        'log-info'
+      );
+    }
+  },
+
+  clearLockMode() {
+    if (!this.lockMode) return;
+    this.lockMode = null;
+    document.body.classList.remove('inv-slot-lock-mode', 'inv-item-lock-mode');
+    this.syncLockButtons();
+  },
+
+  toggleSlotLockAt(slotIndex) {
+    if (!Number.isInteger(slotIndex) || slotIndex < 0) return;
+    const inventory = this.getInventory();
+    const entry = inventory?.[slotIndex];
+    if (!entry) return;
+
+    let nextLocked = false;
+    if (this.tab === 'equip') {
+      const itemId = entry;
+      let state = playerInventoryState[slotIndex];
+      if (!state || state.itemId !== itemId) {
+        state = typeof loadEnchantStateForSlot === 'function'
+          ? loadEnchantStateForSlot(itemId, slotIndex)
+          : { itemId, slotLocked: false };
+      }
+      if (!state) return;
+      state.slotLocked = !state.slotLocked;
+      nextLocked = state.slotLocked;
+      if (typeof saveInventoryItemState === 'function') {
+        saveInventoryItemState(slotIndex, state);
+      } else {
+        playerInventoryState[slotIndex] = state;
+      }
+    } else if (typeof entry === 'object') {
+      entry.slotLocked = !entry.slotLocked;
+      nextLocked = entry.slotLocked;
+      if (typeof SessionPersistenceModule !== 'undefined') {
+        SessionPersistenceModule.scheduleSave();
+      }
+    } else {
+      return;
+    }
+
+    this.render();
+    if (typeof addLog === 'function') {
+      addLog(
+        nextLocked ? '[背包] 已固定道具位置。' : '[背包] 已解除位置固定。',
+        'log-info'
+      );
+    }
+  },
+
+  toggleItemLockAt(slotIndex) {
+    if (this.tab !== 'equip') {
+      if (typeof addLog === 'function') {
+        addLog('[背包] 便利鎖定僅能用於裝備。', 'log-fail');
+      }
+      return;
+    }
+    if (!Number.isInteger(slotIndex) || slotIndex < 0) return;
+    const itemId = playerInventoryEquip?.[slotIndex];
+    if (!itemId) return;
+
+    let state = playerInventoryState[slotIndex];
+    if (!state || state.itemId !== itemId) {
+      state = typeof loadEnchantStateForSlot === 'function'
+        ? loadEnchantStateForSlot(itemId, slotIndex)
+        : { itemId, itemLocked: false };
+    }
+    if (!state) return;
+
+    state.itemLocked = !state.itemLocked;
+    if (typeof saveInventoryItemState === 'function') {
+      saveInventoryItemState(slotIndex, state);
+    } else {
+      playerInventoryState[slotIndex] = state;
+    }
+
+    this.render();
+    if (typeof addLog === 'function') {
+      addLog(
+        state.itemLocked
+          ? '[背包] 已便利鎖定裝備（無法販售、強化、分解、進階消耗）。'
+          : '[背包] 已解除便利鎖定。',
+        'log-info'
+      );
+    }
+  },
+
+  handleSlotLockClick(slotIndex) {
+    if (!this.lockMode) return false;
+    const inventory = this.getInventory();
+    const entry = inventory?.[slotIndex] ?? null;
+
+    if (!entry) {
+      this.clearLockMode();
+      return true;
+    }
+
+    if (this.lockMode === 'slot') {
+      this.toggleSlotLockAt(slotIndex);
+      return true;
+    }
+
+    if (this.lockMode === 'item') {
+      this.toggleItemLockAt(slotIndex);
+      return true;
+    }
+    return false;
+  },
+
+  applyLockOverlays(slot, slotIndex) {
+    if (!slot) return;
+    if (this.isSlotLocked(slotIndex)) {
+      const bar = document.createElement('img');
+      bar.className = 'inv-sortlock-icon';
+      bar.src = 'images/iventory/sortlock.png';
+      bar.alt = '';
+      bar.draggable = false;
+      slot.appendChild(bar);
+    }
+    if (this.tab === 'equip' && this.isEquipItemLocked(slotIndex)) {
+      const frame = slot.querySelector('.inv-item-frame') || slot;
+      const icon = document.createElement('img');
+      icon.className = 'inv-itemlock-icon';
+      icon.src = 'images/iventory/itemlock.png';
+      icon.alt = '';
+      icon.draggable = false;
+      frame.appendChild(icon);
+    }
   },
 
   ensureConsumeTooltip() {
@@ -697,6 +917,7 @@ const InventoryModule = {
 
     const entries = [];
     for (let i = 0; i < inventory.length; i++) {
+      if (this.isSlotLocked(i, tab)) continue;
       const entry = inventory[i];
       if (!entry) continue;
       if (tab === 'consume' && !this.isConsumeEntryActive(entry)) continue;
@@ -721,21 +942,28 @@ const InventoryModule = {
       return a.oldIndex - b.oldIndex;
     });
 
-    const nextInv = new Array(inventory.length).fill(null);
-    entries.forEach((row, index) => {
-      nextInv[index] = row.entry;
+    // 先清空未鎖定格，鎖定格原樣保留
+    for (let i = 0; i < inventory.length; i++) {
+      if (this.isSlotLocked(i, tab)) continue;
+      inventory[i] = null;
+      if (tab === 'equip') playerInventoryState[i] = null;
+    }
+
+    let writeAt = 0;
+    entries.forEach((row) => {
+      while (writeAt < inventory.length && this.isSlotLocked(writeAt, tab)) writeAt += 1;
+      if (writeAt >= inventory.length) return;
+      inventory[writeAt] = row.entry;
+      if (tab === 'equip') playerInventoryState[writeAt] = row.state;
+      writeAt += 1;
     });
-    inventory.splice(0, inventory.length, ...nextInv);
 
     if (tab === 'equip') {
-      const nextState = new Array(playerInventoryState.length).fill(null);
-      entries.forEach((row, index) => {
-        nextState[index] = row.state;
-      });
-      playerInventoryState.splice(0, playerInventoryState.length, ...nextState);
       if (typeof playerInventory !== 'undefined') {
-        playerInventory.splice(0, playerInventory.length, ...nextInv);
+        playerInventory.splice(0, playerInventory.length, ...inventory);
       }
+    } else {
+      // consume / etc：陣列已就地改寫
     }
 
     if (typeof SessionPersistenceModule !== 'undefined') {
@@ -857,6 +1085,13 @@ const InventoryModule = {
       slot.ondragleave = () => slot.classList.remove('inv-drag-over');
       slot.ondrop = (e) => this.handleDrop(e, i);
 
+      slot.addEventListener('click', (e) => {
+        if (!this.lockMode) return;
+        e.preventDefault();
+        e.stopPropagation();
+        this.handleSlotLockClick(i);
+      });
+
       this.applySlotGridPosition(slot, i);
 
       const entry = inventory[i] ?? null;
@@ -867,6 +1102,8 @@ const InventoryModule = {
       } else if (this.tab === 'etc') {
         this.renderEtcSlot(slot, entry, i);
       }
+
+      this.applyLockOverlays(slot, i);
 
       this.applyDisassembleSlot(slot, i, entry);
       grid.appendChild(slot);
@@ -881,6 +1118,7 @@ const InventoryModule = {
     const next = mode === 'equip' || mode === 'scroll' ? mode : null;
     this.disassemblePick = next;
     document.body.classList.toggle('inv-disassemble-pick', !!next);
+    if (next && this.lockMode) this.clearLockMode();
     if (next && this.pendingPotentialScrollId) this.cancelPotentialScrollUse();
     if (next === 'equip' && this.tab !== 'equip') this.setTab('equip');
     else if (next === 'scroll' && this.tab !== 'consume') this.setTab('consume');
@@ -895,7 +1133,7 @@ const InventoryModule = {
     if (!pickingEquip && !pickingScroll) return;
     let ok = false;
     if (pickingEquip) {
-      ok = !!entry && !!DisassembleStore.equipMaterials(entry);
+      ok = !!entry && !!DisassembleStore.equipMaterials(entry) && !this.isEquipItemLocked(slotIndex);
     } else {
       const T = typeof CONSUME_ITEM_TYPE !== 'undefined' ? CONSUME_ITEM_TYPE : {};
       const scrollId = entry?.scrollId;
@@ -955,7 +1193,7 @@ const InventoryModule = {
     equipImg.draggable = true;
 
     equipImg.ondragstart = (e) => {
-      if (this.pendingPotentialScrollId) {
+      if (this.lockMode || this.pendingPotentialScrollId) {
         e.preventDefault();
         return;
       }
@@ -981,6 +1219,12 @@ const InventoryModule = {
     };
 
     equipImg.addEventListener('click', (e) => {
+      if (this.lockMode) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.handleSlotLockClick(slotIndex);
+        return;
+      }
       if (!this.pendingPotentialScrollId) return;
       e.preventDefault();
       e.stopPropagation();
@@ -988,7 +1232,7 @@ const InventoryModule = {
     });
 
     equipImg.ondblclick = (e) => {
-      if (this.pendingPotentialScrollId) {
+      if (this.lockMode || this.pendingPotentialScrollId) {
         e.preventDefault();
         e.stopPropagation();
         return;
@@ -1157,6 +1401,7 @@ const InventoryModule = {
   },
 
   beginPotentialScrollUse(scrollId) {
+    if (this.lockMode) this.clearLockMode();
     this.pendingPotentialScrollId = scrollId;
     document.body.classList.add('inv-potential-scroll-use');
     this.hideConsumeTooltip();
@@ -1428,7 +1673,7 @@ const InventoryModule = {
     scrollImg.alt = scroll.name;
     scrollImg.id = `inv_item_consume_${slotIndex}`;
     scrollImg.draggable = true;
-    scrollImg.title = `${scroll.name}（雙擊選取）`;
+    scrollImg.title = `${scroll.name}（雙擊開啟星力）`;
 
     scrollImg.ondragstart = (e) => {
       e.dataTransfer.setData('text/plain', JSON.stringify({
@@ -1471,7 +1716,7 @@ const InventoryModule = {
     img.alt = cube.name;
     img.id = `inv_item_consume_${slotIndex}`;
     img.draggable = true;
-    img.title = cube.name;
+    img.title = `${cube.name}（雙擊開啟潛能）`;
     img.ondragstart = (e) => {
       e.dataTransfer.setData('text/plain', JSON.stringify({
         slotIndex,
@@ -1486,6 +1731,11 @@ const InventoryModule = {
         el.classList.remove('inv-drag-over');
       });
     };
+    img.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.handleCubeDblClick(cube.id);
+    });
     itemFrame.appendChild(img);
     this.appendStackCount(itemFrame, count);
     slot.appendChild(itemFrame);
@@ -1500,7 +1750,7 @@ const InventoryModule = {
     itemFrame.appendChild(qty);
   },
 
-  renderGenericConsumeIcon(slot, slotIndex, icon, name, count = 0) {
+  renderGenericConsumeIcon(slot, slotIndex, icon, name, count = 0, opts = {}) {
     const itemFrame = document.createElement('div');
     itemFrame.className = 'inv-item-frame inv-consume-frame';
     const img = document.createElement('img');
@@ -1508,7 +1758,7 @@ const InventoryModule = {
     img.alt = name;
     img.id = `inv_item_consume_${slotIndex}`;
     img.draggable = true;
-    img.title = name;
+    img.title = opts.title || name;
     img.ondragstart = (e) => {
       const payload = { slotIndex, tab: 'consume' };
       this._activeDragPayload = payload;
@@ -1523,6 +1773,13 @@ const InventoryModule = {
         el.classList.remove('inv-drag-over');
       });
     };
+    if (typeof opts.onDblClick === 'function') {
+      img.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        opts.onDblClick();
+      });
+    }
     itemFrame.appendChild(img);
     this.appendStackCount(itemFrame, count);
     slot.appendChild(itemFrame);
@@ -1533,7 +1790,10 @@ const InventoryModule = {
     if (!cube) return;
     const count = typeof getPlayerAddPotCubeCount === 'function' ? getPlayerAddPotCubeCount(cube.id) : 0;
     if (count <= 0) return;
-    this.renderGenericConsumeIcon(slot, slotIndex, cube.icon, cube.name, count);
+    this.renderGenericConsumeIcon(slot, slotIndex, cube.icon, cube.name, count, {
+      title: `${cube.name}（雙擊開啟附加潛能）`,
+      onDblClick: () => this.handleAddCubeDblClick(cube.id),
+    });
   },
 
   renderHammerConsumeSlot(slot, entry, slotIndex) {
@@ -1541,7 +1801,10 @@ const InventoryModule = {
     if (!type) return;
     const count = typeof getPlayerHammerCount === 'function' ? getPlayerHammerCount(entry.hammerId) : 0;
     if (count <= 0) return;
-    this.renderGenericConsumeIcon(slot, slotIndex, type.icon, type.name, count);
+    this.renderGenericConsumeIcon(slot, slotIndex, type.icon, type.name, count, {
+      title: `${type.name}（雙擊開啟鐵鎚）`,
+      onDblClick: () => this.handleHammerDblClick(entry.hammerId),
+    });
   },
 
   renderGloryScrollConsumeSlot(slot, entry, slotIndex) {
@@ -1551,10 +1814,13 @@ const InventoryModule = {
     if (count <= 0) return;
     const isNormal = scroll.tab === (typeof SCROLL_TAB !== 'undefined' ? SCROLL_TAB.NORMAL : 'normal');
     const showQty = isNormal || (typeof isIdlePlayMode === 'function' && isIdlePlayMode());
-    this.renderGenericConsumeIcon(slot, slotIndex, scroll.icon, scroll.name, showQty ? count : 0);
+    this.renderGenericConsumeIcon(slot, slotIndex, scroll.icon, scroll.name, showQty ? count : 0, {
+      title: `${scroll.name}（雙擊開啟卷軸）`,
+      onDblClick: () => this.handleGloryScrollDblClick(scroll.id),
+    });
     const img = slot.querySelector('img');
     if (img) {
-      img.title = '';
+      img.title = `${scroll.name}（雙擊開啟卷軸）`;
       img.addEventListener('mouseenter', () => {
         if (typeof ScrollModule !== 'undefined') ScrollModule.showScrollTooltip(img, scroll);
       });
@@ -1569,7 +1835,10 @@ const InventoryModule = {
     if (!item) return;
     const count = typeof getPlayerBonusStatItemCount === 'function' ? getPlayerBonusStatItemCount(item.id) : 0;
     if (count <= 0) return;
-    this.renderGenericConsumeIcon(slot, slotIndex, item.icon, item.name, count);
+    this.renderGenericConsumeIcon(slot, slotIndex, item.icon, item.name, count, {
+      title: `${item.name}（雙擊開啟星火）`,
+      onDblClick: () => this.handleBonusStatDblClick(item.id),
+    });
   },
 
   renderExceptionalHammerConsumeSlot(slot, entry, slotIndex) {
@@ -1610,10 +1879,14 @@ const InventoryModule = {
       IdlePotionStore.resolveIcon(potion.icon),
       potion.name,
       count,
+      {
+        title: `${potion.name}（雙擊裝備到自動喝藥槽）`,
+        onDblClick: () => this.handlePotionDblClick(entry.itemId),
+      },
     );
     const img = slot.querySelector('img');
     if (img) {
-      img.title = '';
+      img.title = `${potion.name}（雙擊裝備到自動喝藥槽）`;
       img.ondragstart = (e) => {
         const payload = {
           slotIndex,
@@ -1635,6 +1908,133 @@ const InventoryModule = {
       };
       img.addEventListener('mouseenter', () => this.showPotionTooltip(img, potion));
       img.addEventListener('mouseleave', () => this.hideEtcTooltip());
+    }
+  },
+
+  handlePotionDblClick(itemId) {
+    const id = String(itemId || '').trim();
+    if (!id) return;
+    if (typeof IdlePotionStore === 'undefined' || !IdlePotionStore.isPotionId?.(id)) return;
+
+    if (typeof IdlePotionPanel === 'undefined' || typeof IdlePotionPanel.setQuickPotion !== 'function') {
+      if (typeof addLog === 'function') addLog('[藥水] 自動喝藥槽尚未載入。', 'log-fail');
+      return;
+    }
+
+    const ok = IdlePotionPanel.setQuickPotion(id);
+    if (!ok) {
+      if (typeof addLog === 'function') addLog('[藥水] 無法裝備到自動喝藥槽。', 'log-fail');
+      return;
+    }
+
+    const potion = IdlePotionStore.get(id);
+    if (typeof addLog === 'function') {
+      addLog(`[藥水] 已將【${potion?.name || id}】裝備到自動喝藥槽。`, 'log-success');
+    }
+  },
+
+  /** 開啟強化台並切到指定分頁（背包雙擊可略過「當前裝備不適用」限制） */
+  openEnchantCategory(category) {
+    if (this.lockMode) this.clearLockMode();
+    if (this.pendingPotentialScrollId) this.cancelPotentialScrollUse();
+
+    if (typeof UiEquipModule !== 'undefined' && typeof UiEquipModule.setEnchantOpen === 'function') {
+      UiEquipModule.setEnchantOpen(true);
+    }
+
+    const tabId = (typeof TAB_BUTTON_IDS !== 'undefined' && TAB_BUTTON_IDS[category])
+      ? TAB_BUTTON_IDS[category]
+      : null;
+    const btn = tabId ? document.getElementById(tabId) : null;
+
+    document.querySelectorAll('.ms-tab-btn').forEach((tab) => tab.classList.remove('checked'));
+    if (btn) btn.classList.add('checked');
+
+    const select = document.getElementById('actionCategory');
+    if (select) select.value = category;
+
+    if (typeof switchCategory === 'function') {
+      switchCategory();
+    } else if (typeof switchCategoryTab === 'function') {
+      switchCategoryTab(category, btn);
+    }
+  },
+
+  handleCubeDblClick(cubeId) {
+    if (!cubeId) return;
+    this.openEnchantCategory('potential');
+    if (typeof PotentialModule !== 'undefined') {
+      PotentialModule.selectedCubeId = cubeId;
+      PotentialModule.updateUI?.();
+    }
+    const cube = typeof getPotentialCubeById === 'function' ? getPotentialCubeById(cubeId) : null;
+    if (cube && typeof addLog === 'function') {
+      addLog(`[潛能] 已開啟潛能面板（【${cube.name}】）。`, 'log-info');
+    }
+  },
+
+  handleAddCubeDblClick(cubeId) {
+    if (!cubeId) return;
+    this.openEnchantCategory('additionalPotential');
+    if (typeof AddPotentialModule !== 'undefined') {
+      AddPotentialModule.selectedCubeId = cubeId;
+      AddPotentialModule.updateUI?.();
+    }
+    const cube = typeof getAddPotCubeById === 'function' ? getAddPotCubeById(cubeId) : null;
+    if (cube && typeof addLog === 'function') {
+      addLog(`[附加潛能] 已開啟附加潛能面板（【${cube.name}】）。`, 'log-info');
+    }
+  },
+
+  handleHammerDblClick(hammerId) {
+    if (!hammerId) return;
+    this.openEnchantCategory('hammer');
+    if (typeof HammerModule !== 'undefined') {
+      HammerModule.selectedHammer = hammerId;
+      if (hammerId === 'golden') HammerModule.setAutoWhiteHammerEnabled?.(false);
+      HammerModule.updateUI?.();
+    }
+    const type = typeof HAMMER_TYPES !== 'undefined' ? HAMMER_TYPES[hammerId] : null;
+    if (type && typeof addLog === 'function') {
+      addLog(`[鐵鎚] 已開啟鐵鎚面板（【${type.name}】）。`, 'log-info');
+    }
+  },
+
+  handleGloryScrollDblClick(scrollId) {
+    if (!scrollId) return;
+    const scroll = typeof getScrollById === 'function' ? getScrollById(scrollId) : null;
+    if (!scroll) return;
+
+    this.openEnchantCategory('scroll');
+
+    if (typeof ScrollModule !== 'undefined') {
+      const tab = scroll.tab === (typeof SCROLL_TAB !== 'undefined' ? SCROLL_TAB.NORMAL : 'normal')
+        ? 'normal'
+        : 'special';
+      ScrollModule.selectedTab = tab;
+      ScrollModule.lastCatalogTab = tab;
+      ScrollModule.selectedScrollId = scrollId;
+      ScrollModule.selectedRestoreScrollId = null;
+      ScrollModule.selectedTraceId = null;
+      ScrollModule.updateUI?.();
+    }
+
+    if (typeof addLog === 'function') {
+      addLog(`[卷軸] 已開啟卷軸面板（【${scroll.name}】）。`, 'log-info');
+    }
+  },
+
+  handleBonusStatDblClick(itemId) {
+    if (!itemId) return;
+    this.openEnchantCategory('bonusStat');
+    if (typeof BonusStatModule !== 'undefined') {
+      BonusStatModule.costTab = 'item';
+      BonusStatModule.selectedItemId = itemId;
+      BonusStatModule.updateUI?.();
+    }
+    const item = typeof getBonusStatItemById === 'function' ? getBonusStatItemById(itemId) : null;
+    if (item && typeof addLog === 'function') {
+      addLog(`[星火] 已開啟附加能力面板（【${item.name}】）。`, 'log-info');
     }
   },
 
@@ -1660,9 +2060,7 @@ const InventoryModule = {
       addLog(`[星力] 已選擇【${scroll.name}】，請放置裝備。`, 'log-info');
     }
 
-    if (typeof switchCategoryTab === 'function') {
-      switchCategoryTab('star', document.getElementById('tabStar'));
-    }
+    this.openEnchantCategory('star');
 
     if (this.tab !== 'equip') {
       this.setTab('equip');
@@ -2098,14 +2496,18 @@ const InventoryModule = {
     const el = document.getElementById('invMesoBalance');
     const mp = document.getElementById('invMaplePointBalance');
     if (mp) mp.textContent = '0';
-    if (!el) return;
-    if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
-      el.textContent = typeof formatIdleHeldMeso === 'function'
-        ? formatIdleHeldMeso()
-        : String(typeof getIdleHeldMeso === 'function' ? getIdleHeldMeso() : 0);
-      return;
+    if (el) {
+      if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+        el.textContent = typeof formatIdleHeldMeso === 'function'
+          ? formatIdleHeldMeso()
+          : String(typeof getIdleHeldMeso === 'function' ? getIdleHeldMeso() : 0);
+      } else {
+        el.textContent = '-';
+      }
     }
-    el.textContent = '-';
+    if (typeof TrunkModule !== 'undefined' && TrunkModule.isOpen?.()) {
+      TrunkModule.updateMesoDisplay?.();
+    }
   },
 
   updateSlotCount() {

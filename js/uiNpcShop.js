@@ -168,6 +168,7 @@ const UiNpcShop = (() => {
               <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" class="npc-shop-buy-qty-input" id="npcShopBuyQty" value="1" autocomplete="off">
               <button type="button" class="npc-shop-buy-plus" id="npcShopBuyPlus" aria-label="增加"></button>
               <button type="button" class="npc-shop-buy-minus" id="npcShopBuyMinus" aria-label="減少"></button>
+              <button type="button" class="npc-shop-buy-max" id="npcShopBuyMax" aria-label="最大數量" title="依楓幣設為可購買最大數量">MAX</button>
               <img class="npc-shop-buy-mid-point-icon" src="${ASSET.meso}" alt="">
               <span class="npc-shop-buy-mid-point-name">楓幣</span>
               <div class="npc-shop-buy-total" id="npcShopBuyTotal">0</div>
@@ -208,6 +209,7 @@ const UiNpcShop = (() => {
     root.querySelector('[data-npc-shop-close]')?.addEventListener('click', () => setOpen(false));
     $('npcShopBuyMinus')?.addEventListener('click', () => setBuyQty(buyQty - 1));
     $('npcShopBuyPlus')?.addEventListener('click', () => setBuyQty(buyQty + 1));
+    $('npcShopBuyMax')?.addEventListener('click', () => setBuyQty(maxAffordableBuyQty()));
     $('npcShopBuyQty')?.addEventListener('change', (e) => {
       setBuyQty(Number(e.target.value) || 1);
     });
@@ -559,6 +561,16 @@ const UiNpcShop = (() => {
     syncBuyPopupTotals();
   }
 
+  /** 依目前楓幣可買的最大數量（上限 999；單價 0 視為 999） */
+  function maxAffordableBuyQty() {
+    const row = selectedBuyRow();
+    const unit = Math.max(0, Math.floor(Number(
+      IdleNpcShopCatalog.resolveBuyRowDisplay(row)?.price,
+    ) || 0));
+    if (!(unit > 0)) return 999;
+    return Math.max(1, Math.min(999, Math.floor(gold() / unit)));
+  }
+
   function syncBuyPopupTotals() {
     const row = selectedBuyRow();
     const disp = IdleNpcShopCatalog.resolveBuyRowDisplay(row);
@@ -883,6 +895,12 @@ const UiNpcShop = (() => {
     if (typeof playerInventoryEquip === 'undefined') return false;
     const itemId = playerInventoryEquip[slotIndex];
     if (!itemId) return false;
+    if (typeof InventoryModule !== 'undefined' && InventoryModule.isEquipItemLocked?.(slotIndex)) {
+      if (typeof addLog === 'function') {
+        addLog('[商店] 此裝備已便利鎖定，無法販售。', 'log-fail');
+      }
+      return false;
+    }
     const state = playerInventoryState[slotIndex]
       ? JSON.parse(JSON.stringify(playerInventoryState[slotIndex]))
       : null;

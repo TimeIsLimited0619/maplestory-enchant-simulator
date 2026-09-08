@@ -151,6 +151,8 @@ const SkillComboOrbs = (() => {
     if (typeof UiCharacterInfo !== 'undefined') {
       UiCharacterInfo.refresh?.();
     }
+    if (typeof IdleHunt !== 'undefined') IdleHunt.syncHuntOverlayBars?.();
+    if (typeof IdleBoss !== 'undefined') IdleBoss.syncBossOverlayBars?.();
   }
 
   /** 攻擊命中後嘗試充能 */

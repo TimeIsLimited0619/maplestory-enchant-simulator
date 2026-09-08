@@ -12,6 +12,15 @@ const SkillCatalog = (() => {
     magef: ['1000003'],
   };
 
+  /** 舊存檔／誤記 ID → 正式 ID（目前無需對應） */
+  const SKILL_ID_ALIASES = {};
+
+  function resolveSkillId(skillId) {
+    const id = String(skillId || '');
+    if (!id) return id;
+    return SKILL_ID_ALIASES[id] || id;
+  }
+
   function books() {
     return (typeof SkillJobData !== 'undefined' && SkillJobData.books) || {};
   }
@@ -59,7 +68,7 @@ const SkillCatalog = (() => {
   }
 
   function getSkill(skillId) {
-    const id = String(skillId);
+    const id = resolveSkillId(skillId);
     const all = books();
     for (const key of Object.keys(all)) {
       const found = (all[key].skills || []).find((s) => String(s.id) === id);
@@ -158,6 +167,86 @@ const SkillCatalog = (() => {
     return getJobBook(jobId)?.name || '';
   }
 
+  /**
+   * 自動接技鏈後續技（不可裝備／連鎖）。
+   * 只從 isAuto／type=1 頭技往下收；僅展開 skipPanel 隱藏橋接，
+   * 不走 type0 選配接技圖（否則會把昇龍等頭技誤標成後續）。
+   */
+  let addAttackFollowupIds = null;
+
+  function isAddAttackChainHead(skill) {
+    const aa = skill?.addAttack;
+    if (!aa?.skill) return false;
+    return !!(aa.isAuto || Number(aa.type) === 1);
+  }
+
+  function collectAddAttackFollowupIds() {
+    if (addAttackFollowupIds) return addAttackFollowupIds;
+    const set = new Set();
+    const queue = [];
+    const enqueue = (rawId) => {
+      const id = String(rawId || '');
+      if (!id || set.has(id)) return;
+      set.add(id);
+      queue.push(id);
+    };
+    const all = books();
+    Object.keys(all).forEach((key) => {
+      (all[key].skills || []).forEach((raw) => {
+        const skill = withOverrides(raw);
+        if (!isAddAttackChainHead(skill)) return;
+        const aa = skill.addAttack;
+        enqueue(aa.skill);
+        (Array.isArray(aa.skillPlus) ? aa.skillPlus : []).forEach(enqueue);
+      });
+    });
+    while (queue.length) {
+      const skill = getSkill(queue.shift());
+      // 隱藏橋接（如 23101007）才繼續展開；一般後續技停在此層
+      if (!skill?.skipPanel) continue;
+      const aa = skill.addAttack;
+      if (!aa?.skill) continue;
+      enqueue(aa.skill);
+      (Array.isArray(aa.skillPlus) ? aa.skillPlus : []).forEach(enqueue);
+    }
+    addAttackFollowupIds = set;
+    return set;
+  }
+
+  function isAddAttackFollowup(skillId) {
+    return collectAddAttackFollowupIds().has(resolveSkillId(skillId));
+  }
+
+  /** baseId → 強化替換技 id（例：光速雙擊 → 進階光速雙擊） */
+  let skillReplacerByBase = null;
+
+  function collectSkillReplacerMap() {
+    if (skillReplacerByBase) return skillReplacerByBase;
+    const map = Object.create(null);
+    const all = books();
+    Object.keys(all).forEach((key) => {
+      (all[key].skills || []).forEach((raw) => {
+        const skill = withOverrides(raw);
+        const base = skill?.replacesSkill != null ? String(skill.replacesSkill) : '';
+        if (!base || !skill?.id) return;
+        map[base] = String(skill.id);
+      });
+    });
+    skillReplacerByBase = map;
+    return map;
+  }
+
+  /** 若 base 已被強化技取代，回傳強化技 id；否則 null */
+  function getSkillReplacer(baseSkillId) {
+    return collectSkillReplacerMap()[resolveSkillId(baseSkillId)] || null;
+  }
+
+  /** 此技是否為某技的強化替換版 */
+  function getReplacedSkillId(advancedSkillId) {
+    const skill = getSkill(advancedSkillId);
+    return skill?.replacesSkill != null ? String(skill.replacesSkill) : null;
+  }
+
   return {
     getJobBook,
     getJobLine,
@@ -169,8 +258,12 @@ const SkillCatalog = (() => {
     panelRanksForJob,
     jobLabel,
     normalizeJobId,
+    resolveSkillId,
     books,
     lines,
+    isAddAttackFollowup,
+    getSkillReplacer,
+    getReplacedSkillId,
   };
 })();
 

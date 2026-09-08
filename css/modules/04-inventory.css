@@ -1077,6 +1077,7 @@
   text-align: left;
   line-height: 1;
   pointer-events: none;
+  z-index: 4;
   text-shadow:
     -1px -1px 0 #000,
     1px -1px 0 #000,
@@ -1088,6 +1089,38 @@
 body.inv-potential-scroll-use,
 body.inv-potential-scroll-use * {
   cursor: url('../../images/iventory/Basic.img.Cursor.32.0.png') 0 0, pointer !important;
+}
+
+/* 格子鎖定／便利鎖定模式：itemlock 游標 */
+body.inv-slot-lock-mode,
+body.inv-slot-lock-mode * {
+  cursor: url('../../images/iventory/Basic.img.slotlock.png') 0 0, pointer !important;
+}
+body.inv-item-lock-mode,
+body.inv-item-lock-mode * {
+  cursor: url('../../images/iventory/Basic.img.itemlock.png') 0 0, pointer !important;
+}
+
+.inv-sortlock-icon {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 42px;
+  height: 5px;
+  pointer-events: none;
+  image-rendering: pixelated;
+  z-index: 3;
+}
+
+.inv-itemlock-icon {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 11px;
+  height: 11px;
+  pointer-events: none;
+  image-rendering: pixelated;
+  z-index: 5;
 }
 
 .inv-consume-tooltip {

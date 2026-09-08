@@ -1893,9 +1893,14 @@ const IdleBossFight = (() => {
     syncHud();
   }
 
+  function stopSustainCombat() {
+    try { SkillCombat.stopSustainChannel?.(); } catch (_) { /* ignore */ }
+  }
+
   async function onBodyDead() {
     if (!fight || fight.mode !== 'fight') return;
     busy = true;
+    stopSustainCombat();
     fight.mode = 'clear';
     hooks?.onPhase?.('clear');
     // 死亡動畫開始前就移除手臂／封印雙手（勿等 die1 播完）
@@ -3325,6 +3330,67 @@ const IdleBossFight = (() => {
     return !!fight;
   }
 
+  const VISUAL_MOB_KEYS = new Set([
+    'mobId', 'statMob', 'visualMob', 'active', 'sealed', 'deadSealed',
+    'bodyStatMob', 'headVisualMob', 'chestMob', 'shell', 'throneMob',
+    'fromMob', 'viaMob', 'mob', 'visualId',
+  ]);
+
+  /** 腳本／WZ 裡會上場的視覺 mobId（略過 rewards 道具 id） */
+  function collectVisualMobIds(listId) {
+    const ids = new Set();
+    const add = (v) => {
+      if (v == null || v === '') return;
+      const raw = String(v).trim();
+      if (!/^\d+$/.test(raw)) return;
+      const id = pad(raw);
+      if (id && id !== '0000000') ids.add(id);
+    };
+    const walk = (val, skipRewards) => {
+      if (val == null) return;
+      if (typeof val === 'string' || typeof val === 'number') return;
+      if (Array.isArray(val)) {
+        val.forEach((item) => walk(item, skipRewards));
+        return;
+      }
+      if (typeof val !== 'object') return;
+      Object.entries(val).forEach(([k, v]) => {
+        if (k === 'rewards' || k === 'difficulties') {
+          // difficulties 仍要往下走（不含 rewards）
+          if (k === 'difficulties') walk(v, true);
+          return;
+        }
+        if (skipRewards && k === 'rewards') return;
+        if (VISUAL_MOB_KEYS.has(k) && (typeof v === 'string' || typeof v === 'number')) {
+          add(v);
+          return;
+        }
+        if (v && typeof v === 'object') walk(v, skipRewards);
+      });
+    };
+    walk(phaseScript(listId), false);
+    (wzRow(listId)?.parts || []).forEach((p) => add(p.mobId));
+    return [...ids];
+  }
+
+  function collectMapArtIds(listId) {
+    const arts = new Set();
+    const script = phaseScript(listId);
+    (script?.stages || []).forEach((st) => {
+      if (st?.mapArt) arts.add(String(st.mapArt));
+    });
+    return [...arts];
+  }
+
+  /** 入場前預載本場會用到的 BOSS 動畫幀 */
+  function warmAssets(listId) {
+    if (typeof IdleMobAnim === 'undefined' || !IdleMobAnim.preloadMob) {
+      return Promise.resolve();
+    }
+    const ids = collectVisualMobIds(listId);
+    return Promise.all(ids.map((id) => IdleMobAnim.preloadMob(id))).then(() => {});
+  }
+
   /** 拉圖斯進場：時鐘 stand／regen（有則播），結束後開戰 */
   async function playPapulatusIntro() {
     if (!fight || !isPapulatus()) return;
@@ -3818,6 +3884,10 @@ const IdleBossFight = (() => {
   function tick(dt) {
     if (!fight) return;
     advanceSprites(dt);
+    // 轉階段 busy／戰鬥結束：打斷伊修塔爾等持續引導，避免空放
+    if (busy || fight.mode === 'done') {
+      stopSustainCombat();
+    }
     if (fight.mode === 'done') return;
     tickPlayer(dt);
     tickBoss(dt);
@@ -3825,6 +3895,7 @@ const IdleBossFight = (() => {
     hooks?.syncPlayerHp?.();
     if (typeof IdleHunt !== 'undefined' && IdleHunt.isPlayerDead?.() && fight.mode === 'fight') {
       fight.mode = 'done';
+      stopSustainCombat();
       hooks?.onFightEnd?.('lose');
     }
   }
@@ -3845,6 +3916,9 @@ const IdleBossFight = (() => {
     getCombatMobs,
     combatCtx,
     capIncomingDamage,
+    collectVisualMobIds,
+    collectMapArtIds,
+    warmAssets,
   };
 })();
 

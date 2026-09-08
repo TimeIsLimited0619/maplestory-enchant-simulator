@@ -349,7 +349,7 @@ const EquipCraftPanel = (() => {
 
     if (recipe.baseEquip) {
       const need = Math.max(1, Math.floor(Number(recipe.baseCount) || 1));
-      const have = s.countEquipInBag(recipe.baseEquip);
+      const have = s.countEquipInBag(recipe.baseEquip, { includeLocked: false });
       reqs.push(reqItemMarkup(
         s.equipIcon(recipe.baseEquip),
         s.equipName(recipe.baseEquip),
@@ -442,6 +442,7 @@ const EquipCraftPanel = (() => {
       categoryId = '';
       detail = null;
       if (typeof DisassemblePanel !== 'undefined') DisassemblePanel.setOpen?.(false);
+      if (typeof JobChangePanel !== 'undefined') JobChangePanel.setOpen?.(false);
       if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.setPickerOpen === 'function') {
         IdleHunt.setPickerOpen(false);
       }

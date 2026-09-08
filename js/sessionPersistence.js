@@ -92,6 +92,10 @@ const SessionPersistenceModule = {
       equippedSlotIndex: null,
     };
 
+    if (typeof TrunkData !== 'undefined' && typeof TrunkData.exportSnapshot === 'function') {
+      Object.assign(snap, TrunkData.exportSnapshot());
+    }
+
     if (typeof UiEquipModule !== 'undefined' && typeof UiEquipModule.exportState === 'function') {
       Object.assign(snap, UiEquipModule.exportState());
     }
@@ -188,12 +192,15 @@ const SessionPersistenceModule = {
 
   emptySessionSnapshot() {
     const count = typeof INVENTORY_SLOT_COUNT !== 'undefined' ? INVENTORY_SLOT_COUNT : 128;
+    const trunkCount = typeof TRUNK_SLOT_COUNT !== 'undefined' ? TRUNK_SLOT_COUNT : count;
     return {
       version: SESSION_PERSISTENCE_VERSION,
       inventoryEquip: new Array(count).fill(null),
       inventoryConsume: new Array(count).fill(null),
       inventoryEtc: new Array(count).fill(null),
       inventoryState: new Array(count).fill(null),
+      trunkSlots: new Array(trunkCount).fill(null),
+      trunkMeso: 0,
       equippedItem: null,
       equippedSlotIndex: null,
       bodyWearActive: {},
@@ -256,6 +263,10 @@ const SessionPersistenceModule = {
     if (typeof InventoryModule !== 'undefined') {
       InventoryModule.render?.();
       InventoryModule.updateSlotCount?.();
+    }
+    if (typeof TrunkModule !== 'undefined') {
+      TrunkModule.render?.();
+      TrunkModule.updateMesoDisplay?.();
     }
     if (typeof updateStatusPanel === 'function') updateStatusPanel();
     if (typeof updateCategoryTabStates === 'function') updateCategoryTabStates();
@@ -699,9 +710,48 @@ const SessionPersistenceModule = {
         name: String(row.name || itemId),
         icon: String(row.icon || ''),
         amount: Math.max(1, Math.floor(Number(row.amount) || 1)),
+        ...(row.slotLocked ? { slotLocked: true } : {}),
       };
     }
     return result;
+  },
+
+  /** 舊版「鎖格子」陣列 → 改寫到道具本身的 slotLocked */
+  migrateLegacySlotLockArrays(data, equip) {
+    const count = typeof INVENTORY_SLOT_COUNT !== 'undefined' ? INVENTORY_SLOT_COUNT : 128;
+
+    const equipLocks = Array.isArray(data?.inventorySlotLockEquip) ? data.inventorySlotLockEquip : null;
+    if (equipLocks) {
+      for (let i = 0; i < count; i++) {
+        if (!equipLocks[i] || !equip[i]) continue;
+        let state = playerInventoryState[i];
+        if (!state || state.itemId !== equip[i]) {
+          state = { itemId: equip[i] };
+        }
+        state.slotLocked = true;
+        playerInventoryState[i] = state;
+      }
+    }
+
+    const consumeLocks = Array.isArray(data?.inventorySlotLockConsume) ? data.inventorySlotLockConsume : null;
+    if (consumeLocks && typeof playerInventoryConsume !== 'undefined') {
+      for (let i = 0; i < count; i++) {
+        if (!consumeLocks[i] || !playerInventoryConsume[i] || typeof playerInventoryConsume[i] !== 'object') {
+          continue;
+        }
+        playerInventoryConsume[i].slotLocked = true;
+      }
+    }
+
+    const etcLocks = Array.isArray(data?.inventorySlotLockEtc) ? data.inventorySlotLockEtc : null;
+    if (etcLocks && typeof playerInventoryEtc !== 'undefined') {
+      for (let i = 0; i < count; i++) {
+        if (!etcLocks[i] || !playerInventoryEtc[i] || typeof playerInventoryEtc[i] !== 'object') {
+          continue;
+        }
+        playerInventoryEtc[i].slotLocked = true;
+      }
+    }
   },
 
   migrateEtcPotionsToConsume() {
@@ -737,6 +787,8 @@ const SessionPersistenceModule = {
     const state = this.sanitizeStateArray(data.inventoryState, equip);
     playerInventoryState.splice(0, playerInventoryState.length, ...state);
 
+    this.migrateLegacySlotLockArrays(data, equip);
+
     const slot = data.equippedSlotIndex;
     this.equippedSlotIndex = Number.isInteger(slot) && slot >= 0 && slot < consumeCount && equip[slot]
       ? slot
@@ -755,6 +807,9 @@ const SessionPersistenceModule = {
     this.mergeDefaultEquipInventory();
     if (typeof ensurePotentialScrollConsumeInventory === 'function') {
       ensurePotentialScrollConsumeInventory();
+    }
+    if (typeof TrunkData !== 'undefined' && typeof TrunkData.applySnapshot === 'function') {
+      TrunkData.applySnapshot(data || {});
     }
     if (this.activeProfile !== 'idle') {
       if (typeof stripLegacyStarterPotentialsFromInventory === 'function') {

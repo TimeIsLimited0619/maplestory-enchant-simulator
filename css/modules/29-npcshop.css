@@ -635,15 +635,21 @@
   top: 39px;
   width: 23px;
   height: 23px;
+  margin: 0;
   border: none;
   padding: 0;
   cursor: pointer;
   color: transparent;
   font-size: 0;
-  image-rendering: pixelated;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: transparent;
   background-repeat: no-repeat;
   background-position: 0 0;
   background-size: 23px 23px;
+  box-shadow: none;
+  outline: none;
+  image-rendering: pixelated;
 }
 
 .npc-shop-buy-plus,
@@ -653,10 +659,12 @@
 }
 .npc-shop-buy-plus:hover,
 .npc-shop-sell-plus:hover {
+  background-color: transparent;
   background-image: url('../../images/npcshop/popup__Buy__mid_buyForMeso__button_Plus__mouseOver__0.png');
 }
 .npc-shop-buy-plus:active,
 .npc-shop-sell-plus:active {
+  background-color: transparent;
   background-image: url('../../images/npcshop/popup__Buy__mid_buyForMeso__button_Plus__pressed__0.png');
 }
 
@@ -667,11 +675,53 @@
 }
 .npc-shop-buy-minus:hover,
 .npc-shop-sell-minus:hover {
+  background-color: transparent;
   background-image: url('../../images/npcshop/popup__Buy__mid_buyForMeso__button_Minus__mouseOver__0.png');
 }
 .npc-shop-buy-minus:active,
 .npc-shop-sell-minus:active {
+  background-color: transparent;
   background-image: url('../../images/npcshop/popup__Buy__mid_buyForMeso__button_Minus__pressed__0.png');
+}
+
+/* MAX：減號右側 — 對齊 +/- 的藍系 bevel，避免過亮青綠色 */
+.npc-shop-buy-max {
+  position: absolute;
+  left: 258px;
+  top: 39px;
+  width: 36px;
+  height: 23px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #0a2f48;
+  border-radius: 2px;
+  cursor: pointer;
+  color: #f2f7fb;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 21px;
+  text-align: center;
+  font-family: "Dotum", "PMingLiU", sans-serif;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 0 rgba(8, 32, 48, 0.75);
+  background: linear-gradient(#3d7ea0 0%, #2a6284 45%, #1a4f6e 100%);
+  image-rendering: auto;
+  box-shadow:
+    inset 1px 1px 0 rgba(150, 210, 235, 0.55),
+    inset -1px -1px 0 rgba(10, 40, 60, 0.4);
+}
+
+.npc-shop-buy-max:hover {
+  color: #ffffff;
+  background: linear-gradient(#4a8fb0 0%, #347298 45%, #225c80 100%);
+}
+
+.npc-shop-buy-max:active {
+  color: #e8f2f8;
+  background: linear-gradient(#1a4f6e 0%, #2a6284 55%, #3d7ea0 100%);
+  box-shadow:
+    inset 1px 1px 2px rgba(0, 24, 40, 0.5),
+    inset -1px -1px 0 rgba(80, 140, 170, 0.25);
 }
 
 .npc-shop-buy-bottom {

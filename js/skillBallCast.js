@@ -115,6 +115,42 @@ const SkillBallCast = (() => {
     return false;
   }
 
+  function evalCommonNum(expr, level = 1) {
+    if (expr == null || String(expr) === '') return 0;
+    if (typeof SkillFormula !== 'undefined' && typeof SkillFormula.evalExpr === 'function') {
+      const n = SkillFormula.evalExpr(expr, { x: Math.max(0, Number(level) || 0) });
+      return Number.isFinite(n) ? n : 0;
+    }
+    const n = Number(expr);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  /**
+   * 雙弩多箭：bulletCount + ballDelay / ballDelay1..N
+   * 僅 sprite 單飛路徑；chain／beam／orb／aoeOnSpecial 維持單發。
+   * @returns {{ count: number, delaysMs: number[] }|null}
+   */
+  function resolveBulletVolleys(skill, plan, level = 1) {
+    if (!plan || plan.ballMode !== 'sprite') return null;
+    if (plan.chain || plan.instantBeam || plan.aoeOnSpecial) return null;
+    const c = skill?.common || {};
+    if (c.bulletCount == null || String(c.bulletCount) === '') return null;
+    const count = Math.max(1, Math.floor(evalCommonNum(c.bulletCount, level)) || 1);
+    if (count <= 1) return null;
+    const fallback = Math.max(
+      60,
+      evalCommonNum(c.ballDelay, level) || Number(plan.launchMs) || 150,
+    );
+    const delaysMs = [];
+    for (let i = 0; i < count; i += 1) {
+      const key = i === 0 ? 'ballDelay' : `ballDelay${i}`;
+      let d = evalCommonNum(c[key], level);
+      if (!(d > 0)) d = fallback;
+      delaysMs.push(d);
+    }
+    return { count, delaysMs };
+  }
+
   function ballSpriteFrames(fx) {
     if (fx?.ball?.frames?.length) return fx.ball.frames;
     const layers = fx?.ball?.layers || [];
@@ -143,15 +179,16 @@ const SkillBallCast = (() => {
   }
 
   /**
-   * effect 錨點＝腳底（cast stage 位置）。優先讀正在播的 effect DOM。
+   * 箭矢發射點：角色身體中段、朝向側前方一點。
+   * fieldPointFromPlayer 的 ox 以朝左為準；朝右時 x = feetX - ox，故 ox 負值＝偏右。
    */
-  function launchPointFromEffect(fieldEl, playerEl) {
-    // 連續施放時 DOM 上可能有多個 cast stage，固定用玩家腳底較穩
+  function launchPointFromEffect(fieldEl, playerEl, facingRight = true) {
+    const offset = [-58, -24];
     if (typeof SkillEffectPlayer !== 'undefined'
       && typeof SkillEffectPlayer.fieldPointFromPlayer === 'function') {
-      return SkillEffectPlayer.fieldPointFromPlayer(fieldEl, playerEl, [0, 0], true);
+      return SkillEffectPlayer.fieldPointFromPlayer(fieldEl, playerEl, offset, facingRight);
     }
-    return { x: 120, y: 140 };
+    return { x: 120, y: 100 };
   }
 
   function mobPoint(fieldEl, mob) {
@@ -354,7 +391,7 @@ const SkillBallCast = (() => {
     return fieldEl;
   }
 
-  function createSpriteStage(fieldEl, frames, facingRight) {
+  function createSpriteStage(fieldEl, frames, facingRight, opts = {}) {
     const list = (frames || []).filter((f) => f?.src);
     if (!list.length) return null;
     const layer = skillFxLayer(fieldEl);
@@ -364,7 +401,10 @@ const SkillBallCast = (() => {
     const anim = createAnimImg(list, 'idle-skill-fx-sprite');
     if (!anim) return null;
     stage.appendChild(anim.img);
-    stage.style.transform = facingRight ? 'scaleX(-1)' : 'none';
+    // 飛向目標時由 travelToPoint 旋轉對準，不先依面向鏡像
+    if (!opts.skipFacingFlip) {
+      stage.style.transform = facingRight ? 'scaleX(-1)' : 'none';
+    }
     layer.appendChild(stage);
     return { stage, stop: anim.stop };
   }
@@ -493,6 +533,79 @@ const SkillBallCast = (() => {
     return { start: () => requestAnimationFrame(step) };
   }
 
+  /**
+   * 出矢點 → 目標點直線飛行（參考閃電連擊 from→to）。
+   * 依飛行方向旋轉球體，不再固定水平／垂直。
+   */
+  function travelToPoint(opts) {
+    const {
+      fromX,
+      fromY,
+      toX,
+      toY,
+      speedPxPerMs = 18 / 30,
+      stage,
+      onReach,
+    } = opts;
+    const endX = Number(toX);
+    const endY = Number(toY);
+    if (!stage) {
+      if (typeof onReach === 'function') onReach({ x: endX, y: endY });
+      return { start: () => {} };
+    }
+
+    const dx = endX - fromX;
+    const dy = endY - fromY;
+    const dist = Math.hypot(dx, dy);
+    if (!(dist > 1)) {
+      stage.style.left = `${endX}px`;
+      stage.style.top = `${endY}px`;
+      stage.remove();
+      if (typeof onReach === 'function') onReach({ x: endX, y: endY });
+      return { start: () => {} };
+    }
+
+    const ux = dx / dist;
+    const uy = dy / dist;
+    const deg = (Math.atan2(dy, dx) * 180) / Math.PI;
+    // 素材預設朝右；旋轉對準目標（同閃電連擊 beam 的 atan2）
+    stage.style.transformOrigin = '50% 50%';
+    stage.style.transform = `rotate(${deg}deg)`;
+    stage.style.left = `${fromX}px`;
+    stage.style.top = `${fromY}px`;
+
+    let traveled = 0;
+    let lastTs = 0;
+    let done = false;
+    const hitRadius = 28;
+
+    const step = (ts) => {
+      if (done) return;
+      if (!lastTs) lastTs = ts;
+      const dt = Math.min(50, Math.max(0, ts - lastTs));
+      lastTs = ts;
+
+      traveled += Math.max(0, speedPxPerMs) * dt;
+      if (traveled >= dist - hitRadius) {
+        done = true;
+        stage.remove();
+        if (typeof onReach === 'function') onReach({ x: endX, y: endY });
+        return;
+      }
+      if (traveled > dist + 800) {
+        done = true;
+        stage.remove();
+        if (typeof onReach === 'function') onReach({ x: endX, y: endY });
+        return;
+      }
+      stage.style.left = `${fromX + ux * traveled}px`;
+      stage.style.top = `${fromY + uy * traveled}px`;
+      requestAnimationFrame(step);
+    };
+
+    return { start: () => requestAnimationFrame(step) };
+  }
+
   function playSpecialAt(fieldEl, frames, pt, facingRight) {
     if (!frames?.length || typeof SkillEffectPlayer === 'undefined') return;
     SkillEffectPlayer.playAtField({
@@ -606,15 +719,20 @@ const SkillBallCast = (() => {
       playerEl,
       fx = {},
       plan,
+      skill = null,
+      level = 1,
       mobs = [],
       getMobs,
       maxTargets = 1,
       facingRight = true,
-      onHit,
+      onHit: onHitOpt,
       onDone,
       onChainBegin,
       visualOnly = false,
+      omitPlayerEffect = false,
     } = opts;
+    // 純動畫：仍飛投射物，但不觸發 onHit 結算
+    const onHit = visualOnly ? null : onHitOpt;
 
     const mobList = () => (typeof getMobs === 'function' ? getMobs() : mobs);
 
@@ -627,27 +745,24 @@ const SkillBallCast = (() => {
       return false;
     }
 
+    const volleys = resolveBulletVolleys(skill, plan, level);
+
     // 背景：略過飛行／orb 持續，立刻對目前目標結算（避免 setTimeout／rAF 被節流）
     if (typeof document !== 'undefined' && document.hidden && !visualOnly) {
       const list = (typeof getMobs === 'function' ? getMobs() : mobs) || [];
       const victims = list.filter((m) => m && Number(m.hp) > 0).slice(0, Math.max(1, maxTargets));
-      victims.forEach((mob, i) => {
-        if (typeof onHit === 'function') onHit(mob, i, null);
-      });
-      // orb 在前景會多 tick；背景用 3 波近似，避免完全沒持續傷
-      if (plan.ballMode === 'orb') {
-        for (let wave = 1; wave < 3; wave += 1) {
-          victims.forEach((mob, i) => {
-            if (!mob || !(Number(mob.hp) > 0)) return;
-            if (typeof onHit === 'function') onHit(mob, i, null);
-          });
-        }
+      const waves = volleys ? volleys.count : (plan.ballMode === 'orb' ? 3 : 1);
+      for (let wave = 0; wave < waves; wave += 1) {
+        victims.forEach((mob, i) => {
+          if (!mob || !(Number(mob.hp) > 0)) return;
+          if (typeof onHit === 'function') onHit(mob, i, null, { volleyIndex: wave });
+        });
       }
       finish();
       return true;
     }
 
-    const effectFrames = fx.effect || [];
+    const effectFrames = omitPlayerEffect ? [] : (fx.effect || []);
 
     if (plan.ballMode === 'orb') {
       if (effectFrames.length && typeof SkillEffectPlayer !== 'undefined') {
@@ -672,15 +787,16 @@ const SkillBallCast = (() => {
       return true;
     }
 
-    const launchMs = scaleRealMs(Math.max(0, Number(plan.launchMs) || 0));
+    const launchMs = omitPlayerEffect
+      ? 0
+      : scaleRealMs(Math.max(0, Number(plan.launchMs) || 0));
     const speed = (Number(plan.speedPxPerMs) || (18 / 30)) * gameSpeedMult();
-    const aoeRadius = Math.max(40, Number(plan.aoeRadius) || 100);
     const chainMax = plan.chain ? Math.max(1, maxTargets) : 1;
 
     if (effectFrames.length && typeof SkillEffectPlayer !== 'undefined') {
       SkillEffectPlayer.playOnPlayer(effectFrames, { playerEl });
     }
-    if (fx.effect0?.length && typeof SkillEffectPlayer !== 'undefined') {
+    if (!omitPlayerEffect && fx.effect0?.length && typeof SkillEffectPlayer !== 'undefined') {
       SkillEffectPlayer.playOnPlayer(fx.effect0, { playerEl });
     }
 
@@ -691,152 +807,298 @@ const SkillBallCast = (() => {
       : [spriteFrames];
 
     ensureFxPreload(preload).then(() => {
-      setTimeout(() => {
-        const spawn = launchPointFromEffect(fieldEl, playerEl);
+      const spawn = launchPointFromEffect(fieldEl, playerEl, facingRight);
+      const perTargetArrows = !!(skill?.multiTargeting || skill?.rectBasedOnTarget);
+      const piercingArrows = !!skill?.piercing;
+
+      const flyOneArrow = (fromX, fromY, victim, volleyIndex, targetIndex, onArrowDone) => {
+        const doneArrow = () => {
+          if (typeof onArrowDone === 'function') onArrowDone();
+        };
+        if (!victim?.mob) {
+          doneArrow();
+          return;
+        }
+        const mover = createSpriteStage(fieldEl, spriteFrames, facingRight, { skipFacingFlip: true });
+        if (!mover) {
+          if (typeof onHit === 'function') {
+            onHit(victim.mob, targetIndex, { x: victim.x, y: victim.y }, { volleyIndex });
+          }
+          doneArrow();
+          return;
+        }
+        // 微幅錯開發射 Y，多箭並飛時較好辨識
+        const jitterY = (targetIndex % 3) * 4 - 4;
+        travelToPoint({
+          fromX,
+          fromY: fromY + jitterY,
+          toX: victim.x,
+          toY: victim.y,
+          speedPxPerMs: speed,
+          stage: mover.stage,
+          onReach: () => {
+            mover.stop?.();
+            const hitPt = { x: victim.x, y: victim.y };
+            if (plan.specialOnFirstHit && fx.special?.frames?.length && targetIndex === 0) {
+              playSpecialAt(fieldEl, fx.special.frames, hitPt, facingRight);
+            }
+            if (typeof onHit === 'function') {
+              onHit(victim.mob, targetIndex, hitPt, { volleyIndex });
+            }
+            doneArrow();
+          },
+        }).start();
+      };
+
+      /** 急速雙擊等：每一波對「每一隻」目標各射一箭 */
+      const runPerTargetVolley = (volleyIndex, onBoltDone) => {
+        const victims = targetsByCount(fieldEl, mobList(), maxTargets);
+        const doneBolt = () => {
+          if (typeof onBoltDone === 'function') onBoltDone();
+          else finish();
+        };
+        if (!victims.length) {
+          doneBolt();
+          return;
+        }
+        let left = victims.length;
+        const mark = () => {
+          left -= 1;
+          if (left <= 0) doneBolt();
+        };
+        victims.forEach((v, i) => {
+          flyOneArrow(spawn.x, spawn.y, v, volleyIndex, i, mark);
+        });
+      };
+
+      /** 精準光速神弩：一箭貫穿多隻（依佇列順序飛過去） */
+      const runPierceVolley = (volleyIndex, onBoltDone) => {
+        const victims = targetsByQueue(fieldEl, mobList(), maxTargets);
+        const doneBolt = () => {
+          if (typeof onBoltDone === 'function') onBoltDone();
+          else finish();
+        };
+        if (!victims.length) {
+          doneBolt();
+          return;
+        }
         let fromX = spawn.x;
         let fromY = spawn.y;
-
-        const runEnergyBolt = () => {
-          const victims = targetsByCount(fieldEl, mobList(), maxTargets);
-          if (!victims.length) {
-            finish();
+        const runSeg = (segIdx) => {
+          if (segIdx >= victims.length) {
+            doneBolt();
             return;
           }
-          const first = victims[0];
-          const flyY = fromY;
-          const mover = createSpriteStage(fieldEl, spriteFrames, facingRight);
+          const v = victims[segIdx];
+          const mover = createSpriteStage(fieldEl, spriteFrames, facingRight, { skipFacingFlip: true });
           if (!mover) {
-            victims.forEach((v, i) => {
-              if (typeof onHit === 'function') onHit(v.mob, i, { x: v.x, y: v.y });
-            });
-            finish();
+            if (typeof onHit === 'function') {
+              onHit(v.mob, segIdx, { x: v.x, y: v.y }, { volleyIndex });
+            }
+            fromX = v.x;
+            fromY = v.y;
+            runSeg(segIdx + 1);
             return;
           }
-          travelHorizontal({
+          travelToPoint({
             fromX,
-            fromY: flyY,
-            toX: first.x,
-            speedPxPerMs: speed,
-            facingRight,
+            fromY,
+            toX: v.x,
+            toY: v.y,
+            speedPxPerMs: speed * 1.15,
             stage: mover.stage,
             onReach: () => {
               mover.stop?.();
-              const hitPt = { x: first.x, y: first.y };
-              if (plan.specialOnFirstHit && fx.special?.frames?.length) {
-                playSpecialAt(fieldEl, fx.special.frames, hitPt, facingRight);
+              if (typeof onHit === 'function') {
+                onHit(v.mob, segIdx, { x: v.x, y: v.y }, { volleyIndex });
               }
-              victims.forEach((v, i) => {
-                if (typeof onHit === 'function') onHit(v.mob, i, hitPt);
-              });
-              finish();
+              fromX = v.x;
+              fromY = v.y;
+              runSeg(segIdx + 1);
+            },
+          }).start();
+        };
+        runSeg(0);
+      };
+
+      const runEnergyBolt = (volleyIndex = 0, onBoltDone) => {
+        if (perTargetArrows) {
+          runPerTargetVolley(volleyIndex, onBoltDone);
+          return;
+        }
+        if (piercingArrows) {
+          runPierceVolley(volleyIndex, onBoltDone);
+          return;
+        }
+        const victims = targetsByCount(fieldEl, mobList(), maxTargets);
+        const doneBolt = () => {
+          if (typeof onBoltDone === 'function') onBoltDone();
+          else finish();
+        };
+        if (!victims.length) {
+          doneBolt();
+          return;
+        }
+        const first = victims[0];
+        const mover = createSpriteStage(fieldEl, spriteFrames, facingRight, { skipFacingFlip: true });
+        if (!mover) {
+          victims.forEach((v, i) => {
+            if (typeof onHit === 'function') {
+              onHit(v.mob, i, { x: v.x, y: v.y }, { volleyIndex });
+            }
+          });
+          doneBolt();
+          return;
+        }
+        travelToPoint({
+          fromX: spawn.x,
+          fromY: spawn.y,
+          toX: first.x,
+          toY: first.y,
+          speedPxPerMs: speed,
+          stage: mover.stage,
+          onReach: () => {
+            mover.stop?.();
+            const hitPt = { x: first.x, y: first.y };
+            if (plan.specialOnFirstHit && fx.special?.frames?.length) {
+              playSpecialAt(fieldEl, fx.special.frames, hitPt, facingRight);
+            }
+            victims.forEach((v, i) => {
+              if (typeof onHit === 'function') {
+                onHit(v.mob, i, hitPt, { volleyIndex });
+              }
+            });
+            doneBolt();
+          },
+        }).start();
+      };
+
+      const runBulletVolleys = () => {
+        let cumulative = 0;
+        let remaining = volleys.count;
+        const markDone = () => {
+          remaining -= 1;
+          if (remaining <= 0) finish();
+        };
+        for (let i = 0; i < volleys.count; i += 1) {
+          cumulative += Math.max(0, Number(volleys.delaysMs[i]) || 0);
+          const waitMs = scaleRealMs(cumulative);
+          const volleyIndex = i;
+          setTimeout(() => {
+            runEnergyBolt(volleyIndex, markDone);
+          }, waitMs);
+        }
+      };
+
+      const runInstantBeam = () => {
+        const count = Math.max(1, Number(plan.instantTargets) || maxTargets);
+        const victims = targetsByQueue(fieldEl, mobList(), count);
+        if (!victims.length) {
+          finish();
+          return;
+        }
+        const end = victims.reduce(
+          (far, v) => (facingRight ? (v.x > far.x ? v : far) : (v.x < far.x ? v : far)),
+          victims[0],
+        );
+        const lenScale = Math.max(1, Number(plan.instantBeamLengthScale) || 1);
+        const beamFx = placeBeamSegment(
+          fieldEl,
+          beam,
+          spawn.x,
+          spawn.y,
+          end.x,
+          end.y,
+          { lengthScale: lenScale },
+        );
+        const holdMs = scaleRealMs(Math.max(120, Number(plan.instantBeamHoldMs) || 180));
+        setTimeout(() => {
+          victims.forEach((v, i) => {
+            if (typeof onHit === 'function') onHit(v.mob, i, { x: v.x, y: v.y });
+          });
+          beamFx?.stop?.();
+          finish();
+        }, holdMs);
+      };
+
+      const runChain = () => {
+        const chainRange = Math.max(280, Number(plan.chainRangePx) || 420);
+        const firstRange = Math.max(chainRange, Number(plan.chainFirstRangePx) || Math.round(chainRange * 1.4));
+        const path = buildChainPath(
+          fieldEl,
+          mobList(),
+          chainMax,
+          chainRange,
+          firstRange,
+          spawn.x,
+          spawn.y,
+        );
+        if (!path.length) {
+          finish();
+          return;
+        }
+        if (typeof onChainBegin === 'function') onChainBegin(path);
+
+        let fromX = spawn.x;
+        let fromY = spawn.y;
+
+        const runSeg = (segIdx) => {
+          if (segIdx >= path.length) {
+            finish();
+            return;
+          }
+          const tgt = path[segIdx];
+          const toX = tgt.x;
+          const toY = tgt.y;
+
+          if (plan.ballMode === 'beam') {
+            const beamFx = placeBeamSegment(fieldEl, beam, fromX, fromY, toX, toY);
+            const holdMs = scaleRealMs(120);
+            setTimeout(() => {
+              beamFx?.stop?.();
+              if (typeof onHit === 'function') onHit(tgt.mob, segIdx, { x: toX, y: toY });
+              fromX = toX;
+              fromY = toY;
+              runSeg(segIdx + 1);
+            }, holdMs);
+            return;
+          }
+
+          const mover = createSpriteStage(fieldEl, spriteFrames, facingRight, { skipFacingFlip: true });
+          if (!mover) {
+            finish();
+            return;
+          }
+          travelToPoint({
+            fromX,
+            fromY,
+            toX,
+            toY,
+            speedPxPerMs: speed,
+            stage: mover.stage,
+            onReach: () => {
+              mover.stop?.();
+              if (typeof onHit === 'function') onHit(tgt.mob, segIdx, { x: toX, y: toY });
+              fromX = toX;
+              fromY = toY;
+              runSeg(segIdx + 1);
             },
           }).start();
         };
 
-        const runInstantBeam = () => {
-          const count = Math.max(1, Number(plan.instantTargets) || maxTargets);
-          const victims = targetsByQueue(fieldEl, mobList(), count);
-          if (!victims.length) {
-            finish();
-            return;
-          }
-          const end = victims.reduce(
-            (far, v) => (facingRight ? (v.x > far.x ? v : far) : (v.x < far.x ? v : far)),
-            victims[0],
-          );
-          const lenScale = Math.max(1, Number(plan.instantBeamLengthScale) || 1);
-          const beamFx = placeBeamSegment(
-            fieldEl,
-            beam,
-            spawn.x,
-            spawn.y,
-            end.x,
-            end.y,
-            { lengthScale: lenScale },
-          );
-          const holdMs = scaleRealMs(Math.max(120, Number(plan.instantBeamHoldMs) || 180));
-          setTimeout(() => {
-            victims.forEach((v, i) => {
-              if (typeof onHit === 'function') onHit(v.mob, i, { x: v.x, y: v.y });
-            });
-            beamFx?.stop?.();
-            finish();
-          }, holdMs);
-        };
+        runSeg(0);
+      };
 
-        const runChain = () => {
-          const chainRange = Math.max(280, Number(plan.chainRangePx) || 420);
-          const firstRange = Math.max(chainRange, Number(plan.chainFirstRangePx) || Math.round(chainRange * 1.4));
-          // 前搖結束再鎖路徑：連續第二發時第一發可能仍佔前排，延後選目標較準
-          const path = buildChainPath(
-            fieldEl,
-            mobList(),
-            chainMax,
-            chainRange,
-            firstRange,
-            spawn.x,
-            spawn.y,
-          );
-          if (!path.length) {
-            finish();
-            return;
-          }
-          if (typeof onChainBegin === 'function') onChainBegin(path);
+      if (volleys) {
+        runBulletVolleys();
+        return;
+      }
 
-          let fromX = spawn.x;
-          let fromY = spawn.y;
-
-          const runSeg = (segIdx) => {
-            if (segIdx >= path.length) {
-              finish();
-              return;
-            }
-            const tgt = path[segIdx];
-            const toX = tgt.x;
-            const toY = tgt.y;
-
-            if (plan.ballMode === 'beam') {
-              const beamFx = placeBeamSegment(fieldEl, beam, fromX, fromY, toX, toY);
-              const holdMs = scaleRealMs(120);
-              setTimeout(() => {
-                beamFx?.stop?.();
-                if (typeof onHit === 'function') onHit(tgt.mob, segIdx, { x: toX, y: toY });
-                fromX = toX;
-                fromY = toY;
-                runSeg(segIdx + 1);
-              }, holdMs);
-              return;
-            }
-
-            const mover = createSpriteStage(fieldEl, spriteFrames, facingRight);
-            if (!mover) {
-              finish();
-              return;
-            }
-            travelHorizontal({
-              fromX,
-              fromY,
-              toX,
-              speedPxPerMs: speed,
-              facingRight,
-              stage: mover.stage,
-              onReach: () => {
-                mover.stop?.();
-                if (typeof onHit === 'function') onHit(tgt.mob, segIdx, { x: toX, y: toY });
-                fromX = toX;
-                fromY = toY;
-                runSeg(segIdx + 1);
-              },
-            }).start();
-          };
-
-          runSeg(0);
-        };
-
+      setTimeout(() => {
         if (plan.instantBeam) runInstantBeam();
-        else if (plan.aoeOnSpecial && !plan.chain) runEnergyBolt();
+        else if (plan.aoeOnSpecial && !plan.chain) runEnergyBolt(0);
         else if (plan.chain) runChain();
-        else runEnergyBolt();
+        else runEnergyBolt(0);
       }, launchMs);
     });
 
@@ -846,6 +1108,7 @@ const SkillBallCast = (() => {
   return {
     buildPlan,
     isBallCastSkill,
+    resolveBulletVolleys,
     playBallCast,
     framesDurationMs,
   };
@@ -853,4 +1116,7 @@ const SkillBallCast = (() => {
 
 if (typeof window !== 'undefined') {
   window.SkillBallCast = SkillBallCast;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = SkillBallCast;
 }

@@ -168,7 +168,14 @@ const SkillFormula = (() => {
     const c = common && typeof common === 'object' ? common : {};
     const x = Math.max(0, Number(level) || 0);
     const damagePct = evalExpr(c.damage, { x });
-    const attackCount = Math.max(1, Math.floor(evalExpr(c.attackCount != null ? c.attackCount : 1, { x })) || 1);
+    // 雙弩等：無 attackCount 時以 bulletCount 當段數（急速雙擊／光速神弩）
+    const hasAttackCount = c.attackCount != null && String(c.attackCount) !== '';
+    const hasBulletCount = c.bulletCount != null && String(c.bulletCount) !== '';
+    const attackCountSrc = hasAttackCount ? c.attackCount : (hasBulletCount ? c.bulletCount : 1);
+    const attackCount = Math.max(1, Math.floor(evalExpr(attackCountSrc, { x })) || 1);
+    const bulletCount = hasBulletCount
+      ? Math.max(1, Math.floor(evalExpr(c.bulletCount, { x })) || 1)
+      : 0;
     const mobCount = Math.max(1, Math.floor(evalExpr(c.mobCount != null ? c.mobCount : 1, { x })) || 1);
     const mpCon = Math.max(0, Math.floor(evalExpr(c.mpCon != null ? c.mpCon : 0, { x })) || 0);
     const cooltimeSec = resolveCooltimeSec(c, x);
@@ -181,6 +188,7 @@ const SkillFormula = (() => {
     return {
       damagePct,
       attackCount,
+      bulletCount,
       mobCount,
       mpCon,
       cooltimeSec,
@@ -206,6 +214,10 @@ const SkillFormula = (() => {
       intX: num('intX') + num('indieInt'),
       lukX: num('lukX') + num('indieLuk'),
       damR: num('damR'),
+      indieDamR: num('indieDamR'),
+      indiePadR: num('indiePadR'),
+      emhp: num('emhp'),
+      damPlus: num('damPlus'),
       bdR: num('bdR'),
       pdR: num('pdR'),
       mdR: num('mdR'),
@@ -253,13 +265,26 @@ const SkillFormula = (() => {
       s: num('s'),
       v: num('v'),
       y: num('y'),
+      z: num('z'),
       ballDelayMs: Math.max(0, Math.floor(num('ballDelay')) || 0),
       xVal: num('x'),
       actionSpeed: num('actionSpeed'),
       damAbsorbShieldR: num('damAbsorbShieldR'),
       indiePowerGuard: num('indiePowerGuard'),
+      asrR: num('asrR'),
+      terR: num('terR'),
       damagePct: num('damage'),
-      attackCount: Math.max(1, Math.floor(num('attackCount', 1)) || 1),
+      attackCount: (() => {
+        const hasAtk = c.attackCount != null && String(c.attackCount) !== '';
+        const hasBullet = c.bulletCount != null && String(c.bulletCount) !== '';
+        if (hasAtk) return Math.max(1, Math.floor(num('attackCount', 1)) || 1);
+        if (hasBullet) return Math.max(1, Math.floor(num('bulletCount', 1)) || 1);
+        return 1;
+      })(),
+      bulletCount: (() => {
+        if (c.bulletCount == null || String(c.bulletCount) === '') return 0;
+        return Math.max(1, Math.floor(num('bulletCount', 1)) || 1);
+      })(),
       mobCount: Math.max(1, Math.floor(num('mobCount', 1)) || 1),
       targetPlus: Math.max(0, Math.floor(num('targetPlus')) || 0),
       /** 楓葉祝福等：直接投入 AP 的能力值 +X% */

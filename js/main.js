@@ -600,6 +600,11 @@ function handleGlobalEscapeKey() {
       close: () => EquipCraftPanel.setOpen(false),
     },
     {
+      id: 'jobChangePanel',
+      isOpen: () => typeof JobChangePanel !== 'undefined' && JobChangePanel.isOpen?.(),
+      close: () => JobChangePanel.setOpen(false),
+    },
+    {
       id: 'idleDungeonRoot',
       isOpen: () => typeof IdleDungeon !== 'undefined' && IdleDungeon.isOpen?.(),
       close: () => IdleDungeon.setOpen(false),
@@ -615,7 +620,7 @@ function handleGlobalEscapeKey() {
       close: () => IdleBoss.setArenaOpen?.(false),
     },
     {
-      id: 'disassemblePanel',
+      id: 'disassembleRoot',
       isOpen: () => typeof DisassemblePanel !== 'undefined' && DisassemblePanel.isOpen?.(),
       close: () => DisassemblePanel.setOpen(false),
     },
@@ -816,6 +821,12 @@ function loadEquipToSlot(itemId, slotIndex) {
   if (typeof EquipTooltipModule !== 'undefined') {
     EquipTooltipModule.hide(true);
   }
+  if (typeof InventoryModule !== 'undefined' && InventoryModule.isEquipItemLocked?.(slotIndex)) {
+    if (typeof addLog === 'function') {
+      addLog('[強化] 此裝備已便利鎖定，無法放入強化槽。', 'log-fail');
+    }
+    return;
+  }
   if (currentEnchantItem) {
     if (!unloadEquipFromSlot()) return;
   }
@@ -841,6 +852,12 @@ function loadEquipToSlot(itemId, slotIndex) {
 /** 從裝備欄身體槽放入強化台（呼叫端已清空該槽；強化槽應已空） */
 function loadEquipFromWearEntry(entry) {
   if (!entry?.itemId) return false;
+  if (entry.state?.itemLocked || entry.itemLocked) {
+    if (typeof addLog === 'function') {
+      addLog('[強化] 此裝備已便利鎖定，無法放入強化槽。', 'log-fail');
+    }
+    return false;
+  }
   if (typeof EquipTooltipModule !== 'undefined') {
     EquipTooltipModule.hide(true);
   }
@@ -1277,6 +1294,13 @@ function collectAppNavAndLevelUpUrls() {
   return urls;
 }
 
+function collectIdleBossListUrls() {
+  if (typeof IdleBoss !== 'undefined' && typeof IdleBoss.collectListPreloadUrls === 'function') {
+    return IdleBoss.collectListPreloadUrls();
+  }
+  return [];
+}
+
 function collectEssentialEnchantChromeUrls() {
   const urls = [];
 
@@ -1286,6 +1310,7 @@ function collectEssentialEnchantChromeUrls() {
   IDLE_PLAYER_DEATH_CHROME.forEach((src) => urls.push(src));
   IDLE_UI_TIMER_CHROME.forEach((src) => urls.push(src));
   collectAppNavAndLevelUpUrls().forEach((src) => urls.push(src));
+  collectIdleBossListUrls().forEach((src) => urls.push(src));
 
   ENCHANT_TAB_BUTTON_PREFIXES.forEach((prefix) => {
     ENCHANT_TAB_BUTTON_STATES.forEach((state) => {
@@ -2578,6 +2603,19 @@ window.addEventListener('DOMContentLoaded', () => {
       storageKey: 'ui.drag.inventoryPanel',
       title: '拖曳背包',
     });
+    PanelDrag.enable(document.getElementById('trunkPanel'), {
+      handle: '#trunkDragHandle',
+      ignoreSelector: [
+        '.trunk-close-btn',
+        '.trunk-btn',
+        '.trunk-tab',
+        '.trunk-scroll-thumb',
+        'button',
+      ].join(', '),
+      storageKey: 'ui.drag.trunkPanel',
+      title: '拖曳倉庫',
+    });
+    if (typeof initTrunk === 'function') initTrunk();
     if (typeof ItemRequestPanel !== 'undefined') {
       ItemRequestPanel.init();
     }

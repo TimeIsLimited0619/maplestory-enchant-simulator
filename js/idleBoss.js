@@ -142,6 +142,93 @@ const IdleBoss = (() => {
     return `${BASE}/${id}/Icon/normal/0.png`;
   }
 
+  const BT_STATES = ['normal', 'mouseOver', 'checked'];
+  let listPreloadPromise = null;
+  /** 當前場地動畫預載是否完成（未完成前不開戰） */
+  let arenaAssetsReady = false;
+  /** @type {Promise<void>|null} */
+  let fightWarmPromise = null;
+  let fightWarmListId = '';
+
+  /** 列表按鈕三態＋選取後的 mob／Icon（開面板前預載，避免 GitHub Pages 閃爍） */
+  function collectListPreloadUrls() {
+    const urls = [];
+    list().forEach((boss) => {
+      const id = String(boss?.id ?? '').trim();
+      if (!id) return;
+      BT_STATES.forEach((state) => urls.push(btUrl(id, state)));
+      urls.push(mobUrl(id));
+      urls.push(bossIconUrl(id));
+    });
+    return [...new Set(urls.filter(Boolean))];
+  }
+
+  function warmListAssets() {
+    if (listPreloadPromise) return listPreloadPromise;
+    const urls = collectListPreloadUrls();
+    if (!urls.length) {
+      listPreloadPromise = Promise.resolve();
+      return listPreloadPromise;
+    }
+    if (typeof EnchantImagePreload !== 'undefined' && EnchantImagePreload.preloadMany) {
+      listPreloadPromise = EnchantImagePreload.preloadMany(urls).catch(() => {});
+    } else {
+      listPreloadPromise = Promise.all(urls.map((url) => new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = url;
+      }))).then(() => {});
+    }
+    return listPreloadPromise;
+  }
+
+  function collectArenaMapUrls(listId) {
+    const urls = [];
+    const addArt = (artId) => {
+      const id = String(artId || '').trim();
+      if (!id) return;
+      urls.push(artLayerUrl(id, 'back'), artLayerUrl(id, 'obj'), artFlatUrl(id));
+    };
+    const boss = getBoss(listId);
+    addArt(boss?.artId);
+    if (typeof IdleBossFight !== 'undefined' && IdleBossFight.collectMapArtIds) {
+      IdleBossFight.collectMapArtIds(listId).forEach(addArt);
+    }
+    return [...new Set(urls.filter(Boolean))];
+  }
+
+  function collectFightMobIds(listId) {
+    if (typeof IdleBossFight !== 'undefined' && IdleBossFight.collectVisualMobIds) {
+      return IdleBossFight.collectVisualMobIds(listId);
+    }
+    return (wzRow(listId)?.parts || []).map((p) => String(p.mobId || '')).filter(Boolean);
+  }
+
+  /** 入場時預載本場 BOSS 動畫＋地圖層，避免換幀卡住 */
+  function warmFightAssets(listId) {
+    const id = String(listId || '').trim();
+    if (!id) return Promise.resolve();
+    if (fightWarmListId === id && fightWarmPromise) return fightWarmPromise;
+
+    const tasks = [];
+    if (typeof IdleBossFight !== 'undefined' && IdleBossFight.warmAssets) {
+      tasks.push(IdleBossFight.warmAssets(id));
+    } else if (typeof IdleMobAnim !== 'undefined' && IdleMobAnim.preloadMob) {
+      collectFightMobIds(id).forEach((mobId) => {
+        tasks.push(IdleMobAnim.preloadMob(mobId));
+      });
+    }
+    const mapUrls = collectArenaMapUrls(id);
+    if (mapUrls.length && typeof EnchantImagePreload !== 'undefined' && EnchantImagePreload.preloadMany) {
+      tasks.push(EnchantImagePreload.preloadMany(mapUrls).catch(() => {}));
+    }
+
+    fightWarmListId = id;
+    fightWarmPromise = Promise.all(tasks).then(() => {}).catch(() => {});
+    return fightWarmPromise;
+  }
+
   function playerDisplayName() {
     if (typeof AppNavSidebar !== 'undefined' && AppNavSidebar.readName) {
       return AppNavSidebar.readName() || '玩家';
@@ -1026,9 +1113,10 @@ const IdleBoss = (() => {
       modal.setAttribute('aria-hidden', show ? 'false' : 'true');
     }
     if (btn) {
-      btn.disabled = !show;
-      btn.textContent = '開始';
-      btn.classList.remove('is-running');
+      const warming = show && !arenaAssetsReady;
+      btn.disabled = !show || warming;
+      btn.textContent = warming ? '載入中…' : '開始';
+      btn.classList.toggle('is-running', warming);
     }
     syncFailModal();
   }
@@ -1350,6 +1438,17 @@ const IdleBoss = (() => {
     }
     if (want) {
       if (!arenaOpen || !arenaBossId) return;
+      if (!arenaAssetsReady) {
+        const id = arenaBossId;
+        warmFightAssets(id).finally(() => {
+          if (!arenaOpen || arenaBossId !== id) return;
+          arenaAssetsReady = true;
+          syncStartBtn();
+          setArenaRunning(true);
+        });
+        syncStartBtn();
+        return;
+      }
       initArenaParts(arenaBossId);
       partAtkAcc = Object.create(null);
       playerAtkAcc = 0;
@@ -1535,29 +1634,78 @@ const IdleBoss = (() => {
       const list = (typeof SkillModifiers !== 'undefined' && SkillModifiers.listActiveBuffs)
         ? SkillModifiers.listActiveBuffs()
         : [];
+      const showStacks = typeof SkillModifiers === 'undefined'
+        || SkillModifiers.getShowStackBuffCounts?.() !== false;
       const live = new Set(list.map((b) => String(b.id)));
       buffHost.querySelectorAll('.idle-hunt-buff[data-buff-id]').forEach((el) => {
         if (!live.has(el.getAttribute('data-buff-id'))) el.remove();
       });
       list.forEach((buff) => {
         const id = String(buff.id);
-        let el = [...buffHost.querySelectorAll('.idle-hunt-buff')].find((n) => n.dataset.buffId === id) || null;
+        let el = [...buffHost.querySelectorAll('.idle-hunt-buff')].find(
+          (n) => n.getAttribute('data-buff-id') === id,
+        ) || null;
         if (!el) {
           el = document.createElement('div');
           el.className = 'idle-hunt-buff';
-          el.dataset.buffId = id;
-          el.title = buff.name || id;
-          const icon = buff.icon
-            || (typeof SkillCatalog !== 'undefined' ? SkillCatalog.getSkill?.(id)?.icon : '')
-            || '';
-          el.innerHTML = `
-            <img class="idle-hunt-buff__icon" alt="" draggable="false"${icon ? ` src="${icon}"` : ''}>
-            <span class="idle-hunt-buff__cd">0</span>
-          `;
+          el.setAttribute('data-buff-id', id);
           buffHost.appendChild(el);
         }
-        const cd = el.querySelector('.idle-hunt-buff__cd');
-        if (cd) cd.textContent = formatBuffRemain(buff.remainMs);
+        const stacks = Math.max(0, Math.floor(Number(buff.stacks) || 0));
+        const showStackBadge = showStacks && !!buff.isStackBuff && stacks > 0;
+        const hideTimer = !!buff.hideTimer;
+        el.title = showStackBadge
+          ? `${buff.name || id} ×${stacks}`
+          : (buff.name || id);
+        el.classList.toggle('is-stack-buff', !!buff.isStackBuff);
+        let icon = el.querySelector('.idle-hunt-buff__icon');
+        if (!icon) {
+          icon = document.createElement('img');
+          icon.className = 'idle-hunt-buff__icon';
+          icon.alt = '';
+          icon.draggable = false;
+          el.appendChild(icon);
+        }
+        const skillId = id.replace(/^combo:/, '');
+        const iconSrc = buff.icon
+          || (typeof SkillCatalog !== 'undefined' ? SkillCatalog.getSkill?.(skillId)?.icon : '')
+          || '';
+        if (iconSrc && icon.getAttribute('src') !== iconSrc) icon.setAttribute('src', iconSrc);
+        let stackEl = el.querySelector('.idle-hunt-buff__stacks');
+        if (!stackEl) {
+          stackEl = document.createElement('span');
+          stackEl.className = 'idle-hunt-buff__stacks';
+          el.appendChild(stackEl);
+        }
+        let cd = el.querySelector('.idle-hunt-buff__cd');
+        if (!cd) {
+          cd = document.createElement('span');
+          cd.className = 'idle-hunt-buff__cd';
+          el.appendChild(cd);
+        }
+        if (hideTimer && showStackBadge) {
+          stackEl.hidden = true;
+          cd.hidden = false;
+          cd.removeAttribute('hidden');
+          cd.textContent = String(stacks);
+          cd.classList.add('idle-hunt-buff__cd--stacks');
+        } else {
+          cd.classList.remove('idle-hunt-buff__cd--stacks');
+          if (showStackBadge) {
+            stackEl.hidden = false;
+            stackEl.removeAttribute('hidden');
+            stackEl.textContent = String(stacks);
+          } else {
+            stackEl.hidden = true;
+          }
+          if (hideTimer || !(Number(buff.remainMs) > 0)) {
+            cd.hidden = true;
+          } else {
+            cd.hidden = false;
+            cd.removeAttribute('hidden');
+            cd.textContent = formatBuffRemain(buff.remainMs);
+          }
+        }
       });
       buffHost.hidden = list.length === 0;
     }
@@ -1715,9 +1863,10 @@ const IdleBoss = (() => {
       }
       if (typeof IdlePlayerDeathFx !== 'undefined') IdlePlayerDeathFx.cancel?.();
       clearBossDrops(false);
-      initArenaParts(arenaBossId);
+      arenaAssetsReady = false;
+      fightWarmPromise = null;
+      fightWarmListId = '';
       resetBossFieldFade();
-      resetChallengeTimer(arenaBossId);
       if (typeof IdleHunt !== 'undefined') {
         IdleHunt.setPickerOpen?.(false);
         // 按下「挑戰」當下就暫停章節狩獵
@@ -1727,8 +1876,21 @@ const IdleBoss = (() => {
       if (typeof EquipCraftPanel !== 'undefined') EquipCraftPanel.setOpen?.(false);
       if (typeof DisassemblePanel !== 'undefined') DisassemblePanel.setOpen?.(false);
       mountHudHosts(true);
-      render();
+      // 先開場地殼層，動畫預載完成後再掛怪／開戰鈕可用
+      syncArenaChrome();
+      syncChrome();
       syncStartBtn();
+      const warmId = arenaBossId;
+      fadeBossField(1, 0);
+      warmFightAssets(warmId).finally(() => {
+        if (!arenaOpen || arenaBossId !== warmId) return;
+        arenaAssetsReady = true;
+        initArenaParts(warmId);
+        resetChallengeTimer(warmId);
+        render();
+        syncStartBtn();
+        fadeBossField(0, MAP_FADE_MS);
+      });
       return;
     }
     arenaOpen = false;
@@ -1741,6 +1903,9 @@ const IdleBoss = (() => {
     applyArenaMapOffset();
     arenaParts = null;
     arenaRunning = false;
+    arenaAssetsReady = false;
+    fightWarmPromise = null;
+    fightWarmListId = '';
     failModalOpen = false;
     deathFxPlaying = false;
     if (typeof IdlePlayerDeathFx !== 'undefined') IdlePlayerDeathFx.cancel?.();
@@ -1776,7 +1941,12 @@ const IdleBoss = (() => {
       if (typeof IdleDungeon !== 'undefined') IdleDungeon.setOpen?.(false);
       if (typeof EquipCraftPanel !== 'undefined') EquipCraftPanel.setOpen?.(false);
       if (typeof DisassemblePanel !== 'undefined') DisassemblePanel.setOpen?.(false);
-      render();
+      syncChrome();
+      warmListAssets().finally(() => {
+        if (!open || arenaOpen) return;
+        renderList();
+        renderMob();
+      });
     } else {
       hideRewardTips();
       if (arenaOpen) setArenaOpen(false);
@@ -1789,6 +1959,7 @@ const IdleBoss = (() => {
     ensureDom();
     ensureArenaDom();
     inited = true;
+    warmListAssets();
     bindRewardTooltips();
     const root = $('idleBossRoot');
     root?.addEventListener('click', (e) => {
@@ -1832,6 +2003,8 @@ const IdleBoss = (() => {
     init,
     setOpen,
     setArenaOpen,
+    collectListPreloadUrls,
+    warmListAssets,
     toggle() {
       init();
       if (arenaOpen) {
@@ -1848,6 +2021,7 @@ const IdleBoss = (() => {
     isOpen: () => open && !arenaOpen,
     isArenaOpen: () => arenaOpen,
     isRunning: () => arenaRunning,
+    syncBossOverlayBars,
     setRunning: setArenaRunning,
     closeAll() {
       exitConfirmPending = false;

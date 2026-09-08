@@ -78,6 +78,13 @@ const IdleHunt = (() => {
   const MAX_CATCH_UP_MS = 120000;
   /** 背景／補算每波最多跑幾步 */
   const CATCH_UP_BURST = 40;
+  /** 掛機自動釋放戰鬥視覺／圖片快取間隔 */
+  const MEM_RELEASE_MS = 45000;
+  /** 解碼圖快取軟上限（張） */
+  const IMAGE_CACHE_SOFT_MAX = 420;
+  let lastMemReleaseAt = 0;
+  /** @type {ReturnType<typeof setInterval>|null} */
+  let memReleaseTimer = null;
   let spawnSeq = 0;
   let mobWalkSeq = 0;
   let mobDamageSeq = 0;
@@ -450,6 +457,8 @@ const IdleHunt = (() => {
     const list = (typeof SkillModifiers !== 'undefined' && SkillModifiers.listActiveBuffs)
       ? SkillModifiers.listActiveBuffs()
       : [];
+    const showStacks = typeof SkillModifiers === 'undefined'
+      || SkillModifiers.getShowStackBuffCounts?.() !== false;
     const live = new Set(list.map((b) => String(b.id)));
     host.querySelectorAll('.idle-hunt-buff[data-buff-id]').forEach((el) => {
       if (!live.has(el.getAttribute('data-buff-id'))) el.remove();
@@ -457,23 +466,73 @@ const IdleHunt = (() => {
     // 右→左：DOM 先施放→後施放，配合 row-reverse 讓最新在最右
     list.forEach((buff) => {
       const id = String(buff.id);
-      let el = [...host.querySelectorAll('.idle-hunt-buff')].find((n) => n.dataset.buffId === id) || null;
+      let el = [...host.querySelectorAll('.idle-hunt-buff')].find(
+        (n) => n.getAttribute('data-buff-id') === id,
+      ) || null;
       if (!el) {
         el = document.createElement('div');
         el.className = 'idle-hunt-buff';
-        el.dataset.buffId = id;
-        el.title = buff.name || id;
-        const icon = buff.icon
-          || (typeof SkillCatalog !== 'undefined' ? SkillCatalog.getSkill?.(id)?.icon : '')
-          || '';
-        el.innerHTML = `
-          <img class="idle-hunt-buff__icon" alt="" draggable="false"${icon ? ` src="${icon}"` : ''}>
-          <span class="idle-hunt-buff__cd">0</span>
-        `;
+        el.setAttribute('data-buff-id', id);
         host.appendChild(el);
       }
-      const cd = el.querySelector('.idle-hunt-buff__cd');
-      if (cd) cd.textContent = formatBuffRemain(buff.remainMs);
+      const stacks = Math.max(0, Math.floor(Number(buff.stacks) || 0));
+      const showStackBadge = showStacks && !!buff.isStackBuff && stacks > 0;
+      const hideTimer = !!buff.hideTimer;
+      el.title = showStackBadge
+        ? `${buff.name || id} ×${stacks}`
+        : (buff.name || id);
+      el.classList.toggle('is-stack-buff', !!buff.isStackBuff);
+      let icon = el.querySelector('.idle-hunt-buff__icon');
+      if (!icon) {
+        icon = document.createElement('img');
+        icon.className = 'idle-hunt-buff__icon';
+        icon.alt = '';
+        icon.draggable = false;
+        el.appendChild(icon);
+      }
+      const skillId = id.replace(/^combo:/, '');
+      const iconSrc = buff.icon
+        || (typeof SkillCatalog !== 'undefined' ? SkillCatalog.getSkill?.(skillId)?.icon : '')
+        || '';
+      if (iconSrc && icon.getAttribute('src') !== iconSrc) icon.setAttribute('src', iconSrc);
+
+      let stackEl = el.querySelector('.idle-hunt-buff__stacks');
+      if (!stackEl) {
+        stackEl = document.createElement('span');
+        stackEl.className = 'idle-hunt-buff__stacks';
+        el.appendChild(stackEl);
+      }
+      let cd = el.querySelector('.idle-hunt-buff__cd');
+      if (!cd) {
+        cd = document.createElement('span');
+        cd.className = 'idle-hunt-buff__cd';
+        el.appendChild(cd);
+      }
+
+      // 無持續時間的堆疊（鬥氣）：層數放底部計時位置，較明顯
+      if (hideTimer && showStackBadge) {
+        stackEl.hidden = true;
+        cd.hidden = false;
+        cd.removeAttribute('hidden');
+        cd.textContent = String(stacks);
+        cd.classList.add('idle-hunt-buff__cd--stacks');
+      } else {
+        cd.classList.remove('idle-hunt-buff__cd--stacks');
+        if (showStackBadge) {
+          stackEl.hidden = false;
+          stackEl.removeAttribute('hidden');
+          stackEl.textContent = String(stacks);
+        } else {
+          stackEl.hidden = true;
+        }
+        if (hideTimer || !(Number(buff.remainMs) > 0)) {
+          cd.hidden = true;
+        } else {
+          cd.hidden = false;
+          cd.removeAttribute('hidden');
+          cd.textContent = formatBuffRemain(buff.remainMs);
+        }
+      }
     });
     host.hidden = list.length === 0;
   }
@@ -572,6 +631,15 @@ const IdleHunt = (() => {
       const p = IdleMobAnim.preloadAction?.(iconId, action);
       return p && typeof p.then === 'function' ? p : Promise.resolve();
     }));
+  }
+
+  /** BOSS 入場：預載全部動作幀（含 attack／skill），避免開戰換幀卡住 */
+  function preloadMobAllActions(iconId) {
+    if (!iconId || typeof IdleMobAnim === 'undefined') return Promise.resolve();
+    if (typeof IdleMobAnim.preloadMob === 'function') {
+      return IdleMobAnim.preloadMob(iconId);
+    }
+    return preloadMobIconActions(iconId);
   }
 
   function preloadZoneAssets(zone) {
@@ -1492,6 +1560,10 @@ const IdleHunt = (() => {
     if (fieldTransition?.kind === 'bossIntro' && fieldTransition.phase === 'warning') {
       return;
     }
+    // 靜默丟掉已死占槽者（獎勵應已在 applySkillMobStateSync／applyKill 發過）
+    state.queue = (state.queue || []).filter((m) => (
+      m && (Number(m.hp) > 0 || keepDamageTrialBossAlive(m))
+    ));
     if (state.huntMode === 'boss') {
       state.queue = state.queue.filter((mob) => mob.isBoss);
       if (!state.queue.length) {
@@ -1524,6 +1596,9 @@ const IdleHunt = (() => {
   function syncInventoryMesoDisplay() {
     if (typeof InventoryModule !== 'undefined') {
       InventoryModule.updateMesoDisplay?.();
+    }
+    if (typeof TrunkModule !== 'undefined' && TrunkModule.isOpen?.()) {
+      TrunkModule.updateMesoDisplay?.();
     }
   }
 
@@ -1814,7 +1889,8 @@ const IdleHunt = (() => {
     if (typeof UiCharacterInfo !== 'undefined'
       && typeof UiCharacterInfo.rollMobHitOutcome === 'function') {
       const outcome = UiCharacterInfo.rollMobHitOutcome(mobLevel);
-      if (outcome === 'miss') {
+      // BOSS 傷害不套用命中／迴避：不會 Miss（格擋仍生效）
+      if (outcome === 'miss' && !opts.isBoss) {
         showPlayerStatusLabel('Miss');
         return;
       }
@@ -1944,21 +2020,25 @@ const IdleHunt = (() => {
   function applySkillMobStateSync(kills) {
     const killSet = new Set(Array.isArray(kills) ? kills.filter(Boolean) : []);
     const remain = [];
+    const toKill = [];
     state.queue.forEach((m) => {
       if (!m) return;
       if (keepDamageTrialBossAlive(m)) {
         remain.push(m);
         return;
       }
-      if (killSet.has(m) || m.hp <= 0) applyKill(m);
+      if (killSet.has(m) || m.hp <= 0) toKill.push(m);
       else remain.push(m);
     });
+    // 先移出佇列再 applyKill，避免 applyKill→fillQueue 補怪後又被 remain 蓋掉
     state.queue = remain;
+    toKill.forEach((m) => applyKill(m));
     const front = state.queue[0];
     if (front && state.mobFrontUid !== front.uid) {
       state.mobFrontUid = front.uid;
       resetMobAtkAccums();
     }
+    fillQueue();
     syncComboOrbsUi();
     // 連鎖同幀可能多次 sync：合併到下一 animation frame 再 render，避免卡頓
     scheduleHuntRender();
@@ -2354,23 +2434,106 @@ const IdleHunt = (() => {
   }
 
   function clearFieldDrops(grantPending) {
-    if (typeof ItemDropController !== 'undefined') {
-      ItemDropController.clear({ grantPending: !!grantPending });
+    releaseCombatVisuals({ soft: false, grantPending: !!grantPending });
+  }
+
+  /**
+   * 釋放戰鬥相關視覺與解碼圖快取。
+   * soft：掛機中可呼叫——清傷害數字／暫態特效／修剪圖片，不中斷模擬、保留召喚 loop。
+   * hard：轉場／離場——等同原 clearFieldDrops。
+   */
+  function releaseCombatVisuals(opts = {}) {
+    const soft = opts.soft === true;
+    const grantPending = !!opts.grantPending;
+
+    if (typeof DamageNumber !== 'undefined') {
+      if (soft) {
+        DamageNumber.clear?.();
+        DamageNumber.pruneStaleStacks?.(5000);
+      } else {
+        DamageNumber.clear?.();
+      }
     }
     if (typeof LevelUpEffect !== 'undefined') {
       LevelUpEffect.stopAll?.();
     }
     if (typeof SkillEffectPlayer !== 'undefined') {
-      SkillEffectPlayer.stopAll?.();
+      if (soft) {
+        SkillEffectPlayer.stopTransientFx?.({ settleHits: true });
+      } else {
+        SkillEffectPlayer.stopAll?.();
+      }
+      SkillEffectPlayer.clearLocalPreloadCache?.();
     }
-    if (typeof DamageNumber !== 'undefined') {
-      DamageNumber.clear?.();
+    if (!soft && typeof ItemDropController !== 'undefined') {
+      ItemDropController.clear({ grantPending });
     }
-    const player = $('idleHuntField')?.querySelector('.idle-actor--player');
-    if (player && typeof IdleMobAnim !== 'undefined') {
-      IdleMobAnim.clearAreaWarning?.(player);
-      IdleMobAnim.clearPlayerHit?.(player);
+    if (typeof SkillMobStatus !== 'undefined') {
+      SkillMobStatus.prune?.();
     }
+    if (typeof EnchantImagePreload !== 'undefined') {
+      if (soft) {
+        EnchantImagePreload.softTrim?.(IMAGE_CACHE_SOFT_MAX);
+      } else {
+        // 轉場：較積極修剪，但不整庫清空（避免換圖後全白等回暖）
+        EnchantImagePreload.softTrim?.(Math.min(220, IMAGE_CACHE_SOFT_MAX));
+      }
+    }
+
+    if (!soft) {
+      const player = $('idleHuntField')?.querySelector('.idle-actor--player');
+      if (player && typeof IdleMobAnim !== 'undefined') {
+        IdleMobAnim.clearAreaWarning?.(player);
+        IdleMobAnim.clearPlayerHit?.(player);
+      }
+    }
+
+    // 回暖常用資源，降低 GC 後首波抽搐
+    try {
+      if (state.zoneId) preloadZoneAssets(state.zoneId);
+    } catch (_) { /* ignore */ }
+    try {
+      SkillEffectPlayer.warmUpCombatLoadout?.();
+    } catch (_) { /* ignore */ }
+
+    lastMemReleaseAt = (typeof performance !== 'undefined' && performance.now)
+      ? performance.now()
+      : Date.now();
+  }
+
+  function maybeAutoReleaseMemory(force) {
+    if (!force && !state.running) return;
+    const now = (typeof performance !== 'undefined' && performance.now)
+      ? performance.now()
+      : Date.now();
+    if (!force && lastMemReleaseAt > 0 && (now - lastMemReleaseAt) < MEM_RELEASE_MS) return;
+    // 前景且特效／傷害數字不多時略過，避免無謂閃爍
+    if (!force && typeof document !== 'undefined' && !document.hidden) {
+      const fxN = typeof SkillEffectPlayer !== 'undefined'
+        ? (Number(SkillEffectPlayer.activeInstanceCount?.()) || 0)
+        : 0;
+      const dmgN = typeof DamageNumber !== 'undefined'
+        ? (Number(DamageNumber.activeCount?.()) || 0)
+        : 0;
+      const imgN = typeof EnchantImagePreload !== 'undefined'
+        ? (Number(EnchantImagePreload.size?.()) || 0)
+        : 0;
+      if (fxN < 24 && dmgN < 80 && imgN < IMAGE_CACHE_SOFT_MAX) return;
+    }
+    releaseCombatVisuals({ soft: true });
+  }
+
+  function startMemReleaseTimer() {
+    if (memReleaseTimer != null) return;
+    memReleaseTimer = window.setInterval(() => {
+      maybeAutoReleaseMemory(false);
+    }, MEM_RELEASE_MS);
+  }
+
+  function stopMemReleaseTimer() {
+    if (memReleaseTimer == null) return;
+    window.clearInterval(memReleaseTimer);
+    memReleaseTimer = null;
   }
 
   function actorMarkup(kind, monster, index, point) {
@@ -2486,7 +2649,23 @@ const IdleHunt = (() => {
       if (x == null || y == null) return null;
       return { x, y };
     })();
-    beginMobDeathVisual(mob || { uid, iconId: el?.querySelector('.idle-actor-sprite')?.dataset?.iconId }, origin);
+    const mobRef = mob || { uid, iconId: el?.querySelector('.idle-actor-sprite')?.dataset?.iconId };
+    beginMobDeathVisual(mobRef, origin);
+    // 先掛上 dying 清單，避免多箭延遲 applyKill 期間屍體不在 dying、又占佇列時無法被 prune
+    const id = mobRef?.uid != null ? String(mobRef.uid) : String(uid || '');
+    if (id && !(state.dying || []).some((d) => String(d.uid) === id)) {
+      state.dying.push({
+        uid: id,
+        name: mobRef.name,
+        iconId: mobRef.iconId,
+        isBoss: !!mobRef.isBoss,
+        bossScaleSprite: !!mobRef.bossScaleSprite,
+        bossScaleHud: !!mobRef.bossScaleHud,
+        x: origin?.x ?? 0,
+        y: origin?.y ?? 0,
+        elapsed: 0,
+      });
+    }
   }
 
   /** 畫面上的怪立刻播死亡動畫（不需等下一幀 render） */
@@ -3290,6 +3469,7 @@ const IdleHunt = (() => {
 
   function startTimer() {
     bindVisibilityCatchUp();
+    startMemReleaseTimer();
     lastSimAt = (typeof performance !== 'undefined' && performance.now)
       ? performance.now()
       : Date.now();
@@ -3315,6 +3495,7 @@ const IdleHunt = (() => {
       cancelAnimationFrame(catchUpRaf);
       catchUpRaf = 0;
     }
+    stopMemReleaseTimer();
     if (huntWorker) {
       try { huntWorker.postMessage({ type: 'stop' }); } catch (_) { /* ignore */ }
     }
@@ -3427,6 +3608,8 @@ const IdleHunt = (() => {
       } else if (state.running) {
         // 進背景立刻存一次進度（sessionPersistence 也會存）
         try { save(); } catch (_) { /* ignore */ }
+        // 背景看不到畫面：立刻軟釋放視覺／解碼圖，降低長掛記憶體
+        maybeAutoReleaseMemory(true);
       }
     });
   }
@@ -3479,6 +3662,8 @@ const IdleHunt = (() => {
       save();
 
       const boss = state.queue[0];
+      if (boss?.iconId) await preloadMobAllActions(boss.iconId);
+      if (seq !== transitionSeq) return;
       if (boss) await playBossEntrance(boss);
       if (seq !== transitionSeq) return;
     } catch (err) {
@@ -4182,7 +4367,7 @@ const IdleHunt = (() => {
         <div class="idle-hunt-jobline-picker__box">
           <p id="idleHuntJobLinePickerTitle" class="idle-hunt-jobline-picker__title">選擇職業路線</p>
           <p class="idle-hunt-jobline-picker__hint">選完後才會開始放置冒險</p>
-          <p class="idle-hunt-jobline-picker__notice">建議先玩英雄線，整體流程較為完善。低等法師裝尚未加入，可能造成嚴重卡關。</p>
+          <p class="idle-hunt-jobline-picker__notice">建議先玩英雄，整體流程較為完善。低等法師裝尚未加入，可能造成嚴重卡關。</p>
           <div id="idleHuntJobLineList" class="idle-hunt-jobline-picker__list"></div>
         </div>
       </div>`;
@@ -4359,6 +4544,7 @@ const IdleHunt = (() => {
       if (state.dungeon) return;
       if (typeof EquipCraftPanel !== 'undefined') EquipCraftPanel.setOpen?.(false);
       if (typeof DisassemblePanel !== 'undefined') DisassemblePanel.setOpen?.(false);
+      if (typeof JobChangePanel !== 'undefined') JobChangePanel.setOpen?.(false);
       setPickerOpen(!pickerOpen);
     });
     $('idleHuntDungeon')?.addEventListener('click', (event) => {
@@ -4465,7 +4651,10 @@ const IdleHunt = (() => {
         const id = row?.icon || row?.mobIcon;
         if (id) ids.add(String(id));
       });
-      const tasks = [...ids].map((id) => preloadMobIconActions(id));
+      const tasks = [...ids].map((id) => {
+        const isBoss = map.bossIcon && String(id) === String(map.bossIcon);
+        return isBoss ? preloadMobAllActions(id) : preloadMobIconActions(id);
+      });
       if (map.fieldArt || map.mapUrl) tasks.push(preloadImageUrl(map.fieldArt || map.mapUrl));
       return Promise.all(tasks);
     })();
@@ -4553,6 +4742,7 @@ const IdleHunt = (() => {
     setOpen,
     isOpen: () => open,
     isRunning: () => state.running,
+    syncHuntOverlayBars,
     suspendForExternal,
     resumeAfterExternal,
     isFieldTransitionActive,
@@ -4603,6 +4793,7 @@ const IdleHunt = (() => {
     },
     isBossCleared,
     respawnMobs,
+    releaseCombatVisuals,
     getPlayerHp: () => ({ hp: Number(state.hp) || 0, maxHp: Number(state.maxHp) || 0 }),
     isPlayerDead,
     isDeathUiLocked,

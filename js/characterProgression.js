@@ -343,13 +343,22 @@ const CharacterProgression = (() => {
     return true;
   }
 
-  function autoAssignAp() {
+  function autoAssignAp(opts = {}) {
+    const forcedJobName = typeof opts === 'string' ? opts : (opts?.jobName || '');
     const left = remainAp();
     if (left <= 0) return false;
+
     let main = 'str';
-    if (typeof CombatJobs !== 'undefined' && typeof CharacterCombatPanel !== 'undefined') {
-      const jobName = CharacterCombatPanel.getState?.().jobName;
-      const labels = CombatJobs.getJobStatLabelsByName?.(jobName || '') || {};
+    if (typeof CombatJobs !== 'undefined') {
+      let jobName = String(forcedJobName || '').trim();
+      // 轉職後以技能線為準，避免戰鬥面板職業名缺資料時誤配成 STR
+      if (!jobName && typeof CharacterSkills !== 'undefined') {
+        jobName = CharacterSkills.getCombatJobNameForCurrentLine?.() || '';
+      }
+      if (!jobName && typeof CharacterCombatPanel !== 'undefined') {
+        jobName = CharacterCombatPanel.getState?.()?.jobName || '';
+      }
+      const labels = CombatJobs.getJobStatLabelsByName?.(jobName) || {};
       const map = { STR: 'str', DEX: 'dex', INT: 'int', LUK: 'luk' };
       main = map[labels.main] || 'str';
       if (labels.secondSub) {
@@ -362,6 +371,17 @@ const CharacterProgression = (() => {
       }
     }
     state.ap[main] += left;
+    notify();
+    return true;
+  }
+
+  /** 清空已分配 AP（等級給點池保留）；可選立即依新職業主屬重配 */
+  function resetAp(opts = {}) {
+    state.ap = defaultAp();
+    if (opts.autoAssign || (opts.autoAssign !== false && state.apInstant)) {
+      autoAssignAp({ jobName: opts.jobName || '' });
+      return true;
+    }
     notify();
     return true;
   }
@@ -566,6 +586,7 @@ const CharacterProgression = (() => {
     apStat,
     getLevelBaseHp,
     autoAssignAp,
+    resetAp,
     setApInstant(on) {
       state.apInstant = !!on;
       notify();

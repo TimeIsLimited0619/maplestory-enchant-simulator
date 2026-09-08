@@ -21,6 +21,8 @@ const Paperdoll = (() => {
    * @type {null | { name: string, steps: object[], index: number, stepStarted: number, until: number }}
    */
   let instructionPlay = null;
+  /** 接技連段中：instruction 結束不清除 move，避免空中位移被瞬間拉回 */
+  let comboMoveHold = false;
 
   function animOf(host) {
     let s = hostAnim.get(host);
@@ -78,8 +80,20 @@ const Paperdoll = (() => {
 
   const ATTACK_ACTION_RE = /^(swing|stab|slash|Leap|shoot|alert|heal|jump)/i;
 
+  /** 技能 instruction 以 blink 隱藏角色本體（騰空踢擊／憤怒天使等） */
+  const HIDE_BODY_ACTIONS = new Set(['blink', 'hide', 'hideBody']);
+
   function isAttackActionName(action) {
     return ATTACK_ACTION_RE.test(String(action || ''));
+  }
+
+  function isHideBodyAction(action) {
+    return HIDE_BODY_ACTIONS.has(String(action || ''));
+  }
+
+  function setHuntBodyHidden(host, hidden) {
+    if (!host || host.getAttribute('data-paperdoll') !== 'hunt') return;
+    host.classList.toggle('is-paperdoll-body-hidden', !!hidden);
   }
 
   function wornWeaponId(itemIds) {
@@ -541,9 +555,38 @@ const Paperdoll = (() => {
     layer.style.transform = t || '';
   }
 
+  /** 無 move 欄位時沿用上一幀位移（接技空中銜接）；明確 [0,0] 才歸位 */
+  function applyInstructionStepMove(host, step) {
+    const layer = host?.querySelector?.(':scope > [data-paperdoll-layers]');
+    if (!layer || !step) return;
+    if (!Object.prototype.hasOwnProperty.call(step, 'move') || step.move == null) {
+      if (step.flip === 1) {
+        const cur = layer.style.transform || '';
+        if (!/\bscaleX\(-1\)/.test(cur)) {
+          layer.style.transform = `${cur} scaleX(-1)`.trim();
+        }
+      }
+      return;
+    }
+    applyInstructionMove(host, step.move, step.flip);
+  }
+
   function clearInstructionMove(host) {
     const layer = host?.querySelector?.(':scope > [data-paperdoll-layers]');
     if (layer) layer.style.transform = '';
+  }
+
+  function setComboMoveHold(on) {
+    comboMoveHold = !!on;
+    if (!comboMoveHold) {
+      hosts.forEach((host) => {
+        if (host.getAttribute('data-paperdoll') !== 'hunt') return;
+        if (!instructionPlay) {
+          clearInstructionMove(host);
+          setHuntBodyHidden(host, false);
+        }
+      });
+    }
   }
 
   function applyInstructionStepToHost(host, step, now) {
@@ -555,18 +598,34 @@ const Paperdoll = (() => {
     s.lastDelay = Math.max(1, Number(step.delay) || 100);
     s.instructionLock = true;
     renderHost(host, { instruction: true });
-    applyInstructionMove(host, step.move, step.flip);
+    applyInstructionStepMove(host, step);
   }
 
   function endInstructionPlay(now) {
+    const lastStep = instructionPlay?.steps?.[instructionPlay.steps.length - 1];
+    const keepHide = !!(comboMoveHold && lastStep && isHideBodyAction(lastStep.action));
     instructionPlay = null;
     forceActionName = '';
     hosts.forEach((host) => {
       if (host.getAttribute('data-paperdoll') !== 'hunt') return;
       const s = animOf(host);
       s.instructionLock = false;
-      clearInstructionMove(host);
-      // 回到狩獵揮砍／站立
+      // 接技連段中保留最後 move，等整段結束再歸位
+      if (!comboMoveHold) {
+        clearInstructionMove(host);
+        setHuntBodyHidden(host, false);
+      } else if (!keepHide) {
+        setHuntBodyHidden(host, false);
+      }
+      // 回到狩獵揮砍／站立（隱身保持時仍鎖 action，避免露出身體）
+      if (keepHide) {
+        s.action = 'blink';
+        s.frameIndex = 0;
+        s.frameStarted = now || performance.now();
+        s.lastDelay = 9999;
+        setHuntBodyHidden(host, true);
+        return;
+      }
       const action = resolveAction(host);
       s.action = action;
       s.frameIndex = 0;
@@ -576,17 +635,30 @@ const Paperdoll = (() => {
     });
   }
 
-  function startInstructionPlay(rawSteps, preferredName, targetDurationMs) {
-    let steps = rawSteps.map((i) => ({
-      action: String(i.action || 'stand1'),
-      frame: Math.max(0, Number(i.frame) || 0),
-      delay: Math.max(1, Number(i.delay) || 100),
-      move: Array.isArray(i.move) ? i.move : [0, 0],
-      flip: i.flip === 1 ? 1 : 0,
-    }));
+  function startInstructionPlay(rawSteps, preferredName, targetDurationMs, opts = {}) {
+    const preferred = String(preferredName || '');
+    const loop = !!opts.loop;
+    // 昇龍二段 elfrush2：WZ 有騰空 move（擊飛怪用），角色本身應貼地
+    const flattenAerial = preferred === 'elfrush2';
+    let steps = rawSteps.map((i) => {
+      const step = {
+        action: String(i.action || 'stand1'),
+        frame: Math.max(0, Number(i.frame) || 0),
+        delay: Math.max(1, Number(i.delay) || 100),
+        flip: i.flip === 1 ? 1 : 0,
+      };
+      if (Object.prototype.hasOwnProperty.call(i, 'move') && i.move != null) {
+        const raw = Array.isArray(i.move) ? i.move : [0, 0];
+        step.move = flattenAerial
+          ? [Number(raw[0]) || 0, 0]
+          : raw;
+      }
+      return step;
+    });
     const natural = steps.reduce((sum, st) => sum + st.delay, 0);
     const target = Number(targetDurationMs);
-    if (Number.isFinite(target) && target > 0 && natural > 0) {
+    // 循環動作維持自然幀速，勿把整段拉長成引導時長
+    if (!loop && Number.isFinite(target) && target > 0 && natural > 0) {
       const scale = target / natural;
       steps = steps.map((st) => ({
         ...st,
@@ -600,7 +672,8 @@ const Paperdoll = (() => {
       steps,
       index: 0,
       stepStarted: now,
-      until: now + total,
+      until: loop ? now + 3.6e6 : now + total,
+      loop,
     };
     forceSwingUntil = Math.max(forceSwingUntil, instructionPlay.until);
     forceActionName = steps[0].action;
@@ -641,7 +714,7 @@ const Paperdoll = (() => {
       if (!d) return;
       const s = animOf(host);
       s.instructionLock = false;
-      clearInstructionMove(host);
+      if (!comboMoveHold) clearInstructionMove(host);
       const lookIdsList = [d.defaults.skin].concat(wornItemIds());
       const action = preferred
         ? resolveHuntAction(lookIdsList, forceActionName)
@@ -653,6 +726,30 @@ const Paperdoll = (() => {
       s.lastDelay = frameDelay(action, 0);
       renderHost(host);
     });
+  }
+
+  /** 持續引導（伊修塔爾等）：自然幀速循環 dualVulcanLoop，直到 stopHuntSwingLoop */
+  function playHuntSwingLoop(preferredAction) {
+    const preferred = preferredAction ? String(preferredAction) : '';
+    const instructions = getInstructions(preferred);
+    if (instructions) {
+      startInstructionPlay(instructions, preferred, 0, { loop: true });
+      return;
+    }
+    playHuntSwing(3.6e6, preferred);
+  }
+
+  function stopHuntSwingLoop() {
+    if (instructionPlay?.loop) {
+      endInstructionPlay(performance.now());
+      return;
+    }
+    const now = performance.now();
+    if (forceSwingUntil > now + 60000) {
+      forceSwingUntil = 0;
+      forceActionName = '';
+      basicAttackPick = '';
+    }
   }
 
   function resolveAction(host) {
@@ -727,6 +824,25 @@ const Paperdoll = (() => {
       fi = s.frameIndex % count;
       s.lastDelay = frameDelay(action, fi);
     }
+
+    // blink 等：隱藏本體，只留技能特效（勿 fallback 成 swing）
+    if (mode === 'hunt' && isHideBodyAction(action)) {
+      setHuntBodyHidden(host, true);
+      let layer = host.querySelector(':scope > [data-paperdoll-layers]');
+      const prevTransform = layer?.style?.transform || '';
+      if (!layer) {
+        layer = document.createElement('div');
+        layer.setAttribute('data-paperdoll-layers', '');
+        layer.className = 'paperdoll-layers';
+        host.insertBefore(layer, host.firstChild);
+      }
+      syncLayerImages(layer, []);
+      if (instructionMode && prevTransform) layer.style.transform = prevTransform;
+      ensureHostReady(host, []);
+      return;
+    }
+    if (mode === 'hunt') setHuntBodyHidden(host, false);
+
     const w = host.clientWidth || 160;
     const h = host.clientHeight || 200;
     // cx/cy = 身體 origin（腳底）；商店預覽腳底貼齊 clip 底邊
@@ -939,7 +1055,20 @@ const Paperdoll = (() => {
       if (step && now - instructionPlay.stepStarted >= step.delay) {
         instructionPlay.index += 1;
         if (instructionPlay.index >= instructionPlay.steps.length) {
-          endInstructionPlay(now);
+          if (instructionPlay.loop && instructionPlay.steps.length) {
+            instructionPlay.index = 0;
+            instructionPlay.stepStarted = now;
+            instructionPlay.until = Math.max(instructionPlay.until, now + 3.6e6);
+            forceSwingUntil = Math.max(forceSwingUntil, instructionPlay.until);
+            const next = instructionPlay.steps[0];
+            forceActionName = next.action;
+            hosts.forEach((host) => {
+              if (host.getAttribute('data-paperdoll') !== 'hunt') return;
+              applyInstructionStepToHost(host, next, now);
+            });
+          } else {
+            endInstructionPlay(now);
+          }
         } else {
           instructionPlay.stepStarted = now;
           const next = instructionPlay.steps[instructionPlay.index];
@@ -1079,6 +1208,9 @@ const Paperdoll = (() => {
     preloadCurrentLook,
     playHuntSwing,
     playHuntAction: playHuntSwing,
+    playHuntSwingLoop,
+    stopHuntSwingLoop,
+    setComboMoveHold,
     resolveHuntAction,
     resolveBasicAttackAction,
     pickBasicAttackAction,

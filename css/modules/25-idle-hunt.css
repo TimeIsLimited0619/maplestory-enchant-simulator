@@ -473,6 +473,40 @@
   pointer-events: none;
 }
 
+.idle-hunt-buff__stacks {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 12px;
+  padding: 0 2px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #fff8c8;
+  text-shadow: 0 0 2px #000, 0 1px 2px #000;
+  background: rgba(0, 0, 0, 0.72);
+  border-radius: 0 0 0 3px;
+  pointer-events: none;
+}
+
+.idle-hunt-buff__stacks[hidden] {
+  display: none !important;
+}
+
+.idle-hunt-buff__cd[hidden] {
+  display: none !important;
+}
+
+.idle-hunt-buff__cd--stacks {
+  color: #fff8c8;
+  font-size: 12px;
+}
+
+.idle-hunt-buff.is-stack-buff .idle-hunt-buff__stacks:not([hidden]) {
+  z-index: 2;
+}
+
 /* 技能 CD：畫面右下，由右往左排（同 buff 邏輯） */
 .idle-hunt-cds {
   position: absolute;
@@ -1512,6 +1546,13 @@
 
 .paperdoll-stage--hunt.is-paperdoll-loading {
   opacity: 0;
+}
+
+/* 技能 instruction blink：隱藏角色本體，只顯示技能特效 */
+.paperdoll-stage--hunt.is-paperdoll-body-hidden > [data-paperdoll-layers] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* 章節死亡彈窗：下移，避免擋住 playerdeath 中央紅字 */

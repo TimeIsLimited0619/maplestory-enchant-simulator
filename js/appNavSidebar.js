@@ -23,6 +23,10 @@ const AppNavSidebar = (() => {
     { id: 'btnViewSkill', label: '技能', icon: 'skill', title: '開關技能面板' },
   ];
 
+  const MAIN_ITEMS_AFTER_SKILL = [
+    { id: 'btnViewJobChange', label: '自由轉職', icon: 'job', title: '自由轉職' },
+  ];
+
   const SIM_ITEMS = [
     { id: 'btnViewRequest', label: '清單', icon: 'itemrequest', title: '開關物品清單' },
     { id: 'btnViewLog', label: 'Log', icon: 'log', title: '開關 Log' },
@@ -61,6 +65,7 @@ const AppNavSidebar = (() => {
       ...MAIN_ITEMS_BEFORE_CRAFT,
       ...MAIN_DRAWER_ITEMS,
       ...MAIN_ITEMS_AFTER_CRAFT,
+      ...MAIN_ITEMS_AFTER_SKILL,
       ...SIM_ITEMS,
       ...IDLE_ITEMS,
     ].forEach((item) => {
@@ -261,6 +266,7 @@ const AppNavSidebar = (() => {
             ${listMarkup(MAIN_ITEMS_BEFORE_CRAFT, 'view-mode-btn')}
             ${listMarkup(MAIN_DRAWER_ITEMS)}
             ${listMarkup(MAIN_ITEMS_AFTER_CRAFT, 'view-mode-btn')}
+            ${listMarkup(MAIN_ITEMS_AFTER_SKILL)}
           </ul>
         </section>
         <hr class="app-nav-divider app-nav-divider--section">
