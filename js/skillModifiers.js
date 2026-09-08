@@ -11,6 +11,8 @@ const SkillModifiers = (() => {
   ]);
   /** 有 CD 的主動攻擊技：鎖定怪物數全域倍率 */
   const CD_ACTIVE_ATTACK_MOB_MULTIPLIER = 2;
+  /** 精靈遊俠技能減傷（damAbsorb／耐性近似）模擬倍率 */
+  const MERCEDES_DAM_ABSORB_SCALE = 0.5;
   /** @type {Array<Record<string, number> & { id: string, expiresAt: number }>} */
   let buffs = [];
   /** 神祕狙擊層數 */
@@ -35,6 +37,19 @@ const SkillModifiers = (() => {
     } catch (_) {
       return true;
     }
+  }
+
+  /** 精靈遊俠技能 id（2300–2312） */
+  function isMercedesSkillId(skillId) {
+    const s = String(skillId || '');
+    return /^23(00|10|11|12)\d*/.test(s);
+  }
+
+  function scaleMercedesDamAbsorb(skillId, pct) {
+    const v = Math.max(0, Number(pct) || 0);
+    if (!(v > 0)) return 0;
+    if (!isMercedesSkillId(skillId)) return v;
+    return v * MERCEDES_DAM_ABSORB_SCALE;
   }
 
   function saveShowStackBuffCounts() {
@@ -229,6 +244,7 @@ const SkillModifiers = (() => {
       powerGuard = SkillFormula.evalExpr(rawCommon.indiePowerGuard, { x: lv }) || 0;
     }
     if (powerGuard) damAbsorbPct += powerGuard;
+    damAbsorbPct = scaleMercedesDamAbsorb(id, damAbsorbPct);
     const reflectPct = powerGuard > 0 ? (Number(stat.y) || 0) : 0;
     let flatMad = (Number(stat.madX) || 0) + (Number(stat.indieMad) || 0);
     // 咒語精通：WZ 的 x＝魔力
@@ -340,15 +356,17 @@ const SkillModifiers = (() => {
       masteryCap = Math.max(masteryCap, Number(st.mastery) || 0);
     });
 
-    // 元素適應／水盾：被動 asrR／terR 以減傷近似
+    // 元素適應／水盾：被動 asrR／terR 以減傷近似（精靈遊俠再 ×0.5）
     ELEMENTAL_ADAPT_IDS.forEach((id) => {
       const level = CharacterSkills.getLevel?.(id) || 0;
       if (!(level > 0)) return;
       const skill = SkillCatalog.getSkill?.(id);
       if (!skill?.common) return;
       const st = SkillFormula.evalStatCommon(skill.common, level);
-      out.damAbsorbPct += Math.max(0, Number(st.asrR) || 0);
-      out.damAbsorbPct += Math.max(0, Number(st.terR) || 0);
+      const asr = Math.max(0, Number(st.asrR) || 0);
+      const ter = Math.max(0, Number(st.terR) || 0);
+      out.damAbsorbPct += scaleMercedesDamAbsorb(id, asr);
+      out.damAbsorbPct += scaleMercedesDamAbsorb(id, ter);
     });
 
     out.mastery = Math.max(0, masteryCap);

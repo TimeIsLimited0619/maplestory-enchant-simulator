@@ -1,7 +1,7 @@
 /**
  * 角色等級／AP／極限屬性點數。
  * AP：每次升級 +5（放置狩獵之後接上）。
- * 極限屬性：140 級起依官方表給點；升一階消耗見 HYPER_LEVEL_COST（16+ 外推）。
+ * 極限屬性：140 級起依官方表給點；升一階消耗見 HYPER_LEVEL_COST（16+ 外推並加碼）。
  */
 const CharacterProgression = (() => {
   const STORAGE_KEY = 'uci.progression.v1';
@@ -26,7 +26,9 @@ const CharacterProgression = (() => {
 
   /**
    * 升到該極限屬性等級需再花的點（index = 目標等級）。
-   * 1～15：官方表；16+：延續 10→15 每級 +15 斜率 → cost = 15×L − 115。
+   * 1～15：官方表。
+   * 16+：先延續原斜率 base = 15×L − 115，再乘 10^(L/50)
+   *       → L50 約為舊表 10 倍、L100 約為舊表 100 倍。
    */
   const HYPER_LEVEL_COST_BASE = [0, 1, 2, 4, 8, 10, 15, 20, 25, 30, 35, 50, 65, 80, 95, 110];
 
@@ -35,7 +37,9 @@ const CharacterProgression = (() => {
     if (lv <= 0) return 0;
     if (lv < HYPER_LEVEL_COST_BASE.length) return HYPER_LEVEL_COST_BASE[lv];
     if (lv > HYPER_MAX_LEVEL) return 0;
-    return 15 * lv - 115;
+    const base = 15 * lv - 115;
+    const mult = 10 ** (lv / 50);
+    return Math.max(1, Math.round(base * mult));
   }
 
   const HYPER_LEVEL_COST = (() => {
