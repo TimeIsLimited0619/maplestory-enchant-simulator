@@ -555,20 +555,20 @@ const UiNpcShop = (() => {
   }
 
   function setBuyQty(n) {
-    buyQty = Math.max(1, Math.min(999, Math.floor(Number(n) || 1)));
+    buyQty = Math.max(1, Math.min(9999, Math.floor(Number(n) || 1)));
     const input = $('npcShopBuyQty');
     if (input) input.value = String(buyQty);
     syncBuyPopupTotals();
   }
 
-  /** 依目前楓幣可買的最大數量（上限 999；單價 0 視為 999） */
+  /** 依目前楓幣可買的最大數量（上限 9999；單價 0 視為 9999） */
   function maxAffordableBuyQty() {
     const row = selectedBuyRow();
     const unit = Math.max(0, Math.floor(Number(
       IdleNpcShopCatalog.resolveBuyRowDisplay(row)?.price,
     ) || 0));
-    if (!(unit > 0)) return 999;
-    return Math.max(1, Math.min(999, Math.floor(gold() / unit)));
+    if (!(unit > 0)) return 9999;
+    return Math.max(1, Math.min(9999, Math.floor(gold() / unit)));
   }
 
   function syncBuyPopupTotals() {
