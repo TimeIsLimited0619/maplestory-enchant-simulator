@@ -393,6 +393,7 @@ const EQUIP_CRAFT_MAKE_LIST = [
       variants: [
         { id: 'twohanded_sword', label: '雙手劍', output: '01402112' },
         { id: 'short_wand', label: '短杖', output: '01372101' },
+        { id: 'dual_crossbow', label: '雙弩槍', output: '01522021' },
       ],
     },
     {
@@ -617,6 +618,7 @@ const EQUIP_CRAFT_MAKE_LIST = [
       variants: [
         { id: 'twohanded_sword', label: '雙手劍', output: '01402095' },
         { id: 'short_wand', label: '短杖', output: '01372084' },
+        { id: 'dual_crossbow', label: '雙弩槍', output: '01522018' },
       ],
     },
     {

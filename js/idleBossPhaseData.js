@@ -100,6 +100,7 @@ const IDLE_BOSS_PHASE = {
         rewards: [
           { kind: 'equip', itemId: '01382068', amount: 1, chance: 30},
           { kind: 'equip', itemId: '01402062', amount: 1, chance: 30},
+          { kind: 'equip', itemId: '01522076', amount: 1, chance: 30 },
           { kind: 'consume', itemId: 'grilled-eel', amount: 20 },
           { kind: 'etc', itemId: 'meowcoin', amount: 1 },
           { kind: 'etc', itemId: 'meowcoin', amount: 1 },
@@ -122,6 +123,7 @@ const IDLE_BOSS_PHASE = {
         rewards: [
           { kind: 'equip', itemId: '01382068', amount: 1, chance: 50},
           { kind: 'equip', itemId: '01402062', amount: 1, chance: 50},
+          { kind: 'equip', itemId: '01522076', amount: 1, chance: 50 },
           { kind: 'consume', itemId: 'Reindeer-milk', amount: 5 },
           { kind: 'consume', itemId: 'Reindeer-milk', amount: 5 },
           { kind: 'consume', itemId: 'Reindeer-milk', amount: 5 },
@@ -231,6 +233,7 @@ const IDLE_BOSS_PHASE = {
           { kind: 'equip', itemId: '01082447', amount: 1, chance: 20 },
           { kind: 'equip', itemId: '01402233', amount: 1, chance: 10 },
           { kind: 'equip', itemId: '01372204', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01522121', amount: 1, chance: 10 },
           { kind: 'consume', itemId: 'Reindeer-milk', amount: 5 },
           { kind: 'consume', itemId: 'Reindeer-milk', amount: 5 },
           { kind: 'consume', itemId: 'Reindeer-milk', amount: 5 },
@@ -809,6 +812,7 @@ const IDLE_BOSS_PHASE = {
           { kind: 'equip', itemId: '01152113', amount: 1, chance: 10 },
           { kind: 'equip', itemId: '01402095', amount: 1, chance: 5 },
           { kind: 'equip', itemId: '01372084', amount: 1, chance: 5 },
+          { kind: 'equip', itemId: '01522018', amount: 1, chance: 5 },
           { kind: 'etc', itemId: '140armor_pcs', amount: 1, chance: 50 },
           { kind: 'etc', itemId: '140weapon_pcs', amount: 1, chance: 30 },
         ],

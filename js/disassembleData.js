@@ -78,7 +78,7 @@ const EQUIP_DISASSEMBLE_LIST = {
   //女皇武器 → 黑色破壞的碎片
   
   ...disassembleFillIds([
-    '01402095', '01372084',
+    '01402095', '01372084', '01522018',
   ], { '140weapon_pcs': 1 }),
 
     // 永恆防具 → 永恆粉塵
