@@ -360,6 +360,11 @@ const UiNpcShop = (() => {
     if (row.consumeType === 'bonus_stat') {
       return { type: T.BONUS_STAT, itemId: row.itemId };
     }
+    if (row.kind === 'consume'
+      && typeof getBonusStatItemById === 'function'
+      && getBonusStatItemById(row.itemId)) {
+      return { type: T.BONUS_STAT, itemId: row.itemId };
+    }
     if (row.consumeType === 'exceptional_hammer') {
       return { type: T.EXCEPTIONAL_HAMMER, hammerId: row.hammerId };
     }
@@ -391,6 +396,12 @@ const UiNpcShop = (() => {
     if (row.consumeType === 'potion'
       || (row.kind === 'consume' && typeof IdlePotionStore !== 'undefined' && IdlePotionStore.isPotionId?.(row.itemId))) {
       return { consumeType: 'potion', itemId: row.itemId, amount };
+    }
+    if (row.consumeType === 'bonus_stat'
+      || (row.kind === 'consume'
+        && typeof getBonusStatItemById === 'function'
+        && getBonusStatItemById(row.itemId))) {
+      return { consumeType: 'bonus_stat', itemId: row.itemId, amount };
     }
     if (row.consumeType) {
       return {

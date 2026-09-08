@@ -126,7 +126,7 @@ const SkillOverrides = (() => {
       equipable: false,
       h: '永久增加格擋機率#stanceProp%',
       desc: '永久增加格擋機率。',
-    }
+    },
 
     // —— 三轉被動說明 ——
     '2110009': {

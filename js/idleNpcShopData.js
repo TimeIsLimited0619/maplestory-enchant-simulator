@@ -11,6 +11,9 @@
  *   maxLevel : 選填，可購買最高等級（含）；省略＝無上限
  * kind: 'scroll' 會依 itemId 自動辨識：
  *   潛能卷軸（getPotentialScrollById）／星力卷軸／榮耀卷軸
+ * kind: 'consume' 會依 itemId 自動辨識：
+ *   藥水（IdlePotionStore）／星火（getBonusStatItemById，如 eternalFlame）
+ * 也可明示：{ kind: 'consume', consumeType: 'bonus_stat', itemId: 'eternalFlame', buyPrice }
  * 也可明示：{ kind: 'consume', consumeType: 'potential_scroll', scrollId: 'scroll_epic_potential', buyPrice }
  * 特殊商品 specialType:
  *   hyper_point — 購入極限屬性點（直接加點，不進背包）
@@ -188,7 +191,7 @@ const IDLE_NPC_SHOP = {
 
 
     { kind: 'scroll', itemId: 'scroll_epic_potential', buyPrice: 1000000, amount: 1, minLevel: 60 },
-
+    { kind: 'consume', itemId: 'eternalFlame', buyPrice: 10000000, amount: 1, minLevel: 60 },
   ],
 };
 
@@ -260,6 +263,7 @@ const IdleNpcShopCatalog = {
   /**
    * 購買分類：equip / consume / scroll / misc
    * scroll 含 kind:scroll 與潛能／星力／榮耀卷軸消耗型
+   * 星火（bonus_stat）歸入雜項
    */
   buyCategoryOf(row) {
     if (!row) return 'misc';
@@ -268,6 +272,10 @@ const IdleNpcShopCatalog = {
     const ct = String(row.consumeType || '');
     if (ct === 'potential_scroll' || ct === 'starforce_scroll' || ct === 'glory_scroll') {
       return 'scroll';
+    }
+    if (ct === 'bonus_stat'
+      || (typeof getBonusStatItemById === 'function' && getBonusStatItemById(row.itemId))) {
+      return 'misc';
     }
     if (row.kind === 'consume' || row.consumeType) return 'consume';
     return 'misc';
@@ -418,6 +426,15 @@ const IdleNpcShopCatalog = {
         return {
           name: potion?.name || row.name || row.itemId || '藥水',
           icon: potion ? IdlePotionStore.resolveIcon(potion.icon) : (row.icon || ''),
+          price,
+        };
+      }
+      if (row.consumeType === 'bonus_stat'
+        || (typeof getBonusStatItemById === 'function' && getBonusStatItemById(row.itemId))) {
+        const flame = typeof getBonusStatItemById === 'function' ? getBonusStatItemById(row.itemId) : null;
+        return {
+          name: flame?.name || row.name || row.itemId || '星火',
+          icon: flame?.icon || row.icon || '',
           price,
         };
       }
