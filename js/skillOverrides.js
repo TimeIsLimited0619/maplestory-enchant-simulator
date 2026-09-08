@@ -109,13 +109,24 @@ const SkillOverrides = (() => {
       desc: '強化自身防禦與最大HP，並減少受到的傷害。',
     },
 
-    // —— 法師：隱藏瞬移／魔力波動及相關被動 ——
+    // —— 法師：隱藏瞬移／魔力波動（瞬間移動精通改回面板，只留永久格擋被動）——
     '2001009': { skipPanel: true }, // 瞬間移動
     '2001011': { skipPanel: true }, // 魔力波動
-    '2111007': { skipPanel: true }, // 瞬間移動精通
-    '2211007': { skipPanel: true }, // 瞬間移動精通
     '2110016': { skipPanel: true }, // 瞬間移動爆發
     // 2210017 已於上方 skipPanel
+    // 火毒／冰雷「瞬間移動精通」：不施放瞬移傷害，只保留永久格擋
+    '2111007': {
+      type: 'passive',
+      equipable: false,
+      h: '永久增加格擋機率#stanceProp%',
+      desc: '永久增加格擋機率。',
+    },
+    '2211007': {
+      type: 'passive',
+      equipable: false,
+      h: '永久增加格擋機率#stanceProp%',
+      desc: '永久增加格擋機率。',
+    }
 
     // —— 三轉被動說明 ——
     '2110009': {

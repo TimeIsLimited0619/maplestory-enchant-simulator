@@ -1886,6 +1886,8 @@ const IdleHunt = (() => {
     const mobLevel = Number.isFinite(Number(opts.mobLevel))
       ? Number(opts.mobLevel)
       : currentMobLevel(!!opts.isBoss);
+    // 格擋：只依機率觸發「加強減傷」，不再全檔、不跳 guard
+    let blocked = false;
     if (typeof UiCharacterInfo !== 'undefined'
       && typeof UiCharacterInfo.rollMobHitOutcome === 'function') {
       const outcome = UiCharacterInfo.rollMobHitOutcome(mobLevel);
@@ -1894,25 +1896,41 @@ const IdleHunt = (() => {
         showPlayerStatusLabel('Miss');
         return;
       }
-      if (outcome === 'block') {
-        showPlayerStatusLabel('guard');
-        return;
-      }
+      if (outcome === 'block') blocked = true;
     } else if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
-      const block = (Number(SkillModifiers.getTotals().blockPct) || 0) * 0.5;
-      if (block > 0 && Math.random() * 100 < block) {
-        showPlayerStatusLabel('guard');
-        return;
+      const block = Number(SkillModifiers.getTotals().blockPct) || 0;
+      if (block > 0 && Math.random() * 100 < block) blocked = true;
+    }
+
+    // 減傷；格擋觸發：減傷 + 減傷×格擋率（例 40+40×50%=60%），上限 80%，不會無敵
+    if (typeof UiCharacterInfo !== 'undefined'
+      && typeof UiCharacterInfo.applyIncomingDamageReduction === 'function') {
+      dmg = UiCharacterInfo.applyIncomingDamageReduction(dmg, {
+        blocked,
+        blockPct: blocked ? (Number(UiCharacterInfo.getHuntBlockPct?.()) || 0) : 0,
+      });
+    } else if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
+      const totals = SkillModifiers.getTotals();
+      const absorb = Math.min(80, Math.max(0, Number(totals.damAbsorbPct) || 0));
+      const blockPct = blocked ? Math.min(100, Number(totals.blockPct) || 0) : 0;
+      let reducePct = absorb;
+      if (blockPct > 0) reducePct = absorb + absorb * (blockPct / 100);
+      reducePct = Math.min(80, Math.max(0, reducePct));
+      dmg = Math.max(0, Math.floor(dmg * (1 - reducePct / 100)));
+    }
+
+    if (!(dmg > 0)) {
+      if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
+        const reflectPct = Number(SkillModifiers.getTotals().reflectPct) || 0;
+        if (reflectPct > 0 && opts.mob) {
+          applyPowerGuardReflect(opts.mob, amount, reflectPct);
+        }
       }
+      return;
     }
 
     if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
-      const totals = SkillModifiers.getTotals();
-      const absorb = Number(totals.damAbsorbPct) || 0;
-      if (absorb > 0) {
-        dmg = Math.max(1, Math.floor(dmg * (1 - Math.min(80, absorb) / 100)));
-      }
-      const reflectPct = Number(totals.reflectPct) || 0;
+      const reflectPct = Number(SkillModifiers.getTotals().reflectPct) || 0;
       if (reflectPct > 0 && opts.mob) {
         applyPowerGuardReflect(opts.mob, amount, reflectPct);
       }

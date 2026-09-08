@@ -675,12 +675,45 @@ const UiCharacterInfo = (() => {
     return Math.max(0, Math.min(100, n));
   }
 
+  function getHuntDamageAbsorbPct() {
+    if (typeof SkillModifiers === 'undefined' || typeof SkillModifiers.getTotals !== 'function') {
+      return 0;
+    }
+    return Math.max(0, Number(SkillModifiers.getTotals().damAbsorbPct) || 0);
+  }
+
+  /**
+   * 被擊傷害係數：
+   * - 一般：×(1 - 減傷%/100)（減傷上限 80%）
+   * - 格擋觸發：減傷% + 減傷%×格擋率（例 40+40×50%＝60%）；最終仍上限 80%（不會全檔無敵）
+   */
+  function incomingDamageFactor(opts = {}) {
+    const absorb = Math.min(80, Math.max(0, getHuntDamageAbsorbPct()));
+    const blockPct = opts.blocked
+      ? Math.min(100, Math.max(0, Number(opts.blockPct) || getHuntBlockPct()))
+      : 0;
+    let reducePct = absorb;
+    if (blockPct > 0) {
+      // 40% + 40%×50% = 60%
+      reducePct = absorb + absorb * (blockPct / 100);
+    }
+    reducePct = Math.min(80, Math.max(0, reducePct));
+    return Math.max(0, Math.min(1, 1 - reducePct / 100));
+  }
+
+  function applyIncomingDamageReduction(rawDmg, opts = {}) {
+    const raw = Math.max(0, Math.floor(Number(rawDmg) || 0));
+    if (!(raw > 0)) return 0;
+    const factor = incomingDamageFactor(opts);
+    return Math.max(0, Math.floor(raw * factor));
+  }
+
   function mobAccuracyForLevel(mobLevel) {
     const lv = Math.max(1, Math.floor(Number(mobLevel) || 1));
     return lv * 10;
   }
 
-  /** 怪物命中玩家：不判定 Miss（迴避關閉），僅 guard（格擋）／命中 */
+  /** 怪物命中玩家：不判定 Miss（迴避關閉）；格擋只回傳 block（加強減傷，非無敵） */
   function rollMobHitOutcome(mobLevel) {
     void mobLevel;
     const block = getHuntBlockPct();
@@ -879,8 +912,6 @@ const UiCharacterInfo = (() => {
       if (key === '防禦力' || key === '物理防禦力' || key === '魔法防禦力') n += Number(mods.flatPdd) || 0;
       if (key === '格擋') n += Number(mods.blockPct) || 0;
     }
-    // 格擋實戰過強：面板／狩獵統一減半
-    if (key === '格擋') n *= 0.5;
     return n;
   }
 
@@ -1120,6 +1151,9 @@ const UiCharacterInfo = (() => {
     getHuntDamageMitigation,
     getHuntAvoidability,
     getHuntBlockPct,
+    getHuntDamageAbsorbPct,
+    incomingDamageFactor,
+    applyIncomingDamageReduction,
     rollMobHitOutcome,
     getHuntMaxHp,
     collectFinalDamageSources,
