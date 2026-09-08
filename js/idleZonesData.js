@@ -2286,7 +2286,21 @@ const IDLE_ZONE_BAND_DEFS = [
     "min": 120,
     "max": 130,
     "name": "時間神殿",
-    "mobDrops": [],
+    "mobDrops": [
+      {
+        "kind": "consume",
+        "consumeType": "potion",
+        "scrollId": "",
+        "cubeId": "",
+        "itemId": "special-potion",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-potion-special-potion",
+        "name": "特殊藥水",
+        "chance": 5,
+        "amount": 1
+      }
+    ],
     "bossDrops": []
   },
   {
@@ -11968,21 +11982,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "killGold": 50000,
     "bossKillExp": 50000,
     "bossKillGold": 500000,
-    "mobDrops": [
-      {
-        "kind": "consume",
-        "consumeType": "potion",
-        "scrollId": "",
-        "cubeId": "",
-        "itemId": "special-potion",
-        "hammerId": "",
-        "soulId": "",
-        "catalogId": "consume-potion-special-potion",
-        "name": "特殊藥水",
-        "chance": 5,
-        "amount": 1
-      }
-    ],
+    "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
