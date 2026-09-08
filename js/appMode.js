@@ -78,6 +78,10 @@ const AppMode = (() => {
     if (typeof AppNavSidebar !== 'undefined') AppNavSidebar.refreshProfile?.();
     if (typeof CharacterCombatPanel !== 'undefined') CharacterCombatPanel.reloadFromStorage?.();
     if (typeof CharacterProgression !== 'undefined') CharacterProgression.reloadFromStorage?.();
+    if (typeof StarForceModule !== 'undefined') {
+      StarForceModule.syncCatValleyRatesUi?.();
+      StarForceModule.updateUI?.();
+    }
     if (mode === 'idle') {
       closeSimOnlyPanels();
       if (typeof IdleHunt !== 'undefined') {

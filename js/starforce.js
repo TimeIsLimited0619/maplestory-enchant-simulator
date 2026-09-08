@@ -13,6 +13,10 @@ const STARFORCE_RADIANT_23_SCROLL_MESO = 5000000000;
 let starForceUseCatValleyRates = false;
 
 function isStarForceCatValleyRatesEnabled() {
+  // 放置模式：強制貓谷星力（降星／鎖定防止破壞），不看開關
+  if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+    return true;
+  }
   if (typeof isCatValleyContentUnlocked !== 'function' || !isCatValleyContentUnlocked()) {
     return false;
   }
@@ -381,6 +385,11 @@ const StarForceModule = {
     if (!el) return;
     this._catValleyRatesBound = true;
     el.addEventListener('change', () => {
+      // 放置模式強制貓谷，忽略手動切換
+      if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+        el.checked = true;
+        return;
+      }
       if (typeof setStarForceCatValleyRatesEnabled === 'function') {
         setStarForceCatValleyRatesEnabled(el.checked);
       }
@@ -393,8 +402,16 @@ const StarForceModule = {
     const wrap = document.getElementById('sfBottomOptionsLeft');
     wrap?.classList.remove('hidden');
     const el = document.getElementById('chkStarForceCatValleyRates');
+    const idleForced = typeof isIdlePlayMode === 'function' && isIdlePlayMode();
     if (el && typeof isStarForceCatValleyRatesEnabled === 'function') {
       el.checked = isStarForceCatValleyRatesEnabled();
+      el.disabled = idleForced;
+    }
+    const label = el?.closest('label');
+    if (label) {
+      label.title = idleForced
+        ? '放置模式強制套用貓谷機率（21–24 與 27 星以上失敗降 1 星、20／25 保底、26 不降；並鎖定防止破壞）'
+        : '開啟：21–24 與 27 星以上失敗降 1 星、20／25 保底、26 不降；並鎖定防止破壞。新舊永恆／光輝飾品另套用星力卷軸規則。';
     }
     this.syncProtectDestroyLock();
   },
