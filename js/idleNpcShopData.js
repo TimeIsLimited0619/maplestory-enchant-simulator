@@ -17,7 +17,7 @@
  * 也可明示：{ kind: 'consume', consumeType: 'potential_scroll', scrollId: 'scroll_epic_potential', buyPrice }
  * 特殊商品 specialType:
  *   hyper_point — 購入極限屬性點（直接加點，不進背包）
- * 注意：極限屬性點由 getBuyList() 自動插到第一格，無需寫進 buyList。
+ * 注意：極限屬性點包（1 點／100 點）由 getBuyList() 自動插到清單最前，無需寫進 buyList。
  * 購買清單只顯示目前角色等級可購買的品項。
  */
 
@@ -64,7 +64,7 @@ function resolveShopScrollMeta(itemId) {
   return null;
 }
 
-/** 極限屬性點商品（全等級可購） */
+/** 極限屬性點商品（全等級可購；固定插在購買清單最前） */
 const IDLE_SHOP_HYPER_POINT = {
   kind: 'special',
   specialType: 'hyper_point',
@@ -76,6 +76,31 @@ const IDLE_SHOP_HYPER_POINT = {
   amount: 1,
   minLevel: 1,
 };
+
+/** 極限屬性點 ×100（1 億楓幣） */
+const IDLE_SHOP_HYPER_POINT_100 = {
+  kind: 'special',
+  specialType: 'hyper_point',
+  itemId: 'hyper_stat_point_100',
+  name: '極限屬性點 ×100',
+  desc: '購入後永久增加 100 點可分配的極限屬性點數。',
+  icon: 'images/potion/0.png',
+  buyPrice: 100000000,
+  amount: 100,
+  minLevel: 1,
+};
+
+const IDLE_SHOP_HYPER_POINT_PACKS = [
+  IDLE_SHOP_HYPER_POINT,
+  IDLE_SHOP_HYPER_POINT_100,
+];
+
+function isShopHyperPointRow(row) {
+  if (!row) return false;
+  if (row.specialType === 'hyper_point') return true;
+  const id = String(row.itemId || '');
+  return id === 'hyper_stat_point' || id.startsWith('hyper_stat_point_');
+}
 
 /** 全地圖統一商店（依角色等級篩選可購品項） */
 const IDLE_NPC_SHOP = {
@@ -319,14 +344,15 @@ const IdleNpcShopCatalog = {
     const filterByLevel = opts.filterByLevel !== false;
     const level = opts.level != null ? opts.level : this.playerLevel();
     const base = Array.isArray(IDLE_NPC_SHOP.buyList) ? IDLE_NPC_SHOP.buyList.slice() : [];
-    // 極限屬性點固定插第一格；資料裡若有再寫一次則去掉避免重複
-    const rest = base.filter((row) => !(
-      row
-      && (row.specialType === 'hyper_point'
-        || row.itemId === 'hyper_stat_point'
-        || (row.kind === 'special' && row.itemId === IDLE_SHOP_HYPER_POINT.itemId))
-    ));
-    const full = [{ ...IDLE_SHOP_HYPER_POINT }, ...rest];
+    // 極限屬性點包固定插最前；buyList 若再寫一次則去掉避免重複
+    const packIds = new Set(IDLE_SHOP_HYPER_POINT_PACKS.map((p) => p.itemId));
+    const rest = base.filter((row) => !(row && (
+      isShopHyperPointRow(row) || packIds.has(row.itemId)
+    )));
+    const full = [
+      ...IDLE_SHOP_HYPER_POINT_PACKS.map((p) => ({ ...p })),
+      ...rest,
+    ];
     if (!filterByLevel) return full;
     return full.filter((row) => this.isRowAvailable(row, level));
   },
@@ -401,8 +427,7 @@ const IdleNpcShopCatalog = {
   resolveBuyRowDisplay(row) {
     if (!row) return { name: '', icon: '', price: 0 };
     const price = Math.max(0, Math.floor(Number(row.buyPrice) || 0));
-    if (row.kind === 'special' || row.specialType === 'hyper_point'
-      || row.itemId === 'hyper_stat_point') {
+    if (isShopHyperPointRow(row)) {
       const base = typeof IDLE_SHOP_HYPER_POINT !== 'undefined' ? IDLE_SHOP_HYPER_POINT : null;
       return {
         name: row.name || base?.name || '極限屬性點',
@@ -468,6 +493,9 @@ if (typeof window !== 'undefined') {
   window.IDLE_NPC_SHOP = IDLE_NPC_SHOP;
   window.IDLE_NPC_SHOPS = IDLE_NPC_SHOPS;
   window.IDLE_SHOP_HYPER_POINT = IDLE_SHOP_HYPER_POINT;
+  window.IDLE_SHOP_HYPER_POINT_100 = IDLE_SHOP_HYPER_POINT_100;
+  window.IDLE_SHOP_HYPER_POINT_PACKS = IDLE_SHOP_HYPER_POINT_PACKS;
   window.IdleNpcShopCatalog = IdleNpcShopCatalog;
   window.resolveShopScrollMeta = resolveShopScrollMeta;
+  window.isShopHyperPointRow = isShopHyperPointRow;
 }

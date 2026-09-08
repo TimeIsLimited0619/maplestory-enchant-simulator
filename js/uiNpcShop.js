@@ -419,8 +419,11 @@ const UiNpcShop = (() => {
 
   function resolveBuyRowTooltip(row) {
     if (!row) return null;
-    if (row.kind === 'special' || row.specialType === 'hyper_point'
-      || row.itemId === 'hyper_stat_point') {
+    if (typeof isShopHyperPointRow === 'function'
+      ? isShopHyperPointRow(row)
+      : (row.kind === 'special' || row.specialType === 'hyper_point'
+        || row.itemId === 'hyper_stat_point'
+        || String(row.itemId || '').startsWith('hyper_stat_point_'))) {
       const disp = typeof IdleNpcShopCatalog !== 'undefined'
         ? IdleNpcShopCatalog.resolveBuyRowDisplay(row)
         : null;
@@ -746,8 +749,11 @@ const UiNpcShop = (() => {
       if (typeof addLog === 'function') addLog('[商店] 楓幣不足。', 'log-fail');
       return;
     }
-    const isHyperPoint = row.kind === 'special' || row.specialType === 'hyper_point'
-      || row.itemId === 'hyper_stat_point';
+    const isHyperPoint = typeof isShopHyperPointRow === 'function'
+      ? isShopHyperPointRow(row)
+      : (row.kind === 'special' || row.specialType === 'hyper_point'
+        || row.itemId === 'hyper_stat_point'
+        || String(row.itemId || '').startsWith('hyper_stat_point_'));
     let ok = true;
     // 極限屬性點一次加總，避免逐筆 notify 造成卡頓
     if (isHyperPoint) {
@@ -777,8 +783,12 @@ const UiNpcShop = (() => {
 
   function grantBuyRow(row, qty = 1) {
     if (!row) return false;
-    if (row.kind === 'special' || row.specialType === 'hyper_point'
-      || row.itemId === 'hyper_stat_point') {
+    const isHyperPoint = typeof isShopHyperPointRow === 'function'
+      ? isShopHyperPointRow(row)
+      : (row.kind === 'special' || row.specialType === 'hyper_point'
+        || row.itemId === 'hyper_stat_point'
+        || String(row.itemId || '').startsWith('hyper_stat_point_'));
+    if (isHyperPoint) {
       const per = Math.max(1, Math.floor(Number(row.amount) || 1));
       const times = Math.max(1, Math.floor(Number(qty) || 1));
       const pts = per * times;
