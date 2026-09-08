@@ -175,12 +175,16 @@ const IDLE_NPC_SHOP = {
 
     { kind: 'scroll', itemId: 'scroll_normal_non_weapon_str_100', buyPrice: 5000, amount: 1, minLevel: 10 },
     { kind: 'scroll', itemId: 'scroll_normal_weapon_atk_100', buyPrice: 10000, amount: 1, minLevel: 15 },
+    { kind: 'scroll', itemId: 'scroll_normal_weapon_matk_100', buyPrice: 10000, amount: 1, minLevel: 10 },
     { kind: 'scroll', itemId: 'scroll_normal_non_weapon_str_70', buyPrice: 20000, amount: 1, minLevel: 25 },
     { kind: 'scroll', itemId: 'scroll_normal_weapon_atk_70', buyPrice: 40000, amount: 1, minLevel: 40 },
+    { kind: 'scroll', itemId: 'scroll_normal_weapon_matk_70', buyPrice: 40000, amount: 1, minLevel: 40 },
     { kind: 'scroll', itemId: 'scroll_normal_non_weapon_str_30', buyPrice: 50000, amount: 1, minLevel: 40 },
     { kind: 'scroll', itemId: 'scroll_normal_weapon_atk_30', buyPrice: 100000, amount: 1, minLevel: 40 },
+    { kind: 'scroll', itemId: 'scroll_normal_weapon_matk_30', buyPrice: 100000, amount: 1, minLevel: 40 },
     { kind: 'scroll', itemId: 'scroll_normal_non_weapon_str_15', buyPrice: 200000, amount: 1, minLevel: 65 },
     { kind: 'scroll', itemId: 'scroll_normal_weapon_atk_15', buyPrice: 400000, amount: 1, minLevel: 70 },
+    { kind: 'scroll', itemId: 'scroll_normal_weapon_matk_15', buyPrice: 400000, amount: 1, minLevel: 70 },
 
 
     { kind: 'scroll', itemId: 'scroll_epic_potential', buyPrice: 1000000, amount: 1, minLevel: 60 },

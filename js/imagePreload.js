@@ -107,16 +107,27 @@ const EnchantImagePreload = {
   /**
    * LRU 軟修剪：超過 maxEntries 時丟掉最久未讀取的解碼圖。
    * @param {number} [maxEntries]
+   * @param {Iterable<string>|Set<string>|null} [keepUrls] 永不剔除的 URL（如傷害數字皮膚）
    * @returns {{ before: number, after: number, evicted: number }}
    */
-  softTrim(maxEntries) {
+  softTrim(maxEntries, keepUrls) {
     const max = Math.max(64, Math.floor(Number(maxEntries) || this.DEFAULT_SOFT_MAX));
+    const keep = new Set();
+    (keepUrls || []).forEach((u) => {
+      const key = this.normalize(u);
+      if (key) keep.add(key);
+    });
     const before = this.imageCache.size;
     while (this.imageCache.size > max) {
-      const key = this.imageCache.keys().next().value;
-      if (key == null) break;
-      this.imageCache.delete(key);
-      this.promiseCache.delete(key);
+      let evicted = false;
+      for (const key of this.imageCache.keys()) {
+        if (keep.has(key)) continue;
+        this.imageCache.delete(key);
+        this.promiseCache.delete(key);
+        evicted = true;
+        break;
+      }
+      if (!evicted) break; // 剩下的都是 keep
     }
     // 清掉已無 image 對應、且已 settled 的 promise 殘留鍵
     for (const key of [...this.promiseCache.keys()]) {

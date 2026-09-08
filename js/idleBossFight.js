@@ -2581,8 +2581,9 @@ const IdleBossFight = (() => {
     const delay = attackDelaySec();
     let hits = 0;
     while (playerAtkAcc >= delay && hits < 10) {
-      if (typeof SkillCombat !== 'undefined' && SkillCombat.isCastLocked?.()) break;
+      if (typeof IdleHunt !== 'undefined' && IdleHunt.isPlayerDead?.()) break;
 
+      // 先選招：持續引導期間仍可挑有 CD 的昇龍等打斷
       const picked = typeof SkillCombat !== 'undefined'
         ? SkillCombat.pickNextCast?.({ wzAttackSpeed: wzAttackSpeed() })
         : null;
@@ -2596,6 +2597,11 @@ const IdleBossFight = (() => {
         playerAtkAcc = 0;
         if (result?.cast) afterExternalHits(getCombatMobs());
         hooks?.syncOverlay?.();
+        break;
+      }
+
+      if (typeof SkillCombat !== 'undefined'
+        && (SkillCombat.isCastLocked?.() || SkillCombat.hasActiveSustain?.())) {
         break;
       }
 
@@ -3889,6 +3895,13 @@ const IdleBossFight = (() => {
       stopSustainCombat();
     }
     if (fight.mode === 'done') return;
+    // 死亡先結算：勿再 tickPlayer（否則死後仍施法一幀／持續引導）
+    if (typeof IdleHunt !== 'undefined' && IdleHunt.isPlayerDead?.() && fight.mode === 'fight') {
+      fight.mode = 'done';
+      stopSustainCombat();
+      hooks?.onFightEnd?.('lose');
+      return;
+    }
     tickPlayer(dt);
     tickBoss(dt);
     if (typeof IdlePotionPanel !== 'undefined') IdlePotionPanel.tryAutoDrink?.();

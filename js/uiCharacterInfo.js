@@ -488,20 +488,28 @@ const UiCharacterInfo = (() => {
   function readHuntCritRateFromPack(pack, extraPct = 0) {
     const snapshot = pack?.snapshot || {};
     const combat = pack?.combat || null;
+    // readValue 已含技能／極限爆擊機率，勿再加一次 SkillModifiers.critRate
     let rate = Number(readValue(snapshot, {
       key: '爆擊機率',
       source: 'extraOrEx',
       percent: true,
     }, combat)) || 0;
-    if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
-      rate += Number(SkillModifiers.getTotals().critRate) || 0;
-    }
     rate += Number(extraPct) || 0;
+    if (!Number.isFinite(rate)) rate = 0;
     return Math.max(0, Math.min(100, rate)) / 100;
   }
 
   function readHuntCritRate(extraPct = 0) {
     return readHuntCritRateFromPack(resolveHuntCombat(), extraPct);
+  }
+
+  function readHuntCritMultiplier(pack) {
+    // 實戰爆擊倍率用面板爆傷（含技能），勿用戰鬥力扣技能後的 rawCritSum
+    const panelCritDmg = Number(pack?.combat?.resolved?.critDamageDetail?.panel);
+    const fallback = Number(pack?.combat?.resolved?.rawCritSum);
+    if (Number.isFinite(panelCritDmg)) return 1.35 + panelCritDmg / 100;
+    if (Number.isFinite(fallback) && fallback > 0) return fallback;
+    return 1.35;
   }
 
   /** 狩獵命中：擲爆擊後套用 1.35 + 爆擊傷害%；opts.damagePct 為技能傷害% */
@@ -526,9 +534,10 @@ const UiCharacterInfo = (() => {
         scaled = Math.max(1, Math.floor(scaled * factor));
       }
     }
-    const critMult = Number(pack.combat?.resolved?.rawCritSum) || 1.35;
+    const critMult = readHuntCritMultiplier(pack);
+    const critChance = readHuntCritRateFromPack(pack, opts.critRateBonus);
     const isCritical = scaled > 0 && (
-      !!opts.forceCritical || Math.random() < readHuntCritRateFromPack(pack, opts.critRateBonus)
+      !!opts.forceCritical || (critChance > 0 && Math.random() < critChance)
     );
     const dmg = isCritical ? Math.floor(scaled * critMult) : scaled;
     return { dmg, isCritical: !!isCritical };

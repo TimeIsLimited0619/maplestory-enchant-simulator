@@ -1930,6 +1930,9 @@ const IdleHunt = (() => {
     }
     if (state.hp <= 0) {
       state.hp = 0;
+      // 立刻打斷伊修塔爾等持續引導／非同步施放（勿等死亡演示結束才停）
+      try { SkillCombat.invalidateAsyncCasts?.(); } catch (_) { /* ignore */ }
+      try { Paperdoll.stopHuntSwingLoop?.(); } catch (_) { /* ignore */ }
       // IdleBoss 場地：只扣血，死亡演示／結算由 IdleBoss 處理（避免 FX 播在隱藏的狩獵場）
       if (typeof IdleBoss !== 'undefined' && IdleBoss.isArenaOpen?.()) {
         if (state.running) {
@@ -2472,12 +2475,17 @@ const IdleHunt = (() => {
       SkillMobStatus.prune?.();
     }
     if (typeof EnchantImagePreload !== 'undefined') {
+      const pin = typeof DamageSkinCatalog !== 'undefined'
+        ? DamageSkinCatalog.pinnedUrls?.()
+        : null;
       if (soft) {
-        EnchantImagePreload.softTrim?.(IMAGE_CACHE_SOFT_MAX);
+        EnchantImagePreload.softTrim?.(IMAGE_CACHE_SOFT_MAX, pin);
       } else {
         // 轉場：較積極修剪，但不整庫清空（避免換圖後全白等回暖）
-        EnchantImagePreload.softTrim?.(Math.min(220, IMAGE_CACHE_SOFT_MAX));
+        EnchantImagePreload.softTrim?.(Math.min(220, IMAGE_CACHE_SOFT_MAX), pin);
       }
+      // 傷害字圖若被踢掉就補載（100% 暴擊副本特別容易踩到）
+      try { DamageSkinCatalog?.warmUpAll?.(); } catch (_) { /* ignore */ }
     }
 
     if (!soft) {
@@ -3343,10 +3351,9 @@ const IdleHunt = (() => {
       ? null
       : $('idleHuntField')?.querySelector('.idle-actor--player');
     while (state.atkAcc >= delay && hits < 20) {
-      if (typeof SkillCombat !== 'undefined' && SkillCombat.isCastLocked?.()) {
-        break;
-      }
+      if (isPlayerDead()) break;
 
+      // 先選招：持續引導（伊修塔爾）期間仍可挑有 CD 的昇龍等打斷，不可在 isCastLocked 時直接 break
       const picked = typeof SkillCombat !== 'undefined'
         ? SkillCombat.pickNextCast?.({ wzAttackSpeed: currentWzAttackSpeed() })
         : null;
@@ -3373,6 +3380,12 @@ const IdleHunt = (() => {
           state.queue = remain;
         }
         if (!skipVisual) syncComboOrbsUi();
+        break;
+      }
+
+      // 施放鎖／持續引導中：不可改打普攻（引導無 CD 可打斷時維持通道）
+      if (typeof SkillCombat !== 'undefined'
+        && (SkillCombat.isCastLocked?.() || SkillCombat.hasActiveSustain?.())) {
         break;
       }
 

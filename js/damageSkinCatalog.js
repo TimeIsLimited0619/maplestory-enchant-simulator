@@ -65,12 +65,31 @@ const DamageSkinCatalog = (() => {
     return playerSkinId;
   }
 
-  function folderFor(isCritical, skin) {
+  function collectSkinUrls(skin) {
     const id = normalizeSkinId(skin);
-    if (!isCritical) return NORMAL_FOLDER;
-    const entry = skinCache.get(id);
-    if (entry?.widths?.has(`${CRIT_FOLDER}/0`)) return CRIT_FOLDER;
-    return CRIT_FOLDER;
+    const urls = [];
+    const folders = [NORMAL_FOLDER, CRIT_FOLDER];
+    folders.forEach((folder) => {
+      DIGITS.forEach((d) => urls.push(glyphUrl(id, folder, d)));
+      urls.push(glyphUrl(id, folder, UNIT_WAN));
+      urls.push(glyphUrl(id, folder, UNIT_YI));
+      if (folder === CRIT_FOLDER) urls.push(glyphUrl(id, folder, CRIT_ICON));
+    });
+    if (id === MOB_SKIN_ID) {
+      Object.keys(STATUS_GLYPHS).forEach((kind) => {
+        const url = statusGlyphUrl(id, kind);
+        if (url) urls.push(url);
+      });
+    }
+    return urls;
+  }
+
+  /** softTrim 時保留目前玩家／怪物傷害字圖，避免暴擊字體被踢掉後一直 fallback 成普通字 */
+  function pinnedUrls() {
+    return [
+      ...collectSkinUrls(playerSkinId),
+      ...collectSkinUrls(MOB_SKIN_ID),
+    ];
   }
 
   function preloadOne(url) {
@@ -93,34 +112,40 @@ const DamageSkinCatalog = (() => {
     });
   }
 
-  async function ensurePreloaded(targetSkinId) {
+  function skinImagesMissing(skin, entry) {
+    if (typeof EnchantImagePreload === 'undefined' || !EnchantImagePreload.getImage) return false;
+    const id = normalizeSkinId(skin);
+    const folders = [NORMAL_FOLDER];
+    if (entry?.widths?.has(`${CRIT_FOLDER}/0`)) folders.push(CRIT_FOLDER);
+    return folders.some((folder) => {
+      const url = glyphUrl(id, folder, 0);
+      const img = EnchantImagePreload.getImage(url);
+      return !(img && img.complete && img.naturalWidth > 0);
+    });
+  }
+
+  async function ensurePreloaded(targetSkinId, opts = {}) {
     const id = normalizeSkinId(targetSkinId);
     const cached = skinCache.get(id);
-    if (cached?.ready) return cached;
+    if (cached?.ready && !opts.force) {
+      // 記憶體軟修剪可能踢掉共享圖：目錄仍 ready，需補載
+      if (!skinImagesMissing(id, cached)) return cached;
+      preloadJobs.delete(id);
+    } else if (cached?.ready && opts.force) {
+      preloadJobs.delete(id);
+      skinCache.delete(id);
+    }
 
     let job = preloadJobs.get(id);
     if (!job) {
       job = (async () => {
         const widths = new Map();
         const units = new Set();
-        const urls = [];
-        const folders = [NORMAL_FOLDER, CRIT_FOLDER];
-        folders.forEach((folder) => {
-          DIGITS.forEach((d) => urls.push(glyphUrl(id, folder, d)));
-          urls.push(glyphUrl(id, folder, UNIT_WAN));
-          urls.push(glyphUrl(id, folder, UNIT_YI));
-          if (folder === CRIT_FOLDER) urls.push(glyphUrl(id, folder, CRIT_ICON));
-        });
-        if (id === MOB_SKIN_ID) {
-          Object.keys(STATUS_GLYPHS).forEach((kind) => {
-            const url = statusGlyphUrl(id, kind);
-            if (url) urls.push(url);
-          });
-        }
+        const urls = collectSkinUrls(id);
 
         await Promise.all(urls.map((url) => preloadOne(url)));
 
-        for (const folder of folders) {
+        for (const folder of [NORMAL_FOLDER, CRIT_FOLDER]) {
           for (const index of [...DIGITS, UNIT_WAN, UNIT_YI, CRIT_ICON]) {
             const url = glyphUrl(id, folder, index);
             const img = typeof EnchantImagePreload !== 'undefined'
@@ -156,44 +181,27 @@ const DamageSkinCatalog = (() => {
     return job;
   }
 
-  function glyphWidth(skin, folder, index, fallback = 18) {
-    const entry = skinCache.get(normalizeSkinId(skin));
-    const w = entry?.widths?.get(`${folder}/${index}`);
-    return Number.isFinite(w) && w > 0 ? w : fallback;
-  }
-
-  function hasUnit(skin, index) {
-    const entry = skinCache.get(normalizeSkinId(skin));
-    if (!entry?.ready) return false;
-    return entry.units.has(index);
-  }
-
-  function getImage(skin, folder, index) {
-    const url = glyphUrl(skin, folder, index);
-    if (typeof EnchantImagePreload !== 'undefined') {
-      return EnchantImagePreload.getImage(url);
-    }
-    return null;
-  }
-
-  function getStatusImage(skin, kind) {
-    const url = statusGlyphUrl(skin, kind);
-    if (!url) return null;
-    if (typeof EnchantImagePreload !== 'undefined') {
-      return EnchantImagePreload.getImage(url);
-    }
-    return null;
+  function folderFor(isCritical, skin) {
+    if (!isCritical) return NORMAL_FOLDER;
+    const id = normalizeSkinId(skin);
+    const entry = skinCache.get(id);
+    // 以預載目錄為準，勿依賴可能被 softTrim 踢掉的 getImage
+    if (entry?.widths?.has(`${CRIT_FOLDER}/0`)) return CRIT_FOLDER;
+    if (getImage(id, CRIT_FOLDER, 0)) return CRIT_FOLDER;
+    return CRIT_FOLDER;
   }
 
   function buildGlyphs(skin, damageValue, isCritical) {
     const skinId = normalizeSkinId(skin);
-    const critFolder = folderFor(true, skinId);
+    const entry = skinCache.get(skinId);
+    const critFolder = CRIT_FOLDER;
     const normalFolder = NORMAL_FOLDER;
-    const folder = isCritical && getImage(skinId, critFolder, 0) ? critFolder : normalFolder;
+    const hasCritGlyph = !!(entry?.widths?.has(`${CRIT_FOLDER}/0`) || getImage(skinId, critFolder, 0));
+    const folder = isCritical && hasCritGlyph ? critFolder : normalFolder;
     const n = Math.max(0, Math.floor(Number(damageValue) || 0));
     const glyphs = [];
 
-    if (isCritical && getImage(skinId, critFolder, CRIT_ICON)) {
+    if (isCritical && (entry?.widths?.has(`${CRIT_FOLDER}/${CRIT_ICON}`) || getImage(skinId, critFolder, CRIT_ICON))) {
       glyphs.push({ folder: critFolder, index: CRIT_ICON });
     }
 
@@ -224,6 +232,35 @@ const DamageSkinCatalog = (() => {
     }
 
     return glyphs;
+  }
+
+  function glyphWidth(skin, folder, index, fallback = 18) {
+    const entry = skinCache.get(normalizeSkinId(skin));
+    const w = entry?.widths?.get(`${folder}/${index}`);
+    return Number.isFinite(w) && w > 0 ? w : fallback;
+  }
+
+  function hasUnit(skin, index) {
+    const entry = skinCache.get(normalizeSkinId(skin));
+    if (!entry?.ready) return false;
+    return entry.units.has(index);
+  }
+
+  function getImage(skin, folder, index) {
+    const url = glyphUrl(skin, folder, index);
+    if (typeof EnchantImagePreload !== 'undefined') {
+      return EnchantImagePreload.getImage(url);
+    }
+    return null;
+  }
+
+  function getStatusImage(skin, kind) {
+    const url = statusGlyphUrl(skin, kind);
+    if (!url) return null;
+    if (typeof EnchantImagePreload !== 'undefined') {
+      return EnchantImagePreload.getImage(url);
+    }
+    return null;
   }
 
   function totalWidth(skin, glyphs, overlap = 4) {
@@ -262,6 +299,7 @@ const DamageSkinCatalog = (() => {
     glyphWidth,
     getImage,
     getStatusImage,
+    pinnedUrls,
     GLYPH_OVERLAP: 4,
     // 相容舊 API
     currentSkinId: playerSkin,

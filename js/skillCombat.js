@@ -592,6 +592,16 @@ const SkillCombat = (() => {
       maxTargets: Math.max(1, atkCommon.mobCount || 1),
       onTick: () => {
         if (!isAsyncCastLive(asyncId)) return;
+        // 角色死亡：立刻中斷引導，避免副本／狩獵死後仍持續結算
+        if (typeof IdleHunt !== 'undefined' && IdleHunt.isPlayerDead?.()) {
+          castLockUntil = nowMs();
+          if (typeof Paperdoll !== 'undefined') Paperdoll.stopHuntSwingLoop?.();
+          if (activeSustainChannel && activeSustainChannel.asyncId === asyncId) {
+            activeSustainChannel = null;
+          }
+          if (typeof stopChannel === 'function') stopChannel();
+          return;
+        }
         const maxTargets = Math.max(1, atkCommon.mobCount || 1);
         const list = () => liveMobTargets(resolveCastMobs(ctx), maxTargets, ctx, skill.id);
         const targets = list();
@@ -1183,6 +1193,8 @@ const SkillCombat = (() => {
           snapshot = EquipStatPanel.buildSnapshot();
         }
         const combat = CombatPower.resolveCurrentInputs(snapshot);
+        const panelCritDmg = Number(combat?.resolved?.critDamageDetail?.panel);
+        if (Number.isFinite(panelCritDmg)) return 1.35 + panelCritDmg / 100;
         return Number(combat?.resolved?.rawCritSum) || 1.35;
       }
     } catch (_) { /* ignore */ }
@@ -2645,6 +2657,7 @@ const SkillCombat = (() => {
     reset,
     invalidateAsyncCasts,
     stopSustainChannel: stopActiveSustainChannel,
+    hasActiveSustain: () => !!activeSustainChannel,
     isCastLocked,
     pickNextCast,
     cast,

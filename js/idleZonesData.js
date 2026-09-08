@@ -11968,7 +11968,21 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "killGold": 50000,
     "bossKillExp": 50000,
     "bossKillGold": 500000,
-    "mobDrops": [],
+    "mobDrops": [
+      {
+        "kind": "consume",
+        "consumeType": "potion",
+        "scrollId": "",
+        "cubeId": "",
+        "itemId": "special-potion",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-potion-special-potion",
+        "name": "特殊藥水",
+        "chance": 5,
+        "amount": 1
+      }
+    ],
     "bossDrops": [],
     "drops": [],
     "custom": true,
@@ -13172,7 +13186,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
 const IDLE_ZONE_PATCHES = {
   "mapleisland-1": {
     "killExp": 1.5,
-    "killGold": 15,
+    "killGold": 1599999999999,
     "monsterHp": 7.5,
     "bossHp": 75,
     "bossKillExp": 15,
