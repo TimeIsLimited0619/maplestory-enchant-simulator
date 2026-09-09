@@ -1160,8 +1160,9 @@ const IdleMobAnim = (() => {
       80,
       Number(actionDurationMs(iconId, resolved, resolved)) || SKILL_MS,
     );
-    // 鎖招至少涵蓋完整動畫；SKILL_MAX_MS 僅防異常超長
-    const lockMs = scaleDelayMs(Math.min(SKILL_MAX_MS, bodyMs + 80));
+    // 鎖招至少涵蓋完整動畫；SKILL_MAX_MS 僅防異常超長；animSpeed>1 時等比縮短
+    const animSpeed = Math.max(0.1, Number(el.dataset.animSpeed) || 1);
+    const lockMs = scaleDelayMs(Math.min(SKILL_MAX_MS, bodyMs + 80)) / animSpeed;
     el.dataset.hitUntil = '0';
     img.dataset.frameAcc = '0';
     img.dataset.bodyDone = '0';
@@ -1213,8 +1214,10 @@ const IdleMobAnim = (() => {
       return;
     }
 
-    const fxTick = tickEffect(img, kind, dt);
-    let acc = (Number(img.dataset.frameAcc) || 0) + (Number(dt) || 0) * 1000;
+    const animSpeed = Math.max(0.1, Number(el.dataset.animSpeed) || 1);
+    const spedDt = (Number(dt) || 0) * animSpeed;
+    const fxTick = tickEffect(img, kind, spedDt);
+    let acc = (Number(img.dataset.frameAcc) || 0) + spedDt * 1000;
     let result = { wrapped: false };
     // 戰鬥 tick 100ms、幀 delay 60ms 時，若每 tick 只進 1 幀，鎖招會先到期 → 約第 16 幀被截斷
     for (let guard = 0; guard < 32; guard += 1) {

@@ -264,7 +264,8 @@ const IdleBossFight = (() => {
         400,
         Number(IdleMobAnim.actionDurationMs(id, dieAction, 'die')) || 1200,
       );
-      const timeout = scaleDelayMs(dur + 250);
+      const speed = Math.max(0.1, Number(el.dataset.animSpeed) || 1);
+      const timeout = scaleDelayMs(dur + 250) / speed;
       const start = Date.now();
       while (Date.now() - start < timeout) {
         if (el.dataset.dieDone === '1') break;
@@ -609,29 +610,42 @@ const IdleBossFight = (() => {
     };
   }
 
+  /** 西格諾斯轉階段（鎖血／覺醒）動畫倍率 */
+  const CYGNUS_PHASE_ANIM_SPEED = 2;
+
+  function setActorAnimSpeed(key, speed) {
+    const el = slotEl(key);
+    if (!el) return;
+    const n = Number(speed);
+    if (Number.isFinite(n) && n > 0 && n !== 1) el.dataset.animSpeed = String(n);
+    else delete el.dataset.animSpeed;
+  }
+
   async function playCygnusBodyAction(actionKey, fallbackMs = 1200) {
     if (!fight?.body) return false;
     const seq = atkFxSeq;
     const id = pad(fight.body.visualId);
     const key = String(actionKey || '');
     const el = slotEl('body');
+    const speed = CYGNUS_PHASE_ANIM_SPEED;
     if (!key) {
-      await sleep(fallbackMs);
+      await sleep(fallbackMs / speed);
       return false;
     }
     const has = typeof IdleMobAnim !== 'undefined'
       && !!IdleMobAnim.resolveAction?.(id, key);
     if (!has || !el) {
-      await sleep(scaleDelayMs(fallbackMs));
+      await sleep(scaleDelayMs(fallbackMs) / speed);
       return false;
     }
+    setActorAnimSpeed('body', speed);
     // 清施法鎖再播，避免 flashAttack 因仍 casting 失敗
     IdleMobAnim.clearActorCastFlags?.(el);
     if (el.dataset.introAction) delete el.dataset.introAction;
     if (!flashAttack('body', id, key)) {
       const img = IdleMobAnim.actorBodyImg?.(el);
       const bodyMs = Math.max(80, Number(IdleMobAnim.actionDurationMs?.(id, key)) || fallbackMs);
-      el.dataset.skillUntil = String(Date.now() + scaleDelayMs(bodyMs + 80));
+      el.dataset.skillUntil = String(Date.now() + scaleDelayMs(bodyMs + 80) / speed);
       el.dataset.attackUntil = '0';
       if (img) {
         img.dataset.kindAction = key;
@@ -640,7 +654,7 @@ const IdleBossFight = (() => {
         IdleMobAnim.bind?.(img, id, key, 0);
       }
     }
-    const cap = scaleDelayMs((IdleMobAnim.actionDurationMs?.(id, key) || fallbackMs) + 600);
+    const cap = scaleDelayMs((IdleMobAnim.actionDurationMs?.(id, key) || fallbackMs) + 600) / speed;
     const startAt = Date.now();
     while (Date.now() - startAt < cap) {
       if (seq !== atkFxSeq || !fight) return false;
@@ -743,6 +757,8 @@ const IdleBossFight = (() => {
     await playCygnusBodyAction(skill5, 3120);
     if (seq !== atkFxSeq || !fight) return;
 
+    // sleep 循環維持原速
+    setActorAnimSpeed('body', 1);
     fight.cygnusSleep = true;
     holdCygnusBodySleep();
     hooks?.onTitle?.('沉睡');
@@ -799,7 +815,9 @@ const IdleBossFight = (() => {
     const seq = atkFxSeq;
     busy = true;
     hooks?.onTitle?.('覺醒');
+    setActorAnimSpeed('escort', CYGNUS_PHASE_ANIM_SPEED);
     await playAnim('escort', escort.visualId, 'die1');
+    setActorAnimSpeed('escort', 1);
     if (seq !== atkFxSeq || !fight) return;
     removeSlot('escort');
     fight.escort = null;
@@ -812,6 +830,7 @@ const IdleBossFight = (() => {
     }
     if (seq !== atkFxSeq || !fight) return;
 
+    setActorAnimSpeed('body', 1);
     fight.cygnusSleep = false;
     fight.body.invincible = false;
     fight.lockIndex = Math.max(0, Math.floor(Number(fight.lockIndex) || 0)) + 1;
@@ -2376,6 +2395,7 @@ const IdleBossFight = (() => {
   }
 
   function afterExternalHits(mobs) {
+    // 與狩獵 applySkillMobStateSync 同一契約：傳入為碰過的單位，生死／轉階依實際狀態判定
     const list = Array.isArray(mobs) ? mobs : (mobs ? [mobs] : getCombatMobs());
     if (isPinkBean()) {
       list.forEach((mob) => {

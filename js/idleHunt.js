@@ -2064,8 +2064,12 @@ const IdleHunt = (() => {
     });
   }
 
-  function applySkillMobStateSync(kills) {
-    const killSet = new Set(Array.isArray(kills) ? kills.filter(Boolean) : []);
+  /**
+   * 傷害後同步佇列（與 IdleBossFight.afterExternalHits 同一語意）：
+   * 傳入的是「本次碰過／需檢查的 mob」，不是必殺名單；是否擊殺只看實際 hp。
+   * （伊修塔爾等持續引導會每 tick 帶入未死目標做同步，不可因在清單內就秒殺。）
+   */
+  function applySkillMobStateSync(_touched) {
     const remain = [];
     const toKill = [];
     state.queue.forEach((m) => {
@@ -2074,7 +2078,7 @@ const IdleHunt = (() => {
         remain.push(m);
         return;
       }
-      if (killSet.has(m) || m.hp <= 0) toKill.push(m);
+      if (m.hp <= 0) toKill.push(m);
       else remain.push(m);
     });
     // 先移出佇列再 applyKill，避免 applyKill→fillQueue 補怪後又被 remain 蓋掉
@@ -3413,16 +3417,8 @@ const IdleHunt = (() => {
           quietFx: skipVisual,
         }));
         state.atkAcc = 0;
-        if (result?.cast && Array.isArray(result.kills) && result.kills.length) {
-          const killSet = new Set(result.kills);
-          const remain = [];
-          state.queue.forEach((m) => {
-            if (!m) return;
-            if (killSet.has(m) || m.hp <= 0) applyKill(m);
-            else remain.push(m);
-          });
-          state.queue = remain;
-        }
+        // 與 BOSS tickPlayer：result.cast 後 afterExternalHits 同一套——依實際 hp 清隊
+        if (result?.cast) applySkillMobStateSync(result.kills || []);
         if (!skipVisual) syncComboOrbsUi();
         break;
       }

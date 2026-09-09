@@ -776,7 +776,7 @@ const IDLE_BOSS_PHASE = {
       {
         id: 'normal',
         hpMult: 10,
-        dmgMult: 1,
+        dmgMult: 5,
         reqLevel: 140,
         timeLimitSec: 1800,
         rewards: [
@@ -819,8 +819,8 @@ const IDLE_BOSS_PHASE = {
       },
       {
         id: 'hard',
-        hpMult: 6,
-        dmgMult: 3,
+        hpMult: 60,
+        dmgMult: 15,
         reqLevel: 190,
         timeLimitSec: 1800,
         rewards: [

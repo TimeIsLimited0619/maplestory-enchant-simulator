@@ -534,6 +534,16 @@ const SkillCombat = (() => {
 
     const kills = [];
     const hitMobs = [];
+    let tickDamagedMobs = [];
+    let stopChannel = null;
+    const abortSustainTick = () => {
+      castLockUntil = nowMs();
+      if (typeof Paperdoll !== 'undefined') Paperdoll.stopHuntSwingLoop?.();
+      if (activeSustainChannel && activeSustainChannel.asyncId === asyncId) {
+        activeSustainChannel = null;
+      }
+      if (typeof stopChannel === 'function') stopChannel();
+    };
     const asyncId = registerAsyncCast();
     const endFxMs = (() => {
       const frames = skillForFx?.fx?.keydownend || skill?.fx?.keydownend || [];
@@ -573,14 +583,16 @@ const SkillCombat = (() => {
         forceCritTail: form.forceCritTail || 0,
         fxHit: fireBallOnTick ? undefined : null,
       });
-      if (hit) pushUniqueMob(hitMobs, live);
+      if (hit) {
+        pushUniqueMob(hitMobs, live);
+        pushUniqueMob(tickDamagedMobs, live);
+      }
       if (live.hp <= 0) {
         pushUniqueMob(kills, live);
         syncMobStateAfterDamage([live], ctx);
       }
     };
 
-    let stopChannel = null;
     const handle = SkillChannelCast.playChannelCast({
       fieldEl,
       playerEl: ctx.playerEl,
@@ -592,14 +604,15 @@ const SkillCombat = (() => {
       maxTargets: Math.max(1, atkCommon.mobCount || 1),
       onTick: () => {
         if (!isAsyncCastLive(asyncId)) return;
+        tickDamagedMobs = [];
         // 角色死亡：立刻中斷引導，避免副本／狩獵死後仍持續結算
         if (typeof IdleHunt !== 'undefined' && IdleHunt.isPlayerDead?.()) {
-          castLockUntil = nowMs();
-          if (typeof Paperdoll !== 'undefined') Paperdoll.stopHuntSwingLoop?.();
-          if (activeSustainChannel && activeSustainChannel.asyncId === asyncId) {
-            activeSustainChannel = null;
-          }
-          if (typeof stopChannel === 'function') stopChannel();
+          abortSustainTick();
+          return;
+        }
+        // BOSS 轉階段 busy：中斷持續引導
+        if (sustain && typeof IdleBossFight !== 'undefined' && IdleBossFight.isBusy?.()) {
+          abortSustainTick();
           return;
         }
         const maxTargets = Math.max(1, atkCommon.mobCount || 1);
@@ -608,12 +621,7 @@ const SkillCombat = (() => {
 
         // 持續引導：無攻擊目標（王死亡／轉階段無敵／清場）立刻中斷，避免空放鎖死
         if (sustain && !targets.length) {
-          castLockUntil = nowMs();
-          if (typeof Paperdoll !== 'undefined') Paperdoll.stopHuntSwingLoop?.();
-          if (activeSustainChannel && activeSustainChannel.asyncId === asyncId) {
-            activeSustainChannel = null;
-          }
-          if (typeof stopChannel === 'function') stopChannel();
+          abortSustainTick();
           return;
         }
 
@@ -682,6 +690,19 @@ const SkillCombat = (() => {
             mergeLinkFollowers(picked, ctx, []);
           });
         }
+        // 持續引導：每 tick 同步場景（BOSS 轉階段／狩獵清隊）；場景端依 hp 判定，勿當必殺
+        if (sustain) {
+          syncMobStateAfterDamage(tickDamagedMobs.length ? tickDamagedMobs : targets, ctx);
+          if (typeof IdleBossFight !== 'undefined' && IdleBossFight.isBusy?.()) {
+            abortSustainTick();
+            return;
+          }
+          if (typeof IdleBoss !== 'undefined' && IdleBoss.isRunning?.()
+            && typeof IdleBossFight !== 'undefined' && IdleBossFight.capIncomingDamage) {
+            const canDeal = targets.some((m) => m && IdleBossFight.capIncomingDamage(m, 1) > 0);
+            if (!canDeal) abortSustainTick();
+          }
+        }
       },
       onDone: () => {
         if (activeSustainChannel && activeSustainChannel.asyncId === asyncId) {
@@ -692,7 +713,8 @@ const SkillCombat = (() => {
         }
         if (!isAsyncCastLive(asyncId)) return;
         releaseAsyncCast(asyncId);
-        syncMobStateAfterDamage(kills, ctx);
+        // 與每 tick 相同：帶入碰過的目標，讓場景依 hp 收尾（含 BOSS 血線鎖轉階）
+        syncMobStateAfterDamage(hitMobs.length ? hitMobs : kills, ctx);
         finishAfterDamage(kills, hitMobs);
       },
     });
@@ -1075,13 +1097,18 @@ const SkillCombat = (() => {
     return ctx.mobs || [];
   }
 
-  function syncMobStateAfterDamage(kills, ctx) {
+  /**
+   * 傷害後請場景同步狀態。
+   * touched：本次碰過的 mob（可含未死者）；場景端必須依實際 hp 判定擊殺／轉階段，
+   * 不可把清單當成「必殺」（狩獵／BOSS 共用此契約）。
+   */
+  function syncMobStateAfterDamage(touched, ctx) {
     if (typeof ctx.onMobStateSync === 'function') {
-      ctx.onMobStateSync(kills || []);
+      ctx.onMobStateSync(touched || []);
       return;
     }
     if (typeof ctx.onProjectileResolve === 'function') {
-      ctx.onProjectileResolve(kills || []);
+      ctx.onProjectileResolve(touched || []);
     }
   }
 
@@ -1130,6 +1157,7 @@ const SkillCombat = (() => {
       skillId: skill?.id,
       stackGroup: stackSlots.stackGroup,
       stackStartIndex: stackSlots.startIndex,
+      ctx,
     });
   }
 
