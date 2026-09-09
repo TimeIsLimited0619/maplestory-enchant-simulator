@@ -29,6 +29,15 @@ const SkillOverrides = (() => {
       commonRemove: ['u'],
     },
 
+    // 英雄「激勵」：改常駐被動（攻擊力／減傷／反射）
+    '1101006': {
+      type: 'passive',
+      equipable: false,
+      h: '永久：攻擊力增加#indiePad\\n被擊傷害減少#indiePowerGuard%，並反射#y%傷害',
+      desc: '劍與靈魂合而為一，永久增加攻擊力，並減少被擊傷害、反射所受傷害。',
+      commonRemove: ['time', 'mpCon', 'lt', 'rb'],
+    },
+
     // 1轉 魔靈彈：攻擊隻數 6、耗血減半（mpCon 減半）
     '2001008': {
       common: {
