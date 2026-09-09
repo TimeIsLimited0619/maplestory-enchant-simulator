@@ -2187,7 +2187,7 @@ const IDLE_BOSS_WZ = {
   },
   "11": {
     "listId": "11",
-    "name": "粉紅豆豆",
+    "name": "粉豆",
     "parts": [
       {
         "role": "body",

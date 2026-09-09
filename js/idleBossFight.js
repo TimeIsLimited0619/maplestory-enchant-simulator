@@ -1418,7 +1418,7 @@ const IdleBossFight = (() => {
     const shellId = fight.shell?.mobId || pad(phases[cur]?.shell);
     const next = cur + 1;
     const goingToBody = next >= phases.length;
-    hooks?.onTitle?.(goingToBody ? '粉紅豆豆' : '雕像解鎖');
+    hooks?.onTitle?.(goingToBody ? '粉豆' : '雕像解鎖');
 
     // 五尊齊全階段結束：先播各雕像 die1（勿先 purge，以免 atkFxSeq 打斷）
     if (goingToBody && isPinkBeanFullStatuePhase()) {
@@ -1471,7 +1471,7 @@ const IdleBossFight = (() => {
   async function enterPinkBeanBody() {
     if (!fight || !isPinkBean()) return;
     busy = true;
-    hooks?.onTitle?.('粉紅豆豆');
+    hooks?.onTitle?.('粉豆');
     hooks?.onPhase?.('body');
 
     armList().forEach((arm) => {

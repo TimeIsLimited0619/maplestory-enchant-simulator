@@ -14,7 +14,7 @@ const IDLE_BOSS_LIST = [
   { id: '22', name: '拉圖斯', artId: '22', playerPos: { x: 450, y: 585 }, bossPos: { x: 672, y: 702 } },
   { id: '2', name: '暗黑龍王', artId: '2/1', playerPos: { x: 300, y: 520 }, bossPos: { x: 650, y: 720 } },
   { id: '10', name: '梅格耐斯', artId: '10', playerPos: { x: 500, y: 663 }, bossPos: { x: 780, y: 653 } },
-  { id: '11', name: '粉紅豆豆', artId: '11', playerPos: { x: 420, y: 620 }, bossPos: { x: 680, y: 610 } },
+  { id: '11', name: '粉豆', artId: '11', playerPos: { x: 420, y: 620 }, bossPos: { x: 680, y: 610 } },
   { id: '12', name: '西格諾斯', artId: '12', playerPos: { x: 450, y: 580 }, bossPos: { x: 720, y: 580 } },
   { id: '18', artId: '18' },
   { id: '4', artId: '4' },

@@ -331,8 +331,8 @@ const IDLE_BOSS_PHASE = {
       },
       {
         id: 'hard',
-        hpMult: 10,
-        dmgMult: 5,
+        hpMult: 50,
+        dmgMult: 20,
         reqLevel: 160,
         timeLimitSec: 1800,
         rewards: [
@@ -664,7 +664,7 @@ const IDLE_BOSS_PHASE = {
    * 血量：WZ maxHP × difficulty.hpMult
    */
   '11': {
-    name: '粉紅豆豆',
+    name: '粉豆',
     kind: 'pinkbean',
     intro: { fromMob: '8820008', viaMob: '8820009', throneMob: '8820000' },
     statues: [
