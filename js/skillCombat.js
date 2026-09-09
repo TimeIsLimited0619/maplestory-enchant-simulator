@@ -2285,14 +2285,24 @@ const SkillCombat = (() => {
       : (Array.isArray(form.actions) ? form.actions[0] : '');
 
     const fx = skillForFx.fx || {};
-    const instructionNaturalMs = (typeof Paperdoll !== 'undefined'
-      && typeof Paperdoll.getInstructionDurationMs === 'function')
-      ? (Paperdoll.getInstructionDurationMs(skillAction) || 0)
-      : 0;
-    const instructionMs = scaleDurationByAttackSpeed(instructionNaturalMs, wzForDelay);
-    const effectMs = scaleDurationByAttackSpeed(skillFxDurationMs(fx), wzForDelay);
-    // 施放鎖定＝攻速後 delay／身體 instruction／施放特效 三者取長（含前搖後搖）
-    const lockMs = scaleGameDelayMs(Math.max(actionDelayMs, instructionMs, effectMs, 30));
+    const timedBuff = typeof SkillBuffRuntime !== 'undefined'
+      && SkillBuffRuntime.isTimedBuffSkill?.(skill, baseCommon);
+    const buffOnly = !!timedBuff || isBuffSkill(skill, baseCommon);
+
+    // Buff：施放無延遲（不鎖選招、不播揮砍動作）
+    let lockMs = 0;
+    let instructionMs = 0;
+    let effectMs = 0;
+    if (!buffOnly) {
+      const instructionNaturalMs = (typeof Paperdoll !== 'undefined'
+        && typeof Paperdoll.getInstructionDurationMs === 'function')
+        ? (Paperdoll.getInstructionDurationMs(skillAction) || 0)
+        : 0;
+      instructionMs = scaleDurationByAttackSpeed(instructionNaturalMs, wzForDelay);
+      effectMs = scaleDurationByAttackSpeed(skillFxDurationMs(fx), wzForDelay);
+      // 施放鎖定＝攻速後 delay／身體 instruction／施放特效 三者取長（含前搖後搖）
+      lockMs = scaleGameDelayMs(Math.max(actionDelayMs, instructionMs, effectMs, 30));
+    }
     castLockUntil = t + lockMs;
 
     if (baseCommon.cooltimeSec > 0) {
@@ -2306,7 +2316,8 @@ const SkillCombat = (() => {
       && typeof SkillChannelCast !== 'undefined'
       && SkillChannelCast.isChannelCastSkill?.(skill, fx);
 
-    if (!(ctx.quietFx || (typeof document !== 'undefined' && document.hidden))
+    if (!buffOnly
+      && !(ctx.quietFx || (typeof document !== 'undefined' && document.hidden))
       && typeof Paperdoll !== 'undefined' && typeof Paperdoll.playHuntSwing === 'function'
       && !willSustainChannel
       && skill.castFxAt !== 'targetHead') {
@@ -2327,9 +2338,6 @@ const SkillCombat = (() => {
     beginSkillResourceCast();
     spendSkillHpCost(baseCommon);
 
-    const timedBuff = typeof SkillBuffRuntime !== 'undefined'
-      && SkillBuffRuntime.isTimedBuffSkill?.(skill, baseCommon);
-
     if (timedBuff) {
       if (typeof SkillEffectPlayer !== 'undefined') {
         if (fx.effect?.length) SkillEffectPlayer.playOnPlayer(fx.effect, { playerEl: ctx.playerEl });
@@ -2343,8 +2351,8 @@ const SkillCombat = (() => {
         cast: true,
         skillId: skill.id,
         level,
-        actionDelayMs,
-        lockMs,
+        actionDelayMs: 0,
+        lockMs: 0,
         kills: [],
         buffOnly: true,
       };

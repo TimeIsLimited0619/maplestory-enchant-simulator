@@ -688,13 +688,17 @@ const SkillModifiers = (() => {
     return stats;
   }
 
-  /** 技能面板／Tooltip：占位符用 common（同步實際 mobCount、CD） */
+  /** 技能面板／Tooltip：占位符用 common（同步實際傷害％含 damPlus、mobCount、CD） */
   function resolvePanelCommon(skill, level) {
     const raw = skill?.common && typeof skill.common === 'object' ? { ...skill.common } : {};
     const stats = resolveCastCommon(skill, level);
     if (!stats) return raw;
     raw.mobCount = String(Math.max(1, Math.floor(Number(stats.mobCount) || 1)));
     if (stats.cooltimeSec > 0) raw.cooltime = String(stats.cooltimeSec);
+    // 顯示實際施放傷害％（含連結 damPlus／超技）；固定數字避免再被公式重算
+    if ((Number(stats.damagePct) || 0) > 0) {
+      raw.damage = String(Math.round(Number(stats.damagePct)));
+    }
     return raw;
   }
 

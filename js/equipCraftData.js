@@ -82,7 +82,7 @@ const EQUIP_CRAFT_ADVANCE_LINES = [
         id: 'adv_maple_heart_6',
         label: '覺醒的楓葉之心(魔攻) Lv.71',
         output: '01122035',
-        baseEquip: '01122029',
+        baseEquip: '01122030',
         baseCount: 1,
         materials: { nekopow: 50, meowcoin: 50 },
         meso: 250000,

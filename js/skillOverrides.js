@@ -202,10 +202,16 @@ const SkillOverrides = (() => {
         mobCount: '6',
       },
     },
-    // 雙弩槍精通：二轉 → 三轉（與水盾對調）
+    // 雙弩槍精通：二轉 → 三轉（與水盾對調）；角色每等級額外 HP（同魔力增幅 lv2mhp，每技能等 +5）
     '23100005': {
       rank: '60',
       skillBook: 2311,
+      h: '雙弩槍熟練度#mastery%增加\\n角色每等級額外增加HP #lv2mhp',
+      desc: '提升雙弩槍的熟練度，並依角色等級永久增加最大HP。',
+      common: {
+        lv2mhp: '10*x',
+      },
+      commonRemove: ['mhpR'],
     },
     // 水盾：三轉 → 二轉；不要無敵主動，只保留被動減傷／格擋／耐性（模擬減傷效果減半）
     '23111005': {
@@ -240,7 +246,19 @@ const SkillOverrides = (() => {
     // 落葉旋風／傳說之槍：WZ 有 tiles 但非暴風雪時間軸
     // 落葉旋風：本為騰空技，特效改掛目標頭頂，避免地面朝下空放
     '23111001': { blizzardCast: false, castFxAt: 'targetHead' },
-    '23121002': { blizzardCast: false },
+    // 接技後續（不可裝備／連鎖；由昇龍等頭技自動接，仍可學習吃 damPlus）
+    '23110006': {
+      equipable: false,
+      addAttackPrefer: ['23121002', '23121052', '23111001', '23111003'],
+    },
+    '23111003': { equipable: false },
+    '23121002': { blizzardCast: false, equipable: false },
+    '23121011': {
+      equipable: false,
+      addAttackPrefer: ['23121002', '23121052', '23111001', '23111003'],
+    },
+    '23121052': { equipable: false },
+    '23100004': { equipable: false }, // 最終一擊：接技後續
     // 伊修塔爾之環：持續引導；傷害即時結算，投射物純動畫
     '23121000': {
       ballVisualDamage: true,
@@ -278,12 +296,6 @@ const SkillOverrides = (() => {
      */
     '23101007': {
       addAttackPrefer: ['23121011', '23110006', '23100004'],
-    },
-    '23110006': {
-      addAttackPrefer: ['23121002', '23121052', '23111001', '23111003'],
-    },
-    '23121011': {
-      addAttackPrefer: ['23121002', '23121052', '23111001', '23111003'],
     },
   };
 

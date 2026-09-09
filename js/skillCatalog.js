@@ -177,6 +177,15 @@ const SkillCatalog = (() => {
    */
   let addAttackFollowupIds = null;
 
+  /** 精靈遊俠等：明示為接技後續、不可裝備（仍可學習，由頭技／優先序自動接） */
+  const FORCE_ADD_ATTACK_FOLLOWUP_IDS = new Set([
+    '23110006', // 騰空踢擊
+    '23111003', // 旋風突進
+    '23121002', // 傳說之槍
+    '23121011', // 旋風月光翻轉
+    '23121052', // 憤怒天使
+  ]);
+
   function isAddAttackChainHead(skill) {
     const aa = skill?.addAttack;
     if (!aa?.skill) return false;
@@ -185,7 +194,7 @@ const SkillCatalog = (() => {
 
   function collectAddAttackFollowupIds() {
     if (addAttackFollowupIds) return addAttackFollowupIds;
-    const set = new Set();
+    const set = new Set(FORCE_ADD_ATTACK_FOLLOWUP_IDS);
     const queue = [];
     const enqueue = (rawId) => {
       const id = String(rawId || '');
@@ -193,6 +202,8 @@ const SkillCatalog = (() => {
       set.add(id);
       queue.push(id);
     };
+    // 強制接技後續也要進 queue，以便展開其隱藏橋接（若有）
+    FORCE_ADD_ATTACK_FOLLOWUP_IDS.forEach((id) => queue.push(id));
     const all = books();
     Object.keys(all).forEach((key) => {
       (all[key].skills || []).forEach((raw) => {
