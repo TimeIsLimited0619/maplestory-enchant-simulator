@@ -214,9 +214,9 @@ const IDLE_DUNGEON_LIST = [
       "mobIcon": "9010147",
       "bossName": "副本 BOSS",
       "bossIcon": "",
-      "baseMobHp": 200000,
+      "baseMobHp": 2000000,
       "baseBossHp": 1800,
-      "mobAtk1Dmg": 2000,
+      "mobAtk1Dmg": 5000,
       "mobAtk1Cd": 1,
       "mobAtk2Dmg": 0,
       "mobAtk2Cd": 0,
@@ -249,7 +249,7 @@ const IDLE_DUNGEON_LIST = [
         "name": "難度 1",
         "reqLevel": 0,
         "killNeed": 0,
-        "settleGoldPerKill": 1000,
+        "settleGoldPerKill": 10000,
         "clearGold": 0,
         "hpMult": 1,
         "dmgMult": 1,
@@ -262,10 +262,10 @@ const IDLE_DUNGEON_LIST = [
         "name": "難度 2",
         "reqLevel": 0,
         "killNeed": 0,
-        "settleGoldPerKill": 2000,
+        "settleGoldPerKill": 20000,
         "clearGold": 0,
         "hpMult": 3,
-        "dmgMult": 1.5,
+        "dmgMult": 3,
         "dropAmountMult": 1,
         "dropRateMult": 1,
         "rewards": []
@@ -275,10 +275,10 @@ const IDLE_DUNGEON_LIST = [
         "name": "難度 3",
         "reqLevel": 0,
         "killNeed": 0,
-        "settleGoldPerKill": 4000,
+        "settleGoldPerKill": 40000,
         "clearGold": 0,
         "hpMult": 5,
-        "dmgMult": 2,
+        "dmgMult": 4,
         "dropAmountMult": 1,
         "dropRateMult": 1,
         "rewards": []
@@ -288,10 +288,10 @@ const IDLE_DUNGEON_LIST = [
         "name": "難度 4",
         "reqLevel": 0,
         "killNeed": 0,
-        "settleGoldPerKill": 8000,
+        "settleGoldPerKill": 80000,
         "clearGold": 0,
         "hpMult": 10,
-        "dmgMult": 3,
+        "dmgMult": 6.5,
         "dropAmountMult": 1,
         "dropRateMult": 1,
         "rewards": []
@@ -301,10 +301,10 @@ const IDLE_DUNGEON_LIST = [
         "name": "難度 5",
         "reqLevel": 0,
         "killNeed": 0,
-        "settleGoldPerKill": 16000,
+        "settleGoldPerKill": 160000,
         "clearGold": 0,
         "hpMult": 20,
-        "dmgMult": 5,
+        "dmgMult": 10,
         "dropAmountMult": 1,
         "dropRateMult": 1,
         "rewards": []
@@ -314,10 +314,10 @@ const IDLE_DUNGEON_LIST = [
         "name": "難度 6",
         "reqLevel": 0,
         "killNeed": 0,
-        "settleGoldPerKill": 32000,
+        "settleGoldPerKill": 320000,
         "clearGold": 0,
         "hpMult": 40,
-        "dmgMult": 7,
+        "dmgMult": 14,
         "dropAmountMult": 1,
         "dropRateMult": 1,
         "rewards": []
@@ -327,10 +327,10 @@ const IDLE_DUNGEON_LIST = [
         "name": "難度 7",
         "reqLevel": 0,
         "killNeed": 0,
-        "settleGoldPerKill": 64000,
+        "settleGoldPerKill": 640000,
         "clearGold": 0,
         "hpMult": 80,
-        "dmgMult": 10,
+        "dmgMult": 22,
         "dropAmountMult": 1,
         "dropRateMult": 1,
         "rewards": []
@@ -340,10 +340,10 @@ const IDLE_DUNGEON_LIST = [
         "name": "難度 8",
         "reqLevel": 0,
         "killNeed": 0,
-        "settleGoldPerKill": 128000,
+        "settleGoldPerKill": 1280000,
         "clearGold": 0,
         "hpMult": 160,
-        "dmgMult": 15,
+        "dmgMult": 33,
         "dropAmountMult": 1,
         "dropRateMult": 1,
         "rewards": []
@@ -353,10 +353,10 @@ const IDLE_DUNGEON_LIST = [
         "name": "難度 9",
         "reqLevel": 0,
         "killNeed": 0,
-        "settleGoldPerKill": 256000,
+        "settleGoldPerKill": 2560000,
         "clearGold": 0,
         "hpMult": 320,
-        "dmgMult": 20,
+        "dmgMult": 50,
         "dropAmountMult": 1,
         "dropRateMult": 1,
         "rewards": []
@@ -366,10 +366,10 @@ const IDLE_DUNGEON_LIST = [
         "name": "難度 10",
         "reqLevel": 0,
         "killNeed": 0,
-        "settleGoldPerKill": 512000,
+        "settleGoldPerKill": 5120000,
         "clearGold": 0,
         "hpMult": 640,
-        "dmgMult": 30,
+        "dmgMult": 75,
         "dropAmountMult": 1,
         "dropRateMult": 1,
         "rewards": []
@@ -1141,11 +1141,11 @@ const IDLE_DUNGEON_LIST = [
             "consumeType": "hammer",
             "scrollId": "",
             "cubeId": "",
-            "hammerId": "platinum",
+            "hammerId": "golden",
             "soulId": "",
             "itemId": "",
-            "catalogId": "consume-hammer-platinum",
-            "name": "白金鐵鎚",
+            "catalogId": "consume-hammer-golden",
+            "name": "黃金鐵鎚",
             "amount": 1,
             "chance": 100
           }
@@ -1161,11 +1161,11 @@ const IDLE_DUNGEON_LIST = [
             "consumeType": "hammer",
             "scrollId": "",
             "cubeId": "",
-            "hammerId": "platinum",
+            "hammerId": "golden",
             "soulId": "",
             "itemId": "",
-            "catalogId": "consume-hammer-platinum",
-            "name": "白金鐵鎚",
+            "catalogId": "consume-hammer-golden",
+            "name": "黃金鐵鎚",
             "amount": 1,
             "chance": 100
           }
@@ -1206,7 +1206,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-hammer-platinum",
             "name": "白金鐵鎚",
-            "amount": 2,
+            "amount": 1,
             "chance": 100
           }
         ]
@@ -1226,7 +1226,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-hammer-platinum",
             "name": "白金鐵鎚",
-            "amount": 2,
+            "amount": 1,
             "chance": 100
           }
         ]
@@ -1246,20 +1246,7 @@ const IDLE_DUNGEON_LIST = [
             "itemId": "",
             "catalogId": "consume-hammer-platinum",
             "name": "白金鐵鎚",
-            "amount": 3,
-            "chance": 100
-          },
-          {
-            "kind": "consume",
-            "consumeType": "hammer",
-            "scrollId": "",
-            "cubeId": "",
-            "hammerId": "golden",
-            "soulId": "",
-            "itemId": "",
-            "catalogId": "consume-hammer-golden",
-            "name": "黃金鐵鎚",
-            "amount": 1,
+            "amount": 2,
             "chance": 100
           }
         ]
@@ -1274,12 +1261,52 @@ const IDLE_DUNGEON_LIST = [
             "consumeType": "hammer",
             "scrollId": "",
             "cubeId": "",
-            "hammerId": "golden",
+            "hammerId": "platinum",
             "soulId": "",
             "itemId": "",
-            "catalogId": "consume-hammer-golden",
-            "name": "黃金鐵鎚",
-            "amount": 2,
+            "catalogId": "consume-hammer-platinum",
+            "name": "白金鐵鎚",
+            "amount": 3,
+            "chance": 100
+          }
+        ]
+      },
+      {
+        "minDamage": 50000000000,
+        "gold": 50000000,
+        "name": "500 億",
+        "rewards": [
+          {
+            "kind": "consume",
+            "consumeType": "hammer",
+            "scrollId": "",
+            "cubeId": "",
+            "hammerId": "platinum",
+            "soulId": "",
+            "itemId": "",
+            "catalogId": "consume-hammer-platinum",
+            "name": "白金鐵鎚",
+            "amount": 5,
+            "chance": 100
+          }
+        ]
+      },
+      {
+        "minDamage": 100000000000,
+        "gold": 100000000,
+        "name": "1000 億",
+        "rewards": [
+          {
+            "kind": "consume",
+            "consumeType": "hammer",
+            "scrollId": "",
+            "cubeId": "",
+            "hammerId": "platinum",
+            "soulId": "",
+            "itemId": "",
+            "catalogId": "consume-hammer-platinum",
+            "name": "白金鐵鎚",
+            "amount": 10,
             "chance": 100
           }
         ]

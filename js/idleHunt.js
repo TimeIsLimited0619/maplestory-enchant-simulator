@@ -91,6 +91,10 @@ const IdleHunt = (() => {
   let gameSpeed = 1;
   let gmGodMode = false;
   let gmOneHitKill = false;
+  /** 受擊無敵幀結束時間（Date.now） */
+  let playerHurtIframeUntil = 0;
+  /** 受擊後基礎無敵時間（ms；會套用遊戲倍速） */
+  const PLAYER_HURT_IFRAME_MS = 500;
   /** 補位時每格錯開多久，營造一隻一隻往前走的節奏 */
   const MOB_STEP_STAGGER_MS = 100;
   /** 隊列補位／進場移動速度倍率（2 = 快一倍） */
@@ -1661,8 +1665,17 @@ const IdleHunt = (() => {
   }
 
   function revivePlayer() {
+    playerHurtIframeUntil = 0;
     syncPlayerHp({ fill: true });
     save();
+  }
+
+  function isPlayerHurtIframe() {
+    return Date.now() < playerHurtIframeUntil;
+  }
+
+  function grantPlayerHurtIframe() {
+    playerHurtIframeUntil = Date.now() + scaleDelayMs(PLAYER_HURT_IFRAME_MS);
   }
 
   function failBossFight() {
@@ -1891,6 +1904,7 @@ const IdleHunt = (() => {
 
   function hurtPlayer(amount, opts = {}) {
     if (gmGodMode) return;
+    if (isPlayerHurtIframe()) return;
     let dmg = Math.max(0, Math.floor(Number(amount) || 0));
     if (!(dmg > 0) || isPlayerDead()) return;
 
@@ -1950,6 +1964,7 @@ const IdleHunt = (() => {
     syncPlayerHp();
     state.hp = Math.max(0, (Number(state.hp) || 0) - dmg);
     flashPlayerHurt();
+    grantPlayerHurtIframe();
     if (typeof SkillComboOrbs !== 'undefined') {
       SkillComboOrbs.onPlayerHit?.();
       syncComboOrbsUi();
@@ -4290,9 +4305,9 @@ const IdleHunt = (() => {
     if (!wrap) return;
     if (!$('idleHuntReset')) {
       wrap.insertAdjacentHTML('afterbegin',
-        `<button type="button" class="app-nav-item app-nav-item--danger" id="idleHuntReset" data-icon-dir="idlehuntreset" title="重置放置數據">
+        `<button type="button" class="app-nav-item app-nav-item--danger" id="idleHuntReset" data-icon-dir="idlehuntreset" title="重置遊戲數據">
           <img class="app-nav-item-icon" src="images/menubtn/idlehuntreset/normal/0.png" alt="" draggable="false" aria-hidden="true">
-          <span class="app-nav-item-label">重置放置數據</span>
+          <span class="app-nav-item-label">重置遊戲數據</span>
         </button>`);
     }
     if (!$('idleHuntResetConfirm')) {

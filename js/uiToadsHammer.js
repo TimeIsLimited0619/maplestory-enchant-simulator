@@ -159,13 +159,16 @@ const UiToadsHammer = (() => {
     return Number(entryOrState?.reqLevel ?? entryOrState?.state?.reqLevel ?? 0) || 0;
   }
 
-  /** 同部位；≤119 可傳給高 1～20 等；>119 需同等級以上同部位 */
+  /** 119 級以下裝備可繼承至同部位、高 1～25 等；120 級以上需同等級以上同部位 */
+  const MAX_INHERIT_LEVEL_GAP = 25;
+
+  /** 同部位；≤119 可傳給高 1～25 等；>119 需同等級以上同部位 */
   function canInheritTo(src, dst) {
     if (!src || !dst) return false;
     if (String(src.islot || '') !== String(dst.islot || '')) return false;
     const sl = reqLevelOf(src);
     const dl = reqLevelOf(dst);
-    if (sl <= 119) return dl >= sl && dl <= sl + 20;
+    if (sl <= 119) return dl >= sl && dl <= sl + MAX_INHERIT_LEVEL_GAP;
     return dl >= sl;
   }
 

@@ -211,6 +211,8 @@ const IDLE_NPC_SHOP = {
     { kind: 'consume', itemId: 'potion-white', buyPrice: 300, amount: 1, minLevel: 25 },
     { kind: 'consume', itemId: 'grilled-eel', buyPrice: 1000, amount: 1, minLevel: 40 },
     { kind: 'consume', itemId: 'Reindeer-milk', buyPrice: 5000, amount: 1, minLevel: 65 },
+    { kind: 'consume', itemId: '02022089', buyPrice: 10000, amount: 1, minLevel: 100 },
+    { kind: 'consume', itemId: '02020031', buyPrice: 30000, amount: 1, minLevel: 100 },
 
 
     { kind: 'scroll', itemId: 'scroll_normal_non_weapon_str_100', buyPrice: 5000, amount: 1, minLevel: 10 },

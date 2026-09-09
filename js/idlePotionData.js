@@ -52,12 +52,36 @@ const IDLE_POTION_DATABASE = [
     price: 500,
   },
   {
+    id: 'Reindeer-milk',
+    name: '馴鹿奶',
+    icon: 'images/potion/5.png',
+    desc: '將馴鹿的新鮮奶水收集起來裝在瓶子裡。',
+    recover: 5000,
+    price: 500,
+  },
+  {
+    id: '02022089',
+    name: '幼年龍的離乳食',
+    icon: 'images/potion/8.png',
+    desc: '幼年龍的離乳食。',
+    recover: 10000,
+    price: 1000,
+  },
+  {
+    id: '02020031',
+    name: '可口可樂',
+    icon: 'images/potion/9.png',
+    desc: '幼年龍的離乳食。',
+    recoverPct: 30,
+    price: 3000,
+  },
+  {
     id: 'special-potion',
     name: '特殊藥水',
     icon: 'images/potion/6.png',
     desc: '傳說中的祕藥。',
     recoverPct: 50,
-    price: 1000,
+    price: 5000,
   },  
   {
     id: 'super-potion',
@@ -65,7 +89,7 @@ const IDLE_POTION_DATABASE = [
     icon: 'images/potion/7.png',
     desc: '傳說中的祕藥。',
     recoverPct: 100,
-    price: 2000,
+    price: 10000,
   },  
 ];
 

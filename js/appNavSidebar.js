@@ -284,9 +284,9 @@ const AppNavSidebar = (() => {
         </section>
       </div>
       <footer class="app-nav-footer" data-idle-only>
-        <button type="button" class="app-nav-item app-nav-item--danger" id="idleHuntReset" data-icon-dir="idlehuntreset" title="重置放置數據">
+        <button type="button" class="app-nav-item app-nav-item--danger" id="idleHuntReset" data-icon-dir="idlehuntreset" title="重置遊戲數據">
           <img class="app-nav-item-icon" src="${iconUrl('idlehuntreset', 'normal')}" alt="" draggable="false" aria-hidden="true">
-          <span class="app-nav-item-label">重置放置數據</span>
+          <span class="app-nav-item-label">重置遊戲數據</span>
         </button>
         <div id="idleHuntResetConfirm" class="app-nav-reset-confirm is-hidden">
           <span>確定清除放置模式全部資料？（模擬器不受影響）</span>
