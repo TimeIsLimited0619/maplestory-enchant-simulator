@@ -443,21 +443,34 @@ const SkillBuffRuntime = (() => {
           if (!(dmg > 0)) continue;
           if (typeof SkillMobStatus !== 'undefined'
             && typeof SkillMobStatus.applyOutgoingDamageMods === 'function') {
-            dmg = SkillMobStatus.applyOutgoingDamageMods(mob, dmg);
+            dmg = SkillMobStatus.applyOutgoingDamageMods(mob, dmg, {
+              isCritical: !!hit.isCritical,
+              skillId: state.parentSkillId || state.summonSkillId || null,
+            });
           }
           if (!(dmg > 0)) continue;
           any = true;
-          if (typeof ctx.showMobDamage === 'function') {
-            ctx.showMobDamage(mob, dmg, hit.isCritical, {
-              multiHit: true,
-              stackIndex: s * state.attackCount + i,
+          const dmgOpts = {
+            multiHit: true,
+            stackIndex: s * state.attackCount + i,
+          };
+          if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.applyPlayerHitToMob === 'function') {
+            IdleHunt.applyPlayerHitToMob(mob, dmg, {
+              isCritical: !!hit.isCritical,
+              showMobDamage: ctx.showMobDamage,
+              onDamage: ctx.onDamage,
+              dmgOpts,
             });
+          } else {
+            if (typeof ctx.showMobDamage === 'function') {
+              ctx.showMobDamage(mob, dmg, hit.isCritical, dmgOpts);
+            }
+            if (typeof ctx.onDamage === 'function') ctx.onDamage(dmg);
+            const finalDmg = (typeof IdleHunt !== 'undefined' && typeof IdleHunt.resolveMobHitDamage === 'function')
+              ? IdleHunt.resolveMobHitDamage(mob, dmg)
+              : dmg;
+            mob.hp -= finalDmg;
           }
-          if (typeof ctx.onDamage === 'function') ctx.onDamage(dmg);
-          const finalDmg = (typeof IdleHunt !== 'undefined' && typeof IdleHunt.resolveMobHitDamage === 'function')
-            ? IdleHunt.resolveMobHitDamage(mob, dmg)
-            : dmg;
-          mob.hp -= finalDmg;
         }
       }
       if (typeof SkillMobStatus !== 'undefined'

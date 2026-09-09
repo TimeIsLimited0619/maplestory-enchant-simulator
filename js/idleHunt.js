@@ -302,9 +302,15 @@ const IdleHunt = (() => {
     return gmOneHitKill;
   }
 
-  /** GM 一擊必殺：至少扣到怪物剩餘 HP（BOSS 場另套轉階傷害鎖） */
-  function resolveMobHitDamage(mob, dmg) {
+  /**
+   * 最終套用傷害：GM OHK → BOSS 血線 cap。
+   * 怪物防禦（IED×PDRate）暫不套用——面板／技能無視尚未完善。
+   * opts.skillIed 保留參數以相容呼叫端，目前忽略。
+   */
+  function resolveMobHitDamage(mob, dmg, opts = {}) {
     let base = Math.max(0, Math.floor(Number(dmg) || 0));
+    // 暫關：UiCharacterInfo.applyMobDefense（等 IED 來源／合併完整再開）
+    void opts;
     if (gmOneHitKill && mob) {
       const hp = Math.max(1, Math.floor(Number(mob.hp) || 0));
       base = Math.max(base, hp);
@@ -314,6 +320,27 @@ const IdleHunt = (() => {
       base = IdleBossFight.capIncomingDamage(mob, base);
     }
     return Math.max(0, Math.floor(base));
+  }
+
+  /**
+   * 統一：先算出 finalDmg，再顯示、再扣血（顯示＝實扣）。
+   * 回傳 finalDmg。
+   */
+  function applyPlayerHitToMob(mob, rawDmg, opts = {}) {
+    if (!mob) return 0;
+    const finalDmg = resolveMobHitDamage(mob, rawDmg, {
+      skillIed: opts.skillIed,
+    });
+    if (typeof opts.showMobDamage === 'function') {
+      opts.showMobDamage(mob, finalDmg, !!opts.isCritical, opts.dmgOpts || {});
+    }
+    if (typeof opts.onDamage === 'function') opts.onDamage(finalDmg);
+    mob.hp = (Number(mob.hp) || 0) - finalDmg;
+    if (typeof IdleBossFight !== 'undefined'
+      && typeof IdleBossFight.afterAppliedDamage === 'function') {
+      IdleBossFight.afterAppliedDamage(mob, finalDmg);
+    }
+    return finalDmg;
   }
 
   function syncGameSpeedInput() {
@@ -3449,7 +3476,10 @@ const IdleHunt = (() => {
       let rolled = hit.dmg;
       if (typeof SkillMobStatus !== 'undefined'
         && typeof SkillMobStatus.applyOutgoingDamageMods === 'function') {
-        rolled = SkillMobStatus.applyOutgoingDamageMods(front, rolled);
+        rolled = SkillMobStatus.applyOutgoingDamageMods(front, rolled, {
+          isCritical: !!hit.isCritical,
+          skillId: null,
+        });
       }
       const dmg = resolveMobHitDamage(front, rolled);
       if (!(dmg > 0)) break;
@@ -3458,7 +3488,7 @@ const IdleHunt = (() => {
       front.hp -= dmg;
       if (typeof SkillMobStatus !== 'undefined'
         && typeof SkillMobStatus.afterPlayerDamagedMob === 'function') {
-        SkillMobStatus.afterPlayerDamagedMob(front, true);
+        SkillMobStatus.afterPlayerDamagedMob(front, true, { skillId: null });
       }
       if (typeof SkillComboOrbs !== 'undefined') {
         SkillComboOrbs.onAttackHit?.();
@@ -4867,6 +4897,7 @@ const IdleHunt = (() => {
     isOneHitKill,
     setOneHitKill,
     resolveMobHitDamage,
+    applyPlayerHitToMob,
     setPickerOpen,
     getZoneId: () => state.zoneId,
   };

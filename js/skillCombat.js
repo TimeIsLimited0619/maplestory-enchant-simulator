@@ -690,15 +690,26 @@ const SkillCombat = (() => {
             mergeLinkFollowers(picked, ctx, []);
           });
         }
-        // 持續引導：每 tick 同步場景（BOSS 轉階段／狩獵清隊）；場景端依 hp 判定，勿當必殺
+        // 持續引導：有死者才掃狩獵佇列；BOSS 另做轉階檢查（避免每 tick 全隊 sync）
         if (sustain) {
-          syncMobStateAfterDamage(tickDamagedMobs.length ? tickDamagedMobs : targets, ctx);
+          const touched = tickDamagedMobs.length ? tickDamagedMobs : targets;
+          const deadTouched = touched.filter((m) => m && !(Number(m.hp) > 0));
+          const inBoss = typeof IdleBoss !== 'undefined' && IdleBoss.isRunning?.();
+          if (deadTouched.length) {
+            syncMobStateAfterDamage(deadTouched, ctx);
+          } else if (inBoss) {
+            if (typeof IdleBossFight !== 'undefined'
+              && typeof IdleBossFight.tryPhaseCheck === 'function') {
+              IdleBossFight.tryPhaseCheck(touched);
+            } else {
+              syncMobStateAfterDamage(touched, ctx);
+            }
+          }
           if (typeof IdleBossFight !== 'undefined' && IdleBossFight.isBusy?.()) {
             abortSustainTick();
             return;
           }
-          if (typeof IdleBoss !== 'undefined' && IdleBoss.isRunning?.()
-            && typeof IdleBossFight !== 'undefined' && IdleBossFight.capIncomingDamage) {
+          if (inBoss && typeof IdleBossFight !== 'undefined' && IdleBossFight.capIncomingDamage) {
             const canDeal = targets.some((m) => m && IdleBossFight.capIncomingDamage(m, 1) > 0);
             if (!canDeal) abortSustainTick();
           }
@@ -713,8 +724,16 @@ const SkillCombat = (() => {
         }
         if (!isAsyncCastLive(asyncId)) return;
         releaseAsyncCast(asyncId);
-        // 與每 tick 相同：帶入碰過的目標，讓場景依 hp 收尾（含 BOSS 血線鎖轉階）
-        syncMobStateAfterDamage(hitMobs.length ? hitMobs : kills, ctx);
+        if (kills.length) {
+          syncMobStateAfterDamage(kills, ctx);
+        } else if (typeof IdleBoss !== 'undefined' && IdleBoss.isRunning?.()) {
+          if (typeof IdleBossFight !== 'undefined'
+            && typeof IdleBossFight.tryPhaseCheck === 'function') {
+            IdleBossFight.tryPhaseCheck(hitMobs);
+          } else {
+            syncMobStateAfterDamage(hitMobs, ctx);
+          }
+        }
         finishAfterDamage(kills, hitMobs);
       },
     });
@@ -1240,7 +1259,12 @@ const SkillCombat = (() => {
       const level = CharacterSkills.getLevel?.(skill?.id) || 0;
       pct += SkillFormula.resolveNormalMobBonusPct?.(skill, level) || 0;
     }
-    const base = UiCharacterInfo.getHuntHitDamage(!!mob.isBoss);
+    const skillEn = (skill?.id && typeof SkillModifiers !== 'undefined'
+      && typeof SkillModifiers.getSkillEnhance === 'function')
+      ? SkillModifiers.getSkillEnhance(skill.id)
+      : null;
+    const skillBdR = (mob.isBoss && skillEn) ? (Number(skillEn.bdR) || 0) : 0;
+    const base = UiCharacterInfo.getHuntHitDamage(!!mob.isBoss, { skillBdR });
     const perHit = Math.max(0, Math.floor(base * pct / 100));
     const hits = Math.max(1, Number(atkCommon?.attackCount) || 1);
     const critTail = Math.max(0, Math.min(hits, Number(form?.forceCritTail) || 0));
@@ -1251,8 +1275,12 @@ const SkillCombat = (() => {
       let hitDmg = useCrit ? Math.floor(perHit * critMult) : perHit;
       if (typeof SkillMobStatus !== 'undefined'
         && typeof SkillMobStatus.applyOutgoingDamageMods === 'function') {
-        hitDmg = SkillMobStatus.applyOutgoingDamageMods(mob, hitDmg);
+        hitDmg = SkillMobStatus.applyOutgoingDamageMods(mob, hitDmg, {
+          isCritical: useCrit,
+          skillId: skill?.id,
+        });
       }
+      // 怪物防禦暫不套用（與 resolveMobHitDamage 一致）
       total += hitDmg;
     }
     return total;
@@ -1476,6 +1504,7 @@ const SkillCombat = (() => {
         damagePct,
         forceCritical: !!opts.forceCritical,
         critRateBonus: opts.critRateBonus,
+        skillBdR: opts.skillBdR,
       });
     }
     return { dmg: 0, isCritical: false };
@@ -1510,6 +1539,13 @@ const SkillCombat = (() => {
       SkillEffectPlayer.playOnMob(mob, hitFx);
     }
 
+    const skillEn = (skillId && typeof SkillModifiers !== 'undefined'
+      && typeof SkillModifiers.getSkillEnhance === 'function')
+      ? SkillModifiers.getSkillEnhance(skillId)
+      : null;
+    const skillBdR = (mob.isBoss && skillEn) ? (Number(skillEn.bdR) || 0) : 0;
+    const skillIed = skillEn ? (Number(skillEn.ied) || 0) : 0;
+
     let stackGroup = stackGroupOpt;
     let startIndex = Number.isFinite(stackStartOpt) ? Math.max(0, Math.floor(stackStartOpt)) : null;
     if (stackGroup == null || startIndex == null) {
@@ -1521,22 +1557,13 @@ const SkillCombat = (() => {
     let any = false;
     for (let i = 0; i < n; i += 1) {
       const forceCritical = critTail > 0 && i >= n - critTail;
-      const hit = rollSkillHit(!!mob.isBoss, pct, { forceCritical, critRateBonus });
+      const hit = rollSkillHit(!!mob.isBoss, pct, {
+        forceCritical,
+        critRateBonus,
+        skillBdR,
+      });
       let dmg = hit.dmg;
       if (!(dmg > 0)) continue;
-      // 技能專屬超技：B傷／無視防禦（以乘算近似，與結凍粉碎 IED 同路徑）
-      const skillEn = (skillId && typeof SkillModifiers !== 'undefined'
-        && typeof SkillModifiers.getSkillEnhance === 'function')
-        ? SkillModifiers.getSkillEnhance(skillId)
-        : null;
-      if (skillEn) {
-        if (mob.isBoss && (Number(skillEn.bdR) || 0) > 0) {
-          dmg = Math.max(0, Math.floor(dmg * (1 + Number(skillEn.bdR) / 100)));
-        }
-        if ((Number(skillEn.ied) || 0) > 0) {
-          dmg = Math.max(0, Math.floor(dmg * (1 + Number(skillEn.ied) / 100)));
-        }
-      }
       if (typeof SkillMobStatus !== 'undefined'
         && typeof SkillMobStatus.applyOutgoingDamageMods === 'function') {
         dmg = SkillMobStatus.applyOutgoingDamageMods(mob, dmg, {
@@ -1554,14 +1581,25 @@ const SkillCombat = (() => {
           ? { delay: i * segmentGapSec }
           : {}),
       };
-      if (typeof showMobDamage === 'function') {
-        showMobDamage(mob, dmg, hit.isCritical, dmgOpts);
+      // 先 cap／IED，再顯示＝實扣
+      if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.applyPlayerHitToMob === 'function') {
+        IdleHunt.applyPlayerHitToMob(mob, dmg, {
+          skillIed,
+          isCritical: !!hit.isCritical,
+          showMobDamage,
+          onDamage,
+          dmgOpts,
+        });
+      } else {
+        const finalDmg = (typeof IdleHunt !== 'undefined' && typeof IdleHunt.resolveMobHitDamage === 'function')
+          ? IdleHunt.resolveMobHitDamage(mob, dmg, { skillIed })
+          : dmg;
+        if (typeof showMobDamage === 'function') {
+          showMobDamage(mob, finalDmg, hit.isCritical, dmgOpts);
+        }
+        if (typeof onDamage === 'function') onDamage(finalDmg);
+        mob.hp -= finalDmg;
       }
-      if (typeof onDamage === 'function') onDamage(dmg);
-      const finalDmg = (typeof IdleHunt !== 'undefined' && typeof IdleHunt.resolveMobHitDamage === 'function')
-        ? IdleHunt.resolveMobHitDamage(mob, dmg)
-        : dmg;
-      mob.hp -= finalDmg;
     }
     if (typeof SkillMobStatus !== 'undefined'
       && typeof SkillMobStatus.afterPlayerDamagedMob === 'function') {

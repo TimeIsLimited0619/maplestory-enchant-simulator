@@ -649,6 +649,7 @@ const SkillMobStatus = (() => {
     }
     const shatterIed = rollFrozenShatterIed(mob);
     if (shatterIed > 0) {
+      // 結凍粉碎：技能狀態觸發的無視，仍以乘算近似（非面板 IED×PDRate 路徑）
       out = Math.max(0, Math.floor(out * (1 + shatterIed / 100)));
     }
     const stacks = getFreezeStacks(mob);
@@ -705,16 +706,23 @@ const SkillMobStatus = (() => {
     const dmg = rollDotDamage(mob, row.dotPct);
     if (!(dmg > 0)) return null;
 
-    if (typeof ctx.showMobDamage === 'function') {
-      ctx.showMobDamage(mob, dmg, false);
+    if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.applyPlayerHitToMob === 'function') {
+      IdleHunt.applyPlayerHitToMob(mob, dmg, {
+        isCritical: false,
+        showMobDamage: ctx.showMobDamage,
+        onDamage: ctx.onDamage,
+      });
+    } else {
+      if (typeof ctx.showMobDamage === 'function') {
+        ctx.showMobDamage(mob, dmg, false);
+      }
+      if (typeof ctx.onDamage === 'function') ctx.onDamage(dmg);
+      const finalDmg = (typeof IdleHunt !== 'undefined'
+        && typeof IdleHunt.resolveMobHitDamage === 'function')
+        ? IdleHunt.resolveMobHitDamage(mob, dmg)
+        : dmg;
+      mob.hp -= finalDmg;
     }
-    if (typeof ctx.onDamage === 'function') ctx.onDamage(dmg);
-
-    const finalDmg = (typeof IdleHunt !== 'undefined'
-      && typeof IdleHunt.resolveMobHitDamage === 'function')
-      ? IdleHunt.resolveMobHitDamage(mob, dmg)
-      : dmg;
-    mob.hp -= finalDmg;
 
     if (mob.hp <= 0) {
       if (typeof ctx.flashDie === 'function') ctx.flashDie(mob.uid, mob);

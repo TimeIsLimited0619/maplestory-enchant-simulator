@@ -377,8 +377,9 @@ const UiCharacterInfo = (() => {
    * 屬性攻擊力
    * 武器係數 × (4×主屬 + 副屬) × 總攻魔/100 × (1+(傷害%+額外傷害%)/100) × ∏(1+終傷_i%/100)
    * target: panel＝只算傷害%（角色視窗）；normal＝傷害%+一般怪物傷害%；boss＝傷害%+BOSS傷害%
+   * opts.skillBdR：技能專屬 BOSS 傷（與面板 BD 加算，對齊正服 1+(dmg+BD+skillBD)）
    */
-  function calcAttributeAttack(snapshot, combat, target) {
+  function calcAttributeAttack(snapshot, combat, target, opts = {}) {
     if (!combat?.resolved) return 0;
     const { resolved, ctx } = combat;
     const jobCat = ctx?.jobCategory || 'normal';
@@ -401,7 +402,8 @@ const UiCharacterInfo = (() => {
     let extraPct = 0;
     if (target === 'boss') {
       extraPct = (Number(resolved.bossDamageDetail?.panel) || 0)
-        + (Number(resolved.bossDamageDetail?.skill) || 0);
+        + (Number(resolved.bossDamageDetail?.skill) || 0)
+        + Math.max(0, Number(opts.skillBdR) || 0);
     } else if (target === 'normal') {
       extraPct = Number(readValue(snapshot || {}, {
         key: '一般怪物傷害',
@@ -434,7 +436,8 @@ const UiCharacterInfo = (() => {
 
   /** 狩獵傷害快取：連鎖／多段同幀會打上百次，不可每次 rebuild snapshot + sync */
   let huntCombatCache = null;
-  const HUNT_COMBAT_CACHE_TTL_MS = 48;
+  // 伊修塔爾等高頻 tick：略延長合併視窗，減少 snapshot 重建
+  const HUNT_COMBAT_CACHE_TTL_MS = 64;
 
   function invalidateHuntCombatCache() {
     huntCombatCache = null;
@@ -479,10 +482,74 @@ const UiCharacterInfo = (() => {
     return pack;
   }
 
+  /** 面板無視防禦%（快取命中時不重建） */
+  function getHuntIedPct() {
+    const { snapshot } = resolveHuntCombat();
+    if (snapshot?.iedTotal != null) return Math.max(0, Number(snapshot.iedTotal) || 0);
+    if (typeof EquipStatPanel !== 'undefined'
+      && typeof EquipStatPanel.combineIgnoreDefense === 'function') {
+      return Math.max(0, Number(EquipStatPanel.combineIgnoreDefense(snapshot?.iedSources || [])) || 0);
+    }
+    return 0;
+  }
+
+  /** 多來源 IED 乘算合併（與 EquipStatPanel.combineIgnoreDefense 同語意） */
+  function combineIedPct(...rates) {
+    if (typeof EquipStatPanel !== 'undefined'
+      && typeof EquipStatPanel.combineIgnoreDefense === 'function') {
+      return Math.max(0, Number(EquipStatPanel.combineIgnoreDefense(rates)) || 0);
+    }
+    let remain = 1;
+    rates.forEach((raw) => {
+      const x = Math.max(0, Number(raw) || 0);
+      if (!(x > 0)) return;
+      remain *= (1 - Math.min(100, x) / 100);
+    });
+    return Math.min(100, (1 - remain) * 100);
+  }
+
+  /**
+   * 怪物 PDRate（%）。優先 mob.pdRate；BOSS 場查 WZ；否則預設一般 10／BOSS 50。
+   */
+  function resolveMobPdRate(mob) {
+    if (!mob) return 0;
+    const direct = Number(mob.pdRate ?? mob.PDRate);
+    if (Number.isFinite(direct) && direct >= 0) return direct;
+    if (typeof IdleBossFight !== 'undefined'
+      && typeof IdleBossFight.getUnitPdRate === 'function'
+      && typeof IdleBoss !== 'undefined' && IdleBoss.isRunning?.()) {
+      const n = IdleBossFight.getUnitPdRate(mob);
+      if (n != null && Number.isFinite(Number(n))) return Math.max(0, Number(n));
+    }
+    const id = String(mob.visualId || mob.statMob || mob.iconId || '').replace(/\D/g, '');
+    if (id && typeof IdleMobAnim !== 'undefined' && typeof IdleMobAnim.getMobEntry === 'function') {
+      const entry = IdleMobAnim.getMobEntry(id.padStart(7, '0')) || IdleMobAnim.getMobEntry(id);
+      const meta = entry?._meta || entry?.info || null;
+      const n = Number(meta?.PDRate ?? meta?.pdRate);
+      if (Number.isFinite(n) && n >= 0) return n;
+    }
+    return mob.isBoss ? 50 : 10;
+  }
+
+  /**
+   * 正服防禦公式：× (1 − def%×(1−ied%))；倍率 ≤0 時最少 1 傷。
+   * 目前實戰未套用（IdleHunt.resolveMobHitDamage 已關閉）；保留供日後開啟。
+   */
+  function applyMobDefense(dmg, mob, skillIedPct = 0) {
+    let out = Math.max(0, Math.floor(Number(dmg) || 0));
+    if (!(out > 0) || !mob) return out;
+    const pd = resolveMobPdRate(mob);
+    if (!(pd > 0)) return out;
+    const ied = combineIedPct(getHuntIedPct(), skillIedPct);
+    const mult = 1 - (pd / 100) * (1 - Math.min(100, ied) / 100);
+    if (!(mult > 0)) return 1;
+    return Math.max(1, Math.floor(out * mult));
+  }
+
   /** 狩獵單下傷害：屬性攻擊力公式，傷害% 再加一般或 BOSS 傷害% */
-  function getHuntHitDamage(isBoss) {
+  function getHuntHitDamage(isBoss, opts = {}) {
     const { snapshot, combat } = resolveHuntCombat();
-    return calcAttributeAttack(snapshot, combat, isBoss ? 'boss' : 'normal');
+    return calcAttributeAttack(snapshot, combat, isBoss ? 'boss' : 'normal', opts);
   }
 
   function readHuntCritRateFromPack(pack, extraPct = 0) {
@@ -512,13 +579,14 @@ const UiCharacterInfo = (() => {
     return 1.35;
   }
 
-  /** 狩獵命中：擲爆擊後套用 1.35 + 爆擊傷害%；opts.damagePct 為技能傷害% */
+  /** 狩獵命中：擲爆擊後套用 1.35 + 爆擊傷害%；opts.damagePct 為技能傷害%；opts.skillBdR 技能專屬 BD */
   function rollHuntHit(isBoss, opts = {}) {
     const pack = resolveHuntCombat();
     const base = calcAttributeAttack(
       pack.snapshot,
       pack.combat,
       isBoss ? 'boss' : 'normal',
+      { skillBdR: opts.skillBdR },
     );
     const pct = Number(opts?.damagePct);
     let scaled = Number.isFinite(pct) && pct > 0
@@ -1146,6 +1214,9 @@ const UiCharacterInfo = (() => {
     getCombatPower,
     getHuntHitDamage,
     rollHuntHit,
+    applyMobDefense,
+    getHuntIedPct,
+    resolveMobPdRate,
     invalidateHuntCombatCache,
     getHuntDefense,
     getHuntDamageMitigation,

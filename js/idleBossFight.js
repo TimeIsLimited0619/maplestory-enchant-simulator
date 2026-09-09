@@ -2206,25 +2206,49 @@ const IdleBossFight = (() => {
     return Math.min(raw, maxDamageAllowed(mob));
   }
 
+  /** 實際扣血後：粉豆殼鏡像／雕像保底（勿掛在 showMobDamage） */
+  function afterAppliedDamage(mob, appliedDmg) {
+    const dmg = Math.max(0, Math.floor(Number(appliedDmg) || 0));
+    if (!mob || !(dmg > 0) || !fight) return;
+    if (!isPinkBean() || pinkBeanInBodyPhase() || !fight.shell) return;
+    const kind = mob.uid || mob.key;
+    if (!findArm(kind)) return;
+    fight.shell.hp = Math.max(0, fight.shell.hp - dmg);
+    if (fight.shell.hp > 0 && mob.hp <= 0) mob.hp = 1;
+  }
+
+  function getUnitPdRate(mob) {
+    if (!fight || !mob) return null;
+    const id = pad(mob.visualId || mob.statMob || mob.iconId || '');
+    if (!id) return null;
+    const part = wzPart(fight.listId, id);
+    if (!part) return null;
+    const n = Number(part.PDRate);
+    return Number.isFinite(n) ? Math.max(0, n) : null;
+  }
+
+  /** 技能／引導碰過單位後：優先 touched，再跑轉階（讀 fight 全域狀態） */
+  function tryPhaseCheck(mobs) {
+    afterExternalHits(mobs || []);
+  }
+
   function applyDamage(target, rawDmg, isCritical) {
     if (!target?.unit || busy) return;
     let dmg = Math.floor(rawDmg);
     if (target.unit.invincible) dmg = 0;
-    dmg = capIncomingDamage(target.unit, dmg);
+    // 統一 resolve（IED／OHK／血線）；勿再另 cap
+    if (typeof IdleHunt !== 'undefined' && IdleHunt.resolveMobHitDamage) {
+      dmg = IdleHunt.resolveMobHitDamage(target.unit, dmg);
+    } else {
+      dmg = capIncomingDamage(target.unit, dmg);
+    }
     if (!(dmg > 0)) {
       showDmg(target.unit.key, 0, false);
       return;
     }
     target.unit.hp = Math.max(0, target.unit.hp - dmg);
     showDmg(target.unit.key, dmg, isCritical);
-
-    if (isPinkBean() && !pinkBeanInBodyPhase() && findArm(target.kind) && fight.shell) {
-      // 雕像階段：傷害鏡像扣殼；雕像自身血量保底 1，避免殼未空就全滅
-      fight.shell.hp = Math.max(0, fight.shell.hp - dmg);
-      if (fight.shell.hp > 0 && target.unit.hp <= 0) {
-        target.unit.hp = 1;
-      }
-    }
+    afterAppliedDamage(target.unit, dmg);
 
     syncHud();
 
@@ -2395,8 +2419,8 @@ const IdleBossFight = (() => {
   }
 
   function afterExternalHits(mobs) {
-    // 與狩獵 applySkillMobStateSync 同一契約：傳入為碰過的單位，生死／轉階依實際狀態判定
-    const list = Array.isArray(mobs) ? mobs : (mobs ? [mobs] : getCombatMobs());
+    // 契約：優先 touched；空陣列仍跑轉階（讀 fight 全域）。勿無故全掃 getCombatMobs。
+    const list = Array.isArray(mobs) ? mobs : (mobs ? [mobs] : []);
     if (isPinkBean()) {
       list.forEach((mob) => {
         if (!mob || !fight) return;
@@ -2411,9 +2435,8 @@ const IdleBossFight = (() => {
           }
           return;
         }
-        // 技能／外部傷害：同樣鏡像扣殼並保底雕像 1 血
+        // 殼損已在 afterAppliedDamage；此處只保底雕像
         if (findArm(kind) && fight.shell && !busy) {
-          // 外部路徑已直接改 mob.hp；補齊殼損（以本次掉血難以追，改為若殼尚在則保底）
           if (fight.shell.hp > 0 && mob.hp <= 0) mob.hp = 1;
         }
       });
@@ -2547,17 +2570,12 @@ const IdleBossFight = (() => {
     syncHud();
   }
 
+  /** 純顯示：呼叫端應傳入已 resolve／cap 的 finalDmg（殼血不在此扣） */
   function showMobDamage(mob, dmg, isCritical, opts) {
     if (typeof DamageNumber === 'undefined') return;
-    const shown = capIncomingDamage(mob, dmg);
+    const shown = Math.max(0, Math.floor(Number(dmg) || 0));
     if (!(shown > 0) && !(Number(dmg) > 0)) return;
-    if (isPinkBean() && !pinkBeanInBodyPhase() && fight?.shell && shown > 0) {
-      const kind = mob?.uid || mob?.key;
-      if (findArm(kind)) {
-        fight.shell.hp = Math.max(0, fight.shell.hp - shown);
-      }
-    }
-    DamageNumber.spawnOnMob(mob, shown > 0 ? shown : 0, !!isCritical, opts || {});
+    DamageNumber.spawnOnMob(mob, shown, !!isCritical, opts || {});
   }
 
   function combatCtx(extra = {}) {
@@ -2615,7 +2633,11 @@ const IdleBossFight = (() => {
           attackSpeedStage: wzAttackSpeed(),
         }));
         playerAtkAcc = 0;
-        if (result?.cast) afterExternalHits(getCombatMobs());
+        // 優先 touched：同步施法若已在 skill 內 sync，這裡只補轉階
+        if (result?.cast) {
+          const touched = Array.isArray(result.kills) ? result.kills : [];
+          afterExternalHits(touched);
+        }
         hooks?.syncOverlay?.();
         break;
       }
@@ -2634,19 +2656,17 @@ const IdleBossFight = (() => {
       let dmg = Number(hit.dmg) || 0;
       if (typeof SkillMobStatus !== 'undefined'
         && typeof SkillMobStatus.applyOutgoingDamageMods === 'function') {
-        dmg = SkillMobStatus.applyOutgoingDamageMods(target.unit, dmg);
-      }
-      if (typeof IdleHunt !== 'undefined' && IdleHunt.resolveMobHitDamage) {
-        dmg = IdleHunt.resolveMobHitDamage(target.unit, dmg);
-      } else if (typeof IdleHunt !== 'undefined' && IdleHunt.isOneHitKill?.()) {
-        dmg = Math.max(dmg, target.unit.hp);
-        dmg = capIncomingDamage(target.unit, dmg);
+        dmg = SkillMobStatus.applyOutgoingDamageMods(target.unit, dmg, {
+          isCritical: !!hit.isCritical,
+          skillId: null,
+        });
       }
       if (!(dmg > 0) && !target.unit.invincible) break;
+      // applyDamage 內統一 resolve／顯示／殼血
       applyDamage(target, dmg, !!hit.isCritical);
       if (typeof SkillMobStatus !== 'undefined'
         && typeof SkillMobStatus.afterPlayerDamagedMob === 'function') {
-        SkillMobStatus.afterPlayerDamagedMob(target.unit, true);
+        SkillMobStatus.afterPlayerDamagedMob(target.unit, true, { skillId: null });
       }
       if (busy) break;
     }
@@ -3949,6 +3969,9 @@ const IdleBossFight = (() => {
     getCombatMobs,
     combatCtx,
     capIncomingDamage,
+    afterAppliedDamage,
+    tryPhaseCheck,
+    getUnitPdRate,
     collectVisualMobIds,
     collectMapArtIds,
     warmAssets,
