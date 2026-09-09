@@ -775,7 +775,7 @@ const IDLE_BOSS_PHASE = {
     difficulties: [
       {
         id: 'normal',
-        hpMult: 1,
+        hpMult: 10,
         dmgMult: 1,
         reqLevel: 140,
         timeLimitSec: 1800,
