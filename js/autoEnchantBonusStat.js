@@ -49,6 +49,8 @@ const AutoEnchantBonusStatModule = {
     if (!BonusStatModule.getSelectedItem?.()) return '請選擇要使用的星火道具。';
     if (BonusStatModule.isChoiceOverlayOpen?.()) return '請先完成 BEFORE/AFTER 選擇。';
     if (this.choiceAutoSessionActive) return '請先完成 BEFORE/AFTER 選擇。';
+    const block = BonusStatModule.getResetBlockReason?.();
+    if (block) return block;
     return null;
   },
 
@@ -613,12 +615,16 @@ const AutoEnchantBonusStatModule = {
 
   async startNormalAuto() {
     let attempts = 0;
+    let stoppedForShortage = false;
 
     while (!this.cancelled) {
       let hit = false;
       const batch = this.getBatchSize();
       for (let i = 0; i < batch && !this.cancelled; i += 1) {
-        BonusStatModule.payResetCost(1);
+        if (!BonusStatModule.payResetCost(1)) {
+          stoppedForShortage = true;
+          break;
+        }
         attempts += 1;
         BonusStatModule.lastAtkPow = BonusStatModule.itemData.bonusStat.atkPow;
         const { after } = BonusStatModule.performRoll();
@@ -632,12 +638,12 @@ const AutoEnchantBonusStatModule = {
       }
       BonusStatModule.updateUI();
       this.render();
-      if (hit) return { attempts, targetHit: true };
-      if (this.cancelled) break;
+      if (hit) return { attempts, targetHit: true, stoppedForShortage: false };
+      if (stoppedForShortage || this.cancelled) break;
       await new Promise((resolve) => setTimeout(resolve, this.getLoopDelayMs()));
     }
 
-    return { attempts, targetHit: false };
+    return { attempts, targetHit: false, stoppedForShortage };
   },
 
   async startMemorialAuto() {
@@ -654,6 +660,7 @@ const AutoEnchantBonusStatModule = {
     this.startProgressAlert();
     let overlayOpened = false;
     let attempts = 0;
+    let stoppedForShortage = false;
     const maxRolls = 50000;
     const delay = () => new Promise((resolve) => setTimeout(resolve, this.getLoopDelayMs()));
     const batch = this.getBatchSize();
@@ -663,7 +670,10 @@ const AutoEnchantBonusStatModule = {
       let lastBefore = null;
       let lastAfter = null;
       for (let i = 0; i < batch && !this.cancelled && attempts < maxRolls; i += 1) {
-        BonusStatModule.payResetCost(1);
+        if (!BonusStatModule.payResetCost(1)) {
+          stoppedForShortage = true;
+          break;
+        }
         attempts += 1;
 
         const { before, after } = BonusStatModule.performRoll(snapshot);
@@ -690,13 +700,13 @@ const AutoEnchantBonusStatModule = {
       }
 
       if (hit) {
-        return { attempts, targetHit: true, stoppedForManualPick: true };
+        return { attempts, targetHit: true, stoppedForManualPick: true, stoppedForShortage: false };
       }
-      if (this.cancelled) break;
+      if (stoppedForShortage || this.cancelled) break;
       await delay();
     }
 
-    return { attempts, targetHit: false, stoppedForManualPick: false };
+    return { attempts, targetHit: false, stoppedForManualPick: false, stoppedForShortage };
   },
 
   async start() {
@@ -712,6 +722,7 @@ const AutoEnchantBonusStatModule = {
     let attempts = 0;
     let targetHit = false;
     let stoppedForManualPick = false;
+    let stoppedForShortage = false;
 
     const logItem = aeSessionLogItemMeta(BonusStatModule.itemData);
     aeSessionLogBegin({
@@ -731,11 +742,13 @@ const AutoEnchantBonusStatModule = {
         attempts = result.attempts || 0;
         targetHit = result.targetHit;
         stoppedForManualPick = result.stoppedForManualPick;
+        stoppedForShortage = !!result.stoppedForShortage;
       } else {
         this.startProgressAlert();
         const result = await this.startNormalAuto();
         attempts = result.attempts || 0;
         targetHit = result.targetHit;
+        stoppedForShortage = !!result.stoppedForShortage;
         if (targetHit) {
           addLog(`✅ 附加能力自動重設：已達成全部目標（共 ${attempts} 次）`, 'log-success');
         }
@@ -763,6 +776,8 @@ const AutoEnchantBonusStatModule = {
       addLog(`⏹ 已取消自動重設（共 ${attempts} 次）`, 'log-info');
     } else if (stoppedForManualPick) {
       addLog(`🔥 BEFORE/AFTER 已出現目標附加能力，請自行選擇（共骰 ${attempts} 次）`, 'log-success');
+    } else if (stoppedForShortage) {
+      addLog(`⚠️ 星火／素材不足，已停止自動重設（共 ${attempts} 次）`, 'log-fail');
     } else if (isMemorial && attempts > 0) {
       addLog(`⚠️ 自動重設結束（共 ${attempts} 次）`, 'log-info');
     }

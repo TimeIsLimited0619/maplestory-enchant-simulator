@@ -6,7 +6,7 @@
  */
 const IdleMobAnim = (() => {
   const VER = '10';
-  const FRAME_MS = { stand: 180, move: 90, hit: 80, attack: 80, skill: 80, die: 100, regen: 100 };
+  const FRAME_MS = { stand: 180, fly: 180, move: 90, hit: 80, attack: 80, skill: 80, die: 100, regen: 100 };
   const DIE_MIN_MS = 800;
   const DIE_MAX_MS = 1600;
   const HIT_MS = 280;
@@ -94,8 +94,11 @@ const IdleMobAnim = (() => {
   function previewUrl(iconId) {
     const id = pad(iconId);
     if (!id || !getMobEntry(id)) return '';
-    const stand = actionRange(id, 'stand');
-    if (stand) return frameUrl(id, 'stand', stand.min);
+    const idle = resolveStandOrFly(id);
+    if (idle) {
+      const range = actionRange(id, idle);
+      if (range) return frameUrl(id, idle, range.min);
+    }
     const entry = getMobEntry(id);
     const firstAction = Object.keys(entry).find((k) => actionRange(id, k));
     if (!firstAction) return '';
@@ -116,7 +119,15 @@ const IdleMobAnim = (() => {
     if (kind === 'regen') return 'regen';
     if (kind === 'sleep') return 'sleep';
     if (kind === 'wakeup') return 'wakeup';
+    if (kind === 'fly') return 'fly';
     return 'stand';
+  }
+
+  /** 待機：無 stand 的飛行怪改用 fly */
+  function resolveStandOrFly(id) {
+    if (hasAction(id, 'stand')) return 'stand';
+    if (hasAction(id, 'fly')) return 'fly';
+    return null;
   }
 
   function resolveAction(id, action) {
@@ -127,14 +138,14 @@ const IdleMobAnim = (() => {
     if (a === 'die1' && !hasAction(id, 'die1') && hasAction(id, 'die')) a = 'die';
     if (a === 'skill1' && !hasAction(id, 'skill1') && hasAction(id, 'skill')) a = 'skill';
     if (a === 'attack1' && !hasAction(id, 'attack1') && hasAction(id, 'attack')) a = 'attack';
+    if (a === 'stand') return resolveStandOrFly(id);
     if (hasAction(id, a)) return a;
     // 缺圖時不要 fallback 成 stand（會造成「技能播到一半變站立」）
     if (/^attack([2-9]|\d{2,})$/i.test(a)) return null;
     if (/^skill([2-9]|\d{2,})$/i.test(a)) return null;
     if (a === 'attack1' || a === 'attack') return null;
     if (/^skill/i.test(a)) return null;
-    if (a !== 'stand' && hasAction(id, 'stand')) return 'stand';
-    return null;
+    return resolveStandOrFly(id);
   }
 
   /** 攻擊／技能本體對應的 effect 路徑，例如 attack1 → attack1/info/effect */

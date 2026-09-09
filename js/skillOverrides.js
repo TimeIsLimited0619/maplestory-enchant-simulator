@@ -29,6 +29,15 @@ const SkillOverrides = (() => {
       commonRemove: ['u'],
     },
 
+    // 1轉 魔靈彈：攻擊隻數 6、耗血減半（mpCon 減半）
+    '2001008': {
+      common: {
+        mobCount: '6',
+        mpCon: '8+d(x/5)',
+      },
+      h: '消耗HP#mpCon，最多對#mobCount名的敵人以#damage%的傷害值進行攻擊#attackCount次',
+    },
+
     // —— 法師：本專案無 MP，MP 相關改 HP ——
     // 1轉 魔力增幅：最大 HP% + 每等 HP + 攻速
     '2000006': {
@@ -187,17 +196,30 @@ const SkillOverrides = (() => {
 
     // —— 精靈遊俠（Mercedes）——
     '23121014': { skipPanel: true }, // 精神迴避（純位移）
-    // 水盾：不要無敵主動，只保留被動減傷／格擋／耐性（模擬減傷效果減半）
+    // 1轉 急速雙擊：攻擊隻數 6
+    '23001000': {
+      common: {
+        mobCount: '6',
+      },
+    },
+    // 雙弩槍精通：二轉 → 三轉（與水盾對調）
+    '23100005': {
+      rank: '60',
+      skillBook: 2311,
+    },
+    // 水盾：三轉 → 二轉；不要無敵主動，只保留被動減傷／格擋／耐性（模擬減傷效果減半）
     '23111005': {
+      rank: '30',
+      skillBook: 2310,
       type: 'passive',
       equipable: false,
-      h: '永久：被擊傷害減少#damAbsorbShieldR%（模擬減半），狀態異常耐性增加#asrR，所有屬性耐性增加#terR%，格擋增加#stanceProp%',
+      h: '永久：被擊傷害減少#damAbsorbShieldR%（減半），狀態異常耐性增加#asrR，所有屬性耐性增加#terR%，格擋增加#stanceProp%',
       desc: '借助精靈之力，永久減少被擊傷害，並增加狀態異常耐性、所有屬性耐性及格擋。',
       commonRemove: ['time', 'cooltime', 'mpRCon'],
     },
     // 水盾－強化：顯示值仍為 WZ；戰鬥減傷於 SkillModifiers 對精靈遊俠 ×0.5
     '23120046': {
-      h: '被擊傷害減少量增加#damAbsorbShieldR%（模擬減半）',
+      h: '被擊傷害減少量增加#damAbsorbShieldR%（減半）',
     },
     // 遠古意志：Buff 數值已接線；永久列只保留格擋（迴避不套用）
     '23121004': {

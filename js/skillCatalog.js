@@ -111,11 +111,14 @@ const SkillCatalog = (() => {
     const includeHidden = !!opts.includeHidden;
     const out = [];
     bookList.forEach((book) => {
-      (book.skills || []).forEach((s) => {
+      (book.skills || []).forEach((raw) => {
+        // 必須先套用 overrides（rank／type／skipPanel 可能被改），再過濾
+        const s = withOverrides(raw);
+        if (!s) return;
         if (!includeHidden && s.skipPanel) return;
         if (rank != null && String(s.rank) !== rank) return;
         if (type != null && String(s.type) !== type) return;
-        out.push(withOverrides(s));
+        out.push(s);
       });
     });
     appendLineExtraSkills(jobId, out, opts);

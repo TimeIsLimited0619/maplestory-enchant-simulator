@@ -280,6 +280,9 @@ const IdleZoneDropStore = {
       bossKillGold: raw.bossKillGold,
       mobName: raw.mobName,
       mobIcon: raw.mobIcon,
+      mobPool: Array.isArray(raw.mobPool)
+        ? raw.mobPool.map((row) => ({ ...row }))
+        : undefined,
       bossName: raw.bossName,
       bossIcon: raw.bossIcon,
       bossScaleSprite: raw.bossScaleSprite,

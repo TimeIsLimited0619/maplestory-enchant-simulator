@@ -1681,6 +1681,10 @@ const SkillCombat = (() => {
     if (!(delayMs > 0)) delayMs = 120;
     // idle 自動接技：不必等完整 permit 窗口
     delayMs = Math.max(90, Math.min(delayMs, 450));
+    // 精靈遊俠：接技間隔 ×0.25（相對原設定約快 4 倍）
+    if (isMercedesJob()) {
+      delayMs = Math.max(20, delayMs * 0.25);
+    }
     // 接技期間鎖住選招，避免連鎖／飛箭插入連段中間
     castLockUntil = Math.max(castLockUntil, nowMs() + scaleGameDelayMs(delayMs + 80));
     // 頭技開始接技鏈：保留紙娃娃 move 直到整段結束

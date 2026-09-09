@@ -3237,6 +3237,14 @@ const IDLE_ZONE_BAND_DEFS = [
     "bossDrops": []
   },
   {
+    "id": "band-1788938795162",
+    "min": 160,
+    "max": 170,
+    "name": "新區塊",
+    "mobDrops": [],
+    "bossDrops": []
+  },
+  {
     "id": "band-1788876212731",
     "min": 170,
     "max": 180,
@@ -3368,7 +3376,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "綠水靈",
+        "icon": "0210100"
+      }
+    ]
   },
   {
     "regionId": "band-1787462987374",
@@ -3431,7 +3445,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "藍水靈",
+        "icon": "1210103"
+      }
+    ]
   },
   {
     "regionId": "band-1787462987374",
@@ -3494,7 +3514,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "紅水靈",
+        "icon": "7120103"
+      }
+    ]
   },
   {
     "regionId": "band-1787462987374",
@@ -3559,7 +3585,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "菇菇寶貝",
+        "icon": "1210102"
+      }
+    ]
   },
   {
     "regionId": "band-1787462987374",
@@ -3624,7 +3656,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "憤世菇菇寶貝",
+        "icon": "2300102"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -3687,7 +3725,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "綠菇菇",
+        "icon": "1110100"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -3750,7 +3794,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "挫折菇菇",
+        "icon": "1110130"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -3813,7 +3863,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "刺菇菇",
+        "icon": "2110200"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -3876,7 +3932,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "憤怒的刺菇菇",
+        "icon": "2300101"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -3941,7 +4003,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "蝴蝶精",
+        "icon": "3000001"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -4006,7 +4074,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "皇家蝴蝶精",
+        "icon": "3000007"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -4071,7 +4145,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "木妖",
+        "icon": "0130100"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -4134,7 +4214,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "斧木妖",
+        "icon": "1130100"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -4197,7 +4283,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "火獨眼獸",
+        "icon": "2230100"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -4260,7 +4352,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "風獨眼獸",
+        "icon": "3230100"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -4323,7 +4421,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "冰獨眼獸",
+        "icon": "4230100"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -4386,7 +4490,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "暗獨眼獸",
+        "icon": "2230113"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -4449,7 +4559,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "猴子",
+        "icon": "2700311"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -4518,7 +4634,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "天使猴",
+        "icon": "4230101"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -4583,7 +4705,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "黑木妖",
+        "icon": "1110101"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -4646,7 +4774,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "黑斧木妖",
+        "icon": "2130100"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -4709,7 +4843,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "發芽木妖",
+        "icon": "1140100"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -4774,7 +4914,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "肥肥",
+        "icon": "1210100"
+      }
+    ]
   },
   {
     "regionId": "band-1787490270340",
@@ -4839,7 +4985,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "黑肥肥",
+        "icon": "2230102"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -4904,7 +5056,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "火肥肥",
+        "icon": "3210100"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -4969,7 +5127,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "鋼之肥肥",
+        "icon": "4090000"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -5034,7 +5198,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "三眼章魚",
+        "icon": "1120100"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -5097,7 +5267,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "地下室蝙蝠",
+        "icon": "2400610"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -5160,7 +5336,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "小幽靈",
+        "icon": "3230101"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -5223,7 +5405,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "大幽靈",
+        "icon": "4230102"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -5286,7 +5474,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "冥界幽靈",
+        "icon": "5090000"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -5351,7 +5545,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 25,
-    "bandMax": 30
+    "bandMax": 30,
+    "mobPool": [
+      {
+        "name": "青蛇",
+        "icon": "2130103"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -5414,7 +5614,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "鱷魚",
+        "icon": "3110100"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -5477,7 +5683,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "黑鱷魚",
+        "icon": "5130103"
+      }
+    ]
   },
   {
     "regionId": "band-1787462987374",
@@ -5540,7 +5752,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "銀水靈",
+        "icon": "7120104"
+      }
+    ]
   },
   {
     "regionId": "band-1787462987374",
@@ -5616,7 +5834,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "金水靈",
+        "icon": "7120105"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -5679,7 +5903,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "藍菇菇",
+        "icon": "2220100"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -5748,7 +5978,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "藍菇菇",
+        "icon": "2220110"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -5811,7 +6047,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "沼澤爛泥怪物",
+        "icon": "2230114"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -5874,7 +6116,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "嫩芽爛泥怪物",
+        "icon": "2230115"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -5937,7 +6185,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "鋼之黑肥肥",
+        "icon": "4230400"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -6002,7 +6256,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "土龍",
+        "icon": "4130100"
+      }
+    ]
   },
   {
     "regionId": "band-1787736998035",
@@ -6067,7 +6327,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 40,
-    "bandMax": 50
+    "bandMax": 50,
+    "mobPool": [
+      {
+        "name": "青龍",
+        "icon": "3645307"
+      }
+    ]
   },
   {
     "regionId": "band-1787736998035",
@@ -6132,7 +6398,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 40,
-    "bandMax": 50
+    "bandMax": 50,
+    "mobPool": [
+      {
+        "name": "赤龍",
+        "icon": "6130100"
+      }
+    ]
   },
   {
     "regionId": "band-1787736998035",
@@ -6197,7 +6469,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 40,
-    "bandMax": 50
+    "bandMax": 50,
+    "mobPool": [
+      {
+        "name": "冰龍",
+        "icon": "6230600"
+      }
+    ]
   },
   {
     "regionId": "band-1787736998035",
@@ -6262,7 +6540,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 40,
-    "bandMax": 50
+    "bandMax": 50,
+    "mobPool": [
+      {
+        "name": "黑龍",
+        "icon": "6230601"
+      }
+    ]
   },
   {
     "regionId": "band-1787736998035",
@@ -6327,7 +6611,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 40,
-    "bandMax": 50
+    "bandMax": 50,
+    "mobPool": [
+      {
+        "name": "魔龍",
+        "icon": "3645311"
+      }
+    ]
   },
   {
     "regionId": "band-1787736998035",
@@ -6392,7 +6682,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 40,
-    "bandMax": 50
+    "bandMax": 50,
+    "mobPool": [
+      {
+        "name": "月牙牛魔王",
+        "icon": "3645314"
+      }
+    ]
   },
   {
     "regionId": "band-1787736998035",
@@ -6457,7 +6753,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 40,
-    "bandMax": 50
+    "bandMax": 50,
+    "mobPool": [
+      {
+        "name": "長槍牛魔王",
+        "icon": "3645313"
+      }
+    ]
   },
   {
     "regionId": "band-1787736998035",
@@ -6522,7 +6824,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 40,
-    "bandMax": 50
+    "bandMax": 50,
+    "mobPool": [
+      {
+        "name": "巴洛古",
+        "icon": "8130100"
+      }
+    ]
   },
   {
     "regionId": "band-1787736998035",
@@ -6593,7 +6901,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 40,
-    "bandMax": 50
+    "bandMax": 50,
+    "mobPool": [
+      {
+        "name": "地域巴洛古",
+        "icon": "8150000"
+      }
+    ]
   },
   {
     "regionId": "band-1787736998035",
@@ -6654,7 +6968,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "木面怪人",
+        "icon": "2230110"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -6715,7 +7035,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 50,
-    "bandMax": 55
+    "bandMax": 55,
+    "mobPool": [
+      {
+        "name": "石面怪人",
+        "icon": "2230111"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -6776,7 +7102,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 50,
-    "bandMax": 55
+    "bandMax": 55,
+    "mobPool": [
+      {
+        "name": "骷髏犬",
+        "icon": "4230125"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -6837,7 +7169,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 50,
-    "bandMax": 55
+    "bandMax": 55,
+    "mobPool": [
+      {
+        "name": "木乃伊犬",
+        "icon": "4230126"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -6898,7 +7236,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 50,
-    "bandMax": 55
+    "bandMax": 55,
+    "mobPool": [
+      {
+        "name": "骷髏士兵",
+        "icon": "5150001"
+      }
+    ]
   },
   {
     "regionId": "band-1787736998035",
@@ -6959,7 +7303,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "稻草堆",
+        "icon": "3501103"
+      }
+    ]
   },
   {
     "regionId": "band-1787780051528",
@@ -7020,7 +7370,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 30,
-    "bandMax": 40
+    "bandMax": 40,
+    "mobPool": [
+      {
+        "name": "灰塵堆",
+        "icon": "3501104"
+      }
+    ]
   },
   {
     "regionId": "band-1787780051528",
@@ -7081,7 +7437,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 30,
-    "bandMax": 40
+    "bandMax": 40,
+    "mobPool": [
+      {
+        "name": "尖尖黑櫟",
+        "icon": "3501100"
+      }
+    ]
   },
   {
     "regionId": "band-1787780051528",
@@ -7142,7 +7504,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 30,
-    "bandMax": 40
+    "bandMax": 40,
+    "mobPool": [
+      {
+        "name": "森林愛哭鬼",
+        "icon": "3501101"
+      }
+    ]
   },
   {
     "regionId": "band-1787780051528",
@@ -7203,7 +7571,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 30,
-    "bandMax": 40
+    "bandMax": 40,
+    "mobPool": [
+      {
+        "name": "夜晚愛哭鬼",
+        "icon": "3501102"
+      }
+    ]
   },
   {
     "regionId": "band-1787780051528",
@@ -7264,7 +7638,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 30,
-    "bandMax": 40
+    "bandMax": 40,
+    "mobPool": [
+      {
+        "name": "森林深處小精靈",
+        "icon": "3501009"
+      }
+    ]
   },
   {
     "regionId": "band-1787780051528",
@@ -7325,7 +7705,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 30,
-    "bandMax": 40
+    "bandMax": 40,
+    "mobPool": [
+      {
+        "name": "森林守護人",
+        "icon": "3501106"
+      }
+    ]
   },
   {
     "regionId": "band-1787780051528",
@@ -7386,7 +7772,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 30,
-    "bandMax": 40
+    "bandMax": 40,
+    "mobPool": [
+      {
+        "name": "夜晚守護人",
+        "icon": "3501107"
+      }
+    ]
   },
   {
     "regionId": "band-1787780051528",
@@ -7447,7 +7839,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 30,
-    "bandMax": 40
+    "bandMax": 40,
+    "mobPool": [
+      {
+        "name": "藍色泉之精靈",
+        "icon": "3501108"
+      }
+    ]
   },
   {
     "regionId": "band-1787780051528",
@@ -7508,7 +7906,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 30,
-    "bandMax": 40
+    "bandMax": 40,
+    "mobPool": [
+      {
+        "name": "深處泉之精靈",
+        "icon": "3501109"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -7569,7 +7973,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 50,
-    "bandMax": 55
+    "bandMax": 55,
+    "mobPool": [
+      {
+        "name": "骷髏士官",
+        "icon": "6230602"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -7630,7 +8040,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0
+    "bossSkill3Cd": 0,
+    "mobPool": [
+      {
+        "name": "骷髏指揮官",
+        "icon": "7130103"
+      }
+    ]
   },
   {
     "regionId": "band-1788134145465",
@@ -7691,7 +8107,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 55,
-    "bandMax": 60
+    "bandMax": 60,
+    "mobPool": [
+      {
+        "name": "星光精靈",
+        "icon": "3230200"
+      }
+    ]
   },
   {
     "regionId": "band-1788134145465",
@@ -7752,7 +8174,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 55,
-    "bandMax": 60
+    "bandMax": 60,
+    "mobPool": [
+      {
+        "name": "月光精靈",
+        "icon": "4230106"
+      }
+    ]
   },
   {
     "regionId": "band-1788134145465",
@@ -7813,7 +8241,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 55,
-    "bandMax": 60
+    "bandMax": 60,
+    "mobPool": [
+      {
+        "name": "日光精靈",
+        "icon": "5120000"
+      }
+    ]
   },
   {
     "regionId": "band-1788134145465",
@@ -7874,7 +8308,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 55,
-    "bandMax": 60
+    "bandMax": 60,
+    "mobPool": [
+      {
+        "name": "幼紅獨角獅",
+        "icon": "3210200"
+      }
+    ]
   },
   {
     "regionId": "band-1788134145465",
@@ -7935,7 +8375,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 55,
-    "bandMax": 60
+    "bandMax": 60,
+    "mobPool": [
+      {
+        "name": "幼黃獨角獅",
+        "icon": "3210201"
+      }
+    ]
   },
   {
     "regionId": "band-1788134145465",
@@ -7996,7 +8442,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 55,
-    "bandMax": 60
+    "bandMax": 60,
+    "mobPool": [
+      {
+        "name": "幼紫獨角獅",
+        "icon": "3210202"
+      }
+    ]
   },
   {
     "regionId": "band-1788134145465",
@@ -8057,7 +8509,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 55,
-    "bandMax": 60
+    "bandMax": 60,
+    "mobPool": [
+      {
+        "name": "紅獨角獅",
+        "icon": "5120001"
+      }
+    ]
   },
   {
     "regionId": "band-1788134145465",
@@ -8118,7 +8576,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 55,
-    "bandMax": 60
+    "bandMax": 60,
+    "mobPool": [
+      {
+        "name": "黃獨角獅",
+        "icon": "5120002"
+      }
+    ]
   },
   {
     "regionId": "band-1788134145465",
@@ -8179,7 +8643,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 55,
-    "bandMax": 60
+    "bandMax": 60,
+    "mobPool": [
+      {
+        "name": "籃獨角獅",
+        "icon": "5120003"
+      }
+    ]
   },
   {
     "regionId": "band-1788134145465",
@@ -8240,7 +8710,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bandMin": 55,
-    "bandMax": 60
+    "bandMax": 60,
+    "mobPool": [
+      {
+        "name": "黑格里芬",
+        "icon": "7130000"
+      }
+    ]
   },
   {
     "regionId": "band-1788134145465",
@@ -8301,7 +8777,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 10,
+    "mobPool": [
+      {
+        "name": "小石球",
+        "icon": "5200000"
+      }
+    ]
   },
   {
     "regionId": "band-1788202749324",
@@ -8362,7 +8844,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 10,
+    "mobPool": [
+      {
+        "name": "石球",
+        "icon": "3000000"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -8423,7 +8911,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 60,
-    "bandMax": 65
+    "bandMax": 65,
+    "mobPool": [
+      {
+        "name": "火石球",
+        "icon": "5200002"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -8484,7 +8978,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 60,
-    "bandMax": 65
+    "bandMax": 65,
+    "mobPool": [
+      {
+        "name": "冰石球",
+        "icon": "5200001"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -8545,7 +9045,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 60,
-    "bandMax": 65
+    "bandMax": 65,
+    "mobPool": [
+      {
+        "name": "利提",
+        "icon": "5300000"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -8606,7 +9112,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 60,
-    "bandMax": 65
+    "bandMax": 65,
+    "mobPool": [
+      {
+        "name": "黑利提",
+        "icon": "5300001"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -8667,7 +9179,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 8600,
-    "bossSkillCd": 3
+    "bossSkillCd": 3,
+    "mobPool": [
+      {
+        "name": "雪吉拉",
+        "icon": "6300000"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -8728,7 +9246,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 10,
+    "mobPool": [
+      {
+        "name": "小雪球",
+        "icon": "5100000"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -8789,7 +9313,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 65,
-    "bandMax": 70
+    "bandMax": 70,
+    "mobPool": [
+      {
+        "name": "黑色小雪球",
+        "icon": "5130105"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -8850,7 +9380,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 65,
-    "bandMax": 70
+    "bandMax": 70,
+    "mobPool": [
+      {
+        "name": "小企鵝王",
+        "icon": "5400000"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -8911,7 +9447,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 65,
-    "bandMax": 70
+    "bandMax": 70,
+    "mobPool": [
+      {
+        "name": "企鵝王",
+        "icon": "6130102"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -8972,7 +9514,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 65,
-    "bandMax": 70
+    "bandMax": 70,
+    "mobPool": [
+      {
+        "name": "野狼",
+        "icon": "5130104"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -9033,7 +9581,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 65,
-    "bandMax": 70
+    "bandMax": 70,
+    "mobPool": [
+      {
+        "name": "白狼",
+        "icon": "5140000"
+      }
+    ]
   },
   {
     "regionId": "band-1788226925937",
@@ -9094,7 +9648,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 70,
-    "bandMax": 80
+    "bandMax": 80,
+    "mobPool": [
+      {
+        "name": "黑吉拉",
+        "icon": "6400000"
+      }
+    ]
   },
   {
     "regionId": "band-1788226925937",
@@ -9155,7 +9715,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 70,
-    "bandMax": 80
+    "bandMax": 80,
+    "mobPool": [
+      {
+        "name": "雪吉拉戰車",
+        "icon": "7130102"
+      }
+    ]
   },
   {
     "regionId": "band-1788226925937",
@@ -9216,7 +9782,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 70,
-    "bandMax": 80
+    "bandMax": 80,
+    "mobPool": [
+      {
+        "name": "黑吉拉戰車",
+        "icon": "8140100"
+      }
+    ]
   },
   {
     "regionId": "band-1788226925937",
@@ -9277,7 +9849,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 11000,
     "bossSkillCd": 3,
     "bandMin": 70,
-    "bandMax": 80
+    "bandMax": 80,
+    "mobPool": [
+      {
+        "name": "狼人",
+        "icon": "7130200"
+      }
+    ]
   },
   {
     "regionId": "band-1788226925937",
@@ -9338,7 +9916,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 70,
-    "bandMax": 80
+    "bandMax": 80,
+    "mobPool": [
+      {
+        "name": "白狼人",
+        "icon": "8140000"
+      }
+    ]
   },
   {
     "regionId": "band-1788226925937",
@@ -9399,7 +9983,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 70,
-    "bandMax": 80
+    "bandMax": 80,
+    "mobPool": [
+      {
+        "name": "殭屍",
+        "icon": "5130107"
+      }
+    ]
   },
   {
     "regionId": "band-1788226925937",
@@ -9460,7 +10050,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 70,
-    "bandMax": 80
+    "bandMax": 80,
+    "mobPool": [
+      {
+        "name": "礦山殭屍",
+        "icon": "5130108"
+      }
+    ]
   },
   {
     "regionId": "band-1788226925937",
@@ -9521,7 +10117,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 70,
-    "bandMax": 80
+    "bandMax": 80,
+    "mobPool": [
+      {
+        "name": "小獵犬",
+        "icon": "4230108"
+      }
+    ]
   },
   {
     "regionId": "band-1788226925937",
@@ -9582,7 +10184,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 70,
-    "bandMax": 80
+    "bandMax": 80,
+    "mobPool": [
+      {
+        "name": "地獄獵犬",
+        "icon": "7130001"
+      }
+    ]
   },
   {
     "regionId": "band-1788226925937",
@@ -9643,7 +10251,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 70,
-    "bandMax": 80
+    "bandMax": 80,
+    "mobPool": [
+      {
+        "name": "煉獄獵犬",
+        "icon": "8140500"
+      }
+    ]
   },
   {
     "regionId": "band-1788226925937",
@@ -9704,7 +10318,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 0
+    "bossSkillCd": 0,
+    "mobPool": [
+      {
+        "name": "褐色發條熊",
+        "icon": "3000005"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -9765,7 +10385,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 80,
-    "bandMax": 90
+    "bandMax": 90,
+    "mobPool": [
+      {
+        "name": "粉色發條熊",
+        "icon": "3110101"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -9826,7 +10452,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 80,
-    "bandMax": 90
+    "bandMax": 90,
+    "mobPool": [
+      {
+        "name": "發條熊貓",
+        "icon": "3210203"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -9887,7 +10519,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 80,
-    "bandMax": 90
+    "bandMax": 90,
+    "mobPool": [
+      {
+        "name": "鼬鼠",
+        "icon": "3210207"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -9948,7 +10586,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 80,
-    "bandMax": 90
+    "bandMax": 90,
+    "mobPool": [
+      {
+        "name": "鼬鼠鬧鐘",
+        "icon": "4230113"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10009,7 +10653,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 80,
-    "bandMax": 90
+    "bandMax": 90,
+    "mobPool": [
+      {
+        "name": "藍色機器人",
+        "icon": "4230111"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10070,7 +10720,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 80,
-    "bandMax": 90
+    "bandMax": 90,
+    "mobPool": [
+      {
+        "name": "紅色機器人",
+        "icon": "4230112"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10131,7 +10787,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 80,
-    "bandMax": 90
+    "bandMax": 90,
+    "mobPool": [
+      {
+        "name": "妖魔",
+        "icon": "3230306"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10192,7 +10854,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 80,
-    "bandMax": 90
+    "bandMax": 90,
+    "mobPool": [
+      {
+        "name": "進化妖魔",
+        "icon": "4230114"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10253,7 +10921,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 80,
-    "bandMax": 90
+    "bandMax": 90,
+    "mobPool": [
+      {
+        "name": "妖魔隊長",
+        "icon": "4230115"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10314,7 +10988,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 10,
+    "mobPool": [
+      {
+        "name": "百烈",
+        "icon": "7140000"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10375,7 +11055,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 90,
-    "bandMax": 100
+    "bandMax": 100,
+    "mobPool": [
+      {
+        "name": "維京",
+        "icon": "8141000"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10436,7 +11122,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 90,
-    "bandMax": 100
+    "bandMax": 100,
+    "mobPool": [
+      {
+        "name": "幽魂發條熊",
+        "icon": "6230400"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10497,7 +11189,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 90,
-    "bandMax": 100
+    "bandMax": 100,
+    "mobPool": [
+      {
+        "name": "幽魂發條熊隊長",
+        "icon": "6230500"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10558,7 +11256,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 90,
-    "bandMax": 100
+    "bandMax": 100,
+    "mobPool": [
+      {
+        "name": "怨靈發條熊",
+        "icon": "7130010"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10619,7 +11323,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 90,
-    "bandMax": 100
+    "bandMax": 100,
+    "mobPool": [
+      {
+        "name": "怨靈發條熊隊長",
+        "icon": "7130300"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10680,7 +11390,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 20000,
     "bossSkillCd": 2,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "橡木甲蟲",
+        "icon": "7130002"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10741,7 +11457,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 22000,
     "bossSkillCd": 2,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "金屬甲蟲",
+        "icon": "7130003"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10802,7 +11524,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "哈維",
+        "icon": "8140001"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10863,7 +11591,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "血腥哈維",
+        "icon": "8140002"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10924,7 +11658,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 28000,
-    "bossSkillCd": 2
+    "bossSkillCd": 2,
+    "mobPool": [
+      {
+        "name": "邪惡綿羊",
+        "icon": "8140110"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -10985,7 +11725,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 30000,
     "bossSkillCd": 2,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "惡魔綿羊",
+        "icon": "8140111"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -11046,7 +11792,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 32000,
     "bossSkillCd": 2,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "妖怪綿羊",
+        "icon": "9300481"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -11107,7 +11859,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "寒冰半人馬",
+        "icon": "8140103"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -11168,7 +11926,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 90,
-    "bandMax": 100
+    "bandMax": 100,
+    "mobPool": [
+      {
+        "name": "幽魂女巫",
+        "icon": "8142000"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -11229,7 +11993,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 90,
-    "bandMax": 100
+    "bandMax": 100,
+    "mobPool": [
+      {
+        "name": "怨靈女巫",
+        "icon": "8143000"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -11290,7 +12060,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "火焰半人馬",
+        "icon": "8140102"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -11351,7 +12127,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 12900,
     "bossSkillCd": 6,
     "bandMin": 90,
-    "bandMax": 100
+    "bandMax": 100,
+    "mobPool": [
+      {
+        "name": "達納托斯",
+        "icon": "8170000"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -11412,7 +12194,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 19999,
     "bossSkillCd": 1,
     "bandMin": 90,
-    "bandMax": 100
+    "bandMax": 100,
+    "mobPool": [
+      {
+        "name": "通道守門人",
+        "icon": "8160000"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -11473,7 +12261,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 40000,
     "bossSkillCd": 2,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "暗黑半人馬",
+        "icon": "8140101"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -11534,7 +12328,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 42000,
     "bossSkillCd": 1,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "暗黑三角龍",
+        "icon": "8140701"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -11595,7 +12395,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 45000,
     "bossSkillCd": 3,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "雙刀龍戰士",
+        "icon": "8150201"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -11656,7 +12462,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "進化迅猛龍",
+        "icon": "8140703"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -11717,7 +12529,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "藍翼龍",
+        "icon": "8150301"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -11778,7 +12596,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "赤翼龍",
+        "icon": "8150300"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -11839,7 +12663,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "黑翼龍",
+        "icon": "8150302"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -11900,7 +12730,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "幼龍",
+        "icon": "8190000"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -11961,7 +12797,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "幼龍守護者",
+        "icon": "8190002"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12022,7 +12864,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 58000,
     "bossSkillCd": 3,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "化石龍",
+        "icon": "8190003"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12083,7 +12931,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 60000,
     "bossSkillCd": 3,
     "bandMin": 100,
-    "bandMax": 115
+    "bandMax": 115,
+    "mobPool": [
+      {
+        "name": "化石龍長老",
+        "icon": "8190004"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12144,7 +12998,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 0
+    "bossSkillCd": 0,
+    "mobPool": [
+      {
+        "name": "回憶的祭司",
+        "icon": "8200001"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12205,7 +13065,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 0
+    "bossSkillCd": 0,
+    "mobPool": [
+      {
+        "name": "紅色勝利者的被造物",
+        "icon": "2400116"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12266,7 +13132,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 115,
-    "bandMax": 120
+    "bandMax": 120,
+    "mobPool": [
+      {
+        "name": "藍色勝利者的被造物",
+        "icon": "2400117"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12327,7 +13199,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 115,
-    "bandMax": 120
+    "bandMax": 120,
+    "mobPool": [
+      {
+        "name": "紫色試藥的被造物",
+        "icon": "2400118"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12388,7 +13266,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 115,
-    "bandMax": 120
+    "bandMax": 120,
+    "mobPool": [
+      {
+        "name": "紅色試藥的被造物",
+        "icon": "2400119"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12449,7 +13333,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 115,
-    "bandMax": 120
+    "bandMax": 120,
+    "mobPool": [
+      {
+        "name": "戰士幽靈",
+        "icon": "2400018"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12510,7 +13400,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 75000,
     "bossSkillCd": 3,
     "bandMin": 115,
-    "bandMax": 120
+    "bandMax": 120,
+    "mobPool": [
+      {
+        "name": "魔法師幽靈",
+        "icon": "2400019"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12571,7 +13467,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 78000,
     "bossSkillCd": 1,
     "bandMin": 115,
-    "bandMax": 120
+    "bandMax": 120,
+    "mobPool": [
+      {
+        "name": "死神幽靈",
+        "icon": "2400020"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12632,7 +13534,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 0
+    "bossSkillCd": 0,
+    "mobPool": [
+      {
+        "name": "回憶的神官",
+        "icon": "8200002"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12693,7 +13601,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 120,
-    "bandMax": 130
+    "bandMax": 130,
+    "mobPool": [
+      {
+        "name": "回憶守護兵",
+        "icon": "8200003"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12754,7 +13668,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 89800,
     "bossSkillCd": 5,
     "bandMin": 120,
-    "bandMax": 130
+    "bandMax": 130,
+    "mobPool": [
+      {
+        "name": "回憶守護隊長",
+        "icon": "8200004"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12815,7 +13735,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 120,
-    "bandMax": 130
+    "bandMax": 130,
+    "mobPool": [
+      {
+        "name": "悔恨的祭司",
+        "icon": "8200005"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12876,7 +13802,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 120,
-    "bandMax": 130
+    "bandMax": 130,
+    "mobPool": [
+      {
+        "name": "悔恨的神官",
+        "icon": "8200006"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12937,7 +13869,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 120,
-    "bandMax": 130
+    "bandMax": 130,
+    "mobPool": [
+      {
+        "name": "悔恨守護兵",
+        "icon": "8200007"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -12998,7 +13936,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 105400,
     "bossSkillCd": 7,
     "bandMin": 120,
-    "bandMax": 130
+    "bandMax": 130,
+    "mobPool": [
+      {
+        "name": "悔恨守護隊長",
+        "icon": "8200008"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -13059,7 +14003,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 120,
-    "bandMax": 130
+    "bandMax": 130,
+    "mobPool": [
+      {
+        "name": "忘卻的祭司",
+        "icon": "8200009"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -13120,23 +14070,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 120,
-    "bandMax": 130
+    "bandMax": 130,
+    "mobPool": [
+      {
+        "name": "忘卻的神官",
+        "icon": "8200010"
+      }
+    ]
   },
   {
     "regionId": "custom",
     "regionName": "騎士團要塞",
-    "name": "新狩獵場",
+    "name": "精靈基地 I",
     "mapId": "c289",
     "mapIndex": 289,
     "unlockLevel": 130,
     "dropMin": 130,
     "dropMax": 135,
-    "artId": "",
+    "artId": "KnightStronghold-10000",
     "bandKey": "151-160",
-    "mobName": "冰石人·5",
-    "mobIcon": "8210001",
-    "bossName": "戴斯克·10",
-    "bossIcon": "8880405",
+    "mobName": "魂",
+    "mobIcon": "8610000",
+    "bossName": "魂",
+    "bossIcon": "8610000",
     "monsterHp": 100750000,
     "bossHp": 1511300000,
     "killExp": 6100,
@@ -13147,8 +14103,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "騎士團要塞",
     "bandMin": 130,
     "bandMax": 140,
@@ -13156,32 +14112,38 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "smallKills": 888,
     "mobAtk1Dmg": 60500,
     "mobAtk1Cd": 1,
-    "mobAtk2Dmg": 0,
-    "mobAtk2Cd": 0,
+    "mobAtk2Dmg": 60500,
+    "mobAtk2Cd": 0.1,
     "mobAtk3Dmg": 0,
     "mobAtk3Cd": 0,
     "mobSkill1Dmg": 0,
-    "mobSkill1Cd": 8,
+    "mobSkill1Cd": 0,
     "mobSkill2Dmg": 0,
     "mobSkill2Cd": 0,
     "mobSkill3Dmg": 0,
     "mobSkill3Cd": 0,
     "mobSkillDmg": 0,
-    "mobSkillCd": 8,
+    "mobSkillCd": 0,
     "bossAtk1Dmg": 121000,
     "bossAtk1Cd": 1,
-    "bossAtk2Dmg": 0,
-    "bossAtk2Cd": 0,
+    "bossAtk2Dmg": 121000,
+    "bossAtk2Cd": 0.1,
     "bossAtk3Dmg": 0,
     "bossAtk3Cd": 0,
     "bossSkill1Dmg": 0,
-    "bossSkill1Cd": 10,
+    "bossSkill1Cd": 0,
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 0,
+    "mobPool": [
+      {
+        "name": "魂",
+        "icon": "8610000"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -13242,7 +14204,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 120,
-    "bandMax": 130
+    "bandMax": 130,
+    "mobPool": [
+      {
+        "name": "忘卻守護兵",
+        "icon": "8200011"
+      }
+    ]
   },
   {
     "regionId": "custom",
@@ -13303,23 +14271,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 121000,
     "bossSkillCd": 7,
     "bandMin": 120,
-    "bandMax": 130
+    "bandMax": 130,
+    "mobPool": [
+      {
+        "name": "忘卻守護隊長",
+        "icon": "8200012"
+      }
+    ]
   },
   {
     "regionId": "custom",
     "regionName": "騎士團要塞",
-    "name": "新狩獵場",
+    "name": "騎士團第一區域",
     "mapId": "c292",
     "mapIndex": 292,
     "unlockLevel": 131,
     "dropMin": 131,
     "dropMax": 131,
-    "artId": "",
+    "artId": "KnightStronghold-10001",
     "bandKey": "151-160",
-    "mobName": "眼鏡蛇·5",
-    "mobIcon": "2100105",
-    "bossName": "賽蓮·10",
-    "bossIcon": "8644650",
+    "mobName": "正式騎士A",
+    "mobIcon": "8610009",
+    "bossName": "正式騎士A",
+    "bossIcon": "8610009",
     "monsterHp": 107450000,
     "bossHp": 1611800000,
     "killExp": 6350,
@@ -13330,57 +14304,63 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "騎士團要塞",
     "bandMin": 130,
     "bandMax": 140,
     "replayBossKills": 205,
     "smallKills": 920,
     "mobAtk1Dmg": 62900,
-    "mobAtk1Cd": 0.6,
-    "mobAtk2Dmg": 0,
-    "mobAtk2Cd": 0,
+    "mobAtk1Cd": 1,
+    "mobAtk2Dmg": 62900,
+    "mobAtk2Cd": 0.1,
     "mobAtk3Dmg": 0,
     "mobAtk3Cd": 0,
     "mobSkill1Dmg": 0,
-    "mobSkill1Cd": 8,
+    "mobSkill1Cd": 0,
     "mobSkill2Dmg": 0,
     "mobSkill2Cd": 0,
     "mobSkill3Dmg": 0,
     "mobSkill3Cd": 0,
     "mobSkillDmg": 0,
-    "mobSkillCd": 8,
+    "mobSkillCd": 0,
     "bossAtk1Dmg": 126000,
-    "bossAtk1Cd": 2,
-    "bossAtk2Dmg": 0,
-    "bossAtk2Cd": 0,
+    "bossAtk1Cd": 1,
+    "bossAtk2Dmg": 126000,
+    "bossAtk2Cd": 0.1,
     "bossAtk3Dmg": 0,
     "bossAtk3Cd": 0,
     "bossSkill1Dmg": 0,
-    "bossSkill1Cd": 10,
+    "bossSkill1Cd": 0,
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 0,
+    "mobPool": [
+      {
+        "name": "正式騎士A",
+        "icon": "8610009"
+      }
+    ]
   },
   {
     "regionId": "custom",
     "regionName": "騎士團要塞",
-    "name": "新狩獵場",
+    "name": "精靈基地 II",
     "mapId": "c293",
     "mapIndex": 293,
     "unlockLevel": 132,
     "dropMin": 132,
     "dropMax": 140,
-    "artId": "",
+    "artId": "KnightStronghold-10002",
     "bandKey": "151-160",
-    "mobName": "砂鼠·5",
-    "mobIcon": "2100100",
-    "bossName": "卡洛斯·10",
-    "bossIcon": "8881000",
+    "mobName": "火牢術",
+    "mobIcon": "8610001",
+    "bossName": "火牢術",
+    "bossIcon": "8610001",
     "monsterHp": 114200000,
     "bossHp": 1713000000,
     "killExp": 6550,
@@ -13391,57 +14371,63 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "騎士團要塞",
     "replayBossKills": 210,
     "smallKills": 960,
     "mobAtk1Dmg": 65200,
-    "mobAtk1Cd": 0.6,
-    "mobAtk2Dmg": 0,
-    "mobAtk2Cd": 0,
+    "mobAtk1Cd": 1,
+    "mobAtk2Dmg": 65200,
+    "mobAtk2Cd": 0.1,
     "mobAtk3Dmg": 0,
     "mobAtk3Cd": 0,
     "mobSkill1Dmg": 0,
-    "mobSkill1Cd": 8,
+    "mobSkill1Cd": 0,
     "mobSkill2Dmg": 0,
     "mobSkill2Cd": 0,
     "mobSkill3Dmg": 0,
     "mobSkill3Cd": 0,
     "mobSkillDmg": 0,
-    "mobSkillCd": 8,
+    "mobSkillCd": 0,
     "bossAtk1Dmg": 130000,
-    "bossAtk1Cd": 2,
-    "bossAtk2Dmg": 0,
-    "bossAtk2Cd": 0,
+    "bossAtk1Cd": 1,
+    "bossAtk2Dmg": 130000,
+    "bossAtk2Cd": 0.1,
     "bossAtk3Dmg": 0,
     "bossAtk3Cd": 0,
     "bossSkill1Dmg": 0,
-    "bossSkill1Cd": 10,
+    "bossSkill1Cd": 0,
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10,
+    "bossSkillCd": 0,
     "bandMin": 130,
-    "bandMax": 140
+    "bandMax": 140,
+    "mobPool": [
+      {
+        "name": "火牢術",
+        "icon": "8610001"
+      }
+    ]
   },
   {
     "regionId": "custom",
     "regionName": "騎士團要塞",
-    "name": "新狩獵場",
+    "name": "騎士團第二區域",
     "mapId": "c294",
     "mapIndex": 294,
     "unlockLevel": 133,
     "dropMin": 133,
     "dropMax": 140,
-    "artId": "",
+    "artId": "KnightStronghold-10003",
     "bandKey": "151-160",
-    "mobName": "進化精靈·5",
-    "mobIcon": "8200000",
-    "bossName": "卡林·10",
-    "bossIcon": "8880900",
+    "mobName": "正式騎士B",
+    "mobIcon": "8610006",
+    "bossName": "正式騎士B",
+    "bossIcon": "8610006",
     "monsterHp": 120900000,
     "bossHp": 1813500000,
     "killExp": 6800,
@@ -13452,57 +14438,63 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "騎士團要塞",
     "replayBossKills": 215,
     "smallKills": 990,
     "mobAtk1Dmg": 67600,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
     "mobAtk3Cd": 0,
     "mobSkill1Dmg": 0,
-    "mobSkill1Cd": 8,
+    "mobSkill1Cd": 0,
     "mobSkill2Dmg": 0,
     "mobSkill2Cd": 0,
     "mobSkill3Dmg": 0,
     "mobSkill3Cd": 0,
     "mobSkillDmg": 0,
-    "mobSkillCd": 8,
+    "mobSkillCd": 0,
     "bossAtk1Dmg": 135000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
     "bossAtk3Cd": 0,
     "bossSkill1Dmg": 0,
-    "bossSkill1Cd": 10,
+    "bossSkill1Cd": 0,
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10,
+    "bossSkillCd": 0,
     "bandMin": 130,
-    "bandMax": 140
+    "bandMax": 140,
+    "mobPool": [
+      {
+        "name": "正式騎士B",
+        "icon": "8610006"
+      }
+    ]
   },
   {
     "regionId": "custom",
     "regionName": "騎士團要塞",
-    "name": "新狩獵場",
+    "name": "精靈基地 III",
     "mapId": "c295",
     "mapIndex": 295,
     "unlockLevel": 134,
     "dropMin": 134,
     "dropMax": 140,
-    "artId": "",
+    "artId": "KnightStronghold-10004",
     "bandKey": "151-160",
-    "mobName": "時間之眼·5",
-    "mobIcon": "8200004",
-    "bossName": "守護天使綠水靈·10",
-    "bossIcon": "8880020",
+    "mobName": "暴風",
+    "mobIcon": "8610002",
+    "bossName": "暴風",
+    "bossIcon": "8610002",
     "monsterHp": 127600000,
     "bossHp": 1914000000,
     "killExp": 7050,
@@ -13513,57 +14505,63 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "騎士團要塞",
     "replayBossKills": 220,
     "smallKills": 1020,
     "mobAtk1Dmg": 69900,
-    "mobAtk1Cd": 0.6,
-    "mobAtk2Dmg": 0,
-    "mobAtk2Cd": 0,
+    "mobAtk1Cd": 1,
+    "mobAtk2Dmg": 69900,
+    "mobAtk2Cd": 0.1,
     "mobAtk3Dmg": 0,
     "mobAtk3Cd": 0,
     "mobSkill1Dmg": 0,
-    "mobSkill1Cd": 8,
+    "mobSkill1Cd": 0,
     "mobSkill2Dmg": 0,
     "mobSkill2Cd": 0,
     "mobSkill3Dmg": 0,
     "mobSkill3Cd": 0,
     "mobSkillDmg": 0,
-    "mobSkillCd": 8,
+    "mobSkillCd": 0,
     "bossAtk1Dmg": 140000,
-    "bossAtk1Cd": 2,
-    "bossAtk2Dmg": 0,
-    "bossAtk2Cd": 0,
+    "bossAtk1Cd": 1,
+    "bossAtk2Dmg": 140000,
+    "bossAtk2Cd": 0.1,
     "bossAtk3Dmg": 0,
     "bossAtk3Cd": 0,
     "bossSkill1Dmg": 0,
-    "bossSkill1Cd": 10,
+    "bossSkill1Cd": 0,
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10,
+    "bossSkillCd": 0,
     "bandMin": 130,
-    "bandMax": 140
+    "bandMax": 140,
+    "mobPool": [
+      {
+        "name": "暴風",
+        "icon": "8610002"
+      }
+    ]
   },
   {
     "regionId": "custom",
     "regionName": "騎士團要塞",
-    "name": "新狩獵場",
+    "name": "騎士團第三區域",
     "mapId": "c296",
     "mapIndex": 296,
     "unlockLevel": 136,
     "dropMin": 136,
     "dropMax": 140,
-    "artId": "",
+    "artId": "KnightStronghold-10005",
     "bandKey": "151-160",
-    "mobName": "神木哈士奇·5",
-    "mobIcon": "8140500",
-    "bossName": "頓凱爾·10",
-    "bossIcon": "8644600",
+    "mobName": "正式騎士C",
+    "mobIcon": "8610008",
+    "bossName": "正式騎士C",
+    "bossIcon": "8610008",
     "monsterHp": 134350000,
     "bossHp": 2015300000,
     "killExp": 7300,
@@ -13574,57 +14572,63 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "騎士團要塞",
     "replayBossKills": 225,
     "smallKills": 1060,
     "mobAtk1Dmg": 72300,
-    "mobAtk1Cd": 0.6,
-    "mobAtk2Dmg": 0,
-    "mobAtk2Cd": 0,
+    "mobAtk1Cd": 1,
+    "mobAtk2Dmg": 72300,
+    "mobAtk2Cd": 0.1,
     "mobAtk3Dmg": 0,
     "mobAtk3Cd": 0,
     "mobSkill1Dmg": 0,
-    "mobSkill1Cd": 8,
+    "mobSkill1Cd": 0,
     "mobSkill2Dmg": 0,
     "mobSkill2Cd": 0,
     "mobSkill3Dmg": 0,
     "mobSkill3Cd": 0,
     "mobSkillDmg": 0,
-    "mobSkillCd": 8,
+    "mobSkillCd": 0,
     "bossAtk1Dmg": 145000,
-    "bossAtk1Cd": 2,
-    "bossAtk2Dmg": 0,
-    "bossAtk2Cd": 0,
+    "bossAtk1Cd": 1,
+    "bossAtk2Dmg": 145000,
+    "bossAtk2Cd": 0.1,
     "bossAtk3Dmg": 0,
     "bossAtk3Cd": 0,
     "bossSkill1Dmg": 0,
-    "bossSkill1Cd": 10,
+    "bossSkill1Cd": 0,
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10,
+    "bossSkillCd": 0,
     "bandMin": 130,
-    "bandMax": 140
+    "bandMax": 140,
+    "mobPool": [
+      {
+        "name": "正式騎士C",
+        "icon": "8610008"
+      }
+    ]
   },
   {
     "regionId": "custom",
     "regionName": "騎士團要塞",
-    "name": "新狩獵場",
+    "name": "精靈基地 IV",
     "mapId": "c297",
     "mapIndex": 297,
     "unlockLevel": 137,
     "dropMin": 137,
     "dropMax": 140,
-    "artId": "",
+    "artId": "KnightStronghold-10006",
     "bandKey": "151-160",
-    "mobName": "龍族戰士·5",
-    "mobIcon": "8150200",
-    "bossName": "受選者·10",
-    "bossIcon": "8880700",
+    "mobName": "黑暗雷鳥",
+    "mobIcon": "8610003",
+    "bossName": "黑暗雷鳥",
+    "bossIcon": "8610003",
     "monsterHp": 141050000,
     "bossHp": 2115800000,
     "killExp": 7600,
@@ -13635,57 +14639,63 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "騎士團要塞",
     "replayBossKills": 230,
     "smallKills": 1090,
     "mobAtk1Dmg": 74600,
-    "mobAtk1Cd": 0.6,
-    "mobAtk2Dmg": 0,
-    "mobAtk2Cd": 0,
+    "mobAtk1Cd": 1,
+    "mobAtk2Dmg": 74600,
+    "mobAtk2Cd": 0.1,
     "mobAtk3Dmg": 0,
     "mobAtk3Cd": 0,
     "mobSkill1Dmg": 0,
-    "mobSkill1Cd": 8,
+    "mobSkill1Cd": 0,
     "mobSkill2Dmg": 0,
     "mobSkill2Cd": 0,
     "mobSkill3Dmg": 0,
     "mobSkill3Cd": 0,
     "mobSkillDmg": 0,
-    "mobSkillCd": 8,
+    "mobSkillCd": 0,
     "bossAtk1Dmg": 149000,
-    "bossAtk1Cd": 2,
-    "bossAtk2Dmg": 0,
-    "bossAtk2Cd": 0,
+    "bossAtk1Cd": 0.1,
+    "bossAtk2Dmg": 149000,
+    "bossAtk2Cd": 0.1,
     "bossAtk3Dmg": 0,
     "bossAtk3Cd": 0,
     "bossSkill1Dmg": 0,
-    "bossSkill1Cd": 10,
+    "bossSkill1Cd": 0,
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10,
+    "bossSkillCd": 0,
     "bandMin": 130,
-    "bandMax": 140
+    "bandMax": 140,
+    "mobPool": [
+      {
+        "name": "黑暗雷鳥",
+        "icon": "8610003"
+      }
+    ]
   },
   {
     "regionId": "custom",
     "regionName": "騎士團要塞",
-    "name": "新狩獵場",
+    "name": "騎士團第四區域",
     "mapId": "c298",
     "mapIndex": 298,
     "unlockLevel": 138,
     "dropMin": 138,
     "dropMax": 140,
-    "artId": "",
+    "artId": "KnightStronghold-10007",
     "bandKey": "151-160",
-    "mobName": "骷髏法師·5",
-    "mobIcon": "5150002",
-    "bossName": "覺醒希拉·10",
-    "bossIcon": "8880510",
+    "mobName": "正式騎士D",
+    "mobIcon": "8610005",
+    "bossName": "正式騎士D",
+    "bossIcon": "8610005",
     "monsterHp": 147750000,
     "bossHp": 2216300000,
     "killExp": 7900,
@@ -13696,57 +14706,63 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "騎士團要塞",
     "replayBossKills": 235,
     "smallKills": 1120,
     "mobAtk1Dmg": 77000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
     "mobAtk3Cd": 0,
     "mobSkill1Dmg": 0,
-    "mobSkill1Cd": 8,
+    "mobSkill1Cd": 0,
     "mobSkill2Dmg": 0,
     "mobSkill2Cd": 0,
     "mobSkill3Dmg": 0,
     "mobSkill3Cd": 0,
     "mobSkillDmg": 0,
-    "mobSkillCd": 8,
+    "mobSkillCd": 0,
     "bossAtk1Dmg": 154000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
     "bossAtk3Cd": 0,
     "bossSkill1Dmg": 0,
-    "bossSkill1Cd": 10,
+    "bossSkill1Cd": 0,
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10,
+    "bossSkillCd": 0,
     "bandMin": 130,
-    "bandMax": 140
+    "bandMax": 140,
+    "mobPool": [
+      {
+        "name": "正式騎士D",
+        "icon": "8610005"
+      }
+    ]
   },
   {
     "regionId": "custom",
     "regionName": "騎士團要塞",
-    "name": "新狩獵場",
+    "name": "精靈基地 V",
     "mapId": "c299",
     "mapIndex": 299,
     "unlockLevel": 139,
     "dropMin": 139,
     "dropMax": 140,
-    "artId": "",
+    "artId": "KnightStronghold-10008",
     "bandKey": "151-160",
-    "mobName": "黑暗石人·5",
-    "mobIcon": "7120106",
-    "bossName": "至暗魔晶·10",
-    "bossIcon": "8880620",
+    "mobName": "閃電",
+    "mobIcon": "8610004",
+    "bossName": "閃電",
+    "bossIcon": "8610004",
     "monsterHp": 154500000,
     "bossHp": 2317500000,
     "killExp": 8150,
@@ -13757,15 +14773,15 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "騎士團要塞",
     "replayBossKills": 240,
     "smallKills": 1160,
     "mobAtk1Dmg": 79300,
-    "mobAtk1Cd": 0.6,
-    "mobAtk2Dmg": 0,
-    "mobAtk2Cd": 0,
+    "mobAtk1Cd": 1,
+    "mobAtk2Dmg": 79300,
+    "mobAtk2Cd": 0.1,
     "mobAtk3Dmg": 0,
     "mobAtk3Cd": 0,
     "mobSkill1Dmg": 0,
@@ -13777,9 +14793,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 159000,
-    "bossAtk1Cd": 2,
-    "bossAtk2Dmg": 0,
-    "bossAtk2Cd": 0,
+    "bossAtk1Cd": 1,
+    "bossAtk2Dmg": 159000,
+    "bossAtk2Cd": 0.1,
     "bossAtk3Dmg": 0,
     "bossAtk3Cd": 0,
     "bossSkill1Dmg": 0,
@@ -13791,223 +14807,247 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 130,
-    "bandMax": 140
+    "bandMax": 140,
+    "mobPool": [
+      {
+        "name": "閃電",
+        "icon": "8610004"
+      }
+    ]
   },
   {
     "regionId": "custom",
     "regionName": "騎士團要塞",
-    "name": "新狩獵場",
+    "name": "騎士團第五區域",
     "mapId": "c300",
     "mapIndex": 300,
     "unlockLevel": 140,
     "dropMin": 140,
     "dropMax": 140,
-    "artId": "",
+    "artId": "KnightStronghold-10009",
     "bandKey": "151-160",
-    "mobName": "精英綠水靈·5",
-    "mobIcon": "0210101",
-    "bossName": "監視者·10",
-    "bossIcon": "8880800",
+    "mobName": "正式騎士E",
+    "mobIcon": "8610007",
+    "bossName": "正式騎士E",
+    "bossIcon": "8610007",
     "monsterHp": 161200000,
     "bossHp": 2418000000,
     "killExp": 8500,
-    "killGold": 80,
+    "killGold": 8500,
     "bossKillExp": 85000,
-    "bossKillGold": 640,
+    "bossKillGold": 85000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "騎士團要塞",
     "replayBossKills": 245,
     "smallKills": 1190,
     "mobAtk1Dmg": 81700,
-    "mobAtk1Cd": 0.6,
-    "mobAtk2Dmg": 0,
-    "mobAtk2Cd": 0,
+    "mobAtk1Cd": 1,
+    "mobAtk2Dmg": 81700,
+    "mobAtk2Cd": 0.1,
     "mobAtk3Dmg": 0,
     "mobAtk3Cd": 0,
     "mobSkill1Dmg": 0,
-    "mobSkill1Cd": 8,
+    "mobSkill1Cd": 0,
     "mobSkill2Dmg": 0,
     "mobSkill2Cd": 0,
     "mobSkill3Dmg": 0,
     "mobSkill3Cd": 0,
     "mobSkillDmg": 0,
-    "mobSkillCd": 8,
+    "mobSkillCd": 0,
     "bossAtk1Dmg": 163000,
-    "bossAtk1Cd": 2,
-    "bossAtk2Dmg": 0,
-    "bossAtk2Cd": 0,
+    "bossAtk1Cd": 1,
+    "bossAtk2Dmg": 163000,
+    "bossAtk2Cd": 0.1,
     "bossAtk3Dmg": 0,
     "bossAtk3Cd": 0,
     "bossSkill1Dmg": 0,
-    "bossSkill1Cd": 10,
+    "bossSkill1Cd": 0,
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10,
+    "bossSkillCd": 0,
     "bandMin": 130,
-    "bandMax": 140
+    "bandMax": 140,
+    "mobPool": [
+      {
+        "name": "正式騎士E",
+        "icon": "8610007"
+      }
+    ]
   },
   {
     "regionId": "custom",
     "regionName": "地球防衛隊本部",
-    "name": "新狩獵場",
+    "name": "洛斯威爾草原 I",
     "mapId": "c301",
     "mapIndex": 301,
     "unlockLevel": 140,
     "dropMin": 140,
     "dropMax": 140,
-    "artId": "",
+    "artId": "OmegaSector-10000",
     "bandKey": "band-1788873229534",
-    "mobName": "嫩寶·6",
-    "mobIcon": "0100100",
-    "bossName": "菇菇王·11",
-    "bossIcon": "2220000",
+    "mobName": "馬堤安",
+    "mobIcon": "4230127",
+    "bossName": "馬堤安",
+    "bossIcon": "4230127",
     "monsterHp": 161200000,
     "bossHp": 2418000000,
     "killExp": 8500,
-    "killGold": 81,
+    "killGold": 85000,
     "bossKillExp": 85000,
-    "bossKillGold": 652,
+    "bossKillGold": 850000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "地球防衛隊本部",
     "bandMin": 140,
     "bandMax": 150,
-    "replayBossKills": 245,
-    "smallKills": 1190,
+    "replayBossKills": 250,
+    "smallKills": 1200,
     "mobAtk1Dmg": 81700,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
     "mobAtk3Cd": 0,
     "mobSkill1Dmg": 0,
-    "mobSkill1Cd": 8,
+    "mobSkill1Cd": 0,
     "mobSkill2Dmg": 0,
     "mobSkill2Cd": 0,
     "mobSkill3Dmg": 0,
     "mobSkill3Cd": 0,
     "mobSkillDmg": 0,
-    "mobSkillCd": 8,
+    "mobSkillCd": 0,
     "bossAtk1Dmg": 163000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
     "bossAtk3Cd": 0,
     "bossSkill1Dmg": 0,
-    "bossSkill1Cd": 10,
+    "bossSkill1Cd": 0,
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 0,
+    "mobPool": [
+      {
+        "name": "馬堤安",
+        "icon": "4230127"
+      }
+    ]
   },
   {
     "regionId": "band-1788873229534",
     "regionName": "地球防衛隊本部",
-    "name": "新狩獵場",
+    "name": "洛斯威爾草原 II",
     "mapId": "c302",
     "mapIndex": 302,
     "unlockLevel": 141,
     "dropMin": 141,
     "dropMax": 150,
-    "artId": "",
+    "artId": "OmegaSector-10001",
     "bandKey": "band-1788873229534",
-    "mobName": "藍寶·6",
-    "mobIcon": "0100101",
-    "bossName": "藍蘑菇王·11",
-    "bossIcon": "2220001",
+    "mobName": "培利堤安",
+    "mobIcon": "4230128",
+    "bossName": "培利堤安",
+    "bossIcon": "4230128",
     "monsterHp": 174050000,
     "bossHp": 2610800000,
     "killExp": 8750,
-    "killGold": 71,
+    "killGold": 87500,
     "bossKillExp": 87500,
-    "bossKillGold": 572,
+    "bossKillGold": 875000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "地球防衛隊本部",
-    "replayBossKills": 245,
+    "replayBossKills": 250,
     "smallKills": 1220,
     "mobAtk1Dmg": 83900,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
     "mobAtk3Cd": 0,
     "mobSkill1Dmg": 0,
-    "mobSkill1Cd": 8,
+    "mobSkill1Cd": 0,
     "mobSkill2Dmg": 0,
     "mobSkill2Cd": 0,
     "mobSkill3Dmg": 0,
     "mobSkill3Cd": 0,
     "mobSkillDmg": 0,
-    "mobSkillCd": 8,
+    "mobSkillCd": 0,
     "bossAtk1Dmg": 167000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
     "bossAtk3Cd": 0,
     "bossSkill1Dmg": 0,
-    "bossSkill1Cd": 10,
+    "bossSkill1Cd": 0,
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10,
+    "bossSkillCd": 0,
     "bandMin": 140,
-    "bandMax": 150
+    "bandMax": 150,
+    "mobPool": [
+      {
+        "name": "培利堤安",
+        "icon": "4230128"
+      }
+    ]
   },
   {
     "regionId": "band-1788873229534",
     "regionName": "地球防衛隊本部",
-    "name": "新狩獵場",
+    "name": "走廊 101",
     "mapId": "c303",
     "mapIndex": 303,
     "unlockLevel": 142,
     "dropMin": 142,
     "dropMax": 150,
-    "artId": "",
+    "artId": "OmegaSector-10002",
     "bandKey": "band-1788873229534",
-    "mobName": "紅寶·6",
-    "mobIcon": "0130101",
-    "bossName": "史萊姆王·11",
-    "bossIcon": "5220000",
+    "mobName": "葛雷族人",
+    "mobIcon": "4230129",
+    "bossName": "葛雷族人",
+    "bossIcon": "4230129",
     "monsterHp": 187950000,
     "bossHp": 2819300000,
     "killExp": 9050,
-    "killGold": 73,
+    "killGold": 90500,
     "bossKillExp": 90500,
-    "bossKillGold": 588,
+    "bossKillGold": 905000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "地球防衛隊本部",
     "replayBossKills": 250,
     "smallKills": 1250,
     "mobAtk1Dmg": 86200,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -14021,7 +15061,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 172000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -14035,40 +15075,46 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 140,
-    "bandMax": 150
+    "bandMax": 150,
+    "mobPool": [
+      {
+        "name": "葛雷族人",
+        "icon": "4230129"
+      }
+    ]
   },
   {
     "regionId": "band-1788873229534",
     "regionName": "地球防衛隊本部",
-    "name": "新狩獵場",
+    "name": "走廊 102",
     "mapId": "c304",
     "mapIndex": 304,
     "unlockLevel": 143,
     "dropMin": 143,
     "dropMax": 150,
-    "artId": "",
+    "artId": "OmegaSector-10003",
     "bandKey": "band-1788873229534",
-    "mobName": "蘑菇仔·6",
-    "mobIcon": "0120100",
-    "bossName": "樹妖王·11",
-    "bossIcon": "3220000",
+    "mobName": "葛雷士兵",
+    "mobIcon": "4230117",
+    "bossName": "葛雷士兵",
+    "bossIcon": "4230117",
     "monsterHp": 202950000,
     "bossHp": 3044300000,
     "killExp": 9350,
-    "killGold": 75,
+    "killGold": 93500,
     "bossKillExp": 93500,
-    "bossKillGold": 600,
+    "bossKillGold": 935000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "地球防衛隊本部",
-    "replayBossKills": 255,
+    "replayBossKills": 250,
     "smallKills": 1280,
     "mobAtk1Dmg": 88500,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -14082,7 +15128,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 177000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -14096,7 +15142,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 140,
-    "bandMax": 150
+    "bandMax": 150,
+    "mobPool": [
+      {
+        "name": "葛雷士兵",
+        "icon": "4230117"
+      }
+    ]
   },
   {
     "regionId": "band-1788873229534",
@@ -14107,29 +15159,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "unlockLevel": 144,
     "dropMin": 144,
     "dropMax": 150,
-    "artId": "",
+    "artId": "OmegaSector-10004",
     "bandKey": "band-1788873229534",
-    "mobName": "木妖·6",
-    "mobIcon": "0110100",
-    "bossName": "殭屍蘑菇王·11",
-    "bossIcon": "6300005",
+    "mobName": "葛雷隊長",
+    "mobIcon": "4230130",
+    "bossName": "葛雷隊長",
+    "bossIcon": "4230130",
     "monsterHp": 219150000,
     "bossHp": 3287300000,
     "killExp": 9650,
-    "killGold": 76,
+    "killGold": 96500,
     "bossKillExp": 96500,
-    "bossKillGold": 612,
+    "bossKillGold": 965000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "地球防衛隊本部",
-    "replayBossKills": 260,
-    "smallKills": 1310,
+    "replayBossKills": 250,
+    "smallKills": 1300,
     "mobAtk1Dmg": 91000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -14143,7 +15195,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 181000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -14157,7 +15209,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 140,
-    "bandMax": 150
+    "bandMax": 150,
+    "mobPool": [
+      {
+        "name": "葛雷隊長",
+        "icon": "4230130"
+      }
+    ]
   },
   {
     "regionId": "band-1788873229534",
@@ -14168,29 +15226,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "unlockLevel": 145,
     "dropMin": 145,
     "dropMax": 150,
-    "artId": "",
+    "artId": "OmegaSector-10005",
     "bandKey": "band-1788873229534",
-    "mobName": "綠水靈·6",
-    "mobIcon": "0210100",
-    "bossName": "浮士德·11",
-    "bossIcon": "5220002",
+    "mobName": "新葛雷白",
+    "mobIcon": "4230131",
+    "bossName": "新葛雷白",
+    "bossIcon": "4230131",
     "monsterHp": 236600000,
     "bossHp": 3549000000,
     "killExp": 10000,
-    "killGold": 78,
+    "killGold": 100000,
     "bossKillExp": 100000,
-    "bossKillGold": 628,
+    "bossKillGold": 1000000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "地球防衛隊本部",
-    "replayBossKills": 265,
+    "replayBossKills": 250,
     "smallKills": 1340,
     "mobAtk1Dmg": 93400,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -14204,7 +15262,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 186000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -14218,7 +15276,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 140,
-    "bandMax": 150
+    "bandMax": 150,
+    "mobPool": [
+      {
+        "name": "新葛雷白",
+        "icon": "4230131"
+      }
+    ]
   },
   {
     "regionId": "band-1788873229534",
@@ -14229,29 +15293,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "unlockLevel": 146,
     "dropMin": 146,
     "dropMax": 150,
-    "artId": "",
+    "artId": "OmegaSector-10006",
     "bandKey": "band-1788873229534",
-    "mobName": "綠菇菇·6",
-    "mobIcon": "1110100",
-    "bossName": "巴洛古·11",
-    "bossIcon": "6130101",
+    "mobName": "新葛雷黑",
+    "mobIcon": "4230132",
+    "bossName": "新葛雷黑",
+    "bossIcon": "4230132",
     "monsterHp": 255500000,
     "bossHp": 3832500000,
     "killExp": 10300,
-    "killGold": 80,
+    "killGold": 103000,
     "bossKillExp": 103000,
-    "bossKillGold": 640,
+    "bossKillGold": 1030000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "地球防衛隊本部",
-    "replayBossKills": 270,
+    "replayBossKills": 250,
     "smallKills": 1370,
     "mobAtk1Dmg": 96000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -14265,7 +15329,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 191000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -14279,7 +15343,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 140,
-    "bandMax": 150
+    "bandMax": 150,
+    "mobPool": [
+      {
+        "name": "新葛雷黑",
+        "icon": "4230132"
+      }
+    ]
   },
   {
     "regionId": "band-1788873229534",
@@ -14290,29 +15360,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "unlockLevel": 147,
     "dropMin": 147,
     "dropMax": 150,
-    "artId": "",
+    "artId": "OmegaSector-10007",
     "bandKey": "band-1788873229534",
-    "mobName": "刺蘑菇·6",
-    "mobIcon": "2110100",
-    "bossName": "拉圖斯·11",
-    "bossIcon": "8500001",
+    "mobName": "梅卡堤安",
+    "mobIcon": "4230133",
+    "bossName": "梅卡堤安",
+    "bossIcon": "4230133",
     "monsterHp": 275850000,
     "bossHp": 4137800000,
     "killExp": 10700,
-    "killGold": 81,
+    "killGold": 107000,
     "bossKillExp": 107000,
-    "bossKillGold": 652,
+    "bossKillGold": 1070000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "地球防衛隊本部",
-    "replayBossKills": 275,
+    "replayBossKills": 250,
     "smallKills": 1400,
     "mobAtk1Dmg": 98600,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -14326,7 +15396,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 197000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -14340,7 +15410,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 140,
-    "bandMax": 150
+    "bandMax": 150,
+    "mobPool": [
+      {
+        "name": "梅卡堤安",
+        "icon": "4230133"
+      }
+    ]
   },
   {
     "regionId": "band-1788873229534",
@@ -14351,29 +15427,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "unlockLevel": 148,
     "dropMin": 148,
     "dropMax": 150,
-    "artId": "",
+    "artId": "OmegaSector-10008",
     "bandKey": "band-1788873229534",
-    "mobName": "藍菇菇·6",
-    "mobIcon": "2220100",
-    "bossName": "殘暴炎魔·11",
-    "bossIcon": "8800002",
+    "mobName": "機器人 MT-09",
+    "mobIcon": "4230134",
+    "bossName": "機器人 MT-09",
+    "bossIcon": "4230134",
     "monsterHp": 297850000,
     "bossHp": 4467800000,
     "killExp": 11000,
-    "killGold": 83,
+    "killGold": 110000,
     "bossKillExp": 110000,
-    "bossKillGold": 668,
+    "bossKillGold": 1100000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "地球防衛隊本部",
-    "replayBossKills": 275,
+    "replayBossKills": 250,
     "smallKills": 1430,
     "mobAtk1Dmg": 101000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -14387,7 +15463,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 202000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -14401,7 +15477,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 140,
-    "bandMax": 150
+    "bandMax": 150,
+    "mobPool": [
+      {
+        "name": "機器人 MT-09",
+        "icon": "4230134"
+      }
+    ]
   },
   {
     "regionId": "band-1788873229534",
@@ -14412,29 +15494,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "unlockLevel": 149,
     "dropMin": 149,
     "dropMax": 150,
-    "artId": "",
+    "artId": "OmegaSector-10009",
     "bandKey": "band-1788873229534",
-    "mobName": "殭屍蘑菇·6",
-    "mobIcon": "2230100",
-    "bossName": "闇黑龍王·11",
-    "bossIcon": "8810018",
+    "mobName": "無人機白",
+    "mobIcon": "4230137",
+    "bossName": "無人機白",
+    "bossIcon": "4230137",
     "monsterHp": 321650000,
     "bossHp": 4824800000,
     "killExp": 11400,
-    "killGold": 85,
+    "killGold": 114000,
     "bossKillExp": 114000,
-    "bossKillGold": 680,
+    "bossKillGold": 1140000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "地球防衛隊本部",
-    "replayBossKills": 280,
+    "replayBossKills": 250,
     "smallKills": 1460,
     "mobAtk1Dmg": 104000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -14448,7 +15530,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 208000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -14462,23 +15544,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 140,
-    "bandMax": 150
+    "bandMax": 150,
+    "mobPool": [
+      {
+        "name": "無人機白",
+        "icon": "4230137"
+      }
+    ]
   },
   {
     "regionId": "band-1788873229534",
     "regionName": "星光之塔",
-    "name": "新狩獵場",
+    "name": "1層電子賣場",
     "mapId": "c311",
     "mapIndex": 311,
     "unlockLevel": 150,
     "dropMin": 150,
     "dropMax": 150,
-    "artId": "",
+    "artId": "KerningTower-10000",
     "bandKey": "band-1788873703017",
-    "mobName": "斧木妖·6",
-    "mobIcon": "1140100",
-    "bossName": "皮卡啾·11",
-    "bossIcon": "8820001",
+    "mobName": "最新型的音響",
+    "mobIcon": "4310002",
+    "bossName": "最新型的音響",
+    "bossIcon": "4310002",
     "monsterHp": 347300000,
     "bossHp": 5209500000,
     "killExp": 11800,
@@ -14489,57 +15577,63 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "星光之塔",
     "bandMin": 150,
     "bandMax": 160,
-    "replayBossKills": 285,
+    "replayBossKills": 250,
     "smallKills": 1490,
     "mobAtk1Dmg": 107000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
     "mobAtk3Cd": 0,
     "mobSkill1Dmg": 0,
-    "mobSkill1Cd": 8,
+    "mobSkill1Cd": 0,
     "mobSkill2Dmg": 0,
     "mobSkill2Cd": 0,
     "mobSkill3Dmg": 0,
     "mobSkill3Cd": 0,
     "mobSkillDmg": 0,
-    "mobSkillCd": 8,
+    "mobSkillCd": 0,
     "bossAtk1Dmg": 213000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
     "bossAtk3Cd": 0,
     "bossSkill1Dmg": 0,
-    "bossSkill1Cd": 10,
+    "bossSkill1Cd": 0,
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 0,
+    "mobPool": [
+      {
+        "name": "最新型的音響",
+        "icon": "4310002"
+      }
+    ]
   },
   {
     "regionId": "band-1788873703017",
     "regionName": "星光之塔",
-    "name": "新狩獵場",
+    "name": "2層咖啡廳 <1>",
     "mapId": "c312",
     "mapIndex": 312,
     "unlockLevel": 151,
     "dropMin": 151,
     "dropMax": 160,
-    "artId": "",
+    "artId": "KerningTower-10001",
     "bandKey": "band-1788873703017",
-    "mobName": "三眼木妖·6",
-    "mobIcon": "1130100",
-    "bossName": "西格諾斯·11",
-    "bossIcon": "8850011",
+    "mobName": "蘇打味膠凍果汁",
+    "mobIcon": "4310004",
+    "bossName": "蘇打味膠凍果汁",
+    "bossIcon": "4310004",
     "monsterHp": 372400000,
     "bossHp": 5586000000,
     "killExp": 12100,
@@ -14550,13 +15644,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "星光之塔",
-    "replayBossKills": 290,
+    "replayBossKills": 250,
     "smallKills": 1520,
     "mobAtk1Dmg": 109000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -14570,7 +15664,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 218000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -14584,23 +15678,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 150,
-    "bandMax": 160
+    "bandMax": 160,
+    "mobPool": [
+      {
+        "name": "蘇打味膠凍果汁",
+        "icon": "4310004"
+      }
+    ]
   },
   {
     "regionId": "band-1788873703017",
     "regionName": "星光之塔",
-    "name": "新狩獵場",
+    "name": "2層咖啡廳 <2>",
     "mapId": "c313",
     "mapIndex": 313,
     "unlockLevel": 152,
     "dropMin": 152,
     "dropMax": 160,
-    "artId": "",
+    "artId": "KerningTower-10002",
     "bandKey": "band-1788873703017",
-    "mobName": "豬·6",
-    "mobIcon": "1210100",
-    "bossName": "凡雷恩·11",
-    "bossIcon": "8840000",
+    "mobName": "葡萄味膠凍果汁",
+    "mobIcon": "4310005",
+    "bossName": "葡萄味膠凍果汁",
+    "bossIcon": "4310005",
     "monsterHp": 399300000,
     "bossHp": 5989500000,
     "killExp": 12500,
@@ -14611,13 +15711,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "星光之塔",
-    "replayBossKills": 295,
+    "replayBossKills": 250,
     "smallKills": 1550,
     "mobAtk1Dmg": 112000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -14631,7 +15731,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 224000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -14645,23 +15745,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 150,
-    "bandMax": 160
+    "bandMax": 160,
+    "mobPool": [
+      {
+        "name": "葡萄味膠凍果汁",
+        "icon": "4310005"
+      }
+    ]
   },
   {
     "regionId": "band-1788873703017",
     "regionName": "星光之塔",
-    "name": "新狩獵場",
+    "name": "2層咖啡廳 <3>",
     "mapId": "c314",
     "mapIndex": 314,
     "unlockLevel": 153,
     "dropMin": 153,
     "dropMax": 160,
-    "artId": "",
+    "artId": "KerningTower-10003",
     "bandKey": "band-1788873703017",
-    "mobName": "緞帶豬·6",
-    "mobIcon": "1210101",
-    "bossName": "希拉·11",
-    "bossIcon": "8870000",
+    "mobName": "噴蒸氣的咖啡機",
+    "mobIcon": "4310006",
+    "bossName": "噴蒸氣的咖啡機",
+    "bossIcon": "4310006",
     "monsterHp": 428150000,
     "bossHp": 6422300000,
     "killExp": 12900,
@@ -14672,13 +15778,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "星光之塔",
-    "replayBossKills": 295,
+    "replayBossKills": 250,
     "smallKills": 1570,
     "mobAtk1Dmg": 115000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -14692,7 +15798,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 229000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -14706,23 +15812,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 150,
-    "bandMax": 160
+    "bandMax": 160,
+    "mobPool": [
+      {
+        "name": "噴蒸氣的咖啡機",
+        "icon": "4310006"
+      }
+    ]
   },
   {
     "regionId": "band-1788873703017",
     "regionName": "星光之塔",
-    "name": "新狩獵場",
+    "name": "3層文具店 <1>",
     "mapId": "c315",
     "mapIndex": 315,
     "unlockLevel": 154,
     "dropMin": 154,
     "dropMax": 160,
-    "artId": "",
+    "artId": "KerningTower-10004",
     "bandKey": "band-1788873703017",
-    "mobName": "野豬·6",
-    "mobIcon": "3210100",
-    "bossName": "麥格納斯·11",
-    "bossIcon": "8880000",
+    "mobName": "綠色本子",
+    "mobIcon": "4310007",
+    "bossName": "綠色本子",
+    "bossIcon": "4310007",
     "monsterHp": 459100000,
     "bossHp": 6886500000,
     "killExp": 13300,
@@ -14733,13 +15845,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "星光之塔",
-    "replayBossKills": 300,
+    "replayBossKills": 250,
     "smallKills": 1600,
     "mobAtk1Dmg": 118000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -14753,7 +15865,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 235000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -14767,23 +15879,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 150,
-    "bandMax": 160
+    "bandMax": 160,
+    "mobPool": [
+      {
+        "name": "綠色本子",
+        "icon": "4310007"
+      }
+    ]
   },
   {
     "regionId": "band-1788873703017",
     "regionName": "星光之塔",
-    "name": "新狩獵場",
+    "name": "3層文具店 <2>",
     "mapId": "c316",
     "mapIndex": 316,
     "unlockLevel": 155,
     "dropMin": 155,
     "dropMax": 160,
-    "artId": "",
+    "artId": "KerningTower-10005",
     "bandKey": "band-1788873703017",
-    "mobName": "火野豬·6",
-    "mobIcon": "3230100",
-    "bossName": "史烏·11",
-    "bossIcon": "8880100",
+    "mobName": "藍色本子",
+    "mobIcon": "4310008",
+    "bossName": "藍色本子",
+    "bossIcon": "4310008",
     "monsterHp": 492300000,
     "bossHp": 7384500000,
     "killExp": 13700,
@@ -14794,13 +15912,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "星光之塔",
-    "replayBossKills": 305,
+    "replayBossKills": 250,
     "smallKills": 1630,
     "mobAtk1Dmg": 121000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -14814,7 +15932,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 241000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -14828,23 +15946,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 150,
-    "bandMax": 160
+    "bandMax": 160,
+    "mobPool": [
+      {
+        "name": "藍色本子",
+        "icon": "4310008"
+      }
+    ]
   },
   {
     "regionId": "band-1788873703017",
     "regionName": "星光之塔",
-    "name": "新狩獵場",
+    "name": "4層音樂賣場 <1>",
     "mapId": "c317",
     "mapIndex": 317,
     "unlockLevel": 155,
     "dropMin": 155,
     "dropMax": 160,
-    "artId": "",
+    "artId": "KerningTower-10006",
     "bandKey": "band-1788873703017",
-    "mobName": "石球·6",
-    "mobIcon": "4230100",
-    "bossName": "露希妲·11",
-    "bossIcon": "8880141",
+    "mobName": "黃色耳機",
+    "mobIcon": "4310009",
+    "bossName": "黃色耳機",
+    "bossIcon": "4310009",
     "monsterHp": 527850000,
     "bossHp": 7917800000,
     "killExp": 14100,
@@ -14855,13 +15979,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "星光之塔",
-    "replayBossKills": 310,
+    "replayBossKills": 250,
     "smallKills": 1660,
     "mobAtk1Dmg": 124000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -14875,7 +15999,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 247000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -14889,23 +16013,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 150,
-    "bandMax": 160
+    "bandMax": 160,
+    "mobPool": [
+      {
+        "name": "黃色耳機",
+        "icon": "4310009"
+      }
+    ]
   },
   {
     "regionId": "band-1788873703017",
     "regionName": "星光之塔",
-    "name": "新狩獵場",
+    "name": "4層音樂賣場 <2>",
     "mapId": "c318",
     "mapIndex": 318,
     "unlockLevel": 156,
     "dropMin": 156,
     "dropMax": 160,
-    "artId": "",
+    "artId": "KerningTower-10007",
     "bandKey": "band-1788873703017",
-    "mobName": "小石人·6",
-    "mobIcon": "5120000",
-    "bossName": "威爾·11",
-    "bossIcon": "8880301",
+    "mobName": "紅色耳機",
+    "mobIcon": "4310010",
+    "bossName": "紅色耳機",
+    "bossIcon": "4310010",
     "monsterHp": 566000000,
     "bossHp": 8490000000,
     "killExp": 14500,
@@ -14916,13 +16046,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "星光之塔",
-    "replayBossKills": 315,
+    "replayBossKills": 250,
     "smallKills": 1680,
     "mobAtk1Dmg": 127000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -14936,7 +16066,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 253000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -14950,23 +16080,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 150,
-    "bandMax": 160
+    "bandMax": 160,
+    "mobPool": [
+      {
+        "name": "紅色耳機",
+        "icon": "4310010"
+      }
+    ]
   },
   {
     "regionId": "band-1788873703017",
     "regionName": "星光之塔",
-    "name": "新狩獵場",
+    "name": "5層化妝品賣場 <1>",
     "mapId": "c319",
     "mapIndex": 319,
     "unlockLevel": 157,
     "dropMin": 157,
     "dropMax": 160,
-    "artId": "",
+    "artId": "KerningTower-10008",
     "bandKey": "band-1788873703017",
-    "mobName": "木馬·6",
-    "mobIcon": "5130100",
-    "bossName": "戴斯克·11",
-    "bossIcon": "8880405",
+    "mobName": "暴躁的化妝品",
+    "mobIcon": "4310011",
+    "bossName": "暴躁的化妝品",
+    "bossIcon": "4310011",
     "monsterHp": 606900000,
     "bossHp": 9103500000,
     "killExp": 15000,
@@ -14977,13 +16113,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "星光之塔",
-    "replayBossKills": 315,
+    "replayBossKills": 250,
     "smallKills": 1710,
     "mobAtk1Dmg": 130000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -14997,7 +16133,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 259000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -15011,23 +16147,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 150,
-    "bandMax": 160
+    "bandMax": 160,
+    "mobPool": [
+      {
+        "name": "暴躁的化妝品",
+        "icon": "4310011"
+      }
+    ]
   },
   {
     "regionId": "band-1788873703017",
     "regionName": "星光之塔",
-    "name": "新狩獵場",
+    "name": "5層化妝品賣場 <2>",
     "mapId": "c320",
     "mapIndex": 320,
     "unlockLevel": 158,
     "dropMin": 158,
     "dropMax": 160,
-    "artId": "",
+    "artId": "KerningTower-10009",
     "bandKey": "band-1788873703017",
-    "mobName": "白狼·6",
-    "mobIcon": "5140000",
-    "bossName": "真希拉·11",
-    "bossIcon": "8880503",
+    "mobName": "暴躁的化妝台",
+    "mobIcon": "4310012",
+    "bossName": "暴躁的化妝台",
+    "bossIcon": "4310012",
     "monsterHp": 650750000,
     "bossHp": 9761300000,
     "killExp": 15400,
@@ -15038,13 +16180,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "星光之塔",
-    "replayBossKills": 320,
+    "replayBossKills": 250,
     "smallKills": 1740,
     "mobAtk1Dmg": 133000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -15058,7 +16200,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 265000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -15072,7 +16214,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 150,
-    "bandMax": 160
+    "bandMax": 160,
+    "mobPool": [
+      {
+        "name": "暴躁的化妝台",
+        "icon": "4310012"
+      }
+    ]
   },
   {
     "regionId": "band-1788873703017",
@@ -15133,7 +16281,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 10,
+    "mobPool": [
+      {
+        "name": "猴子·6",
+        "icon": "5100000"
+      }
+    ]
   },
   {
     "regionId": "band-1788876212731",
@@ -15194,7 +16348,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 170,
-    "bandMax": 180
+    "bandMax": 180,
+    "mobPool": [
+      {
+        "name": "小幽靈·6",
+        "icon": "3230200"
+      }
+    ]
   },
   {
     "regionId": "band-1788876212731",
@@ -15255,7 +16415,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 170,
-    "bandMax": 180
+    "bandMax": 180,
+    "mobPool": [
+      {
+        "name": "銅甲石人·6",
+        "icon": "4130100"
+      }
+    ]
   },
   {
     "regionId": "band-1788876212731",
@@ -15316,7 +16482,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 170,
-    "bandMax": 180
+    "bandMax": 180,
+    "mobPool": [
+      {
+        "name": "鐵甲石人·6",
+        "icon": "4230101"
+      }
+    ]
   },
   {
     "regionId": "band-1788876212731",
@@ -15377,7 +16549,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 170,
-    "bandMax": 180
+    "bandMax": 180,
+    "mobPool": [
+      {
+        "name": "蝙蝠魔·6",
+        "icon": "2230102"
+      }
+    ]
   },
   {
     "regionId": "band-1788876212731",
@@ -15438,7 +16616,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 170,
-    "bandMax": 180
+    "bandMax": 180,
+    "mobPool": [
+      {
+        "name": "小雪吉拉·6",
+        "icon": "8130100"
+      }
+    ]
   },
   {
     "regionId": "band-1788876212731",
@@ -15499,7 +16683,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 170,
-    "bandMax": 180
+    "bandMax": 180,
+    "mobPool": [
+      {
+        "name": "白雪人·6",
+        "icon": "8140000"
+      }
+    ]
   },
   {
     "regionId": "band-1788876212731",
@@ -15560,7 +16750,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 170,
-    "bandMax": 180
+    "bandMax": 180,
+    "mobPool": [
+      {
+        "name": "雪吉拉·6",
+        "icon": "8150000"
+      }
+    ]
   },
   {
     "regionId": "band-1788876212731",
@@ -15621,7 +16817,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 170,
-    "bandMax": 180
+    "bandMax": 180,
+    "mobPool": [
+      {
+        "name": "企鵝王手下·6",
+        "icon": "8210000"
+      }
+    ]
   },
   {
     "regionId": "band-1788876212731",
@@ -15682,7 +16884,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 170,
-    "bandMax": 180
+    "bandMax": 180,
+    "mobPool": [
+      {
+        "name": "海賊·6",
+        "icon": "8190000"
+      }
+    ]
   },
   {
     "regionId": "band-1788876212731",
@@ -15743,7 +16951,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 10,
+    "mobPool": [
+      {
+        "name": "克雷塞爾·6",
+        "icon": "7130000"
+      }
+    ]
   },
   {
     "regionId": "band-1788876265095",
@@ -15804,7 +17018,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 180,
-    "bandMax": 190
+    "bandMax": 190,
+    "mobPool": [
+      {
+        "name": "火焰野豬·6",
+        "icon": "7120100"
+      }
+    ]
   },
   {
     "regionId": "band-1788876265095",
@@ -15865,7 +17085,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 180,
-    "bandMax": 190
+    "bandMax": 190,
+    "mobPool": [
+      {
+        "name": "狼人·6",
+        "icon": "5100004"
+      }
+    ]
   },
   {
     "regionId": "band-1788876265095",
@@ -15926,7 +17152,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 180,
-    "bandMax": 190
+    "bandMax": 190,
+    "mobPool": [
+      {
+        "name": "殭屍·6",
+        "icon": "5130103"
+      }
+    ]
   },
   {
     "regionId": "band-1788876265095",
@@ -15987,7 +17219,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 180,
-    "bandMax": 190
+    "bandMax": 190,
+    "mobPool": [
+      {
+        "name": "骷髏士兵·6",
+        "icon": "5150001"
+      }
+    ]
   },
   {
     "regionId": "band-1788876265095",
@@ -16048,7 +17286,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 180,
-    "bandMax": 190
+    "bandMax": 190,
+    "mobPool": [
+      {
+        "name": "骷髏警衛兵·6",
+        "icon": "5150000"
+      }
+    ]
   },
   {
     "regionId": "band-1788876265095",
@@ -16109,7 +17353,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 180,
-    "bandMax": 190
+    "bandMax": 190,
+    "mobPool": [
+      {
+        "name": "小石龍·6",
+        "icon": "8144000"
+      }
+    ]
   },
   {
     "regionId": "band-1788876265095",
@@ -16170,7 +17420,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 180,
-    "bandMax": 190
+    "bandMax": 190,
+    "mobPool": [
+      {
+        "name": "龍族雜兵·6",
+        "icon": "8190003"
+      }
+    ]
   },
   {
     "regionId": "band-1788876265095",
@@ -16231,7 +17487,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 180,
-    "bandMax": 190
+    "bandMax": 190,
+    "mobPool": [
+      {
+        "name": "玩具黃鴨·6",
+        "icon": "3230300"
+      }
+    ]
   },
   {
     "regionId": "band-1788876265095",
@@ -16292,7 +17554,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 180,
-    "bandMax": 190
+    "bandMax": 190,
+    "mobPool": [
+      {
+        "name": "發條老鼠·6",
+        "icon": "3230302"
+      }
+    ]
   },
   {
     "regionId": "band-1788876265095",
@@ -16353,7 +17621,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 10,
+    "mobPool": [
+      {
+        "name": "機器人A·6",
+        "icon": "4230106"
+      }
+    ]
   },
   {
     "regionId": "band-1788876290721",
@@ -16414,7 +17688,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 190,
-    "bandMax": 200
+    "bandMax": 200,
+    "mobPool": [
+      {
+        "name": "機器人B·6",
+        "icon": "4230107"
+      }
+    ]
   },
   {
     "regionId": "band-1788876290721",
@@ -16475,7 +17755,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 190,
-    "bandMax": 200
+    "bandMax": 200,
+    "mobPool": [
+      {
+        "name": "外星雞·6",
+        "icon": "9400000"
+      }
+    ]
   },
   {
     "regionId": "band-1788876290721",
@@ -16536,7 +17822,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 190,
-    "bandMax": 200
+    "bandMax": 200,
+    "mobPool": [
+      {
+        "name": "外星章魚·6",
+        "icon": "9400002"
+      }
+    ]
   },
   {
     "regionId": "band-1788876290721",
@@ -16597,7 +17889,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 190,
-    "bandMax": 200
+    "bandMax": 200,
+    "mobPool": [
+      {
+        "name": "半人馬·6",
+        "icon": "9400543"
+      }
+    ]
   },
   {
     "regionId": "band-1788876290721",
@@ -16658,7 +17956,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 190,
-    "bandMax": 200
+    "bandMax": 200,
+    "mobPool": [
+      {
+        "name": "黑暗半人馬·6",
+        "icon": "9400544"
+      }
+    ]
   },
   {
     "regionId": "band-1788876290721",
@@ -16719,7 +18023,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 190,
-    "bandMax": 200
+    "bandMax": 200,
+    "mobPool": [
+      {
+        "name": "骷髏犬·6",
+        "icon": "8190004"
+      }
+    ]
   },
   {
     "regionId": "band-1788876290721",
@@ -16780,7 +18090,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 190,
-    "bandMax": 200
+    "bandMax": 200,
+    "mobPool": [
+      {
+        "name": "火焰骷髏·6",
+        "icon": "7130010"
+      }
+    ]
   },
   {
     "regionId": "band-1788876290721",
@@ -16841,7 +18157,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 190,
-    "bandMax": 200
+    "bandMax": 200,
+    "mobPool": [
+      {
+        "name": "冰石人·6",
+        "icon": "8210001"
+      }
+    ]
   },
   {
     "regionId": "band-1788876290721",
@@ -16902,23 +18224,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 190,
-    "bandMax": 200
+    "bandMax": 200,
+    "mobPool": [
+      {
+        "name": "沙漠土龍·6",
+        "icon": "2100103"
+      }
+    ]
   },
   {
     "regionId": "band-1788873703017",
     "regionName": "星光之塔",
-    "name": "新狩獵場",
+    "name": "6層美容室 <1>",
     "mapId": "c351",
     "mapIndex": 351,
     "unlockLevel": 159,
     "dropMin": 159,
     "dropMax": 160,
-    "artId": "",
+    "artId": "KerningTower-10010",
     "bandKey": "band-1788873703017",
-    "mobName": "木乃伊·6",
-    "mobIcon": "2100108",
-    "bossName": "黑魔法師·12",
-    "bossIcon": "8880600",
+    "mobName": "簡易的美髮捲",
+    "mobIcon": "4310013",
+    "bossName": "簡易的美髮捲",
+    "bossIcon": "4310013",
     "monsterHp": 697800000,
     "bossHp": 10467000000,
     "killExp": 15900,
@@ -16929,13 +18257,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "星光之塔",
-    "replayBossKills": 325,
+    "replayBossKills": 250,
     "smallKills": 1770,
     "mobAtk1Dmg": 136000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -16949,7 +18277,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 272000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.1,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -16963,23 +18291,29 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 150,
-    "bandMax": 160
+    "bandMax": 160,
+    "mobPool": [
+      {
+        "name": "簡易的美髮捲",
+        "icon": "4310013"
+      }
+    ]
   },
   {
     "regionId": "band-1788873703017",
     "regionName": "星光之塔",
-    "name": "新狩獵場",
+    "name": "6層美容室 <2>",
     "mapId": "c352",
     "mapIndex": 352,
     "unlockLevel": 160,
     "dropMin": 160,
     "dropMax": 160,
-    "artId": "",
+    "artId": "KerningTower-10011",
     "bandKey": "band-1788873703017",
-    "mobName": "眼鏡蛇·6",
-    "mobIcon": "2100105",
-    "bossName": "賽蓮·12",
-    "bossIcon": "8644650",
+    "mobName": "簡易的美髮器",
+    "mobIcon": "4310014",
+    "bossName": "簡易的美髮器",
+    "bossIcon": "4310015",
     "monsterHp": 748200000,
     "bossHp": 11223000000,
     "killExp": 16400,
@@ -16993,10 +18327,10 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "星光之塔",
-    "replayBossKills": 330,
+    "replayBossKills": 250,
     "smallKills": 1790,
     "mobAtk1Dmg": 140000,
-    "mobAtk1Cd": 0.6,
+    "mobAtk1Cd": 0.1,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
     "mobAtk3Dmg": 0,
@@ -17010,21 +18344,27 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 279000,
-    "bossAtk1Cd": 2,
-    "bossAtk2Dmg": 0,
-    "bossAtk2Cd": 0,
-    "bossAtk3Dmg": 0,
-    "bossAtk3Cd": 0,
-    "bossSkill1Dmg": 0,
-    "bossSkill1Cd": 10,
+    "bossAtk1Cd": 5,
+    "bossAtk2Dmg": 279000,
+    "bossAtk2Cd": 3,
+    "bossAtk3Dmg": 279000,
+    "bossAtk3Cd": 0.1,
+    "bossSkill1Dmg": 279000,
+    "bossSkill1Cd": 15,
     "bossSkill2Dmg": 0,
     "bossSkill2Cd": 0,
-    "bossSkill3Dmg": 0,
-    "bossSkill3Cd": 0,
-    "bossSkillDmg": 0,
-    "bossSkillCd": 10,
+    "bossSkill3Dmg": 279000,
+    "bossSkill3Cd": 10,
+    "bossSkillDmg": 279000,
+    "bossSkillCd": 15,
     "bandMin": 150,
-    "bandMax": 160
+    "bandMax": 160,
+    "mobPool": [
+      {
+        "name": "簡易的美髮器",
+        "icon": "4310014"
+      }
+    ]
   },
   {
     "regionId": "band-1788873229534",
@@ -17035,27 +18375,27 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "unlockLevel": 150,
     "dropMin": 150,
     "dropMax": 150,
-    "artId": "",
+    "artId": "OmegaSector-10010",
     "bandKey": "band-1788873229534",
-    "mobName": "砂鼠·6",
-    "mobIcon": "2100100",
-    "bossName": "卡洛斯·12",
-    "bossIcon": "8881000",
+    "mobName": "無人機黑",
+    "mobIcon": "4230138",
+    "bossName": "無人機黑",
+    "bossIcon": "4230138",
     "monsterHp": 347300000,
     "bossHp": 5209500000,
     "killExp": 11800,
-    "killGold": 86,
+    "killGold": 118000,
     "bossKillExp": 118000,
-    "bossKillGold": 692,
+    "bossKillGold": 1180000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "地球防衛隊本部",
-    "replayBossKills": 285,
-    "smallKills": 1490,
+    "replayBossKills": 250,
+    "smallKills": 1500,
     "mobAtk1Dmg": 107000,
     "mobAtk1Cd": 0.6,
     "mobAtk2Dmg": 0,
@@ -17085,7 +18425,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 140,
-    "bandMax": 150
+    "bandMax": 150,
+    "mobPool": [
+      {
+        "name": "無人機黑",
+        "icon": "4230138"
+      }
+    ]
   },
   {
     "regionId": "band-1788876212731",
@@ -17146,7 +18492,13 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 170,
-    "bandMax": 180
+    "bandMax": 180,
+    "mobPool": [
+      {
+        "name": "進化精靈·6",
+        "icon": "8200000"
+      }
+    ]
   },
   {
     "regionId": "band-1788876212731",
@@ -17207,7 +18559,1008 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 10,
     "bandMin": 170,
-    "bandMax": 180
+    "bandMax": 180,
+    "mobPool": [
+      {
+        "name": "時間之眼·6",
+        "icon": "8200004"
+      }
+    ]
+  },
+  {
+    "regionId": "custom",
+    "regionName": "騎士團要塞",
+    "name": "騎士之殿 I",
+    "mapId": "c356",
+    "mapIndex": 356,
+    "unlockLevel": 130,
+    "dropMin": 130,
+    "dropMax": 140,
+    "artId": "KnightStronghold-10010",
+    "bandKey": "151-160",
+    "mobName": "上級騎士A",
+    "mobIcon": "8610014",
+    "bossName": "上級騎士A",
+    "bossIcon": "8610014",
+    "monsterHp": 161200000,
+    "bossHp": 2418000000,
+    "killExp": 8500,
+    "killGold": 8500,
+    "bossKillExp": 85000,
+    "bossKillGold": 850000,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "上級騎士A",
+        "icon": "8610014"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "騎士團要塞",
+    "replayBossKills": 250,
+    "smallKills": 1200,
+    "mobAtk1Dmg": 82000,
+    "mobAtk1Cd": 0.1,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 0,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 0,
+    "bossAtk1Dmg": 163000,
+    "bossAtk1Cd": 0.1,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 0,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 0
+  },
+  {
+    "regionId": "custom",
+    "regionName": "騎士團要塞",
+    "name": "騎士之殿 II",
+    "mapId": "c357",
+    "mapIndex": 357,
+    "unlockLevel": 130,
+    "dropMin": 130,
+    "dropMax": 140,
+    "artId": "KnightStronghold-10011",
+    "bandKey": "151-160",
+    "mobName": "上級騎士B",
+    "mobIcon": "8610011",
+    "bossName": "上級騎士B",
+    "bossIcon": "8610011",
+    "monsterHp": 161200000,
+    "bossHp": 2418000000,
+    "killExp": 8500,
+    "killGold": 85000,
+    "bossKillExp": 85000,
+    "bossKillGold": 850000,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "上級騎士B",
+        "icon": "8610011"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "騎士團要塞",
+    "replayBossKills": 250,
+    "smallKills": 1200,
+    "mobAtk1Dmg": 82000,
+    "mobAtk1Cd": 1,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 0,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 0,
+    "bossAtk1Dmg": 163000,
+    "bossAtk1Cd": 1,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 0,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 0
+  },
+  {
+    "regionId": "custom",
+    "regionName": "騎士團要塞",
+    "name": "騎士之殿 III",
+    "mapId": "c358",
+    "mapIndex": 358,
+    "unlockLevel": 130,
+    "dropMin": 130,
+    "dropMax": 140,
+    "artId": "KnightStronghold-10012",
+    "bandKey": "151-160",
+    "mobName": "上級騎士C",
+    "mobIcon": "8610013",
+    "bossName": "上級騎士C",
+    "bossIcon": "8610013",
+    "monsterHp": 161200000,
+    "bossHp": 2418000000,
+    "killExp": 8500,
+    "killGold": 85000,
+    "bossKillExp": 85000,
+    "bossKillGold": 850000,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "上級騎士C",
+        "icon": "8610013"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "騎士團要塞",
+    "replayBossKills": 250,
+    "smallKills": 1200,
+    "mobAtk1Dmg": 82000,
+    "mobAtk1Cd": 1,
+    "mobAtk2Dmg": 82000,
+    "mobAtk2Cd": 0.1,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 0,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 0,
+    "bossAtk1Dmg": 163000,
+    "bossAtk1Cd": 1,
+    "bossAtk2Dmg": 163000,
+    "bossAtk2Cd": 0.1,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 0,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 0
+  },
+  {
+    "regionId": "custom",
+    "regionName": "騎士團要塞",
+    "name": "騎士之殿 IV",
+    "mapId": "c359",
+    "mapIndex": 359,
+    "unlockLevel": 130,
+    "dropMin": 130,
+    "dropMax": 140,
+    "artId": "KnightStronghold-10013",
+    "bandKey": "151-160",
+    "mobName": "上級騎士D",
+    "mobIcon": "8610010",
+    "bossName": "上級騎士D",
+    "bossIcon": "8610010",
+    "monsterHp": 161200000,
+    "bossHp": 2418000000,
+    "killExp": 8500,
+    "killGold": 85000,
+    "bossKillExp": 85000,
+    "bossKillGold": 850000,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "上級騎士D",
+        "icon": "8610010"
+      }
+    ],
+    "bossScaleSprite": false,
+    "bossScaleHud": false,
+    "bandName": "騎士團要塞",
+    "replayBossKills": 250,
+    "smallKills": 1200,
+    "mobAtk1Dmg": 82000,
+    "mobAtk1Cd": 1,
+    "mobAtk2Dmg": 82000,
+    "mobAtk2Cd": 0.1,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 0,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 0,
+    "bossAtk1Dmg": 163000,
+    "bossAtk1Cd": 1,
+    "bossAtk2Dmg": 163000,
+    "bossAtk2Cd": 0.1,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 0,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 0
+  },
+  {
+    "regionId": "custom",
+    "regionName": "騎士團要塞",
+    "name": "騎士之殿 V",
+    "mapId": "c360",
+    "mapIndex": 360,
+    "unlockLevel": 130,
+    "dropMin": 130,
+    "dropMax": 140,
+    "artId": "KnightStronghold-10014",
+    "bandKey": "151-160",
+    "mobName": "上級騎士E",
+    "mobIcon": "8610012",
+    "bossName": "上級騎士E",
+    "bossIcon": "8610012",
+    "monsterHp": 161200000,
+    "bossHp": 2418000000,
+    "killExp": 8500,
+    "killGold": 85000,
+    "bossKillExp": 85000,
+    "bossKillGold": 850000,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "上級騎士E",
+        "icon": "8610012"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "騎士團要塞",
+    "replayBossKills": 250,
+    "smallKills": 1200,
+    "mobAtk1Dmg": 82000,
+    "mobAtk1Cd": 1,
+    "mobAtk2Dmg": 82000,
+    "mobAtk2Cd": 0.1,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 163000,
+    "bossAtk1Cd": 1,
+    "bossAtk2Dmg": 163000,
+    "bossAtk2Cd": 0.1,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10
+  },
+  {
+    "regionId": "band-1788938795162",
+    "regionName": "新區塊",
+    "name": "新狩獵場",
+    "mapId": "c361",
+    "mapIndex": 361,
+    "unlockLevel": 160,
+    "dropMin": 160,
+    "dropMax": 160,
+    "artId": "",
+    "bandKey": "band-1788938795162",
+    "mobName": "嫩寶·7",
+    "mobIcon": "0100100",
+    "bossName": "菇菇王·13",
+    "bossIcon": "2220000",
+    "monsterHp": 748200000,
+    "bossHp": 11223000000,
+    "killExp": 16400,
+    "killGold": 95,
+    "bossKillExp": 164000,
+    "bossKillGold": 760,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "嫩寶·7",
+        "icon": "0100100"
+      }
+    ],
+    "bossScaleSprite": false,
+    "bossScaleHud": false,
+    "bandName": "新區塊",
+    "bandMin": 160,
+    "bandMax": 170,
+    "replayBossKills": 330,
+    "smallKills": 1790,
+    "mobAtk1Dmg": 140000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 279000,
+    "bossAtk1Cd": 2,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10
+  },
+  {
+    "regionId": "band-1788938795162",
+    "regionName": "新區塊",
+    "name": "新狩獵場",
+    "mapId": "c362",
+    "mapIndex": 362,
+    "unlockLevel": 161,
+    "dropMin": 161,
+    "dropMax": 170,
+    "artId": "",
+    "bandKey": "band-1788938795162",
+    "mobName": "藍寶·7",
+    "mobIcon": "0100101",
+    "bossName": "藍蘑菇王·13",
+    "bossIcon": "2220001",
+    "monsterHp": 814850000,
+    "bossHp": 12222800000,
+    "killExp": 17000,
+    "killGold": 81,
+    "bossKillExp": 170000,
+    "bossKillGold": 652,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "藍寶·7",
+        "icon": "0100101"
+      }
+    ],
+    "bossScaleSprite": false,
+    "bossScaleHud": false,
+    "bandName": "新區塊",
+    "replayBossKills": 335,
+    "smallKills": 1830,
+    "mobAtk1Dmg": 144000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 287000,
+    "bossAtk1Cd": 2,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "bandMin": 160,
+    "bandMax": 170
+  },
+  {
+    "regionId": "band-1788938795162",
+    "regionName": "新區塊",
+    "name": "新狩獵場",
+    "mapId": "c363",
+    "mapIndex": 363,
+    "unlockLevel": 162,
+    "dropMin": 162,
+    "dropMax": 170,
+    "artId": "",
+    "bandKey": "band-1788938795162",
+    "mobName": "紅寶·7",
+    "mobIcon": "0130101",
+    "bossName": "史萊姆王·13",
+    "bossIcon": "5220000",
+    "monsterHp": 887350000,
+    "bossHp": 13310300000,
+    "killExp": 17600,
+    "killGold": 83,
+    "bossKillExp": 176000,
+    "bossKillGold": 668,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "紅寶·7",
+        "icon": "0130101"
+      }
+    ],
+    "bossScaleSprite": false,
+    "bossScaleHud": false,
+    "bandName": "新區塊",
+    "replayBossKills": 340,
+    "smallKills": 1860,
+    "mobAtk1Dmg": 148000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 296000,
+    "bossAtk1Cd": 2,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "bandMin": 160,
+    "bandMax": 170
+  },
+  {
+    "regionId": "band-1788938795162",
+    "regionName": "新區塊",
+    "name": "新狩獵場",
+    "mapId": "c364",
+    "mapIndex": 364,
+    "unlockLevel": 163,
+    "dropMin": 163,
+    "dropMax": 170,
+    "artId": "",
+    "bandKey": "band-1788938795162",
+    "mobName": "蘑菇仔·7",
+    "mobIcon": "0120100",
+    "bossName": "樹妖王·13",
+    "bossIcon": "3220000",
+    "monsterHp": 966350000,
+    "bossHp": 14495300000,
+    "killExp": 18300,
+    "killGold": 85,
+    "bossKillExp": 183000,
+    "bossKillGold": 680,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "蘑菇仔·7",
+        "icon": "0120100"
+      }
+    ],
+    "bossScaleSprite": false,
+    "bossScaleHud": false,
+    "bandName": "新區塊",
+    "replayBossKills": 345,
+    "smallKills": 1890,
+    "mobAtk1Dmg": 153000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 305000,
+    "bossAtk1Cd": 2,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "bandMin": 160,
+    "bandMax": 170
+  },
+  {
+    "regionId": "band-1788938795162",
+    "regionName": "新區塊",
+    "name": "新狩獵場",
+    "mapId": "c365",
+    "mapIndex": 365,
+    "unlockLevel": 164,
+    "dropMin": 164,
+    "dropMax": 170,
+    "artId": "",
+    "bandKey": "band-1788938795162",
+    "mobName": "木妖·7",
+    "mobIcon": "0110100",
+    "bossName": "殭屍蘑菇王·13",
+    "bossIcon": "6300005",
+    "monsterHp": 1052400000,
+    "bossHp": 15786000000,
+    "killExp": 18900,
+    "killGold": 86,
+    "bossKillExp": 189000,
+    "bossKillGold": 692,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "木妖·7",
+        "icon": "0110100"
+      }
+    ],
+    "bossScaleSprite": false,
+    "bossScaleHud": false,
+    "bandName": "新區塊",
+    "replayBossKills": 350,
+    "smallKills": 1930,
+    "mobAtk1Dmg": 157000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 314000,
+    "bossAtk1Cd": 2,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "bandMin": 160,
+    "bandMax": 170
+  },
+  {
+    "regionId": "band-1788938795162",
+    "regionName": "新區塊",
+    "name": "新狩獵場",
+    "mapId": "c366",
+    "mapIndex": 366,
+    "unlockLevel": 166,
+    "dropMin": 166,
+    "dropMax": 170,
+    "artId": "",
+    "bandKey": "band-1788938795162",
+    "mobName": "綠水靈·7",
+    "mobIcon": "0210100",
+    "bossName": "浮士德·13",
+    "bossIcon": "5220002",
+    "monsterHp": 1146100000,
+    "bossHp": 17191500000,
+    "killExp": 19600,
+    "killGold": 88,
+    "bossKillExp": 196000,
+    "bossKillGold": 708,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "綠水靈·7",
+        "icon": "0210100"
+      }
+    ],
+    "bossScaleSprite": false,
+    "bossScaleHud": false,
+    "bandName": "新區塊",
+    "replayBossKills": 350,
+    "smallKills": 1960,
+    "mobAtk1Dmg": 162000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 324000,
+    "bossAtk1Cd": 2,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "bandMin": 160,
+    "bandMax": 170
+  },
+  {
+    "regionId": "band-1788938795162",
+    "regionName": "新區塊",
+    "name": "新狩獵場",
+    "mapId": "c367",
+    "mapIndex": 367,
+    "unlockLevel": 167,
+    "dropMin": 167,
+    "dropMax": 170,
+    "artId": "",
+    "bandKey": "band-1788938795162",
+    "mobName": "綠菇菇·7",
+    "mobIcon": "1110100",
+    "bossName": "巴洛古·13",
+    "bossIcon": "6130101",
+    "monsterHp": 1248100000,
+    "bossHp": 18721500000,
+    "killExp": 20400,
+    "killGold": 90,
+    "bossKillExp": 204000,
+    "bossKillGold": 720,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "綠菇菇·7",
+        "icon": "1110100"
+      }
+    ],
+    "bossScaleSprite": false,
+    "bossScaleHud": false,
+    "bandName": "新區塊",
+    "replayBossKills": 355,
+    "smallKills": 1990,
+    "mobAtk1Dmg": 167000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 333000,
+    "bossAtk1Cd": 2,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "bandMin": 160,
+    "bandMax": 170
+  },
+  {
+    "regionId": "band-1788938795162",
+    "regionName": "新區塊",
+    "name": "新狩獵場",
+    "mapId": "c368",
+    "mapIndex": 368,
+    "unlockLevel": 168,
+    "dropMin": 168,
+    "dropMax": 170,
+    "artId": "",
+    "bandKey": "band-1788938795162",
+    "mobName": "刺蘑菇·7",
+    "mobIcon": "2110100",
+    "bossName": "拉圖斯·13",
+    "bossIcon": "8500001",
+    "monsterHp": 1359200000,
+    "bossHp": 20388000000,
+    "killExp": 21100,
+    "killGold": 91,
+    "bossKillExp": 211000,
+    "bossKillGold": 732,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "刺蘑菇·7",
+        "icon": "2110100"
+      }
+    ],
+    "bossScaleSprite": false,
+    "bossScaleHud": false,
+    "bandName": "新區塊",
+    "replayBossKills": 360,
+    "smallKills": 2025,
+    "mobAtk1Dmg": 172000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 343000,
+    "bossAtk1Cd": 2,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "bandMin": 160,
+    "bandMax": 170
+  },
+  {
+    "regionId": "band-1788938795162",
+    "regionName": "新區塊",
+    "name": "新狩獵場",
+    "mapId": "c369",
+    "mapIndex": 369,
+    "unlockLevel": 169,
+    "dropMin": 169,
+    "dropMax": 170,
+    "artId": "",
+    "bandKey": "band-1788938795162",
+    "mobName": "藍菇菇·7",
+    "mobIcon": "2220100",
+    "bossName": "殘暴炎魔·13",
+    "bossIcon": "8800002",
+    "monsterHp": 1480200000,
+    "bossHp": 22203000000,
+    "killExp": 21900,
+    "killGold": 93,
+    "bossKillExp": 219000,
+    "bossKillGold": 748,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "藍菇菇·7",
+        "icon": "2220100"
+      }
+    ],
+    "bossScaleSprite": false,
+    "bossScaleHud": false,
+    "bandName": "新區塊",
+    "replayBossKills": 365,
+    "smallKills": 2050,
+    "mobAtk1Dmg": 177000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 354000,
+    "bossAtk1Cd": 2,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "bandMin": 160,
+    "bandMax": 170
+  },
+  {
+    "regionId": "band-1788938795162",
+    "regionName": "新區塊",
+    "name": "新狩獵場",
+    "mapId": "c370",
+    "mapIndex": 370,
+    "unlockLevel": 170,
+    "dropMin": 170,
+    "dropMax": 170,
+    "artId": "",
+    "bandKey": "band-1788938795162",
+    "mobName": "殭屍蘑菇·7",
+    "mobIcon": "2230100",
+    "bossName": "闇黑龍王·13",
+    "bossIcon": "8810018",
+    "monsterHp": 1612000000,
+    "bossHp": 24180000000,
+    "killExp": 22700,
+    "killGold": 95,
+    "bossKillExp": 227000,
+    "bossKillGold": 760,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "殭屍蘑菇·7",
+        "icon": "2230100"
+      }
+    ],
+    "bossScaleSprite": false,
+    "bossScaleHud": false,
+    "bandName": "新區塊",
+    "replayBossKills": 370,
+    "smallKills": 2100,
+    "mobAtk1Dmg": 183000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 364000,
+    "bossAtk1Cd": 2,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "bandMin": 160,
+    "bandMax": 170
   }
 ];
 
@@ -17271,6 +19624,12 @@ const IDLE_ZONE_PATCHES = {
     "bossHp": 140,
     "bossKillExp": 20,
     "bossKillGold": 200,
+    "mobPool": [
+      {
+        "name": "菇菇仔",
+        "icon": "0120100"
+      }
+    ],
     "mobName": "菇菇仔",
     "mobIcon": "0120100",
     "bossName": "強大的菇菇仔",
@@ -17300,6 +19659,12 @@ const IDLE_ZONE_PATCHES = {
     "bossHp": 175,
     "bossKillExp": 30,
     "bossKillGold": 300,
+    "mobPool": [
+      {
+        "name": "紅寶",
+        "icon": "0130101"
+      }
+    ],
     "mobName": "紅寶",
     "mobIcon": "0130101",
     "bossName": "紅寶王",

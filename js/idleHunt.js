@@ -619,6 +619,11 @@ const IdleHunt = (() => {
     const ids = new Set();
     if (typeof IdleZones === 'undefined') return ids;
     const cfg = IdleZones.configFor(zone);
+    const pool = Array.isArray(cfg?.mobPool) ? cfg.mobPool : [];
+    pool.forEach((row) => {
+      const id = row?.icon || row?.mobIcon;
+      if (id) ids.add(String(id));
+    });
     if (cfg?.mobIcon) ids.add(String(cfg.mobIcon));
     if (cfg?.bossIcon) ids.add(String(cfg.bossIcon));
     return ids;
@@ -1317,7 +1322,13 @@ const IdleHunt = (() => {
     }
     const cfg = IdleZones.configFor(IdleZones.get(state.zoneId));
     if (isBoss) return { name: cfg.bossName, iconId: cfg.bossIcon };
-    return { name: cfg.mobName, iconId: cfg.mobIcon };
+    const pick = typeof IdleZones.pickRandomMob === 'function'
+      ? IdleZones.pickRandomMob(cfg)
+      : null;
+    return {
+      name: pick?.name || cfg.mobName,
+      iconId: pick?.icon || pick?.mobIcon || cfg.mobIcon,
+    };
   }
 
   function currentWzAttackSpeed() {

@@ -494,6 +494,42 @@ const IdleZones = {
     };
   },
 
+  /** 小怪外觀池一筆（名稱＋icon；戰鬥數值仍用地圖共用欄位） */
+  normalizeMob(row, index) {
+    const m = row && typeof row === 'object' ? row : {};
+    const name = String(m.name || m.mobName || `怪物${index + 1}`).trim();
+    return {
+      name: name || `怪物${index + 1}`,
+      icon: String(m.icon || m.mobIcon || '').trim(),
+    };
+  },
+
+  /**
+   * 章節小怪外觀池。優先 mobPool；若 mobs[] 是名稱／icon（非座標）也可當外觀池。
+   * 座標佇列仍用 spawn()，且只讀有 x/y 的 mobs 列。
+   */
+  normalizeMobPool(zone) {
+    const z = zone && typeof zone === 'object' ? zone : {};
+    if (Array.isArray(z.mobPool) && z.mobPool.length) {
+      return z.mobPool.map((row, i) => this.normalizeMob(row, i));
+    }
+    if (Array.isArray(z.mobs) && z.mobs.length) {
+      const looksLikePool = z.mobs.every((row) => {
+        if (!row || typeof row !== 'object') return false;
+        const hasPos = Number.isFinite(Number(row.x)) || Number.isFinite(Number(row.y));
+        const hasId = !!(row.name || row.mobName || row.icon || row.mobIcon);
+        return hasId && !hasPos;
+      });
+      if (looksLikePool) return z.mobs.map((row, i) => this.normalizeMob(row, i));
+    }
+    return [this.normalizeMob({ name: z.mobName, icon: z.mobIcon }, 0)];
+  },
+
+  pickRandomMob(zone) {
+    const pool = this.normalizeMobPool(zone || {});
+    return pool[Math.floor(Math.random() * pool.length)] || pool[0] || { name: '怪物', icon: '' };
+  },
+
   spawn(zone, mobCount) {
     const z = zone?.mapId ? zone : this.get(zone);
     const player = this.point(z?.player, this.DEFAULT_PLAYER);
@@ -501,13 +537,16 @@ const IdleZones = {
     const y = this.MOB_Y;
     const span = Number(this.MOB_LINE_SPAN) || ((5 - 1) * 110);
     const spacing = n <= 1 ? 0 : span / (n - 1);
+    const layout = Array.isArray(z?.mobs) ? z.mobs : [];
     const mobs = [];
     for (let i = 0; i < n; i += 1) {
       const fallback = {
         x: this.MOB_FIRST_X + i * spacing,
         y,
       };
-      mobs.push(this.point(z?.mobs?.[i], fallback));
+      const raw = layout[i];
+      const isPos = raw && (Number.isFinite(Number(raw.x)) || Number.isFinite(Number(raw.y)));
+      mobs.push(this.point(isPos ? raw : null, fallback));
     }
     return { player, mobs };
   },
@@ -598,6 +637,7 @@ const IdleZones = {
     const baseGold = Number(z.killGold);
     const baseHp = Number(z.monsterHp);
     const baseBossHp = Number(z.bossHp);
+    const mobPool = this.normalizeMobPool(z);
     const fallback = {
       drops: Array.isArray(z.drops) ? z.drops.map((row) => ({ ...row })) : [],
       mobDrops: Array.isArray(z.mobDrops) && z.mobDrops.length
@@ -612,8 +652,9 @@ const IdleZones = {
         : Math.max(12, (Number.isFinite(baseHp) && baseHp > 0 ? baseHp : 12) * 18),
       bossKillExp: Number.isFinite(Number(z.bossKillExp)) ? Number(z.bossKillExp) : this.mapIndex(z) * 20,
       bossKillGold: Number.isFinite(Number(z.bossKillGold)) ? Number(z.bossKillGold) : this.mapIndex(z) * 4,
-      mobName: z.mobName || '怪物',
-      mobIcon: z.mobIcon || '',
+      mobPool,
+      mobName: mobPool[0]?.name || z.mobName || '怪物',
+      mobIcon: mobPool[0]?.icon || z.mobIcon || '',
       bossName: z.bossName || 'BOSS',
       bossIcon: z.bossIcon || '',
       bossScaleSprite: !!z.bossScaleSprite,
@@ -665,6 +706,26 @@ const IdleZones = {
     const over = IdleZoneDropStore.config(id);
     const overHp = Number(over.monsterHp);
     const overBossHp = Number(over.bossHp);
+    const overPool = Array.isArray(over.mobPool) && over.mobPool.length
+      ? over.mobPool.map((row, i) => this.normalizeMob(row, i))
+      : null;
+    let mergedPool;
+    if (overPool) {
+      mergedPool = overPool;
+    } else if (Array.isArray(fallback.mobPool) && fallback.mobPool.length > 1) {
+      mergedPool = fallback.mobPool.map((row) => ({ ...row }));
+      if (over.mobName != null && String(over.mobName) !== '') {
+        mergedPool[0] = { ...mergedPool[0], name: String(over.mobName) };
+      }
+      if (over.mobIcon != null && String(over.mobIcon) !== '') {
+        mergedPool[0] = { ...mergedPool[0], icon: String(over.mobIcon) };
+      }
+    } else {
+      mergedPool = this.normalizeMobPool({
+        mobName: over.mobName != null && String(over.mobName) !== '' ? String(over.mobName) : fallback.mobName,
+        mobIcon: over.mobIcon != null && String(over.mobIcon) !== '' ? String(over.mobIcon) : fallback.mobIcon,
+      });
+    }
     return {
       drops: Array.isArray(over.drops) ? over.drops.map((row) => ({ ...row })) : fallback.drops,
       mobDrops: Array.isArray(over.mobDrops)
@@ -679,8 +740,9 @@ const IdleZones = {
       bossHp: Number.isFinite(overBossHp) && overBossHp > 0 ? overBossHp : fallback.bossHp,
       bossKillExp: Number.isFinite(Number(over.bossKillExp)) ? Number(over.bossKillExp) : fallback.bossKillExp,
       bossKillGold: Number.isFinite(Number(over.bossKillGold)) ? Number(over.bossKillGold) : fallback.bossKillGold,
-      mobName: over.mobName != null && String(over.mobName) !== '' ? String(over.mobName) : fallback.mobName,
-      mobIcon: over.mobIcon != null && String(over.mobIcon) !== '' ? String(over.mobIcon) : fallback.mobIcon,
+      mobPool: mergedPool,
+      mobName: mergedPool[0]?.name || fallback.mobName,
+      mobIcon: mergedPool[0]?.icon || fallback.mobIcon,
       bossName: over.bossName != null && String(over.bossName) !== '' ? String(over.bossName) : fallback.bossName,
       bossIcon: over.bossIcon != null && String(over.bossIcon) !== '' ? String(over.bossIcon) : fallback.bossIcon,
       bossScaleSprite: over.bossScaleSprite != null ? !!over.bossScaleSprite : fallback.bossScaleSprite,
@@ -804,7 +866,7 @@ const IdleZones = {
       const keep = {};
       const keys = [
         'drops', 'mobDrops', 'bossDrops', 'killExp', 'killGold', 'monsterHp', 'bossHp',
-        'bossKillExp', 'bossKillGold', 'mobName', 'mobIcon', 'bossName', 'bossIcon',
+        'bossKillExp', 'bossKillGold', 'mobPool', 'mobName', 'mobIcon', 'bossName', 'bossIcon',
         'bossScaleSprite', 'bossScaleHud', 'artId',
         'name', 'regionName', 'bandName', 'bandKey', 'bandMin', 'bandMax', 'replayBossKills', 'smallKills',
         'mobAtk1Dmg', 'mobAtk1Cd', 'mobAtk2Dmg', 'mobAtk2Cd', 'mobAtk3Dmg', 'mobAtk3Cd',
@@ -828,6 +890,17 @@ const IdleZones = {
         if (key === 'drops') return;
         if (key === 'mobDrops' || key === 'bossDrops') {
           if (Array.isArray(cur) && cur.length) keep[key] = cur;
+          return;
+        }
+        if (key === 'mobPool') {
+          if (!Array.isArray(cur) || !cur.length) return;
+          const pool = cur.map((row, i) => this.normalizeMob(row, i));
+          const baseName = String(generated?.mobName || '');
+          const baseIcon = String(generated?.mobIcon || '');
+          const isDefault = pool.length === 1
+            && pool[0].name === baseName
+            && pool[0].icon === baseIcon;
+          if (!isDefault) keep[key] = pool;
           return;
         }
         if (key === 'bossScaleSprite' || key === 'bossScaleHud') {
