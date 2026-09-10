@@ -67,6 +67,10 @@ const IDLE_ETC_DATABASE = [
   { id: 'tinkerer_chest', name: '意志盒', icon: 'images/ETCicon/04033667.png', desc: '楓之谷堅韌意志進階材料，可通過分解中心或擊敗拉圖斯獲取。' },
   { id: '140armor_pcs', name: '黑色守護的碎片', icon: 'images/ETCicon/02434589.png', desc: '附著西格諾斯守護騎士團力量的碎片。收集5個可以製作Lv. 140女皇裝備' },
   { id: '140weapon_pcs', name: '黑色破壞的碎片', icon: 'images/ETCicon/02434588.png', desc: '附著西格諾斯守護騎士團力量的碎片。收集15個可以製作Lv. 140女皇武器' },
+  { id: 'Captivating_Fragment', name: '魅惑的碎片', icon: 'images/ETCicon/02630594.png', desc: '濃姬副手製作材料，可通過擊敗濃姬獲取。' },
+  { id: '02434585', name: '嘲弄的碎片', icon: 'images/ETCicon/02434585.png', desc: '嘲弄的碎片，可通過擊敗比艾樂和班班以及分解深淵衣褲獲取。' },
+  { id: '02434586', name: '吶喊的碎片', icon: 'images/ETCicon/02434586.png', desc: '懷疑的碎片，可通過擊敗比血腥女皇以及分解深淵帽子獲取。' },
+  { id: '02434587', name: '破滅的碎片', icon: 'images/ETCicon/02434587.png', desc: '懷疑的碎片，可通過擊敗貝倫以及分解深淵武器獲取。' },
 ];
 
 const IdleEtcStore = {

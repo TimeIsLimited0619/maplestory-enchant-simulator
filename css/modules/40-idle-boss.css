@@ -416,6 +416,20 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.idle-boss-screen-center {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  z-index: 35;
+  pointer-events: none;
+}
+
+.idle-boss-screen-center > .idle-actor-sprite--screen-center {
+  display: block;
+  max-width: none;
+}
+
 .idle-boss-map {
   position: absolute;
   inset: 0;
@@ -546,6 +560,102 @@
   width: 100%;
 }
 
+.idle-boss-challenge {
+  align-self: center;
+  box-sizing: border-box;
+  width: 216px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 10px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 0;
+  background: #161A23;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.80);
+  font-family: 'Microsoft JhengHei', 'PingFang TC', 'Segoe UI', sans-serif;
+  pointer-events: none;
+}
+
+.idle-boss-challenge[hidden] {
+  display: none !important;
+}
+
+.idle-boss-challenge__text {
+  margin: 0;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #2D2F39;
+  color: rgba(255, 255, 255, 0.80);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+.idle-boss-challenge__bar {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  background: #0e1118;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.idle-boss-challenge__fill {
+  height: 100%;
+  width: 0%;
+  background: #e0d13a;
+  transition: width 0.12s linear;
+}
+
+.idle-boss-challenge__meta {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11px;
+  line-height: 1.2;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 血腥女皇：愛心彈錨在玩家腳邊（位置由 JS feet anchor 覆寫） */
+.idle-actor--player > .idle-boss-bq-bombs {
+  position: absolute;
+  left: 50%;
+  top: 78%;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  transform: translateX(-50%);
+  z-index: 26;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.idle-boss-bq-bomb {
+  position: relative;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.idle-boss-bq-bomb .idle-actor-sprite-stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+}
+
+.idle-boss-bq-bomb .idle-actor-sprite {
+  position: absolute;
+  left: calc(-1 * var(--ox, 0px));
+  top: calc(-1 * var(--oy, 0px));
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
 /* UI.Timer 掛點（元件樣式見 41-idle-ui-timer.css） */
 .idle-boss-timer-host {
   align-self: center;
@@ -618,6 +728,22 @@
   transition: width 0.25s ease-out;
 }
 
+.idle-boss-hp__pct {
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 2px #000, 1px 0 1px #000, -1px 0 1px #000, 0 1px 1px #000;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
 .idle-boss-hp__text {
   position: absolute;
   inset: 0;
@@ -631,6 +757,10 @@
   color: #fff;
   text-shadow: 0 0 2px #000, 1px 0 1px #000, -1px 0 1px #000, 0 1px 1px #000;
   font-variant-numeric: tabular-nums;
+}
+
+#idleBossHpName {
+  display: none;
 }
 
 .idle-boss-part {

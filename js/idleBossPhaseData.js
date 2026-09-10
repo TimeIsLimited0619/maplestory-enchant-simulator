@@ -29,6 +29,10 @@ const IdleBossDiff = (() => {
         id,
         hpMult: Number(row.hpMult) > 0 ? Number(row.hpMult) : 1,
         dmgMult: Number(row.dmgMult) > 0 ? Number(row.dmgMult) : 1,
+        // 依 mobId 覆寫該態血量倍率（未列則用 hpMult）
+        formHpMult: (row.formHpMult && typeof row.formHpMult === 'object')
+          ? { ...row.formHpMult }
+          : null,
         reqLevel: Math.max(0, Math.floor(Number(row.reqLevel) || 0)),
         timeLimitSec: Math.max(1, Math.floor(Number(row.timeLimitSec) || Number(script?.timeLimitSec) || 1800)),
         rewards: Array.isArray(row.rewards) ? row.rewards : [],
@@ -588,7 +592,7 @@ const IDLE_BOSS_PHASE = {
       },
       {
         id: 'hard',
-        hpMult: 50,
+        hpMult: 100,
         dmgMult: 6,
         reqLevel: 150,
         timeLimitSec: 1800,
@@ -824,6 +828,520 @@ const IDLE_BOSS_PHASE = {
         reqLevel: 190,
         timeLimitSec: 1800,
         rewards: [
+        ],
+      },
+    ],
+  },
+
+  /**
+   * 濃姬（單態）
+   * 合成王 9450023（9450040 攻＋9450022 技）；森蘭丸已移除。
+   * 血量：difficulty.formHpMult[mobId]；未列則用 hpMult
+   */
+  '18': {
+    name: '濃姬',
+    kind: 'forms',
+    bodyForms: [
+      { statMob: '9450023', visualMob: '9450023' },
+    ],
+    nohimeKit: {
+      bodyMob: '9450023',
+      // 合成王已只含要用的招；此處再保險排除＋機制覆寫
+      excludeActions: ['attack6'], // 門檻技不進一般輪轉
+      castTicks: {
+        skill1: { fromFrame: 16, tickMs: 250, tickDmgRatio: 0.6 },
+        // skill2：依指定幀出傷（0–43）；有 damageFrames 時忽略 fromFrame／tickMs
+        skill2: {
+          damageFrames: [16, 22, 24, 28, 29, 31, 32, 33, 34],
+          tickDmgRatio: 0.5,
+        },
+      },
+      skillChain: {
+        skill4: { afterKey: 'skillAfter4', damageFrame: 11, dmgRatio: 1 },
+      },
+      thresholdAttack: {
+        actionKey: 'attack6',
+        hpRatio: 0.5,
+        breakHpRatio: 0.07,
+        failPlayerHpRatio: 1,
+        screenCenter: true,
+      },
+    },
+    chestMob: null,
+    exitSec: 30,
+    difficulties: [
+      {
+        id: 'normal',
+        hpMult: 1,
+        formHpMult: {
+          '9450023': 250,
+        },
+        dmgMult: 7,
+        reqLevel: 150,
+        timeLimitSec: 1800,
+        rewards: [
+          { kind: 'etc', itemId: 'Captivating_Fragment', amount: 1 },
+          { kind: 'etc', itemId: 'Captivating_Fragment', amount: 1, chance: 20 },
+          { kind: 'etc', itemId: 'Captivating_Fragment', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01352246', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01352009', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01352216', amount: 1, chance: 3 },
+          { kind: 'etc', itemId: 'doom', amount:1 , chance: 30},
+          { kind: 'etc', itemId: 'meowcoin', amount: 1 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 1 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 1 },
+          { kind: 'etc', itemId: 'nekopow', amount: 1 },
+          { kind: 'etc', itemId: 'nekopow', amount: 1 },
+          { kind: 'etc', itemId: 'nekopow', amount: 1 },
+        ],
+      },
+      {
+        id: 'hard',
+        hpMult: 1,
+        formHpMult: {
+          '9450023': 750,
+        },
+        dmgMult: 10.5,
+        reqLevel: 180,
+        timeLimitSec: 1800,
+        rewards: [
+          { kind: 'etc', itemId: 'Captivating_Fragment', amount: 1 },
+          { kind: 'etc', itemId: 'Captivating_Fragment', amount: 1, chance: 50 },
+          { kind: 'etc', itemId: 'Captivating_Fragment', amount: 1, chance: 30 },
+          { kind: 'equip', itemId: '01352246', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01352009', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01352216', amount: 1, chance: 10 },
+          { kind: 'etc', itemId: 'doom', amount:1 },
+          { kind: 'etc', itemId: 'doom', amount:1 , chance: 30},
+          { kind: 'etc', itemId: 'doom', amount:1 , chance: 20},
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+        ],
+      },
+    ],
+  },
+
+  /**
+   * 比艾樂：8900000 打到 50% → 分裂 8900001＋8900002 共血、分開攻擊。
+   * 0002 無出手動畫：move 在玩家身邊巡邏，接觸出傷。帽子互換／互救／飛帽 v1 不做。
+   */
+  '4': {
+    name: '比艾樂',
+    kind: 'pierre',
+    bodyStatMob: '8900000',
+    splitHpRatio: 0.5,
+    split: {
+      hat: { visualMob: '8900001', offset: { x: -140, y: 0 } },
+      chase: { visualMob: '8900002', offset: { x: 160, y: 0 } },
+    },
+    chase: {
+      speedPx: 100,
+      orbitPx: 90,
+      contactPx: 88,
+      contactDamR: 0.8,
+      contactCdSec: 0.5,
+    },
+    pierreKits: {
+      '8900000': {
+        excludeActions: ['skill1'],
+        // WZ conDamR 50／70
+        attackHpRatio: { attack1: 1, attack2: 1.2 },
+        attackCdSec: { attack2: 5 },
+      },
+      '8900001': {
+        excludeActions: ['skill1', 'skillAfter1'],
+        // WZ conDamR 50／50
+        attackHpRatio: { attack1: 1, attack2: 1.2 },
+      },
+    },
+    chestMob: '8900003',
+    exitSec: 30,
+    difficulties: [
+      {
+        id: 'normal',
+        hpMult: 150,
+        dmgMult: 8,
+        reqLevel: 150,
+        timeLimitSec: 1800,
+        rewards: [
+          { kind: 'equip', itemId: '01003797', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01003798', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01003799', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01003800', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01003801', amount: 1, chance: 3 },
+          { kind: 'etc', itemId: '02434585', amount: 1, },
+          { kind: 'etc', itemId: '02434585', amount: 1, chance: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 5 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 5 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 5 },
+          { kind: 'etc', itemId: 'nekopow', amount: 5 },
+          { kind: 'etc', itemId: 'nekopow', amount: 5 },
+          { kind: 'etc', itemId: 'nekopow', amount: 5 },
+        ],
+      },
+      {
+        id: 'hard',
+        hpMult: 600,
+        dmgMult: 12,
+        reqLevel: 180,
+        timeLimitSec: 1800,
+        rewards: [
+          { kind: 'equip', itemId: '01003797', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01003798', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01003799', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01003800', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01003801', amount: 1, chance: 10 },
+          { kind: 'etc', itemId: '02434585', amount: 1, },
+          { kind: 'etc', itemId: '02434585', amount: 1, chance: 10 },
+          { kind: 'etc', itemId: '02434585', amount: 1, chance: 30 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+        ],
+      },
+    ],
+  },
+
+  /**
+   * 班班：skill1 召喚香蕉 → skillAfter1 窗 60s；
+   * 擊殺全小怪→skillFail 弱化 30s（受傷×1.5）；逾時→skillUse 強化 30s（出傷×1.2＋小怪同打）。
+   * v1 不做 skill2 暈／skill3・6 瞬移；skill4／5 空殼排除。
+   */
+  '5': {
+    name: '班班',
+    kind: 'banban',
+    bodyStatMob: '8910000',
+    chestMob: null,
+    banbanKit: {
+      bodyMob: '8910000',
+      minionMob: '8910001',
+      summonCount: 2,
+      maxMinions: 2,
+      windowSec: 60,
+      buffSec: 15,
+      weakenSec: 15,
+      buffOutMult: 1.4,
+      weakenInMult: 1.5,
+      skillCdSec: 20,
+      minionOffsets: [
+        { x: -150, y: 0 },
+        { x: 150, y: 0 },
+      ],
+      excludeActions: [
+        'skill2', 'skill3', 'skill4', 'skill5', 'skill6',
+        'skillAfter3', 'skillAfter6',
+        'attack5', 'attack6', 'attack7', 'attack8',
+      ],
+      // 出傷 = WZ基傷(PA×attackRatio) × 對maxHP傷 × dmgMult
+      attackHpRatio: {
+        attack1: 1.5,
+        attack2: 1.0,
+        attack3: 1.0,
+      },
+      attackCdSec: {
+        attack1: 3,
+        attack2: 6,
+        attack3: 15,
+        attack4: 18,
+        skill1: 20,
+      },
+      damageChain: {
+        opener: 'attack4',
+        chain: ['attack4', 'attack5', 'attack6', 'attack7', 'attack8'],
+        segmentHpRatio: 1,
+      },
+    },
+    minionKit: {
+      attackHpRatio: { attack1: 1.5 },
+      attackCdSec: { attack1: 3 },
+    },
+    exitSec: 30,
+    difficulties: [
+      {
+        id: 'normal',
+        hpMult: 150,
+        // 香蕉小怪血量倍率（未列則跟 hpMult）
+        formHpMult: {
+          '8910001': 40,
+        },
+        dmgMult: 8,
+        reqLevel: 150,
+        timeLimitSec: 1800,
+        rewards: [
+          { kind: 'equip', itemId: '01062165', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01062166', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01062167', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01062168', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01062169', amount: 1, chance: 3 },
+          { kind: 'etc', itemId: '02434585', amount: 1, },
+          { kind: 'etc', itemId: '02434585', amount: 1, chance: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 5 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 5 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 5 },
+          { kind: 'etc', itemId: 'nekopow', amount: 5 },
+          { kind: 'etc', itemId: 'nekopow', amount: 5 }, 
+          { kind: 'etc', itemId: 'nekopow', amount: 5 },
+        ],
+      },
+      {
+        id: 'hard',
+        hpMult: 600,
+        formHpMult: {
+          '8910001': 160,
+        },
+        dmgMult: 12,
+        reqLevel: 180,
+        timeLimitSec: 1800,
+        rewards: [
+          { kind: 'equip', itemId: '01062165', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01062166', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01062167', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01062168', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01062169', amount: 1, chance: 10 },
+          { kind: 'etc', itemId: '02434585', amount: 1, },
+          { kind: 'etc', itemId: '02434585', amount: 1, chance: 10 },
+          { kind: 'etc', itemId: '02434585', amount: 1, chance: 30 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+        ],
+      },
+    ],
+  },
+
+  /**
+   * 血腥女皇：三臉共血輪替。
+   * 0000 skill1→愛心彈；skill2 回血；0001 skill1 封技能／attack2–6 每段傷；0002 skill1 壓至 1% HP。
+   */
+  '6': {
+    name: '血腥女皇',
+    kind: 'bloodyQueen',
+    bodyForms: [
+      { statMob: '8920000', visualMob: '8920000' },
+      { statMob: '8920001', visualMob: '8920001' },
+      { statMob: '8920002', visualMob: '8920002' },
+    ],
+    faceSwitch: {
+      cdSec: 25,
+    },
+    faceKits: {
+      '8920000': {
+        excludeActions: ['skill3', 'skill4', 'skill5'],
+        // WZ conDamR → 對maxHP傷倍率（× WZ基傷 × dmgMult）
+        attackHpRatio: {
+          attack1: 2.2,
+        },
+        skills: {
+          skill1: {
+            bombAfter: {
+              bombMob: '8920004',
+              bombCount: 1,
+              bombDamR: 0.8,
+              bombBaseDmg: 30000,
+            },
+          },
+          skill2: {
+            healSelfRatio: 0.10,
+            cdSec: 10,
+          },
+        },
+      },
+      '8920001': {
+        excludeActions: ['skill2', 'skill3', 'skill4', 'attack3', 'attack4', 'attack5', 'attack6'],
+        attackHpRatio: {
+          attack1: 2.2,
+          attack2: 1.8,
+          attack3: 1.8,
+          attack4: 1.8,
+          attack5: 1.8,
+          attack6: 1.8,
+        },
+        skills: {
+          skill1: {
+            sealSkillsMs: 3000,
+            cdSec: 10,
+          },
+        },
+        damageChain: {
+          opener: 'attack2',
+          chain: ['attack2', 'attack3', 'attack4', 'attack5', 'attack6'],
+          segmentHpRatio: 1.0,
+        },
+      },
+      '8920002': {
+        excludeActions: ['skill2', 'skill3', 'skill4'],
+        skills: {
+          skill1: {
+            // 將玩家壓到最大 HP 的 1%（不致死）
+            dropToHpRatio: 0.01,
+            cdSec: 5,
+          },
+        },
+        attackHpRatio: {
+          attack1: 2.2,
+          attack2: 2.35,
+        },
+      },
+    },
+    chestMob: '8920005',
+    exitSec: 30,
+    difficulties: [
+      {
+        id: 'normal',
+        hpMult: 200,
+        dmgMult: 8,
+        reqLevel: 150,
+        timeLimitSec: 1800,
+        rewards: [
+          { kind: 'equip', itemId: '01042254', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01042255', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01042256', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01042257', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01042258', amount: 1, chance: 3 },
+          { kind: 'etc', itemId: '02434586', amount: 1, },
+          { kind: 'etc', itemId: '02434586', amount: 1, chance: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 5 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 5 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 5 },
+          { kind: 'etc', itemId: 'nekopow', amount: 5 },
+          { kind: 'etc', itemId: 'nekopow', amount: 5 },
+          { kind: 'etc', itemId: 'nekopow', amount: 5 },
+        ],
+      },
+      {
+        id: 'hard',
+        hpMult: 600,
+        dmgMult: 12,
+        reqLevel: 180,
+        timeLimitSec: 1800,
+        rewards: [
+          { kind: 'equip', itemId: '01042254', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01042255', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01042256', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01042257', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01042258', amount: 1, chance: 10 },
+          { kind: 'etc', itemId: '02434586', amount: 1, },
+          { kind: 'etc', itemId: '02434586', amount: 1, chance: 10 },
+          { kind: 'etc', itemId: '02434586', amount: 1, chance: 30 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+        ],
+      },
+    ],
+  },
+
+  /**
+   * 貝倫：本體 8930000＋尾巴 8930001 共血。
+   * 尾巴每 7s 完整播 attack1；出傷（竄出≈2.1s）起可打，播完收回。
+   * v1 不做 skill1 隱身、disease、callSkill 彈體。
+   */
+  '7': {
+    name: '貝倫',
+    kind: 'vellum',
+    bodyStatMob: '8930000',
+    chestMob: null,
+    vellumKit: {
+      bodyMob: '8930000',
+      tailMob: '8930001',
+      tailCdSec: 7,
+      tailOrbitPx: 140,
+      // WZ attackAfter≈2070：出傷／可打起始（竄出）
+      tailAttackLeadMs: 2100,
+      excludeActions: [
+        'skill1', 'skillAfter1',
+        'attack3', 'attack4', 'attack5', 'attack6',
+        'attack10', 'attack11', 'attack12',
+        'attack14', 'attack15', 'attack16',
+      ],
+      // WZ conDamR → 對maxHP傷
+      attackHpRatio: {
+        attack1: 1,
+        attack2: 1,
+        attack3: 1,
+        attack4: 1,
+        attack5: 1,
+        attack6: 1,
+        attack7: 0.8,
+        attack8: 1,
+        attack9: 1,
+        attack10: 1,
+        attack11: 1,
+        attack12: 1,
+        attack13: 0.8,
+        attack14: 1.2,
+        attack15: 1.2,
+        attack16: 1.2,
+      },
+      attackCdSec: {
+        attack1: 15,
+        attack2: 35,
+        attack7: 9,
+        attack8: 35,
+        attack9: 25,
+        attack13: 15,
+      },
+      damageChains: [
+        { opener: 'attack2', chain: ['attack2', 'attack5', 'attack3', 'attack4', 'attack6'] },
+        { opener: 'attack9', chain: ['attack9', 'attack10', 'attack11', 'attack12'] },
+        { opener: 'attack13', chain: ['attack13', 'attack14', 'attack15', 'attack16'] },
+      ],
+      tailAttackHpRatio: 1,
+    },
+    exitSec: 30,
+    difficulties: [
+      {
+        id: 'normal',
+        hpMult: 250,
+        dmgMult: 8,
+        reqLevel: 150,
+        timeLimitSec: 1800,
+        rewards: [
+          { kind: 'equip', itemId: '01402196', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01522094', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01372177', amount: 1, chance: 3 },
+          { kind: 'etc', itemId: '02434587', amount: 1, },
+          { kind: 'etc', itemId: '02434587', amount: 1, chance: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 5 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 5 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 5 },
+          { kind: 'etc', itemId: 'nekopow', amount: 5 },
+          { kind: 'etc', itemId: 'nekopow', amount: 5 },
+          { kind: 'etc', itemId: 'nekopow', amount: 5 },
+        ],
+      },
+      {
+        id: 'hard',
+        hpMult: 750,
+        dmgMult: 12,
+        reqLevel: 180,
+        timeLimitSec: 1800,
+        rewards: [
+          { kind: 'equip', itemId: '01402196', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01522094', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01372177', amount: 1, chance: 10 },
+          { kind: 'etc', itemId: '02434587', amount: 1, },
+          { kind: 'etc', itemId: '02434587', amount: 1, chance: 30 },
+          { kind: 'etc', itemId: '02434587', amount: 1, chance: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
         ],
       },
     ],

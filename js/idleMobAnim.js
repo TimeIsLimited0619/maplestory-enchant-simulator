@@ -57,7 +57,13 @@ const IdleMobAnim = (() => {
   function frameOwnedByAction(iconId, action, meta) {
     if (!meta || !meta.src || !action) return false;
     const id = pad(iconId);
-    return String(meta.src).includes(`/${id}/${action}/`);
+    const src = String(meta.src);
+    // 正常：images/idle-bosses/{mobId}/{action}/N.png
+    if (src.includes(`/${id}/${action}/`)) return true;
+    // 合成 mob（如 9450023）：圖仍在來源 id 目錄，只要路徑含 /{action}/ 即算本動作
+    // （uol 到 stand 的尾幀路徑是 /stand/，仍會被 trim 掉）
+    if (src.includes(`/${action}/`)) return true;
+    return false;
   }
 
   function actionRange(iconId, action) {
@@ -114,6 +120,14 @@ const IdleMobAnim = (() => {
     if (kind === 'attack') return 'attack1';
     // skill16 等：不可只認 skill1–4，否則會被落到 stand
     if (/^skill\d+$/i.test(kind)) return String(kind).toLowerCase();
+    if (/^skillAfter\d+$/i.test(kind)) {
+      const n = String(kind).replace(/\D/g, '') || '1';
+      return `skillAfter${n}`;
+    }
+    // 班班等：skillFail／skillUse 需原樣保留，不可落到 stand
+    if (/^skill(Fail|Use)$/i.test(kind)) {
+      return kind.toLowerCase() === 'skillfail' ? 'skillFail' : 'skillUse';
+    }
     if (kind === 'skill') return 'skill1';
     if (/^die\d*$/i.test(kind)) return kind === 'die' ? 'die1' : String(kind).toLowerCase();
     if (kind === 'regen') return 'regen';
@@ -155,11 +169,38 @@ const IdleMobAnim = (() => {
     return hasAction(iconId, key) ? key : null;
   }
 
+  /** 全畫面中央特效，例如 attack6 → attack6/info/screenCenter */
+  function screenCenterActionFor(iconId, bodyAction) {
+    if (!bodyAction || !/^(attack|skill)\d*$/i.test(bodyAction)) return null;
+    const key = `${bodyAction}/info/screenCenter`;
+    return hasAction(iconId, key) ? key : null;
+  }
+
   /** 打在目標上的 hit 特效，例如 attack1 → attack1/info/hit（勿用 hit1：那是怪物本體受擊） */
   function hitActionFor(iconId, bodyAction) {
     if (!bodyAction || !/^(attack|skill)\d*$/i.test(bodyAction)) return null;
     const key = `${bodyAction}/info/hit`;
     return hasAction(iconId, key) ? key : null;
+  }
+
+  /**
+   * 動作播到指定幀「開始」前的毫秒（幀 0..frameIdx-1 的 delay 加總）。
+   * frameIdx<=0 → 0
+   */
+  function actionFrameOffsetMs(iconId, action, frameIdx) {
+    const id = pad(iconId);
+    const resolved = resolveAction(id, action) || action;
+    const target = Math.max(0, Math.floor(Number(frameIdx) || 0));
+    if (!(target > 0)) return 0;
+    const frames = getMobEntry(id)?.[resolved];
+    if (!Array.isArray(frames)) return 0;
+    let total = 0;
+    for (let i = 0; i < target && i < frames.length; i += 1) {
+      const f = frames[i];
+      if (!f) continue;
+      total += frameDelay(id, resolved, i, resolved);
+    }
+    return Math.max(0, total);
   }
 
   /** 腳下範圍預警，例如 attack1 → attack1/info/areaWarning */
@@ -820,6 +861,94 @@ const IdleMobAnim = (() => {
     else start();
   }
 
+  function ensureScreenCenterImg(fieldEl) {
+    if (!fieldEl) return null;
+    let stage = fieldEl.querySelector(':scope > .idle-boss-screen-center');
+    if (!stage) {
+      stage = document.createElement('div');
+      stage.className = 'idle-boss-screen-center';
+      fieldEl.appendChild(stage);
+    }
+    let img = stage.querySelector(':scope > .idle-actor-sprite--screen-center');
+    if (!img) {
+      img = document.createElement('img');
+      img.className = 'idle-actor-sprite idle-actor-sprite--screen-center';
+      img.alt = '';
+      img.hidden = true;
+      stage.appendChild(img);
+      img.addEventListener('load', () => applyOrigin(img, { updateActor: false }));
+    }
+    return img;
+  }
+
+  function clearScreenCenter(fieldEl) {
+    const img = fieldEl?.querySelector?.(':scope > .idle-boss-screen-center > .idle-actor-sprite--screen-center');
+    if (!img) return;
+    img.hidden = true;
+    img.dataset.done = '1';
+    img.dataset.mode = 'none';
+    applySrc(img, '');
+  }
+
+  /** 在場地中央播放 bodyAction/info/screenCenter */
+  function playScreenCenter(fieldEl, iconId, bodyAction, opts = {}) {
+    if (!fieldEl) return false;
+    const id = pad(iconId);
+    const resolved = resolveAction(id, bodyAction) || bodyAction;
+    const scAction = screenCenterActionFor(id, resolved);
+    if (!scAction) return false;
+    const token = `${id}:${resolved}:sc:${Date.now()}`;
+    fieldEl.dataset.screenCenterToken = token;
+    const img = ensureScreenCenterImg(fieldEl);
+    if (!img) return false;
+    img.hidden = false;
+    img.dataset.done = '0';
+    img.dataset.frameAcc = '0';
+    bindLayer(img, id, scAction, 0, { updateActor: false });
+    return true;
+  }
+
+  function tickScreenCenter(fieldEl, dt) {
+    const img = fieldEl?.querySelector?.(':scope > .idle-boss-screen-center > .idle-actor-sprite--screen-center');
+    if (!img || img.hidden || img.dataset.mode !== 'anim') {
+      return { active: false, wrapped: true };
+    }
+    if (img.dataset.done === '1') {
+      img.hidden = true;
+      return { active: false, wrapped: true };
+    }
+    const id = img.dataset.iconId;
+    let acc = (Number(img.dataset.frameAcc) || 0) + (Number(dt) || 0) * 1000;
+    for (let guard = 0; guard < 32; guard += 1) {
+      const action = img.dataset.action;
+      const frame = Number(img.dataset.frame) || 0;
+      const step = frameDelay(id, action, frame, 'attack');
+      if (acc < step) {
+        img.dataset.frameAcc = String(acc);
+        return { active: true, wrapped: false };
+      }
+      acc -= step;
+      img.dataset.frameAcc = String(acc);
+      const range = actionRange(id, action);
+      if (!range) {
+        img.dataset.done = '1';
+        img.hidden = true;
+        return { active: false, wrapped: true };
+      }
+      let next = frame + 1;
+      while (next <= range.max && !frameMeta(id, action, next)) next += 1;
+      if (next > range.max) {
+        img.dataset.done = '1';
+        bindLayer(img, id, action, range.max, { updateActor: false });
+        img.hidden = true;
+        applySrc(img, '');
+        return { active: false, wrapped: true };
+      }
+      bindLayer(img, id, action, next, { updateActor: false });
+    }
+    return { active: true, wrapped: false };
+  }
+
   function tickPlayerHit(playerEl, dt) {
     const stage = playerEl?.querySelector?.(':scope > .idle-actor-hit-stage');
     if (stage) syncPlayerHitAnchor(playerEl, stage);
@@ -1042,12 +1171,28 @@ const IdleMobAnim = (() => {
     return el?.querySelector('.idle-actor-sprite:not(.idle-actor-sprite--effect)') || null;
   }
 
+  /** 攻擊／技能本體或 effect 尚未播完 */
+  function isAttackOrSkillPlaying(el) {
+    const img = actorBodyImg(el);
+    if (!img) return false;
+    const ka = String(img.dataset.kindAction || '');
+    if (!(/^attack/i.test(ka) || /^skill/i.test(ka))) return false;
+    if (img.dataset.bodyDone !== '1') return true;
+    return !isEffectDone(img);
+  }
+
   /** Same priority order as chapter IdleHunt.spriteKind */
   function spriteKind(el) {
     if (!el) return 'stand';
     if (el.classList.contains('is-dying')) return 'die';
     if (el.dataset.introAction) return el.dataset.introAction;
     const img = actorBodyImg(el);
+    // 鎖招 until 先到期時，仍維持當前招式，避免被 stand／hit 截斷
+    if (isAttackOrSkillPlaying(el)) {
+      return img?.dataset?.kindAction
+        || el.dataset.attackAction
+        || 'attack1';
+    }
     const skillUntil = Number(el.dataset.skillUntil) || 0;
     if (skillUntil > Date.now()) return img?.dataset?.kindAction || 'skill1';
     const attackUntil = Number(el.dataset.attackUntil) || 0;
@@ -1068,7 +1213,9 @@ const IdleMobAnim = (() => {
     const skillUntil = Number(el.dataset.skillUntil) || 0;
     if (skillUntil > Date.now()) return true;
     const attackUntil = Number(el.dataset.attackUntil) || 0;
-    return attackUntil > Date.now();
+    if (attackUntil > Date.now()) return true;
+    // until 已過但本體／effect 未完：仍占施法，擋下一招
+    return isAttackOrSkillPlaying(el);
   }
 
   function clearActorCastFlags(el) {
@@ -1156,13 +1303,21 @@ const IdleMobAnim = (() => {
     }
     if (!img || !iconId) return false;
 
-    const bodyMs = Math.max(
-      80,
-      Number(actionDurationMs(iconId, resolved, resolved)) || SKILL_MS,
+    const range = actionRange(iconId, resolved);
+    const startFrame = Math.max(
+      range?.min || 0,
+      Math.min(range?.max || 0, Math.floor(Number(opts.startFrame) || 0)),
     );
-    // 鎖招至少涵蓋完整動畫；SKILL_MAX_MS 僅防異常超長；animSpeed>1 時等比縮短
+    const leadMs = startFrame > (range?.min || 0)
+      ? actionFrameOffsetMs(iconId, resolved, startFrame)
+      : 0;
+    const fullBodyMs = Math.max(80, Number(actionDurationMs(iconId, resolved, resolved)) || SKILL_MS);
+    const bodyMs = Math.max(80, fullBodyMs - leadMs);
+    const fxKey = effectActionFor(iconId, resolved);
+    const fxMs = fxKey ? (Number(actionDurationMs(iconId, fxKey, resolved)) || 0) : 0;
+    // 鎖招至少涵蓋本體與 effect；SKILL_MAX_MS 僅防異常超長；animSpeed>1 時等比縮短
     const animSpeed = Math.max(0.1, Number(el.dataset.animSpeed) || 1);
-    const lockMs = scaleDelayMs(Math.min(SKILL_MAX_MS, bodyMs + 80)) / animSpeed;
+    const lockMs = scaleDelayMs(Math.min(SKILL_MAX_MS, Math.max(bodyMs, fxMs) + 80)) / animSpeed;
     el.dataset.hitUntil = '0';
     img.dataset.frameAcc = '0';
     img.dataset.bodyDone = '0';
@@ -1171,13 +1326,13 @@ const IdleMobAnim = (() => {
       el.dataset.attackUntil = '0';
       el.dataset.attackAction = '';
       img.dataset.kindAction = resolved;
-      bind(img, iconId, resolved, 0);
+      bind(img, iconId, resolved, startFrame);
     } else {
       el.dataset.attackUntil = String(Date.now() + lockMs);
       el.dataset.attackAction = resolved;
       el.dataset.skillUntil = '0';
       img.dataset.kindAction = resolved;
-      bind(img, iconId, resolved, 0);
+      bind(img, iconId, resolved, startFrame);
     }
     return true;
   }
@@ -1291,6 +1446,11 @@ const IdleMobAnim = (() => {
     tickEffect,
     isEffectDone,
     playPlayerHit,
+    playScreenCenter,
+    tickScreenCenter,
+    clearScreenCenter,
+    screenCenterActionFor,
+    actionFrameOffsetMs,
     playAreaWarning,
     tickAreaWarning,
     clearAreaWarning,

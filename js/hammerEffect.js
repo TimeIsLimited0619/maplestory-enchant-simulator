@@ -559,6 +559,8 @@ const HammerEffectModule = {
       fn?.();
       return;
     }
+    // 動畫進行中不重入，避免卡頓連點疊加多次 onComplete
+    if (this.playing) return;
     if (typeof HammerModule !== 'undefined') HammerModule.updateUseButtonState();
     this.playHammerUse({ success, onComplete: fn });
   },

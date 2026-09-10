@@ -36,7 +36,14 @@ const HammerModule = {
   autoRunning: false,
   autoCancelled: false,
   autoCancelHandler: null,
+  /** 手動／動畫進行中，防止卡頓連點疊加突破上限 */
+  actionBusy: false,
   AUTO_HAMMER_DELAY_MS: 8,
+
+  isBusy() {
+    if (this.autoRunning || this.actionBusy) return true;
+    return typeof HammerEffectModule !== 'undefined' && HammerEffectModule.isPlaying?.();
+  },
 
   loadEquip(item) {
     this.itemData = item;
@@ -45,7 +52,10 @@ const HammerModule = {
   },
 
   resetState() {
-    this.cancelAutoHammer();
+    this.autoCancelled = true;
+    this.autoRunning = false;
+    this.unbindAutoCancelListener();
+    this.actionBusy = false;
     this.itemData = null;
     this.selectedHammer = null;
     this.updateUI();
@@ -93,14 +103,10 @@ const HammerModule = {
   },
 
   cancelAutoHammer() {
-    if (!this.autoRunning) return;
-
+    if (!this.autoRunning && !this.autoCancelled) return;
+    // 只標記取消；autoRunning 交給 runAutoHammer finally 清掉，避免卡頓連點重入雙開
     this.autoCancelled = true;
-    this.autoRunning = false;
-    this.unbindAutoCancelListener();
     this.updateUseButtonState();
-    const btn = document.getElementById('btnHammerUse');
-    if (btn) btn.removeAttribute('aria-busy');
   },
 
   getHammerUsed(hammerId) {
@@ -120,6 +126,7 @@ const HammerModule = {
   },
 
   getRemainingUses(hammerId) {
+    if (!this.itemData) return 0;
     return Math.max(0, this.getHammerMax(hammerId) - this.getHammerUsed(hammerId));
   },
 
@@ -376,13 +383,14 @@ const HammerModule = {
     if (!btn) return;
 
     const effectPlaying = typeof HammerEffectModule !== 'undefined' && HammerEffectModule.isPlaying();
+    const busy = this.autoRunning || this.actionBusy || effectPlaying;
     const canUseHammer = Boolean(this.itemData && (
       typeof canUseHammerEnhancement === 'function'
         ? canUseHammerEnhancement(this.itemData)
         : hasBaseUpgradeSlots(this.itemData)
     ));
     const autoCheck = document.getElementById('chkHammerAutoEnhance');
-    if (autoCheck) autoCheck.disabled = !canUseHammer || effectPlaying;
+    if (autoCheck) autoCheck.disabled = !canUseHammer || busy;
 
     const autoChecked = autoCheck?.checked;
     const idle = typeof isIdlePlayMode === 'function' && isIdlePlayMode();
@@ -396,8 +404,8 @@ const HammerModule = {
       this.getRemainingUses('platinum') > 0 &&
       bagOk('platinum');
 
-    btn.disabled = this.autoRunning || effectPlaying || !(canUseManual || canUseAuto);
-    if (!this.autoRunning) {
+    btn.disabled = busy || !(canUseManual || canUseAuto);
+    if (!this.autoRunning && !this.actionBusy) {
       btn.removeAttribute('aria-busy');
     }
   },
@@ -438,6 +446,7 @@ const HammerModule = {
 
   handleUseClick() {
     if (!this.itemData) return;
+    if (this.isBusy()) return;
 
     if (!(typeof canUseHammerEnhancement === 'function'
       ? canUseHammerEnhancement(this.itemData)
@@ -460,6 +469,7 @@ const HammerModule = {
   useHammerWithAnim() {
     const hammerId = this.selectedHammer;
     if (!this.itemData || !hammerId) return null;
+    if (this.isBusy()) return null;
 
     if (!(typeof canUseHammerEnhancement === 'function'
       ? canUseHammerEnhancement(this.itemData)
@@ -474,7 +484,13 @@ const HammerModule = {
       return 'exhausted';
     }
 
+    // 先鎖再消耗／擲骰，避免卡頓連點在動畫回呼前重複通過上限檢查
+    this.actionBusy = true;
+    this.updateUseButtonState();
+
     if (typeof consumePlayerHammer === 'function' && !consumePlayerHammer(hammerId, 1)) {
+      this.actionBusy = false;
+      this.updateUseButtonState();
       const name = HAMMER_TYPES[hammerId]?.name || hammerId;
       addLog(`⚠️ 背包中沒有${name}。`, 'log-fail');
       return null;
@@ -486,16 +502,26 @@ const HammerModule = {
     const success = Math.random() * 100 < rate;
     this.trackHammerAttempt(hammerId);
 
-    const applyResult = () => {
-      this.applyHammerResult({ hammerId, success, rate, silent: false });
+    // 結果立刻套用（含上限夾住），動畫只負責演出
+    this.applyHammerResult({ hammerId, success, rate, silent: false, skipUI: true });
+
+    const finishUi = () => {
+      this.actionBusy = false;
+      this.updateUI();
+      updateStatusPanel();
     };
 
-    if (typeof HammerEffectModule !== 'undefined') {
-      HammerEffectModule.runWithAnim({ success, fn: applyResult });
+    if (typeof HammerEffectModule !== 'undefined'
+      && HammerEffectModule.isAnimEnabled?.()
+      && HammerEffectModule.hasAssets?.()) {
+      HammerEffectModule.runWithAnim({
+        success,
+        fn: finishUi,
+      });
       return success ? 'success' : 'fail';
     }
 
-    applyResult();
+    finishUi();
     return success ? 'success' : 'fail';
   },
 
@@ -503,13 +529,21 @@ const HammerModule = {
     if (!this.itemData || !hammerId) return null;
 
     const type = HAMMER_TYPES[hammerId];
+    const max = this.getHammerMax(hammerId);
     const used = this.getHammerUsed(hammerId);
 
     if (success) {
+      if (used >= max) {
+        if (!silent) {
+          addLog(`⚠️ 此裝備的${type?.name || hammerId}使用次數已達上限！`, 'log-fail');
+        }
+        return 'exhausted';
+      }
+      const nextUsed = Math.min(max, used + 1);
       if (hammerId === 'golden') {
-        this.itemData.goldenHammerUsed = used + 1;
+        this.itemData.goldenHammerUsed = nextUsed;
       } else {
-        this.itemData.platinumHammerUsed = used + 1;
+        this.itemData.platinumHammerUsed = nextUsed;
       }
       this.itemData.upgradeSlots = (this.itemData.upgradeSlots || 0) + 1;
       if (!silent) {
@@ -583,7 +617,8 @@ const HammerModule = {
   },
 
   async runAutoHammer() {
-    if (this.autoRunning || !this.itemData) return;
+    if (this.autoRunning || this.actionBusy || !this.itemData) return;
+    if (typeof HammerEffectModule !== 'undefined' && HammerEffectModule.isPlaying?.()) return;
 
     if (this.getRemainingUses('platinum') <= 0) {
       return addLog('⚠️ 白槌次數已用完！', 'log-fail');
@@ -601,9 +636,10 @@ const HammerModule = {
     const startUsed = this.getHammerUsed('platinum');
     const startSlots = this.itemData.upgradeSlots || 0;
     let attempts = 0;
+    let wasCancelled = false;
 
     try {
-      while (this.autoRunning && this.getRemainingUses('platinum') > 0) {
+      while (!this.autoCancelled && this.getRemainingUses('platinum') > 0) {
         const prevUsed = this.getHammerUsed('platinum');
         this.useHammer({ silent: true, skipUI: true, forceHammerId: 'platinum' });
         attempts++;
@@ -617,13 +653,12 @@ const HammerModule = {
         if (attempts > 10000) break;
       }
     } finally {
+      wasCancelled = this.autoCancelled;
       this.unbindAutoCancelListener();
+      this.autoRunning = false;
+      this.autoCancelled = false;
+      if (btn) btn.removeAttribute('aria-busy');
     }
-
-    const wasCancelled = this.autoCancelled;
-    this.autoRunning = false;
-    this.autoCancelled = false;
-    if (btn) btn.removeAttribute('aria-busy');
 
     const successCount = this.getHammerUsed('platinum') - startUsed;
     const slotGain = (this.itemData.upgradeSlots || 0) - startSlots;

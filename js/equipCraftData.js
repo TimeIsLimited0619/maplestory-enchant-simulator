@@ -725,6 +725,100 @@ const EQUIP_CRAFT_MAKE_LIST = [
     },
   ],
 },
+
+//深淵裝備
+{
+  id: 'abyss_equip',
+  name: '深淵裝備',
+  iconItemId: '01402196',
+  categories: [
+    {
+      id: 'abyss_weapon',
+      name: '深淵武器',
+      iconItemId: '01402196',
+      materials: { '02434587': 15 },
+      meso: 1000000000,
+      variants: [
+        { id: 'twohanded_sword', label: '雙手劍', output: '01402196' },
+        { id: 'short_wand', label: '短杖', output: '01372177' },
+        { id: 'dual_crossbow', label: '雙弩槍', output: '01522094' },
+      ],
+    },
+  ],
+},
+
+//深淵帽子
+{
+  id: 'abyss_cap',
+  name: '深淵帽子',
+  iconItemId: '01003797',
+  categories: [
+    {
+      id: 'abyss_cap',
+      name: '深淵帽子',
+      iconItemId: '01003797',
+      materials: { '02434586': 10 },
+      meso: 500000000,
+      variants: [
+        { id: 'warrior', label: '劍士', output: '01003797' },
+        { id: 'mage', label: '法師', output: '01003798' },
+        { id: 'bowman', label: '弓箭手', output: '01003799' },
+        { id: 'thief', label: '盜賊', output: '01003800' },
+        { id: 'pirate', label: '海盜', output: '01003801' },
+      ],
+    },
+  ],
+},
+
+//深淵衣褲
+{
+  id: 'abyss_armor',
+  name: '深淵衣褲',
+  iconItemId: '01042254',
+  categories: [
+    {
+      id: 'abyss_armor',
+      name: '深淵衣褲',
+      iconItemId: '01042254',
+      materials: { '02434585': 10 },
+      meso: 500000000,
+      variants: [
+        { id: 'warrior', label: '劍士', output: '01042254' },
+        { id: 'warrior', label: '劍士', output: '01062165' },
+        { id: 'mage', label: '法師', output: '01042255' },
+        { id: 'mage', label: '法師', output: '01062166' },
+        { id: 'bowman', label: '弓箭手', output: '01042256' },
+        { id: 'bowman', label: '弓箭手', output: '01062167' },
+        { id: 'thief', label: '盜賊', output: '01042257' },
+        { id: 'thief', label: '盜賊', output: '01062168' },
+        { id: 'pirate', label: '海盜', output: '01042258' },
+        { id: 'pirate', label: '海盜', output: '01062169' },
+      ],
+    },
+  ],
+},
+
+//濃姬副手
+{
+  id: 'nohime_subhand',
+  name: '濃姬副武器',
+  iconItemId: '01352216',
+  categories: [
+    {
+      id: 'nohime_subhand_weapon',
+      name: '濃姬副武器',
+      iconItemId: '01352216',
+      materials: { 'Captivating_Fragment':15},
+      meso: 100000000,
+      variants: [
+        { id: 'job1', label: '英雄', output: '01352216' },
+        { id: 'job2', label: '冰雷', output: '01352246' },
+        { id: 'job3', label: '精靈遊俠', output: '01352009' },
+      ],
+    },
+  ],
+},
+
   // 舊永恆
   {
     id: 'old_eternal',

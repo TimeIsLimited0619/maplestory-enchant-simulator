@@ -35,7 +35,7 @@ const IdleBoss = (() => {
   let playerAtkAcc = 0;
   /** @type {Record<string, Record<string, number>>} */
   let partAtkAcc = Object.create(null);
-  const ARENA_UI_VER = '13';
+  const ARENA_UI_VER = '15';
   let exitConfirmPending = false;
   /** 死亡失敗彈窗（你已死亡／挑戰失敗） */
   let failModalOpen = false;
@@ -478,6 +478,7 @@ const IdleBoss = (() => {
           title.textContent = boss ? `${boss.name}｜${tag}${msg}` : String(msg || '');
         }
       },
+      syncChallengeHud: (state) => syncBossChallengeHud(state),
       onExitStart: (sec) => {
         const hint = $('idleBossExitHint');
         if (hint) {
@@ -625,11 +626,19 @@ const IdleBoss = (() => {
                 <img id="idleBossIcon" class="idle-boss-icon" alt="" draggable="false">
                 <div class="idle-boss-hp" id="idleBossHpBar" aria-label="BOSS HP">
                   <div class="idle-boss-hp__fill" id="idleBossHpFill"></div>
+                  <span class="idle-boss-hp__pct" id="idleBossHpPct">100%</span>
                   <div class="idle-boss-hp__text">
                     <span id="idleBossHpName">BOSS</span>
                     <span id="idleBossHpText">0 / 0</span>
                   </div>
                 </div>
+              </div>
+              <div id="idleBossChallengePanel" class="idle-boss-challenge" hidden>
+                <div class="idle-boss-challenge__text" id="idleBossChallengeText"></div>
+                <div class="idle-boss-challenge__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="idleBossChallengeBar">
+                  <div class="idle-boss-challenge__fill" id="idleBossChallengeFill"></div>
+                </div>
+                <div class="idle-boss-challenge__meta" id="idleBossChallengeMeta"></div>
               </div>
               <div id="idleBossTimerHost" class="idle-boss-timer-host"></div>
               <div class="idle-hunt-buffs" id="idleBossBuffs" aria-label="作用中的增益" hidden></div>
@@ -1015,6 +1024,14 @@ const IdleBoss = (() => {
     return `${h.toLocaleString('zh-TW')} / ${m.toLocaleString('zh-TW')}`;
   }
 
+  function formatHpPct(hp, maxHp) {
+    const max = Math.max(1, Number(maxHp) || 1);
+    const pct = Math.max(0, Math.min(100, ((Number(hp) || 0) / max) * 100));
+    if (pct <= 0) return '0%';
+    if (pct >= 100) return '100%';
+    return `${pct.toFixed(1)}%`;
+  }
+
   function syncPlayerHpHud() {
     const fill = $('idleBossPlayerHpFill');
     const text = $('idleBossPlayerHpText');
@@ -1043,9 +1060,8 @@ const IdleBoss = (() => {
   function syncBossHpHud(boss) {
     const fill = $('idleBossHpFill');
     const text = $('idleBossHpText');
-    const name = $('idleBossHpName');
+    const pctEl = $('idleBossHpPct');
     const icon = $('idleBossIcon');
-    if (name) name.textContent = boss?.name || 'BOSS';
     if (icon && boss?.id) {
       icon.src = bossIconUrl(boss.id);
       icon.alt = boss.name || '';
@@ -1058,6 +1074,7 @@ const IdleBoss = (() => {
         const pct = Math.max(0, Math.min(100, (body.hp / Math.max(1, body.maxHp)) * 100));
         if (fill) fill.style.width = `${pct}%`;
         if (text) text.textContent = formatHp(body.hp, body.maxHp);
+        if (pctEl) pctEl.textContent = formatHpPct(body.hp, body.maxHp);
         return;
       }
     }
@@ -1066,10 +1083,38 @@ const IdleBoss = (() => {
       const pct = Math.max(0, Math.min(100, (body.hp / Math.max(1, body.maxHp)) * 100));
       if (fill) fill.style.width = `${pct}%`;
       if (text) text.textContent = formatHp(body.hp, body.maxHp);
+      if (pctEl) pctEl.textContent = formatHpPct(body.hp, body.maxHp);
     } else {
       if (fill) fill.style.width = '100%';
       if (text) text.textContent = '—';
+      if (pctEl) pctEl.textContent = '—';
     }
+  }
+
+  /** 門檻技／打斷挑戰：說明文字＋倒數進度條 */
+  function syncBossChallengeHud(state) {
+    const panel = $('idleBossChallengePanel');
+    if (!panel) return;
+    if (!state || state.hide) {
+      panel.hidden = true;
+      return;
+    }
+    panel.hidden = false;
+    const textEl = $('idleBossChallengeText');
+    const fill = $('idleBossChallengeFill');
+    const meta = $('idleBossChallengeMeta');
+    const bar = $('idleBossChallengeBar');
+    if (textEl) textEl.textContent = String(state.text || '');
+    const totalMs = Math.max(1, Math.floor(Number(state.totalMs) || 1));
+    const remainMs = Math.max(0, Math.min(totalMs, Math.floor(Number(state.remainMs) || 0)));
+    const pct = Math.max(0, Math.min(100, (remainMs / totalMs) * 100));
+    const sec = (remainMs / 1000).toFixed(1);
+    if (fill) fill.style.width = `${pct}%`;
+    if (bar) {
+      bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+      bar.setAttribute('aria-valuetext', `剩餘 ${sec} 秒`);
+    }
+    if (meta) meta.textContent = `剩餘 ${sec} 秒`;
   }
 
   function timeLimitSecOf(listId, diffId) {

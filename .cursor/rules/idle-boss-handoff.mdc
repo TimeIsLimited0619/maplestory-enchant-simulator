@@ -1,0 +1,192 @@
+---
+description: Idle BOSS 製作交接注意事項（WZ 匯入、phase kind、常見坑）
+globs: js/idleBoss*.js,scripts/import-boss-wz.mjs,wz-xml/boss/**/*,css/modules/40-idle-boss.css,index.html
+alwaysApply: false
+---
+
+# Idle BOSS 製作交接
+
+給下一個 agent：接新 boss／改機制前先讀本規則與現有相近 `kind` 實作，複雜機制先給方案再動手。
+
+## 推薦製作流程（比艾樂驗收通過；以後照這套）
+
+使用者滿意的節奏是：**先盤清 → 提案對齊 → 拍板再開工 → 交手不代測**。
+
+### 1. 讀 WZ（動手寫 code 之前）
+
+對每個 mob 盤：
+
+| 項目 | 看什麼 |
+|------|--------|
+| `info` | level、maxHP、PA/MA、PDRate、boss、bodyAttack、stalking |
+| `info/attack` | action、cooltime、conDamR、attackCount、disease |
+| `info/skill`／`trans`／`linkMob` | 變身、共血、互救、死後技 |
+| 頂層 action | stand／move／attackN／skillN／regen／transform／die／hit |
+| Canvas／outlink | 缺哪些跨 mob hit 幀 |
+
+同時對照 `idleBossFight.js` 現有相近 kind（共血→`bloodyQueen`；鎖血轉階→`cygnus`；雙體→勿硬套 forms）。
+
+### 2. 給方案（繁中、表格、待確認項）
+
+回覆應含：
+
+1. **角色表**：哪個 mob＝進場／分裂／寶箱／召喚
+2. **流程**：進場 → 門檻 → 分裂／換態 → 共血否 → 清場寶箱
+3. **空殼／缺圖**：列清楚；佔位幀可建議不補（等使用者確認）
+4. **WZ 有、但本次可不做**：互救、帽子互換、飛帽等 → 標「建議 v1 跳過」
+5. **kind 選擇**：為何不能用 forms（會重置血）／為何要新 kind
+6. **待確認清單**（數字／行為）：  
+   例：貼身怪怎麼打、難度倍率對齊誰、場圖是否已有、v1 範圍
+
+**不要**在這一步改 manifest／fight。
+
+### 3. 使用者拍板後再實作
+
+順序固定：
+
+1. `BOSS_MANIFEST`（parts + chest／extra）
+2. `npm run import:boss`（看 console）
+3. `idleBossPhaseData.js`（kind、kits、難度、chest）
+4. `idleBossListData.js`（name、座標；場圖路徑填好即可，圖檔使用者自管）
+5. `idleBossFight.js`（新 kind 狀態機；對齊現有 hook：pickTarget、maxDamageAllowed、getCombatMobs、afterExternalHits、tickBoss、start／stop／onDead）
+6. `index.html` bump `?v=`
+7. 更新本規則的 kind 表與該 boss 摘要
+
+### 4. 思路要點（這次做對的）
+
+- **聽使用者流程優先**：WZ `hpTriggerOn=70` 可提，但使用者說 50% 就鎖 50%。
+- **共血 ≠ forms**：雙體同時在場且同一條血 → 新 kind；可用 getter／同一 `body.hp` 鏡像。
+- **出傷公式（比艾樂／血腥女皇／班班及之後）**：`WZ基傷(PA×attackRatio) × attackHpRatio(對maxHP傷) × dmgMult`；勿再用玩家 maxHP × 比例。
+- **無出手動畫的部位**：不要硬塞假 attack；用 `move` + `holdAction`／`is-moving` + 接觸判定（比艾樂 0002；接觸傷同樣走 WZ基傷×比例×dmgMult）。
+- **空殼**：`excludeActions`；缺 hit 佔位幀確認後可不補 Canvas。
+- **難度**：可對齊既有王（比艾樂對齊血腥女皇 normal／hard）。
+- **不代測**：見 `no-auto-verify.mdc`；交手說明改了什麼即可。
+
+### 5. 交手回覆格式（短）
+
+- 進場／分裂／共血／清場一句話
+- 難度與跳過機制
+- 改了哪些檔（不必貼大段 code）
+
+## 資料流（必改檔）
+
+| 層 | 檔案 | 職責 |
+|----|------|------|
+| WZ 來源 | `wz-xml/boss/{listId}/` | `Mob.{id}.img.xml` + `Mob._Canvas.{id}.img.xml` |
+| Manifest | `scripts/import-boss-wz.mjs` → `BOSS_MANIFEST` | `parts[]`、`extraMobs[]`、倍率 |
+| 產生 | `npm run import:boss` | `js/idleBossMobData.js`、`js/idleBossWzData.js`、`images/idle-bosses/` |
+| Phase | `js/idleBossPhaseData.js` | `kind`、機制設定、難度、獎勵、`chestMob` |
+| 戰鬥 | `js/idleBossFight.js` | 狀態機；新機制通常要加新 `kind` 或 kit |
+| 列表 UI | `js/idleBossListData.js` | `id`、`name`、`artId`、`playerPos`／`bossPos` |
+| 場圖 | `images/bossIdlezone/{artId}/back.png`（+ `obj.png`） | 背景層 |
+| 列表圖 | `images/Boss/BossList/{id}/` | 選單縮圖 |
+| Cache | `index.html` 的 `?v=` | 改 JS／CSS／產生檔後必須 bump |
+
+血量公式：`WZ maxHP × manifest.hpMult × difficulty.hpMult`；可再乘 `difficulty.formHpMult[mobId]`。
+
+## 現有 `kind`（勿硬套）
+
+| kind | 範例 | 重點 |
+|------|------|------|
+| （省略／balrog） | `0` | body + 雙手 + 可選 chest；階段鎖血 |
+| `zakum` | `1` | 多臂獨立血 → `bodyForms` 換態（**每態重置血**） |
+| `horntail` | `2` | `stages[]` 換圖＋部位；死亡佔位 |
+| `papulatus` | `22` | 單槽 `bodyForms` 打死換下一型（重置血）；可 `sleepSkills` |
+| `forms` | `18` 濃姬 | 與 papulatus 同路徑；可加專屬 kit（如 `nohimeKit`） |
+| `simple` | `10` | 單本體 |
+| `pinkbean` | `11` | 過場／王座／雕像殼 |
+| `cygnus` | `12` | 鎖血召喚護衛 + sleep |
+| `bloodyQueen` | `6` | **共血**三臉輪替；**不是** forms |
+| `pierre` | `4` | 0000 打到 50% 分裂 0001＋0002 **共血雙體**；0002 `move` 貼近接觸傷 |
+| `banban` | `5` | skill1 召喚香蕉 → skillAfter1 窗 60s；擊殺→弱化／逾時→強化 |
+| `vellum` | `7` | 本體＋尾巴**共血**；尾巴每 7s 竄出 2s（隨機左右） |
+
+**重要：** `forms`／papulatus／zakum bodyForms = 打死換型＋**新血條**。  
+若要「戰鬥中切視覺／招式但共用同一條血」，必須像血腥女皇另做 kind（或等價共血狀態），**不要**用 `onZakumBodyFormDown`。
+
+## 新 Boss 檢查清單
+
+1. 放 WZ 到 `wz-xml/boss/{listId}/`（主檔 + Canvas；outlink 到別 mob 的 Canvas 也要在同資料夾或可解析）
+2. `BOSS_MANIFEST` 加 `parts`／`extraMobs`（召喚物、寶箱、僅匯入來源都可進 `extraMobs`）
+3. `npm run import:boss`，看 console：缺 Canvas／空殼 action、frame 數
+4. `idleBossPhaseData.js` 寫 phase（選最接近的 kind；機制不夠就新 kind）
+5. `idleBossListData.js` 補 name、座標
+6. 確認場圖／列表圖存在
+7. `index.html` cache bust（`idleBossFight`／`Phase`／`Mob`／`Wz`／`List`／`40-idle-boss.css` 視改動）
+8. 複雜機制：先盤 WZ → 給方案 → 等使用者拍板再開工
+
+## WZ／匯入注意
+
+- XML 是 `<dir>` 不是舊版 `<imgdir>`。
+- 1×1 stub + `_outlink` → Canvas；跨 mob outlink（如 hit 圖）需該 Canvas 在同 boss 資料夾（例：`6230602`）。
+- **空殼**：單幀指到 `info/default` 的 skill／attack = 佔位，**不要**當可用招；phase 用 `excludeActions` 排除。
+- **缺圖**：不要自行 remap 亂填；向使用者回報缺哪些 action／幀。
+- MobSkill.img（變身目標、召喚數）常不在 `boss/{id}` 包內 → 用 phase config 補行為。
+- `info/attack` 的 cooltime／fixDamR／disease 匯入不一定齊；CD 常 fallback 用 `animMs`；特殊 % 傷在 phase 覆寫。
+- UOL／同圖多 action：import 曾出過「寫到錯 action 路徑」類 bug；改 import 時小心自測各 action 幀。
+
+## 動畫／掛點常見坑
+
+1. **`advanceActorsIn` 只掃 `.idle-actor--mob`**  
+   臨時 actor（召喚物、腳邊彈）必須帶此 class，否則不動畫。
+2. **`spriteKind` 會拉回 `stand`**  
+   播 one-shot 時要鎖：`introAction`／`attackUntil`（`flashActorAttack`）／`holdAction`／`skillUntil`。  
+   只 `bindActorSprite` 不夠。
+3. **玩家腳邊 FX**：對齊 `Paperdoll.getHuntFeetAnchor`（同 areaWarning）；身上 hit 用 `IdleMobAnim.playPlayerHit`。
+4. **淺拷貝陷阱**：`tickUnitAttack('body', { ...fight.body })` 會讓回血／改狀態寫到副本。  
+   共血／回血類請直接傳 `fight.body`，或明確寫回 `fight.body`。
+5. **`bossActionLock`／`atkFxSeq`**：長動畫、連鎖、非同步技要鎖招並在 cancel／stop 時清掉。
+6. **標題**：血腥女皇類機制預設**不要**狂刷 `hooks.onTitle`（回血／切臉／封印等）；其他 boss 既有 title 維持即可，除非使用者要求拿掉。
+
+## 血腥女皇（`6` / `bloodyQueen`）現況摘要
+
+- 本體：`8920000`／`0001`／`0002` 共血；開場固定 `8920000`；固定 CD 輪替並播該臉 `regen`。
+- `faceKits` 在 `idleBossPhaseData.js` `'6'`：
+  - **0000** `skill1` → 腳邊 **1 顆** `8920004`（regen→attack1；出傷 `bombBaseDmg × bombDamR × dmgMult`）+ 玩家 hit；`skill2` 自補 10%（CD 10s）；排除 skill3–5。
+  - **0001** `skill1` 封**技能** 3s（普攻可，CD 10s）；`attack2–6` 引導連鎖**每段** `WZ基傷 × dmgMult`；排除 skill2–4。
+  - **0002** `skill1` 將玩家壓到最大 HP **1%**（不致死、無視減傷，CD 5s）；`attack2`：`WZ基傷 × 0.45 × dmgMult`；排除 skill2–4。
+- 寶箱：`chestMob: '8920005'`。
+- 實作入口：`createBloodyQueenFight`、`buildBloodyQueenAttacks`、`runBq*`、`tryBloodyFaceSwitch`、`playBqBombsOnce`。
+
+## 比艾樂（`4` / `pierre`）摘要
+
+- 進場 `8900000`（regen）；HP 鎖 **50%**（`splitHpRatio`）播 `transform` → `8900001`（左，attack1／2）＋ `8900002`（右，`move` 繞玩家、接觸 % 傷），**同一條血**打到 0 → 寶箱 `8900003`。
+- 傷害：`attackHpRatio`（0000：0.5／0.7；0001：0.5／0.5）→ `WZ基傷 × 比例 × dmgMult`；0002 接觸：`PA × contactDamR × dmgMult`。
+- v1 不做：帽子互換、`linkMob` 互救、0001 飛帽 `skill1`／`skillAfter1`；`excludeActions` 排除空殼 skill。
+- hit 跨 mob 佔位幀（8610013／7220002）確認為空 → 不補。
+- 難度對齊血腥女皇：normal `hpMult 150 / dmg 8`，hard `600 / 20`。
+- 實作入口：`createPierreFight`、`linkPierreSharedHp`、`buildPierreAttacks`、`tryPierreSplit`／`runPierreSplit`、`tickPierreChase`、`onPierreDead`、`playPierreIntro`。
+- 此王的製作流程即上方「推薦製作流程」範本。
+
+## 班班（`5` / `banban`）摘要
+
+- 本體 `8910000`；`skill1` 召喚 **2** 隻 `8910001`（WZ 血量 × 難度）；無寶箱（`chestMob: null`）。
+- 召喚後本體 `skillAfter1` 鎖招 **60s**；小怪可打。
+  - **60s 內擊殺全部小怪** → **弱化 30s**：循環 `skillFail`、本體不普攻；對王傷害 × **1.5**。
+  - **逾時小怪仍在** → `skillUse` → **強化 30s**：王出傷 × **1.2**，王＋小怪同打；結束後清小怪。
+- 普攻：出傷 = WZ基傷(PA×attackRatio) × 對maxHP傷(`attackHpRatio`) × `dmgMult`；attack4–8 連鎖每段 ×0.5；排除 skill2–6／瞬移／空殼。
+- 小怪血量：`difficulty.formHpMult['8910001']`（normal 40／hard 160；本體仍用 hpMult 150／600）。
+- 小怪存活期間本體 `targetable=false`（不可鎖）；召喚窗本體 **循環** `skillAfter1`；HUD 血條改顯示小怪合計（同西格諾斯護衛）。
+- 難度：normal／hard 的 `dmgMult` 見 phase（可調）。
+- 實作入口：`createBanbanFight`、`buildBanbanAttacks`、`runBanbanSummonSkill`、`resolveBanbanWindow`、`tickBanbanPhases`。
+
+## 貝倫（`7` / `vellum`）摘要
+
+- 本體 `8930000`＋尾巴 `8930001` **共血**（同比艾樂 `linkPierreSharedHp`）；HUD 一條血。
+- 尾巴：每 `tailCdSec`（7）完整播 `attack1`；`tailAttackLeadMs`（竄出／出傷）起可打，播完收回；位置玩家左右隨機。
+- 本體：三條 `damageChains`（WZ afterAttack）＋ attack1／7／8；排除 skill1／連鎖非 opener。
+- 出傷：`WZ基傷 × attackHpRatio(conDamR) × dmgMult`；尾巴同公式（`tailAttackHpRatio`）。
+- v1 不做 skill1 隱身、disease、callSkill 彈體。
+
+## 濃姬（`18` / `forms` + `nohimeKit`）摘要
+
+- 單態合成王 `9450023`（import 時由 9450040 攻 + 9450022 技合成；來源在 `extraMobs`）。森蘭丸已移除。
+- 門檻技、引導 tick、`skillChain`、挑戰 HUD（倒數條）等見 `nohimeKit`／`runNohimeThresholdAttack`。
+- 合併 mob 的 sprite `src` 可能仍是來源路徑 → `frameOwnedByAction` 勿只認 `/{mobId}/{action}/`。
+
+## 溝通習慣（本專案）
+
+- 先讀 WZ 再給方案；缺圖／空殼誠實回報。
+- 使用者拍板切臉節奏、召喚數、傷害公式、v1 範圍後再實作。
+- 改動聚焦相關檔；改完 bump cache；用繁中簡短回覆結果。
+- **不**自動開瀏覽器／代跑實戰檢查（`no-auto-verify.mdc`）。

@@ -126,15 +126,16 @@ const WeaponTypeMap = (() => {
     短杖: ['swingO1', 'swingO2', 'swingO3'],
     長杖: ['swingO1', 'swingO2', 'swingO3'],
     指虎: ['swingP1', 'swingP2', 'swingPF'],
-    火槍: ['shoot1', 'shootF'],
+    火槍: ['shoot1', 'shootF', 'swingT1'],
     手杖: ['swingO1', 'swingO2', 'stabO1'],
-    雙弩槍: ['shoot1', 'shootF'],
+    // 雙弩槍正服為 shoot*；目前紙娃娃常缺 shoot 幀，需 swingT1 後備才有普攻動作
+    雙弩槍: ['shoot1', 'shootF', 'swingT1', 'swingO1'],
     加農砲: ['shoot1', 'shootF', 'swingT1'],
     閃亮克魯: ['swingO1', 'swingO2'],
     調節器: ['swingO1', 'swingO2'],
-    龍息射手: ['shoot1', 'shootF'],
+    龍息射手: ['shoot1', 'shootF', 'swingT1'],
     長劍: ['swingT1', 'swingT2', 'stabT1'],
-    靈魂射手: ['shoot1', 'shootF'],
+    靈魂射手: ['shoot1', 'shootF', 'swingT1'],
     魔劍: ['swingO1', 'swingO2', 'stabO1'],
     能量劍: ['swingO1', 'swingO2', 'stabO1'],
     記憶長杖: ['swingO1', 'swingO2', 'swingO3'],
@@ -148,8 +149,8 @@ const WeaponTypeMap = (() => {
     太刀: ['swingT1', 'swingT2', 'stabT1'],
     琉: ['swingT1', 'swingT2'],
     璃: ['swingT1', 'swingT2'],
-    重拳槍: ['shoot1', 'shootF'],
-    古代之弓: ['shoot1', 'shootF'],
+    重拳槍: ['shoot1', 'shootF', 'swingT1'],
+    古代之弓: ['shoot1', 'shootF', 'swingT1'],
   };
 
   const DEFAULT_BASIC_ATTACK_ACTIONS = ['swingT1', 'swingO1', 'swingT2', 'stabT1'];

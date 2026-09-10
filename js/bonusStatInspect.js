@@ -58,17 +58,17 @@ const BonusStatInspectModule = {
     return starFireType === 'awakened' || starFireType === 'blackAwakened';
   },
 
-  usesAwakenedIndependentTiers() {
+  usesAwakenedIndependentTiers(starFireType = this.getSelectedStarFireType()) {
     return typeof bsUsesAwakenedIndependentTiers === 'function'
-      ? bsUsesAwakenedIndependentTiers()
+      ? bsUsesAwakenedIndependentTiers(starFireType)
       : false;
   },
 
-  getDisplayTierMax() {
+  getDisplayTierMax(starFireType = this.getSelectedStarFireType()) {
     if (typeof bsGetBonusStatDisplayTierMax === 'function') {
-      return bsGetBonusStatDisplayTierMax();
+      return bsGetBonusStatDisplayTierMax(starFireType);
     }
-    return this.usesAwakenedIndependentTiers() ? 9 : 7;
+    return this.usesAwakenedIndependentTiers(starFireType) ? 9 : 7;
   },
 
   getStarFireTypeOptions() {
@@ -185,10 +185,10 @@ const BonusStatInspectModule = {
     );
   },
 
-  buildLineCountRows(item) {
+  buildLineCountRows(item, starFireType = this.getSelectedStarFireType()) {
     const isBoss = typeof bsIsBossGearItem === 'function' && bsIsBossGearItem(item);
     const prob = typeof bsGetLineCountProb === 'function'
-      ? bsGetLineCountProb(isBoss)
+      ? bsGetLineCountProb(isBoss, starFireType)
       : (isBoss
         ? BONUS_STAT_LINE_COUNT_PROB?.boss
         : BONUS_STAT_LINE_COUNT_PROB?.general);
@@ -255,7 +255,7 @@ const BonusStatInspectModule = {
     return line.label || statName;
   },
 
-  buildStatPoolRows(item) {
+  buildStatPoolRows(item, starFireType = this.getSelectedStarFireType()) {
     const pool = typeof bsGetStatPool === 'function'
       ? bsGetStatPool(item)
       : (BONUS_STAT_STAT_POOL?.weapon || []);
@@ -263,7 +263,7 @@ const BonusStatInspectModule = {
       (name) => typeof bsCanRollStat !== 'function' || bsCanRollStat(name, item)
     );
     const rateMap = typeof bsGetStatPickRates === 'function'
-      ? bsGetStatPickRates(item)
+      ? bsGetStatPickRates(item, null, starFireType)
       : null;
 
     const rows = available.map((statName) => {
@@ -281,21 +281,23 @@ const BonusStatInspectModule = {
 
     const rateSum = rows.reduce((sum, row) => sum + ((row.rate || 0) * 100), 0);
     const hasAllStatBias = available.includes('全屬性%') && available.length > 1;
+    const catOn = typeof isBonusStatCatValleyRatesFor === 'function'
+      ? isBonusStatCatValleyRatesFor(starFireType)
+      : (typeof isBonusStatCatValleyRatesEnabled === 'function' && isBonusStatCatValleyRatesEnabled());
 
     return {
       rows,
       rateSum: available.length ? 1 : 0,
       rateSumText: `${rateSum.toFixed(4)}%`,
       poolType: typeof bsIsWeaponItem === 'function' && bsIsWeaponItem(item) ? '武器' : '防具',
-      sectionTitle: hasAllStatBias && typeof isBonusStatCatValleyRatesEnabled === 'function'
-        && isBonusStatCatValleyRatesEnabled()
+      sectionTitle: hasAllStatBias && catOn
         ? `詞條種類（全屬性% ${BONUS_STAT_ALLSTAT_PICK_RATE ?? 3}%，其餘均分）`
         : '詞條種類（等機率）',
     };
   },
 
   buildLineTierNote(starFireType) {
-    if (this.usesAwakenedIndependentTiers()) {
+    if (this.usesAwakenedIndependentTiers(starFireType)) {
       if (this.isAwakenedStarFireType(starFireType)) {
         return '詞條階級：先抽基礎 T1~T5，再抽加值（覺醒／暗黑共用；最終 clamp 1~9）';
       }
@@ -346,7 +348,7 @@ const BonusStatInspectModule = {
   },
 
   renderStarTierSections(starFireType) {
-    if (this.isAwakenedStarFireType(starFireType) && this.usesAwakenedIndependentTiers()) {
+    if (this.isAwakenedStarFireType(starFireType) && this.usesAwakenedIndependentTiers(starFireType)) {
       const baseTier = this.buildAwakenedBaseTierRows();
       const bonus = this.buildAwakenedBonusRows();
       const finalTier = this.buildAwakenedFinalTierRows();
@@ -443,19 +445,20 @@ const BonusStatInspectModule = {
     }
 
     const starFireType = this.getSelectedStarFireType();
-    const lineCount = this.buildLineCountRows(item);
-    const statPool = this.buildStatPoolRows(item);
+    const lineCount = this.buildLineCountRows(item, starFireType);
+    const statPool = this.buildStatPoolRows(item, starFireType);
     const typeLabel = BONUS_STAT_INSPECT_STAR_FIRE_LABELS[starFireType] || starFireType;
     const tierNote = this.buildLineTierNote(starFireType);
+    const catOn = typeof isBonusStatCatValleyRatesFor === 'function'
+      ? isBonusStatCatValleyRatesFor(starFireType)
+      : (typeof isBonusStatCatValleyRatesEnabled === 'function' && isBonusStatCatValleyRatesEnabled());
 
     if (metaEl) {
       metaEl.textContent = [
         `裝備：Lv.${item.reqLevel} ${item.name}${item.isBossGear ? ' · BOSS 套裝' : ''}`,
         `詞條池：${statPool.poolType}`,
         `星火：${typeLabel}`,
-        typeof isBonusStatCatValleyRatesEnabled === 'function' && isBonusStatCatValleyRatesEnabled()
-          ? '機率：貓谷'
-          : '機率：正服',
+        catOn ? '機率：貓谷' : '機率：正服',
         tierNote,
       ].filter(Boolean).join('\n');
     }

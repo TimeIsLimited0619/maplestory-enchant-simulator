@@ -85,6 +85,14 @@ const BONUS_STAT_STAR_LEVEL_PROB_OFFICIAL_BLACK = {
 
 let bonusStatUseCatValleyRates = true;
 
+/** 放置模式：依星火種類鎖定是否套用貓谷機率（模擬器仍吃全域開關） */
+const BONUS_STAT_IDLE_CAT_VALLEY_LOCK = {
+  enhanced: false,       // 強力的輪迴星火 → 正服
+  eternal: false,        // 永遠的輪迴星火 → 正服
+  awakened: true,        // 覺醒的輪迴星火 → 貓谷
+  blackAwakened: true,   // 覺醒的暗黑輪迴星火 → 貓谷
+};
+
 function isBonusStatCatValleyRatesEnabled() {
   if (typeof isCatValleyContentUnlocked !== 'function' || !isCatValleyContentUnlocked()) {
     return false;
@@ -92,31 +100,47 @@ function isBonusStatCatValleyRatesEnabled() {
   return bonusStatUseCatValleyRates === true;
 }
 
+/**
+ * 實際擲骰／顯示用：放置模式依星火種類鎖定；其餘走全域開關。
+ * @param {string} [starFireType]
+ */
+function isBonusStatCatValleyRatesFor(starFireType) {
+  const type = String(starFireType || '');
+  if (
+    typeof isIdlePlayMode === 'function'
+    && isIdlePlayMode()
+    && Object.prototype.hasOwnProperty.call(BONUS_STAT_IDLE_CAT_VALLEY_LOCK, type)
+  ) {
+    return BONUS_STAT_IDLE_CAT_VALLEY_LOCK[type] === true;
+  }
+  return isBonusStatCatValleyRatesEnabled();
+}
+
 function setBonusStatCatValleyRatesEnabled(enabled) {
   bonusStatUseCatValleyRates = Boolean(enabled);
 }
 
 function bsGetStarLevelProb(starFireType = 'enhanced') {
-  if (starFireType === 'blackAwakened' && !isBonusStatCatValleyRatesEnabled()) {
+  if (starFireType === 'blackAwakened' && !isBonusStatCatValleyRatesFor(starFireType)) {
     return BONUS_STAT_STAR_LEVEL_PROB_OFFICIAL_BLACK;
   }
   return BONUS_STAT_STAR_LEVEL_PROB[starFireType] || BONUS_STAT_STAR_LEVEL_PROB.enhanced;
 }
 
-function bsGetLineCountProb(isBossGear) {
-  const tables = isBonusStatCatValleyRatesEnabled()
+function bsGetLineCountProb(isBossGear, starFireType = 'enhanced') {
+  const tables = isBonusStatCatValleyRatesFor(starFireType)
     ? BONUS_STAT_LINE_COUNT_PROB
     : BONUS_STAT_LINE_COUNT_PROB_OFFICIAL;
   return isBossGear ? tables.boss : tables.general;
 }
 
-function bsUsesAwakenedIndependentTiers() {
-  return isBonusStatCatValleyRatesEnabled();
+function bsUsesAwakenedIndependentTiers(starFireType = 'awakened') {
+  return isBonusStatCatValleyRatesFor(starFireType);
 }
 
 /** 機率表／數值範圍顯示用的詞條階級上限：貓谷 1~9，正服 1~7 */
-function bsGetBonusStatDisplayTierMax() {
-  return isBonusStatCatValleyRatesEnabled() ? BONUS_STAT_STAR_LINE_TIERS : 7;
+function bsGetBonusStatDisplayTierMax(starFireType = 'enhanced') {
+  return isBonusStatCatValleyRatesFor(starFireType) ? BONUS_STAT_STAR_LINE_TIERS : 7;
 }
 
 const BONUS_STAT_STAT_POOL = {
@@ -818,8 +842,8 @@ function bsRollStarFireLevel(starFireType = 'enhanced') {
   return bsRollWeighted(entries.length ? entries : [{ value: 2, weight: 1 }]);
 }
 
-function bsRollLineCount(isBossGear) {
-  const prob = bsGetLineCountProb(isBossGear);
+function bsRollLineCount(isBossGear, starFireType = 'enhanced') {
+  const prob = bsGetLineCountProb(isBossGear, starFireType);
   return bsRollWeighted([
     { value: 1, weight: prob[0] || 0 },
     { value: 2, weight: prob[1] || 0 },
@@ -851,7 +875,7 @@ function bsRollAwakenedLineStarTier(_starFireType) {
 function bsRollLineStarTier(starFireLevel, item, starFireType = 'enhanced') {
   if (
     (starFireType === 'awakened' || starFireType === 'blackAwakened')
-    && bsUsesAwakenedIndependentTiers()
+    && bsUsesAwakenedIndependentTiers(starFireType)
   ) {
     return bsRollAwakenedLineStarTier(starFireType);
   }
@@ -1020,7 +1044,7 @@ function bsResolveStatLine(statName, starTier, item) {
 /** 全屬性% 固定權重（%）；其餘可洗詞條均分剩餘機率 */
 const BONUS_STAT_ALLSTAT_PICK_RATE = 4;
 
-function bsPickStatFromPool(pool, usedLabels, item) {
+function bsPickStatFromPool(pool, usedLabels, item, starFireType = 'enhanced') {
   const available = pool.filter(
     (name) => !usedLabels.has(name) && bsCanRollStat(name, item)
   );
@@ -1028,7 +1052,7 @@ function bsPickStatFromPool(pool, usedLabels, item) {
 
   const allStatName = '全屬性%';
   const hasAllStat = available.includes(allStatName);
-  if (!hasAllStat || available.length === 1 || !isBonusStatCatValleyRatesEnabled()) {
+  if (!hasAllStat || available.length === 1 || !isBonusStatCatValleyRatesFor(starFireType)) {
     return available[Math.floor(Math.random() * available.length)];
   }
 
@@ -1044,7 +1068,7 @@ function bsPickStatFromPool(pool, usedLabels, item) {
 }
 
 /** 詞條種類機率（與 bsPickStatFromPool 相同規則；usedLabels 可排除已出現詞條） */
-function bsGetStatPickRates(item, usedLabels = null) {
+function bsGetStatPickRates(item, usedLabels = null, starFireType = 'enhanced') {
   const pool = typeof bsGetStatPool === 'function'
     ? bsGetStatPool(item)
     : [];
@@ -1057,7 +1081,7 @@ function bsGetStatPickRates(item, usedLabels = null) {
 
   const allStatName = '全屬性%';
   const hasAllStat = available.includes(allStatName);
-  if (!hasAllStat || available.length === 1 || !isBonusStatCatValleyRatesEnabled()) {
+  if (!hasAllStat || available.length === 1 || !isBonusStatCatValleyRatesFor(starFireType)) {
     const each = 100 / available.length;
     available.forEach((name) => rates.set(name, each));
     return rates;
@@ -1073,13 +1097,13 @@ function bsGetStatPickRates(item, usedLabels = null) {
 
 function bsRollBonusStatLines(item, starFireType = 'enhanced', starFireLevel = null) {
   const sfLevel = starFireLevel ?? bsRollStarFireLevel(starFireType);
-  const lineCount = bsRollLineCount(bsIsBossGearItem(item));
+  const lineCount = bsRollLineCount(bsIsBossGearItem(item), starFireType);
   const pool = bsGetStatPool(item);
   const used = new Set();
   const lines = [];
 
   for (let i = 0; i < lineCount; i += 1) {
-    const statName = bsPickStatFromPool(pool, used, item);
+    const statName = bsPickStatFromPool(pool, used, item, starFireType);
     if (!statName) break;
     used.add(statName);
     const tier = bsRollLineStarTier(sfLevel, item, starFireType);

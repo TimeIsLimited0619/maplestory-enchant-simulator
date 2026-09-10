@@ -145,8 +145,12 @@ const BonusStatModule = {
   },
 
   payResetCost(count = 1) {
+    const selectedFlame = this.costTab === 'item' ? this.getSelectedItem() : null;
+    const starFireType = typeof getBonusStatRollStarFireType === 'function'
+      ? getBonusStatRollStarFireType(this.costTab, selectedFlame, this.itemData?.bonusStat)
+      : selectedFlame?.starFireType;
     const extra = typeof getBonusStatCatValleyExtraMaterials === 'function'
-      ? getBonusStatCatValleyExtraMaterials(this.itemData)
+      ? getBonusStatCatValleyExtraMaterials(this.itemData, starFireType)
       : null;
     const extraCost = extra && count > 0
       ? Object.fromEntries(Object.entries(extra).map(([k, v]) => [k, (Number(v) || 0) * count]))
@@ -183,7 +187,7 @@ const BonusStatModule = {
       idleSpendEtcMap(extraCost);
     }
     if (typeof trackBonusStatCatValleyCost === 'function') {
-      trackBonusStatCatValleyCost(this.itemData, count);
+      trackBonusStatCatValleyCost(this.itemData, count, starFireType);
     }
     return true;
   },
@@ -584,10 +588,12 @@ const BonusStatModule = {
     const catValleyRatesCheck = document.getElementById('chkBonusStatCatValleyRates');
     if (!catValleyRatesCheck || catValleyRatesCheck.dataset.bound === '1') return;
     catValleyRatesCheck.dataset.bound = '1';
-    if (typeof isBonusStatCatValleyRatesEnabled === 'function') {
-      catValleyRatesCheck.checked = isBonusStatCatValleyRatesEnabled();
-    }
+    this.syncCatValleyRatesUi();
     catValleyRatesCheck.addEventListener('change', () => {
+      if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+        this.syncCatValleyRatesUi();
+        return;
+      }
       if (typeof setBonusStatCatValleyRatesEnabled === 'function') {
         setBonusStatCatValleyRatesEnabled(catValleyRatesCheck.checked);
       }
@@ -595,6 +601,43 @@ const BonusStatModule = {
         BonusStatInspectModule.render();
       }
     });
+  },
+
+  syncCatValleyRatesUi() {
+    const el = document.getElementById('chkBonusStatCatValleyRates');
+    const label = el?.closest('label');
+    if (!el) return;
+    const idle = typeof isIdlePlayMode === 'function' && isIdlePlayMode();
+    const selected = this.costTab === 'item' ? this.getSelectedItem?.() : null;
+    const starFireType = typeof getBonusStatRollStarFireType === 'function'
+      ? getBonusStatRollStarFireType(this.costTab, selected, this.itemData?.bonusStat)
+      : (selected?.starFireType || this.itemData?.bonusStat?.starFireType);
+    const locked = idle
+      && starFireType
+      && typeof BONUS_STAT_IDLE_CAT_VALLEY_LOCK !== 'undefined'
+      && Object.prototype.hasOwnProperty.call(BONUS_STAT_IDLE_CAT_VALLEY_LOCK, starFireType);
+
+    if (locked) {
+      const on = typeof isBonusStatCatValleyRatesFor === 'function'
+        ? isBonusStatCatValleyRatesFor(starFireType)
+        : false;
+      el.checked = on;
+      el.disabled = true;
+      if (label) {
+        label.title = on
+          ? '放置模式：此星火鎖定使用貓谷機率'
+          : '放置模式：此星火鎖定不套用貓谷機率（正服）';
+      }
+      return;
+    }
+
+    el.disabled = false;
+    if (typeof isBonusStatCatValleyRatesEnabled === 'function') {
+      el.checked = isBonusStatCatValleyRatesEnabled();
+    }
+    if (label) {
+      label.title = '開啟：使用進階星火機率；關閉：正服機率';
+    }
   },
 
   showItemTooltip(slot, item) {
@@ -796,10 +839,7 @@ const BonusStatModule = {
     if (bottomOptions) bottomOptions.classList.remove('hidden');
     const bottomOptionsLeft = document.getElementById('bsBottomOptionsLeft');
     if (bottomOptionsLeft) bottomOptionsLeft.classList.remove('hidden');
-    const catValleyRatesCheck = document.getElementById('chkBonusStatCatValleyRates');
-    if (catValleyRatesCheck && typeof isBonusStatCatValleyRatesEnabled === 'function') {
-      catValleyRatesCheck.checked = isBonusStatCatValleyRatesEnabled();
-    }
+    this.syncCatValleyRatesUi();
 
     if (typeof AutoEnchantBonusStatModule !== 'undefined') {
       AutoEnchantBonusStatModule.syncAutoCheckbox();

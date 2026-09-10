@@ -3660,6 +3660,22 @@ const ITEM_DATABASE = {
     unsyntesizable: 1
   }),
 
+  // 平衡：精靈遊俠副武器（妖蝶姬之咒式矢）補 +9 物攻，對齊同套副手
+'01352009': buildEquipFromWzInfo('01352009', '妖蝶姬之咒式矢', {
+    wzPart: 'Weapon',
+    islot: 'Si',
+    vslot: 'Si',
+    reqJob: 4,
+    reqLevel: 140,
+    incSTR: 14,
+    incDEX: 14,
+    incPAD: 9,
+    cash: 0,
+    tuc: 0,
+    price: 100000,
+    tradeBlock: 1,
+  }),
+
 '01354309': buildEquipFromWzInfo('01354309', '千魂降臨靈符', {
     wzPart: 'Weapon',
     islot: 'ohp',

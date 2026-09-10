@@ -216,7 +216,7 @@ const IDLE_NPC_SHOP = {
 
 
     { kind: 'scroll', itemId: 'scroll_normal_non_weapon_str_100', buyPrice: 5000, amount: 1, minLevel: 10 },
-    { kind: 'scroll', itemId: 'scroll_normal_weapon_atk_100', buyPrice: 10000, amount: 1, minLevel: 15 },
+    { kind: 'scroll', itemId: 'scroll_normal_weapon_atk_100', buyPrice: 10000, amount: 1, minLevel: 10 },
     { kind: 'scroll', itemId: 'scroll_normal_weapon_matk_100', buyPrice: 10000, amount: 1, minLevel: 10 },
     { kind: 'scroll', itemId: 'scroll_normal_non_weapon_str_70', buyPrice: 20000, amount: 1, minLevel: 25 },
     { kind: 'scroll', itemId: 'scroll_normal_weapon_atk_70', buyPrice: 40000, amount: 1, minLevel: 40 },

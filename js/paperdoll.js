@@ -175,7 +175,13 @@ const Paperdoll = (() => {
    * 從武器普攻池隨機抽一個（對齊 MS：單手劍 swingO1/O2/O3 等，非固定 swingO1）
    */
   function pickBasicAttackAction(itemIds) {
-    const available = availableBasicAttackActions(itemIds);
+    let available = availableBasicAttackActions(itemIds);
+    // 武器池標了 shoot* 但紙娃娃缺幀時，退回常見 swing，避免卡 stand1
+    if (!available.length) {
+      const fallback = ['swingT1', 'swingO1', 'swingT2', 'swingO2', 'stabT1', 'stabO1']
+        .filter((name) => lookHasAction(itemIds, name));
+      available = fallback;
+    }
     if (!available.length) {
       basicAttackPick = '';
       return 'stand1';

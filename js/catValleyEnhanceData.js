@@ -156,12 +156,15 @@ function isCatValleyImmortalHeritageItem(item) {
   return String(item.name || '') === '不朽的遺產';
 }
 
-function isBonusStatCatValleyCostActive() {
+function isBonusStatCatValleyCostActive(starFireType) {
+  if (typeof isBonusStatCatValleyRatesFor === 'function') {
+    return isBonusStatCatValleyRatesFor(starFireType);
+  }
   return typeof isBonusStatCatValleyRatesEnabled === 'function' && isBonusStatCatValleyRatesEnabled();
 }
 
-function getBonusStatCatValleyExtraMaterials(item) {
-  if (!isBonusStatCatValleyCostActive() || !item) return null;
+function getBonusStatCatValleyExtraMaterials(item, starFireType) {
+  if (!isBonusStatCatValleyCostActive(starFireType) || !item) return null;
   const type = typeof getCatValleyEnhanceType === 'function' ? getCatValleyEnhanceType(item) : null;
   const isNewEternal = typeof CAT_VALLEY_ENHANCE_TYPE !== 'undefined'
     && type === CAT_VALLEY_ENHANCE_TYPE.NEW_ETERNAL;
@@ -175,8 +178,8 @@ function getBonusStatCatValleyExtraMaterials(item) {
 }
 
 /** 附加能力貓谷耗材：每次星火重設（道具分頁） */
-function trackBonusStatCatValleyCost(item, count = 1) {
-  const extra = getBonusStatCatValleyExtraMaterials(item);
+function trackBonusStatCatValleyCost(item, count = 1, starFireType) {
+  const extra = getBonusStatCatValleyExtraMaterials(item, starFireType);
   if (!extra) return;
   const n = Math.max(1, Number(count) || 1);
   if (extra.awakened > 0 && typeof trackCostEvent === 'function') {

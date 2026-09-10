@@ -46,7 +46,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 1,
             "elemAttr": "F",
-            "animMs": 1560,
+            "animMs": 3210,
             "dmg": 583
           },
           {
@@ -300,7 +300,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 100,
             "elemAttr": "",
-            "animMs": 2590,
+            "animMs": 4190,
             "dmg": 5880
           },
           {
@@ -314,7 +314,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "L",
             "disease": 120,
             "level": 4,
-            "animMs": 1800,
+            "animMs": 3400,
             "dmg": 5880
           },
           {
@@ -328,7 +328,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 123,
             "level": 3,
-            "animMs": 1600,
+            "animMs": 3200,
             "dmg": 6241
           }
         ],
@@ -370,8 +370,8 @@ const IDLE_BOSS_WZ = {
           }
         ],
         "skillAnimMs": {
-          "skill1": 1508,
-          "skill2": 1500,
+          "skill1": 2308,
+          "skill2": 2300,
           "skill3": 1504
         }
       },
@@ -405,7 +405,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 100,
             "elemAttr": "",
-            "animMs": 1790,
+            "animMs": 2590,
             "dmg": 6360
           },
           {
@@ -419,7 +419,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "L",
             "disease": 120,
             "level": 4,
-            "animMs": 1900,
+            "animMs": 2700,
             "dmg": 6360
           },
           {
@@ -433,7 +433,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 123,
             "level": 3,
-            "animMs": 1600,
+            "animMs": 2400,
             "dmg": 6591
           }
         ],
@@ -503,8 +503,8 @@ const IDLE_BOSS_WZ = {
           }
         ],
         "skillAnimMs": {
-          "skill1": 1508,
-          "skill2": 1500,
+          "skill1": 2308,
+          "skill2": 2300,
           "skill3": 1504
         }
       },
@@ -681,7 +681,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 164,
             "level": 1,
-            "animMs": 1495,
+            "animMs": 4075,
             "dmg": 3040
           },
           {
@@ -695,7 +695,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 164,
             "level": 1,
-            "animMs": 2355,
+            "animMs": 4935,
             "dmg": 3040
           },
           {
@@ -709,7 +709,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 132,
             "level": 8,
-            "animMs": 0,
+            "animMs": 4075,
             "dmg": 3040
           },
           {
@@ -723,7 +723,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 127,
             "level": 16,
-            "animMs": 0,
+            "animMs": 4075,
             "dmg": 3040
           }
         ],
@@ -763,7 +763,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 164,
             "level": 1,
-            "animMs": 1495,
+            "animMs": 4075,
             "dmg": 3040
           },
           {
@@ -777,7 +777,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 164,
             "level": 1,
-            "animMs": 2355,
+            "animMs": 4935,
             "dmg": 3040
           },
           {
@@ -791,7 +791,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 132,
             "level": 9,
-            "animMs": 0,
+            "animMs": 4075,
             "dmg": 3040
           },
           {
@@ -805,7 +805,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 127,
             "level": 17,
-            "animMs": 0,
+            "animMs": 4075,
             "dmg": 3040
           }
         ],
@@ -843,7 +843,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 10,
             "elemAttr": "F",
-            "animMs": 2130,
+            "animMs": 4710,
             "dmg": 3420
           }
         ],
@@ -864,7 +864,7 @@ const IDLE_BOSS_WZ = {
           }
         ],
         "skillAnimMs": {
-          "skill1": 1500
+          "skill1": 2230
         }
       },
       {
@@ -900,7 +900,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 164,
             "level": 1,
-            "animMs": 2490,
+            "animMs": 5070,
             "dmg": 3860
           },
           {
@@ -914,7 +914,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "L",
             "disease": 164,
             "level": 1,
-            "animMs": 1500,
+            "animMs": 4810,
             "dmg": 3420
           },
           {
@@ -928,7 +928,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "L",
             "disease": 135,
             "level": 3,
-            "animMs": 1500,
+            "animMs": 4810,
             "dmg": 3420
           }
         ],
@@ -1100,7 +1100,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 164,
             "level": 1,
-            "animMs": 2360,
+            "animMs": 4940,
             "dmg": 3500
           },
           {
@@ -1114,7 +1114,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 164,
             "level": 1,
-            "animMs": 1500,
+            "animMs": 5800,
             "dmg": 3500
           }
         ],
@@ -1154,7 +1154,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 164,
             "level": 1,
-            "animMs": 2660,
+            "animMs": 5240,
             "dmg": 3500
           },
           {
@@ -1168,7 +1168,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 164,
             "level": 1,
-            "animMs": 1800,
+            "animMs": 6100,
             "dmg": 3500
           }
         ],
@@ -1215,7 +1215,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 1,
             "elemAttr": "I",
-            "animMs": 3360,
+            "animMs": 5880,
             "dmg": 5300
           },
           {
@@ -1227,7 +1227,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 1,
             "elemAttr": "I",
-            "animMs": 2240,
+            "animMs": 5180,
             "dmg": 14500
           },
           {
@@ -1239,7 +1239,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 1,
             "elemAttr": "I",
-            "animMs": 0,
+            "animMs": 5180,
             "dmg": 14500
           }
         ],
@@ -1288,9 +1288,9 @@ const IDLE_BOSS_WZ = {
           }
         ],
         "skillAnimMs": {
-          "skill1": 2240,
-          "skill2": 2380,
-          "skill3": 0
+          "skill1": 5180,
+          "skill2": 5180,
+          "skill3": 2380
         }
       },
       {
@@ -1323,7 +1323,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 1,
             "elemAttr": "L",
-            "animMs": 3220,
+            "animMs": 5880,
             "dmg": 5300
           },
           {
@@ -1335,7 +1335,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 1,
             "elemAttr": "L",
-            "animMs": 2240,
+            "animMs": 5180,
             "dmg": 5300
           },
           {
@@ -1347,7 +1347,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 1,
             "elemAttr": "L",
-            "animMs": 2240,
+            "animMs": 5180,
             "dmg": 5300
           }
         ],
@@ -1396,9 +1396,9 @@ const IDLE_BOSS_WZ = {
           }
         ],
         "skillAnimMs": {
-          "skill1": 2240,
-          "skill2": 2380,
-          "skill3": 0
+          "skill1": 5180,
+          "skill2": 5180,
+          "skill3": 2380
         }
       },
       {
@@ -1455,7 +1455,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 1,
             "elemAttr": "I",
-            "animMs": 0,
+            "animMs": 2040,
             "dmg": 5365
           }
         ],
@@ -1628,7 +1628,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 1,
             "elemAttr": "L",
-            "animMs": 0,
+            "animMs": 2040,
             "dmg": 5300
           }
         ],
@@ -1691,7 +1691,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 10,
             "elemAttr": "",
-            "animMs": 2520,
+            "animMs": 5040,
             "dmg": 2200
           }
         ],
@@ -1776,7 +1776,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 5,
             "elemAttr": "",
-            "animMs": 2520,
+            "animMs": 5040,
             "dmg": 2200
           }
         ],
@@ -1847,7 +1847,7 @@ const IDLE_BOSS_WZ = {
         ],
         "skillAnimMs": {
           "skill1": 2380,
-          "skill2": 2240,
+          "skill2": 3920,
           "skill3": 2240
         }
       },
@@ -1917,9 +1917,9 @@ const IDLE_BOSS_WZ = {
           }
         ],
         "skillAnimMs": {
-          "skill1": 2940,
-          "skill2": 2520,
-          "skill3": 2380
+          "skill1": 5180,
+          "skill2": 4620,
+          "skill3": 4620
         }
       },
       {
@@ -1952,7 +1952,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
-            "animMs": 2180,
+            "animMs": 5180,
             "dmg": 7490
           },
           {
@@ -1978,7 +1978,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
-            "animMs": 1820,
+            "animMs": 4820,
             "dmg": 7490
           },
           {
@@ -2029,7 +2029,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
-            "animMs": 2660,
+            "animMs": 5160,
             "dmg": 5635
           }
         ],
@@ -2058,6 +2058,975 @@ const IDLE_BOSS_WZ = {
       "8810017",
       "8810018"
     ],
+    "hpMult": 1,
+    "dmgMult": 1,
+    "cdMult": 1
+  },
+  "4": {
+    "listId": "4",
+    "name": "比艾樂",
+    "parts": [
+      {
+        "role": "body",
+        "mobId": "8900000",
+        "z": 20,
+        "level": 190,
+        "maxHP": 2000000000,
+        "maxMP": 108000,
+        "PADamage": 35000,
+        "MADamage": 35000,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 80,
+        "MDRate": 80,
+        "acc": 9999,
+        "eva": 750,
+        "bodyAttack": false,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 1000,
+        "mpRecovery": 10000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 132,
+            "level": 11,
+            "animMs": 1050,
+            "dmg": 35000
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 123,
+            "level": 44,
+            "animMs": 1500,
+            "dmg": 35000
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 201,
+            "action": 1,
+            "level": 40,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 120
+        }
+      },
+      {
+        "role": "body",
+        "mobId": "8900001",
+        "z": 20,
+        "level": 190,
+        "maxHP": 2000000000,
+        "maxMP": 108000,
+        "PADamage": 35000,
+        "MADamage": 35000,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 80,
+        "MDRate": 80,
+        "acc": 9999,
+        "eva": 750,
+        "bodyAttack": false,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 1000,
+        "mpRecovery": 10000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 126,
+            "level": 20,
+            "animMs": 780,
+            "dmg": 35000
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 1260,
+            "dmg": 35000
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 170,
+            "action": 1,
+            "level": 10,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 1080
+        }
+      },
+      {
+        "role": "body",
+        "mobId": "8900002",
+        "z": 21,
+        "level": 190,
+        "maxHP": 2000000000,
+        "maxMP": 108000,
+        "PADamage": 35000,
+        "MADamage": 35000,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 80,
+        "MDRate": 80,
+        "acc": 9999,
+        "eva": 750,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 1000,
+        "mpRecovery": 10000,
+        "attacks": [],
+        "skills": [],
+        "skillAnimMs": {}
+      }
+    ],
+    "extraMobs": [
+      "8900003"
+    ],
+    "hpMult": 1,
+    "dmgMult": 1,
+    "cdMult": 1
+  },
+  "5": {
+    "listId": "5",
+    "name": "班班",
+    "parts": [
+      {
+        "role": "body",
+        "mobId": "8910000",
+        "z": 20,
+        "level": 190,
+        "maxHP": 2000000000,
+        "maxMP": 100000,
+        "PADamage": 30000,
+        "MADamage": 30000,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 100,
+        "MDRate": 100,
+        "acc": 9999,
+        "eva": 750,
+        "bodyAttack": false,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 1000,
+        "mpRecovery": 10000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 123,
+            "level": 43,
+            "animMs": 1530,
+            "dmg": 30000
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 2,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 2340,
+            "dmg": 30000
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 100,
+            "type": 6,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 1650,
+            "dmg": 30000
+          },
+          {
+            "index": 3,
+            "action": 4,
+            "actionKey": "attack4",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 126,
+            "level": 20,
+            "animMs": 1260,
+            "dmg": 30000
+          },
+          {
+            "index": 4,
+            "action": 5,
+            "actionKey": "attack5",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 126,
+            "level": 20,
+            "animMs": 600,
+            "dmg": 30000
+          },
+          {
+            "index": 5,
+            "action": 6,
+            "actionKey": "attack6",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 126,
+            "level": 20,
+            "animMs": 600,
+            "dmg": 30000
+          },
+          {
+            "index": 6,
+            "action": 7,
+            "actionKey": "attack7",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 126,
+            "level": 20,
+            "animMs": 600,
+            "dmg": 30000
+          },
+          {
+            "index": 7,
+            "action": 8,
+            "actionKey": "attack8",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 126,
+            "level": 20,
+            "animMs": 720,
+            "dmg": 30000
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 203,
+            "action": 1,
+            "level": 1,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 184,
+            "action": 2,
+            "level": 1,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 170,
+            "action": 3,
+            "level": 11,
+            "effectAfter": 0
+          },
+          {
+            "index": 3,
+            "skill": 191,
+            "action": 4,
+            "level": 1,
+            "effectAfter": 0
+          },
+          {
+            "index": 4,
+            "skill": 191,
+            "action": 5,
+            "level": 2,
+            "effectAfter": 0
+          },
+          {
+            "index": 5,
+            "skill": 170,
+            "action": 6,
+            "level": 14,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 1440,
+          "skill2": 2340,
+          "skill3": 600,
+          "skill4": 30,
+          "skill5": 30,
+          "skill6": 600
+        }
+      },
+      {
+        "role": "body",
+        "mobId": "8910001",
+        "z": 22,
+        "level": 190,
+        "maxHP": 800000000,
+        "maxMP": 100000,
+        "PADamage": 30000,
+        "MADamage": 30000,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 100,
+        "MDRate": 100,
+        "acc": 9999,
+        "eva": 750,
+        "bodyAttack": false,
+        "firstAttack": false,
+        "boss": true,
+        "hpRecovery": 1000,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 50,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 120,
+            "level": 11,
+            "animMs": 1530,
+            "dmg": 15000
+          }
+        ],
+        "skills": [],
+        "skillAnimMs": {}
+      }
+    ],
+    "extraMobs": [],
+    "hpMult": 1,
+    "dmgMult": 1,
+    "cdMult": 1
+  },
+  "6": {
+    "listId": "6",
+    "name": "血腥女皇",
+    "parts": [
+      {
+        "role": "body",
+        "mobId": "8920000",
+        "z": 20,
+        "level": 190,
+        "maxHP": 2000000000,
+        "maxMP": 15000000,
+        "PADamage": 20400,
+        "MADamage": 20400,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 120,
+        "MDRate": 120,
+        "acc": 9999,
+        "eva": 750,
+        "bodyAttack": false,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 1000,
+        "mpRecovery": 0,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 120,
+            "level": 11,
+            "animMs": 2280,
+            "dmg": 20400
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 201,
+            "action": 1,
+            "level": 47,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 201,
+            "action": 2,
+            "level": 48,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 201,
+            "action": 3,
+            "level": 52,
+            "effectAfter": 0
+          },
+          {
+            "index": 3,
+            "skill": 201,
+            "action": 4,
+            "level": 53,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 2880,
+          "skill2": 3060,
+          "skill3": 120,
+          "skill4": 120,
+          "skill5": 120
+        }
+      },
+      {
+        "role": "body",
+        "mobId": "8920001",
+        "z": 20,
+        "level": 190,
+        "maxHP": 2000000000,
+        "maxMP": 15000000,
+        "PADamage": 20400,
+        "MADamage": 20400,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 120,
+        "MDRate": 120,
+        "acc": 9999,
+        "eva": 750,
+        "bodyAttack": false,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 1000,
+        "mpRecovery": 0,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 132,
+            "level": 11,
+            "animMs": 2280,
+            "dmg": 20400
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 1800,
+            "dmg": 20400
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 720,
+            "dmg": 20400
+          },
+          {
+            "index": 3,
+            "action": 4,
+            "actionKey": "attack4",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 600,
+            "dmg": 20400
+          },
+          {
+            "index": 4,
+            "action": 5,
+            "actionKey": "attack5",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 600,
+            "dmg": 20400
+          },
+          {
+            "index": 5,
+            "action": 6,
+            "actionKey": "attack6",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 1440,
+            "dmg": 20400
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 186,
+            "action": 1,
+            "level": 1,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 201,
+            "action": 2,
+            "level": 51,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 201,
+            "action": 3,
+            "level": 53,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 2280,
+          "skill2": 120,
+          "skill3": 120,
+          "skill4": 120
+        }
+      },
+      {
+        "role": "body",
+        "mobId": "8920002",
+        "z": 20,
+        "level": 190,
+        "maxHP": 2000000000,
+        "maxMP": 15000000,
+        "PADamage": 20400,
+        "MADamage": 20400,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 120,
+        "MDRate": 120,
+        "acc": 9999,
+        "eva": 750,
+        "bodyAttack": false,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 1000,
+        "mpRecovery": 0,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 136,
+            "level": 6,
+            "animMs": 2280,
+            "dmg": 20400
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 205,
+            "level": 1,
+            "animMs": 4500,
+            "dmg": 20400
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 183,
+            "action": 1,
+            "level": 1,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 201,
+            "action": 2,
+            "level": 51,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 201,
+            "action": 3,
+            "level": 52,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 2190,
+          "skill2": 120,
+          "skill3": 120,
+          "skill4": 120
+        }
+      }
+    ],
+    "extraMobs": [
+      "8920004",
+      "8920005"
+    ],
+    "hpMult": 1,
+    "dmgMult": 1,
+    "cdMult": 1
+  },
+  "7": {
+    "listId": "7",
+    "name": "貝倫",
+    "parts": [
+      {
+        "role": "body",
+        "mobId": "8930000",
+        "z": 20,
+        "level": 190,
+        "maxHP": 2000000000,
+        "maxMP": 64500,
+        "PADamage": 46000,
+        "MADamage": 36000,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 200,
+        "MDRate": 200,
+        "acc": 9999,
+        "eva": 750,
+        "bodyAttack": false,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 1000,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 4350,
+            "dmg": 46000
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 2490,
+            "dmg": 46000
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 2280,
+            "dmg": 46000
+          },
+          {
+            "index": 3,
+            "action": 4,
+            "actionKey": "attack4",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 2190,
+            "dmg": 46000
+          },
+          {
+            "index": 4,
+            "action": 5,
+            "actionKey": "attack5",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 2100,
+            "dmg": 46000
+          },
+          {
+            "index": 5,
+            "action": 6,
+            "actionKey": "attack6",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 2220,
+            "dmg": 46000
+          },
+          {
+            "index": 6,
+            "action": 7,
+            "actionKey": "attack7",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 123,
+            "level": 43,
+            "animMs": 3300,
+            "dmg": 46000
+          },
+          {
+            "index": 7,
+            "action": 8,
+            "actionKey": "attack8",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 4290,
+            "dmg": 46000
+          },
+          {
+            "index": 8,
+            "action": 9,
+            "actionKey": "attack9",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 6210,
+            "dmg": 46000
+          },
+          {
+            "index": 9,
+            "action": 10,
+            "actionKey": "attack10",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 1440,
+            "dmg": 46000
+          },
+          {
+            "index": 10,
+            "action": 11,
+            "actionKey": "attack11",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 840,
+            "dmg": 46000
+          },
+          {
+            "index": 11,
+            "action": 12,
+            "actionKey": "attack12",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 2220,
+            "dmg": 46000
+          },
+          {
+            "index": 12,
+            "action": 13,
+            "actionKey": "attack13",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 123,
+            "level": 43,
+            "animMs": 1890,
+            "dmg": 46000
+          },
+          {
+            "index": 13,
+            "action": 14,
+            "actionKey": "attack14",
+            "attackRatio": 100,
+            "type": 4,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 131,
+            "level": 17,
+            "animMs": 3180,
+            "dmg": 46000
+          },
+          {
+            "index": 14,
+            "action": 15,
+            "actionKey": "attack15",
+            "attackRatio": 100,
+            "type": 4,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 131,
+            "level": 17,
+            "animMs": 3180,
+            "dmg": 46000
+          },
+          {
+            "index": 15,
+            "action": 16,
+            "actionKey": "attack16",
+            "attackRatio": 100,
+            "type": 4,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 131,
+            "level": 17,
+            "animMs": 3990,
+            "dmg": 46000
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 170,
+            "action": 1,
+            "level": 13,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 2000
+        }
+      },
+      {
+        "role": "body",
+        "mobId": "8930001",
+        "z": 22,
+        "level": 190,
+        "maxHP": 2000000000,
+        "maxMP": 64500,
+        "PADamage": 46000,
+        "MADamage": 36000,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 200,
+        "MDRate": 200,
+        "acc": 9999,
+        "eva": 750,
+        "bodyAttack": false,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 1000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 3960,
+            "dmg": 46000
+          }
+        ],
+        "skills": [],
+        "skillAnimMs": {}
+      }
+    ],
+    "extraMobs": [],
     "hpMult": 1,
     "dmgMult": 1,
     "cdMult": 1
@@ -2120,7 +3089,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 10,
             "elemAttr": "",
-            "animMs": 1800,
+            "animMs": 2760,
             "dmg": 24000
           },
           {
@@ -2132,7 +3101,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 2,
             "elemAttr": "",
-            "animMs": 6240,
+            "animMs": 7200,
             "dmg": 22000
           },
           {
@@ -2144,7 +3113,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 2,
             "elemAttr": "",
-            "animMs": 4770,
+            "animMs": 5730,
             "dmg": 22000
           },
           {
@@ -2187,7 +3156,7 @@ const IDLE_BOSS_WZ = {
   },
   "11": {
     "listId": "11",
-    "name": "粉豆",
+    "name": "粉紅豆豆",
     "parts": [
       {
         "role": "body",
@@ -2311,7 +3280,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 123,
             "level": 7,
-            "animMs": 1800,
+            "animMs": 3240,
             "dmg": 11500
           },
           {
@@ -2935,7 +3904,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 2,
             "elemAttr": "",
-            "animMs": 1620,
+            "animMs": 2340,
             "dmg": 25000
           },
           {
@@ -2949,7 +3918,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 131,
             "level": 13,
-            "animMs": 1860,
+            "animMs": 2580,
             "dmg": 25000
           },
           {
@@ -2963,7 +3932,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 173,
             "level": 1,
-            "animMs": 4080,
+            "animMs": 4920,
             "dmg": 20000
           },
           {
@@ -3058,8 +4027,8 @@ const IDLE_BOSS_WZ = {
         ],
         "skillAnimMs": {
           "skill1": 1620,
-          "skill2": 2400,
-          "skill3": 2520,
+          "skill2": 3120,
+          "skill3": 3360,
           "skill4": 2340,
           "skill5": 3120,
           "skill6": 2640,
@@ -3152,7 +4121,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 2,
             "elemAttr": "",
-            "animMs": 1200,
+            "animMs": 1560,
             "dmg": 21500
           },
           {
@@ -3166,7 +4135,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 121,
             "level": 15,
-            "animMs": 1440,
+            "animMs": 1710,
             "dmg": 7525
           }
         ],
@@ -3216,7 +4185,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 131,
             "level": 13,
-            "animMs": 1500,
+            "animMs": 2220,
             "dmg": 18000
           },
           {
@@ -3228,7 +4197,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 2,
             "elemAttr": "",
-            "animMs": 1200,
+            "animMs": 1920,
             "dmg": 18000
           },
           {
@@ -3240,7 +4209,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 2,
             "elemAttr": "",
-            "animMs": 1710,
+            "animMs": 2790,
             "dmg": 18000
           }
         ],
@@ -3304,7 +4273,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
-            "animMs": 1320,
+            "animMs": 2040,
             "dmg": 20000
           },
           {
@@ -3316,7 +4285,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
-            "animMs": 900,
+            "animMs": 1620,
             "dmg": 20000
           },
           {
@@ -3328,7 +4297,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 0,
             "elemAttr": "",
-            "animMs": 1200,
+            "animMs": 1920,
             "dmg": 15000
           }
         ],
@@ -3376,7 +4345,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 2,
             "elemAttr": "",
-            "animMs": 1350,
+            "animMs": 2250,
             "dmg": 2610
           },
           {
@@ -3388,7 +4357,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 2,
             "elemAttr": "",
-            "animMs": 1140,
+            "animMs": 2040,
             "dmg": 20500
           },
           {
@@ -3400,7 +4369,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 2,
             "elemAttr": "",
-            "animMs": 900,
+            "animMs": 1800,
             "dmg": 10250
           },
           {
@@ -3412,7 +4381,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 2,
             "elemAttr": "",
-            "animMs": 1560,
+            "animMs": 2460,
             "dmg": 14500
           }
         ],
@@ -3452,7 +4421,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 0,
             "elemAttr": "",
-            "animMs": 1530,
+            "animMs": 2250,
             "dmg": 14000
           },
           {
@@ -3464,7 +4433,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
-            "animMs": 1350,
+            "animMs": 2070,
             "dmg": 21000
           },
           {
@@ -3476,7 +4445,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
-            "animMs": 2070,
+            "animMs": 2790,
             "dmg": 21000
           }
         ],
@@ -3496,6 +4465,110 @@ const IDLE_BOSS_WZ = {
       }
     ],
     "extraMobs": [],
+    "hpMult": 1,
+    "dmgMult": 1,
+    "cdMult": 1
+  },
+  "18": {
+    "listId": "18",
+    "name": "濃姬",
+    "parts": [
+      {
+        "role": "body",
+        "mobId": "9450023",
+        "z": 20,
+        "level": 190,
+        "maxHP": 2100000000,
+        "maxMP": 100000,
+        "PADamage": 52000,
+        "MADamage": 52000,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 30,
+        "MDRate": 30,
+        "acc": 600,
+        "eva": 170,
+        "bodyAttack": false,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 0,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 132,
+            "level": 19,
+            "animMs": 2160,
+            "dmg": 52000
+          },
+          {
+            "index": 1,
+            "action": 4,
+            "actionKey": "attack4",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 137,
+            "level": 4,
+            "animMs": 2160,
+            "dmg": 52000
+          },
+          {
+            "index": 2,
+            "action": 6,
+            "actionKey": "attack6",
+            "attackRatio": 100,
+            "type": 101,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "animMs": 9120,
+            "dmg": 52000
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 0,
+            "action": 1,
+            "level": 0,
+            "effectAfter": 0
+          },
+          {
+            "index": 1,
+            "skill": 0,
+            "action": 2,
+            "level": 0,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 0,
+            "action": 4,
+            "level": 0,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 3120,
+          "skill2": 3120,
+          "skill4": 2070
+        }
+      }
+    ],
+    "extraMobs": [
+      "9450022",
+      "9450040"
+    ],
     "hpMult": 1,
     "dmgMult": 1,
     "cdMult": 1
@@ -3558,7 +4631,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 0,
             "elemAttr": "",
-            "animMs": 1920,
+            "animMs": 3120,
             "dmg": 3625
           },
           {
@@ -3570,7 +4643,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 100,
             "elemAttr": "",
-            "animMs": 1620,
+            "animMs": 2220,
             "dmg": 3806
           }
         ],
@@ -3625,7 +4698,7 @@ const IDLE_BOSS_WZ = {
           "skill2": 2880,
           "skill3": 3240,
           "skill4": 1440,
-          "skill5": 1800
+          "skill5": 3000
         }
       },
       {

@@ -1931,44 +1931,52 @@ const IdleHunt = (() => {
 
   function hurtPlayer(amount, opts = {}) {
     if (gmGodMode) return;
-    if (isPlayerHurtIframe()) return;
+    if (!opts.ignoreHurtIframe && isPlayerHurtIframe()) return;
     let dmg = Math.max(0, Math.floor(Number(amount) || 0));
     if (!(dmg > 0) || isPlayerDead()) return;
 
+    const ignoreMitigation = !!(opts.ignoreMitigation || opts.trueDamage);
     const mobLevel = Number.isFinite(Number(opts.mobLevel))
       ? Number(opts.mobLevel)
       : currentMobLevel(!!opts.isBoss);
     // 格擋：只依機率觸發「加強減傷」，不再全檔、不跳 guard
     let blocked = false;
-    if (typeof UiCharacterInfo !== 'undefined'
-      && typeof UiCharacterInfo.rollMobHitOutcome === 'function') {
-      const outcome = UiCharacterInfo.rollMobHitOutcome(mobLevel);
-      // BOSS 傷害不套用命中／迴避：不會 Miss（格擋仍生效）
-      if (outcome === 'miss' && !opts.isBoss) {
-        showPlayerStatusLabel('Miss');
-        return;
+    if (!ignoreMitigation) {
+      if (typeof UiCharacterInfo !== 'undefined'
+        && typeof UiCharacterInfo.rollMobHitOutcome === 'function') {
+        const outcome = UiCharacterInfo.rollMobHitOutcome(mobLevel);
+        // BOSS 傷害不套用命中／迴避：不會 Miss（格擋仍生效）
+        if (outcome === 'miss' && !opts.isBoss) {
+          showPlayerStatusLabel('Miss');
+          return;
+        }
+        if (outcome === 'block') blocked = true;
+      } else if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
+        const block = Number(SkillModifiers.getTotals().blockPct) || 0;
+        if (block > 0 && Math.random() * 100 < block) blocked = true;
       }
-      if (outcome === 'block') blocked = true;
-    } else if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
-      const block = Number(SkillModifiers.getTotals().blockPct) || 0;
-      if (block > 0 && Math.random() * 100 < block) blocked = true;
-    }
 
-    // 減傷；格擋觸發：減傷 + 減傷×格擋率（例 40+40×50%=60%），上限 80%，不會無敵
-    if (typeof UiCharacterInfo !== 'undefined'
-      && typeof UiCharacterInfo.applyIncomingDamageReduction === 'function') {
-      dmg = UiCharacterInfo.applyIncomingDamageReduction(dmg, {
-        blocked,
-        blockPct: blocked ? (Number(UiCharacterInfo.getHuntBlockPct?.()) || 0) : 0,
-      });
-    } else if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
-      const totals = SkillModifiers.getTotals();
-      const absorb = Math.min(80, Math.max(0, Number(totals.damAbsorbPct) || 0));
-      const blockPct = blocked ? Math.min(100, Number(totals.blockPct) || 0) : 0;
-      let reducePct = absorb;
-      if (blockPct > 0) reducePct = absorb + absorb * (blockPct / 100);
-      reducePct = Math.min(80, Math.max(0, reducePct));
-      dmg = Math.max(0, Math.floor(dmg * (1 - reducePct / 100)));
+      // 減傷；格擋觸發：減傷 + 減傷×格擋率（例 40+40×50%=60%），上限 80%，不會無敵
+      if (typeof UiCharacterInfo !== 'undefined'
+        && typeof UiCharacterInfo.applyIncomingDamageReduction === 'function') {
+        dmg = UiCharacterInfo.applyIncomingDamageReduction(dmg, {
+          blocked,
+          blockPct: blocked ? (Number(UiCharacterInfo.getHuntBlockPct?.()) || 0) : 0,
+        });
+      } else if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
+        const totals = SkillModifiers.getTotals();
+        const absorb = Math.min(80, Math.max(0, Number(totals.damAbsorbPct) || 0));
+        const blockPct = blocked ? Math.min(100, Number(totals.blockPct) || 0) : 0;
+        let reducePct = absorb;
+        if (blockPct > 0) reducePct = absorb + absorb * (blockPct / 100);
+        reducePct = Math.min(80, Math.max(0, reducePct));
+        dmg = Math.max(0, Math.floor(dmg * (1 - reducePct / 100)));
+      }
+
+      // 技能／格擋之後再套防禦力（官方物防公式）
+      if (dmg > 0) {
+        dmg = mitigateMobDamage(dmg, false, mobLevel);
+      }
     }
 
     if (!(dmg > 0)) {
@@ -2296,7 +2304,7 @@ const IdleHunt = (() => {
           && typeof SkillMobStatus.applyIncomingMobDamageMods === 'function') {
           rawDmg = SkillMobStatus.applyIncomingMobDamageMods(front, rawDmg);
         }
-        const dmg = mitigateMobDamage(rawDmg, !!s.isSkill, mobLevel);
+        // 防禦力改由 hurtPlayer 在技能／格擋之後統一套用，此處傳毛傷
         const hurtOpts = {
           mobLevel,
           isBoss: !!front.isBoss,
@@ -2304,7 +2312,7 @@ const IdleHunt = (() => {
         };
         IdleMobAnim.playAreaWarning(playerEl, iconId, bodyAction, {
           onDamage: () => {
-            applyMobAttackDamage(dmg, hurtOpts);
+            applyMobAttackDamage(rawDmg, hurtOpts);
             if (typeof IdleMobAnim.playPlayerHit === 'function') {
               IdleMobAnim.playPlayerHit(playerEl, iconId, bodyAction, { immediate: true });
             }
@@ -2317,14 +2325,13 @@ const IdleHunt = (() => {
           && typeof SkillMobStatus.applyIncomingMobDamageMods === 'function') {
           rawDmg = SkillMobStatus.applyIncomingMobDamageMods(front, rawDmg);
         }
-        const dmg = mitigateMobDamage(rawDmg, !!s.isSkill, mobLevel);
         const hurtOpts = {
           mobLevel,
           isBoss: !!front.isBoss,
           mob: front,
         };
         scheduleMobDamage(mobDamageDelayMs(iconId, bodyAction), () => {
-          applyMobAttackDamage(dmg, hurtOpts);
+          applyMobAttackDamage(rawDmg, hurtOpts);
         });
       }
       return;
