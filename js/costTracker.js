@@ -333,8 +333,8 @@ const CostTrackerModule = {
       if (typeof SessionPersistenceModule !== 'undefined') {
         SessionPersistenceModule.scheduleSave();
       }
+      this.scheduleLiveRefresh();
     }
-    this.scheduleLiveRefresh();
   },
 
   readStoredPricePayload() {

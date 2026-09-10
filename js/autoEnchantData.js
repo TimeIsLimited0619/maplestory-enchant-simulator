@@ -1523,6 +1523,20 @@ function aePotIsAnyAutoEnchantRunning() {
 }
 
 function aePotFlushAutoEnchantSideUi() {
+  if (typeof InventoryModule !== 'undefined') {
+    if (InventoryModule._renderRaf) {
+      cancelAnimationFrame(InventoryModule._renderRaf);
+      InventoryModule._renderRaf = 0;
+    }
+    InventoryModule.render?.();
+    InventoryModule.updateSlotCount?.();
+  }
+  if (typeof AddPotentialModule !== 'undefined') {
+    AddPotentialModule.renderMesoCost?.();
+  }
+  if (typeof BonusStatModule !== 'undefined') {
+    BonusStatModule.renderItemGrid?.();
+  }
   if (typeof CostTrackerModule !== 'undefined') {
     CostTrackerModule.refreshCostDisplay?.();
   }

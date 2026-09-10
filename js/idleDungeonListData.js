@@ -776,6 +776,19 @@ const IDLE_DUNGEON_LIST = [
             "name": "新對等方塊",
             "amount": 2,
             "chance": 100
+          },
+          {
+            "kind": "consume",
+            "consumeType": "cube",
+            "scrollId": "",
+            "cubeId": "union",
+            "hammerId": "",
+            "soulId": "",
+            "itemId": "",
+            "catalogId": "consume-cube-union",
+            "name": "結合方塊",
+            "amount": 1,
+            "chance": 100
           }
         ]
       },
@@ -822,6 +835,19 @@ const IDLE_DUNGEON_LIST = [
             "name": "新對等方塊",
             "amount": 3,
             "chance": 100
+          },
+          {
+            "kind": "consume",
+            "consumeType": "cube",
+            "scrollId": "",
+            "cubeId": "union",
+            "hammerId": "",
+            "soulId": "",
+            "itemId": "",
+            "catalogId": "consume-cube-union",
+            "name": "結合方塊",
+            "amount": 2,
+            "chance": 100
           }
         ]
       },
@@ -867,6 +893,19 @@ const IDLE_DUNGEON_LIST = [
             "catalogId": "consume-cube-equal",
             "name": "新對等方塊",
             "amount": 5,
+            "chance": 100
+          },
+          {
+            "kind": "consume",
+            "consumeType": "cube",
+            "scrollId": "",
+            "cubeId": "union",
+            "hammerId": "",
+            "soulId": "",
+            "itemId": "",
+            "catalogId": "consume-cube-union",
+            "name": "結合方塊",
+            "amount": 3,
             "chance": 100
           }
         ]

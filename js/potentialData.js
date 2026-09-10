@@ -162,8 +162,13 @@ function consumePlayerCube(cubeId) {
   }
   trackCostUsage('cube', cubeId);
   if (typeof InventoryModule !== 'undefined') {
-    InventoryModule.render?.();
-    InventoryModule.updateSlotCount?.();
+    // 超速自動重設：同步整表重繪會堵死 setTimeout delay，改延後合併
+    if (typeof aePotIsAnyAutoEnchantRunning === 'function' && aePotIsAnyAutoEnchantRunning()) {
+      InventoryModule.scheduleRender?.();
+    } else {
+      InventoryModule.render?.();
+      InventoryModule.updateSlotCount?.();
+    }
   }
   return true;
 }

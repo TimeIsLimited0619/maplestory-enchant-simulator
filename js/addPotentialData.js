@@ -134,11 +134,16 @@ function consumePlayerAddPotCube(cubeId) {
   if (meso > 0 && typeof trackCostEvent === 'function') {
     trackCostEvent('addPotentialMeso', meso);
   }
+  const autoBusy = typeof aePotIsAnyAutoEnchantRunning === 'function' && aePotIsAnyAutoEnchantRunning();
   if (typeof InventoryModule !== 'undefined') {
-    InventoryModule.render?.();
-    InventoryModule.updateSlotCount?.();
+    if (autoBusy) {
+      InventoryModule.scheduleRender?.();
+    } else {
+      InventoryModule.render?.();
+      InventoryModule.updateSlotCount?.();
+    }
   }
-  if (typeof AddPotentialModule !== 'undefined') {
+  if (!autoBusy && typeof AddPotentialModule !== 'undefined') {
     AddPotentialModule.renderMesoCost?.();
   }
   return true;

@@ -15573,7 +15573,21 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "killGold": 118000,
     "bossKillExp": 118000,
     "bossKillGold": 118000,
-    "mobDrops": [],
+    "mobDrops": [
+      {
+        "kind": "consume",
+        "consumeType": "cube",
+        "scrollId": "",
+        "cubeId": "union",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-cube-union",
+        "name": "結合方塊",
+        "chance": 5,
+        "amount": 1
+      }
+    ],
     "bossDrops": [],
     "drops": [],
     "custom": true,

@@ -2263,6 +2263,28 @@ const ITEM_DATABASE = {
     price: 1
   }),
 
+  // 部位修正：覺醒的記憶徽章與米特拉同為能源／徽章（Em），勿用副手 Si
+'01190544': buildEquipFromWzInfo('01190544', '覺醒的記憶徽章', {
+    wzPart: 'Emblem',
+    islot: 'Em',
+    vslot: 'Em',
+    reqJob: 0,
+    reqLevel: 100,
+    incSTR: 15,
+    incDEX: 15,
+    incINT: 15,
+    incLUK: 15,
+    incPAD: 10,
+    incMAD: 10,
+    incSpeed: 15,
+    incJump: 15,
+    tuc: 0,
+    price: 1,
+    cash: 0,
+    tradeBlock: 1,
+    notSale: 1,
+  }),
+
 '01190566': buildEquipFromWzInfo('01190566', '米特拉的憤怒: 劍士', {
     wzPart: 'Emblem',
     islot: 'Em',

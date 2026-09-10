@@ -312,11 +312,16 @@ function consumePlayerBonusStatItem(itemId, amount = 1) {
   let next = Math.max(0, count - need);
   if (!idle && next <= 0) next = DEFAULT_BONUS_STAT_ITEM_COUNT;
   playerBonusStatItemCounts[itemId] = next;
+  const autoBusy = typeof aePotIsAnyAutoEnchantRunning === 'function' && aePotIsAnyAutoEnchantRunning();
   if (typeof InventoryModule !== 'undefined') {
-    InventoryModule.render?.();
-    InventoryModule.updateSlotCount?.();
+    if (autoBusy) {
+      InventoryModule.scheduleRender?.();
+    } else {
+      InventoryModule.render?.();
+      InventoryModule.updateSlotCount?.();
+    }
   }
-  if (typeof BonusStatModule !== 'undefined') BonusStatModule.renderItemGrid?.();
+  if (!autoBusy && typeof BonusStatModule !== 'undefined') BonusStatModule.renderItemGrid?.();
   return true;
 }
 
