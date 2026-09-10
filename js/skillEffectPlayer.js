@@ -7,8 +7,6 @@ const SkillEffectPlayer = (() => {
   const projectiles = new Set();
   const preloadCache = new Map();
   let nextId = 1;
-  /** 非循環 hit／cast 同時上限；超過就略過特效，傷害仍照結 */
-  const MAX_TRANSIENT_FX = 40;
   let sharedRaf = null;
   const fieldPtCache = new Map();
   let fieldPtCacheFrame = 0;
@@ -117,7 +115,9 @@ const SkillEffectPlayer = (() => {
     const dt = Math.max(0, ts - inst.lastTs);
     inst.lastTs = ts;
     inst.acc += dt;
-    if (!syncAnchor(inst)) return;
+    if (inst.loop || inst.resolveAnchor) {
+      if (!syncAnchor(inst)) return;
+    }
 
     const frames = inst.frames;
     while (frames.length > 0) {
@@ -158,6 +158,14 @@ const SkillEffectPlayer = (() => {
 
   function startInstance(inst) {
     if (!instances.has(inst)) return;
+    if (typeof inst.resolveAnchor === 'function' && !inst.loop) {
+      const a = inst.resolveAnchor();
+      if (a && Number.isFinite(a.x) && Number.isFinite(a.y)) {
+        inst.fixedX = a.x;
+        inst.fixedY = a.y;
+        inst.resolveAnchor = null;
+      }
+    }
     syncAnchor(inst);
     applyFrame(inst);
     startSharedLoop();
@@ -173,7 +181,7 @@ const SkillEffectPlayer = (() => {
     img.alt = '';
     img.draggable = false;
     img.hidden = true;
-    img.decoding = 'sync';
+    img.decoding = 'async';
     stage.appendChild(img);
     parentEl.appendChild(stage);
     const z = Number(opts.zIndex);
@@ -200,12 +208,8 @@ const SkillEffectPlayer = (() => {
     return inst;
   }
 
-  function countTransientFx() {
-    let n = 0;
-    instances.forEach((inst) => {
-      if (!inst.loop) n += 1;
-    });
-    return n;
+  function framesAreReady(list) {
+    return list.every((f) => !f.src || decodedImage(f.src));
   }
 
   function playFrames(parentEl, frames, opts = {}) {
@@ -214,12 +218,10 @@ const SkillEffectPlayer = (() => {
     }
     const list = (frames || []).filter((f) => f && (f.src || f.delay));
     if (!parentEl || !list.length) return null;
-    if (!opts.loop && !opts.forcePlay && countTransientFx() >= MAX_TRANSIENT_FX) {
-      return null;
-    }
     const inst = createInstance(parentEl, list, opts);
     if (!inst) return null;
-    ensurePreloaded(list).then(() => startInstance(inst));
+    if (framesAreReady(list)) startInstance(inst);
+    else ensurePreloaded(list).then(() => startInstance(inst));
     return inst.id;
   }
 
@@ -234,7 +236,9 @@ const SkillEffectPlayer = (() => {
     const originY = Number.isFinite(oy) && oy > 0 ? oy : 64;
     const originX = Number.isFinite(ox) ? ox : 0;
     const scale = actor.classList.contains('is-boss-scale-sprite')
-      ? (parseFloat(getComputedStyle(actor).getPropertyValue('--boss-sprite-scale')) || 2)
+      ? (parseFloat(actor.style.getPropertyValue('--boss-sprite-scale'))
+        || parseFloat(getComputedStyle(actor).getPropertyValue('--boss-sprite-scale'))
+        || 2)
       : 1;
 
     const img = actor.querySelector(
@@ -433,16 +437,27 @@ const SkillEffectPlayer = (() => {
       ? actorHint
       : (uid ? fieldEl?.querySelector(`.idle-actor--mob[data-uid="${uid}"]`) : null);
     let result = null;
-    if (actor && fieldEl) {
-      const fr = fieldEl.getBoundingClientRect();
-      const ar = actor.getBoundingClientRect();
+    if (actor) {
       const local = resolveMobCenterLocal(actor);
-      result = {
-        x: ar.left - fr.left + local.x,
-        y: ar.top - fr.top + local.y,
-        mob,
-        actor,
-      };
+      const sx = parseFloat(actor.style.left);
+      const sy = parseFloat(actor.style.top);
+      if (Number.isFinite(sx) && Number.isFinite(sy)) {
+        result = {
+          x: sx + (Number(local.x) || 0),
+          y: sy + (Number(local.y) || 0),
+          mob,
+          actor,
+        };
+      } else if (fieldEl) {
+        const fr = fieldEl.getBoundingClientRect();
+        const ar = actor.getBoundingClientRect();
+        result = {
+          x: ar.left - fr.left + (Number(local.x) || 0),
+          y: ar.top - fr.top + (Number(local.y) || 0),
+          mob,
+          actor,
+        };
+      }
     } else if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.mobFieldPoint === 'function') {
       const pt = IdleHunt.mobFieldPoint(mob);
       if (pt && Number.isFinite(pt.x) && Number.isFinite(pt.y)) {

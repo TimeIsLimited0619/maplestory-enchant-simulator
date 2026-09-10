@@ -21,11 +21,11 @@ const DamageNumber = (() => {
 
   /**
    * 場上同時存在的數字上限。
-   * 需能覆蓋「可見隊列 × 多段」一波（約 10×8＋追擊），再高只會讓 RAF 寫 style 卡死。
+   * 需能覆蓋「隊列 mob × 多段」一次打出；超過才回收最舊。
    */
-  const MAX_ON_FIELD = 200;
+  const MAX_ON_FIELD = 640;
   /** 連鎖等同幀大量數字：每幀最多掛載幾個，避免主執行緒卡頓 */
-  const SPAWN_PER_FRAME = 16;
+  const SPAWN_PER_FRAME = 28;
   const STACK_PRUNE_EVERY_TICKS = 45;
   const PLAYER_STACK_KEY = 'player';
 
@@ -123,7 +123,6 @@ const DamageNumber = (() => {
 
   function trimOldestIfNeeded() {
     while (instances.size >= MAX_ON_FIELD) {
-      // Set 插入序＝生成序：清最早已開始播放的，避免掃全體找 max age
       let victim = null;
       for (const inst of instances) {
         if (inst.age < inst.delay) continue;
@@ -381,8 +380,6 @@ const DamageNumber = (() => {
       const waited = Math.max(0, (performance.now() - item.queuedAt) / 1000);
       const inst = {
         el,
-        baseX: Math.round(Number(item.targetX) || 0),
-        baseY: Math.round(Number(item.targetY) || 0),
         age: waited,
         delay: Math.max(0, Number(item.opts.delay) || 0),
         stackIndex: Math.max(0, Math.floor(Number(item.opts.stackIndex) || 0)),
@@ -673,8 +670,6 @@ const DamageNumber = (() => {
 
       const inst = {
         el: pop,
-        baseX: Math.round(point.x + jitter),
-        baseY: Math.round(point.y),
         age: 0,
         delay: Number.isFinite(opts.delay) ? Math.max(0, Number(opts.delay)) : delay,
         stackIndex,

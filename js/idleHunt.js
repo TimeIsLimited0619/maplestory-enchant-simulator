@@ -1505,9 +1505,11 @@ const IdleHunt = (() => {
   function stopMobMovement(el) {
     if (!el) return;
     el.dataset.walkToken = String(++mobWalkSeq);
+    const moving = el.classList.contains('is-moving');
     el.classList.remove('is-moving');
     el.dataset.moveUntil = '0';
     el.style.transition = 'none';
+    if (!moving) return;
     const cs = window.getComputedStyle(el);
     const left = parseFloat(cs.left);
     const top = parseFloat(cs.top);
@@ -2897,17 +2899,22 @@ const IdleHunt = (() => {
 
     const live = new Set(state.dying.map((d) => String(d.uid)));
     const entryPoint = queueEntryPoint(zone, spawn);
+    const actorsByUid = new Map();
+    stage.querySelectorAll('.idle-actor--mob').forEach((node) => {
+      const uid = node.getAttribute('data-uid');
+      if (uid) actorsByUid.set(String(uid), node);
+    });
     state.queue.slice(0, VISIBLE_QUEUE_LEN).forEach((mob, i) => {
       live.add(String(mob.uid));
-      let el = stage.querySelector(`.idle-actor--mob[data-uid="${mob.uid}"]`);
+      let el = actorsByUid.get(String(mob.uid));
       const point = spawn.mobs[i] || spawn.mobs[spawn.mobs.length - 1];
       const stagger = i * MOB_STEP_STAGGER_MS;
       if (!el) {
         stage.insertAdjacentHTML('beforeend', actorMarkup('mob', mob, i, entryPoint));
         el = stage.querySelector(`.idle-actor--mob[data-uid="${mob.uid}"]`);
+        actorsByUid.set(String(mob.uid), el);
         applyMobStackZ(el, mob, i, false);
         el.dataset.queueSlot = String(i);
-        // 立刻綁定 stand，避免過圖淡出後仍空白一幀
         bindMobSprite(el, mob, 'stand');
         requestAnimationFrame(() => {
           if (!el?.isConnected || el.dataset.introLock) return;
@@ -2944,10 +2951,11 @@ const IdleHunt = (() => {
       }
     });
     state.dying.forEach((row) => {
-      let el = stage.querySelector(`.idle-actor--mob[data-uid="${row.uid}"]`);
+      let el = actorsByUid.get(String(row.uid));
       if (!el) {
         stage.insertAdjacentHTML('beforeend', actorMarkup('mob', { ...row, dying: true, hp: 0, maxHp: 1 }, 0, row));
         el = stage.querySelector(`.idle-actor--mob[data-uid="${row.uid}"]`);
+        actorsByUid.set(String(row.uid), el);
         setActorPoint(el, row, false);
         bindMobSprite(el, row, 'die');
       } else if (!el.classList.contains('is-dying')) {
