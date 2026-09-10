@@ -7,6 +7,11 @@ const SkillEffectPlayer = (() => {
   const projectiles = new Set();
   const preloadCache = new Map();
   let nextId = 1;
+  /** 非循環 hit／cast 同時上限；超過就略過特效，傷害仍照結 */
+  const MAX_TRANSIENT_FX = 40;
+  let sharedRaf = null;
+  const fieldPtCache = new Map();
+  let fieldPtCacheFrame = 0;
 
   function scaleRealMs(ms) {
     if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.scaleDelayMs === 'function') {
@@ -73,12 +78,9 @@ const SkillEffectPlayer = (() => {
 
   function destroy(inst) {
     if (!inst) return;
-    if (inst.rafId != null) {
-      cancelAnimationFrame(inst.rafId);
-      inst.rafId = null;
-    }
     inst.stage?.remove();
     instances.delete(inst);
+    if (!instances.size) stopSharedLoop();
   }
 
   function facingTransform(inst) {
@@ -109,7 +111,7 @@ const SkillEffectPlayer = (() => {
     return true;
   }
 
-  function tick(inst, ts) {
+  function tickInstance(inst, ts) {
     if (!instances.has(inst)) return;
     if (!inst.lastTs) inst.lastTs = ts;
     const dt = Math.max(0, ts - inst.lastTs);
@@ -135,15 +137,30 @@ const SkillEffectPlayer = (() => {
       const shown = applyFrame(inst);
       if (frames[inst.frameIdx]?.src && !shown) break;
     }
+  }
 
-    inst.rafId = requestAnimationFrame((t) => tick(inst, t));
+  function startSharedLoop() {
+    if (sharedRaf != null) return;
+    sharedRaf = requestAnimationFrame(sharedTick);
+  }
+
+  function stopSharedLoop() {
+    if (sharedRaf == null) return;
+    cancelAnimationFrame(sharedRaf);
+    sharedRaf = null;
+  }
+
+  function sharedTick(ts) {
+    sharedRaf = requestAnimationFrame(sharedTick);
+    instances.forEach((inst) => tickInstance(inst, ts));
+    if (!instances.size) stopSharedLoop();
   }
 
   function startInstance(inst) {
     if (!instances.has(inst)) return;
     syncAnchor(inst);
     applyFrame(inst);
-    inst.rafId = requestAnimationFrame((t) => tick(inst, t));
+    startSharedLoop();
   }
 
   function createInstance(parentEl, frames, opts = {}) {
@@ -183,12 +200,23 @@ const SkillEffectPlayer = (() => {
     return inst;
   }
 
+  function countTransientFx() {
+    let n = 0;
+    instances.forEach((inst) => {
+      if (!inst.loop) n += 1;
+    });
+    return n;
+  }
+
   function playFrames(parentEl, frames, opts = {}) {
     if (typeof document !== 'undefined' && document.hidden && !opts.forcePlay) {
       return null;
     }
     const list = (frames || []).filter((f) => f && (f.src || f.delay));
     if (!parentEl || !list.length) return null;
+    if (!opts.loop && !opts.forcePlay && countTransientFx() >= MAX_TRANSIENT_FX) {
+      return null;
+    }
     const inst = createInstance(parentEl, list, opts);
     if (!inst) return null;
     ensurePreloaded(list).then(() => startInstance(inst));
@@ -301,7 +329,7 @@ const SkillEffectPlayer = (() => {
       if (!IdleHunt.isMobVisibleInField(mob)) return null;
     }
     const uid = mob.uid != null ? String(mob.uid) : '';
-    const actor = uid
+    let actor = uid
       ? fieldEl?.querySelector(`.idle-actor--mob[data-uid="${uid}"]`)
       : null;
     if (!fieldEl || !actor) return null;
@@ -316,9 +344,13 @@ const SkillEffectPlayer = (() => {
       className: opts.className || 'idle-skill-fx-stage idle-skill-fx-stage--hit',
       mirrorX: false,
       resolveAnchor: () => {
-        const live = uid
-          ? fieldEl.querySelector(`.idle-actor--mob[data-uid="${uid}"]`)
-          : actor;
+        let live = actor;
+        if (!live?.isConnected) {
+          live = uid
+            ? fieldEl.querySelector(`.idle-actor--mob[data-uid="${uid}"]`)
+            : null;
+          actor = live;
+        }
         if (!live || !live.isConnected) return null;
         if (live.style.display === 'none' || live.classList.contains('is-hidden-slot')
           || live.classList.contains('is-dead')) {
@@ -329,7 +361,7 @@ const SkillEffectPlayer = (() => {
           const pt = localAnchorToField(fieldEl, live, local);
           if (pt) return pt;
         }
-        const pt = fieldPointFromMob(fieldEl, mob);
+        const pt = fieldPointFromMob(fieldEl, mob, live);
         if (!pt) return null;
         return { x: pt.x, y: pt.y };
       },
@@ -387,29 +419,38 @@ const SkillEffectPlayer = (() => {
     return { x, y, feetX, feetY };
   }
 
-  function fieldPointFromMob(fieldEl, mob) {
+  function fieldPointFromMob(fieldEl, mob, actorHint) {
     const uid = mob?.uid != null ? String(mob.uid) : '';
-    const actor = uid
-      ? fieldEl.querySelector(`.idle-actor--mob[data-uid="${uid}"]`)
-      : null;
-    if (actor) {
+    const frame = Math.floor(performance.now() / 16);
+    if (frame !== fieldPtCacheFrame) {
+      fieldPtCache.clear();
+      fieldPtCacheFrame = frame;
+    }
+    const cacheKey = `${fieldEl?.id || ''}:${uid}`;
+    if (uid && fieldPtCache.has(cacheKey)) return fieldPtCache.get(cacheKey);
+
+    const actor = actorHint?.isConnected
+      ? actorHint
+      : (uid ? fieldEl?.querySelector(`.idle-actor--mob[data-uid="${uid}"]`) : null);
+    let result = null;
+    if (actor && fieldEl) {
       const fr = fieldEl.getBoundingClientRect();
       const ar = actor.getBoundingClientRect();
       const local = resolveMobCenterLocal(actor);
-      return {
+      result = {
         x: ar.left - fr.left + local.x,
         y: ar.top - fr.top + local.y,
         mob,
         actor,
       };
-    }
-    if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.mobFieldPoint === 'function') {
+    } else if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.mobFieldPoint === 'function') {
       const pt = IdleHunt.mobFieldPoint(mob);
       if (pt && Number.isFinite(pt.x) && Number.isFinite(pt.y)) {
-        return { x: pt.x, y: pt.y, mob, actor: null };
+        result = { x: pt.x, y: pt.y, mob, actor: null };
       }
     }
-    return null;
+    if (uid && result) fieldPtCache.set(cacheKey, result);
+    return result;
   }
 
   /**
@@ -895,6 +936,8 @@ const SkillEffectPlayer = (() => {
       try { p.cancel(false); } catch (_) { /* ignore */ }
     });
     projectiles.clear();
+    stopSharedLoop();
+    fieldPtCache.clear();
     scrubTransientFxDom({ includeLoop: true });
   }
 

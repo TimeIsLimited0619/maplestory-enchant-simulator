@@ -1234,6 +1234,11 @@ const SkillCombat = (() => {
 
   function readCritMultiplier() {
     try {
+      if (typeof UiCharacterInfo !== 'undefined'
+        && typeof UiCharacterInfo.getHuntCritMultiplier === 'function') {
+        const n = Number(UiCharacterInfo.getHuntCritMultiplier());
+        if (Number.isFinite(n) && n > 0) return n;
+      }
       if (typeof CombatPower !== 'undefined' && typeof CombatPower.resolveCurrentInputs === 'function') {
         let snapshot = null;
         if (typeof EquipStatPanel !== 'undefined' && typeof EquipStatPanel.buildSnapshot === 'function') {

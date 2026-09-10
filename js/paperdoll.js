@@ -1174,9 +1174,14 @@ const Paperdoll = (() => {
       stage.className = 'paperdoll-stage paperdoll-stage--hunt idle-actor-sprite';
       if (img) img.replaceWith(stage);
       else slot.appendChild(stage);
+      mount(stage);
+      syncStandHitAnchor(stage);
+      return;
     }
-    mount(stage);
-    syncStandHitAnchor(stage);
+    if (!hosts.has(stage)) {
+      mount(stage);
+      syncStandHitAnchor(stage);
+    }
   }
 
   /** NPC 商店右側預覽：固定 stand，腳底對齊 avatarPreview */

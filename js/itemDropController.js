@@ -41,6 +41,8 @@ const ItemDropController = (() => {
   let lootDelaySec = 0;
   let rafId = null;
   let lastTs = 0;
+  let cachedPlayerPoint = null;
+  let cachedPlayerPointAt = 0;
 
   function mesoIdForAmount(amount) {
     const n = Math.max(0, Math.floor(Number(amount) || 0));
@@ -80,13 +82,21 @@ const ItemDropController = (() => {
   }
 
   function playerPoint() {
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (cachedPlayerPoint && (now - cachedPlayerPointAt) < 80) return cachedPlayerPoint;
     const root = fieldRoot();
     const player = root?.querySelector?.('[data-sprite-slot="player"]')
       || stageEl?.querySelector?.('[data-sprite-slot="player"]');
-    if (!player) return { x: 200, y: 360 };
+    if (!player) {
+      cachedPlayerPoint = { x: 200, y: 360 };
+      cachedPlayerPointAt = now;
+      return cachedPlayerPoint;
+    }
     const x = parseFloat(player.style.left) || 200;
     const y = parseFloat(player.style.top) || 400;
-    return { x, y: y - 40 };
+    cachedPlayerPoint = { x, y: y - 40 };
+    cachedPlayerPointAt = now;
+    return cachedPlayerPoint;
   }
 
   function toIconRawPath(url) {
@@ -317,7 +327,6 @@ const ItemDropController = (() => {
       badge.textContent = String(qty);
       el.appendChild(badge);
     }
-    layer.appendChild(el);
 
     const item = {
       id: nextId++,
@@ -475,18 +484,23 @@ const ItemDropController = (() => {
     if (!floating.length) return;
 
     const sim = { equipTaken: 0, etcTaken: 0, consumeTaken: 0 };
+    const countEmpty = (arr) => {
+      if (!arr) return 0;
+      let n = 0;
+      for (let i = 0; i < arr.length; i += 1) {
+        if (!arr[i]) n += 1;
+      }
+      return n;
+    };
+    const freeEquip = countEmpty(typeof playerInventoryEquip !== 'undefined' ? playerInventoryEquip : null);
+    const freeEtc = countEmpty(typeof playerInventoryEtc !== 'undefined' ? playerInventoryEtc : null);
+    const freeConsume = countEmpty(typeof playerInventoryConsume !== 'undefined' ? playerInventoryConsume : null);
 
     const acceptSim = (row) => {
       if (!canAcceptRow(row)) return false;
       if (row.kind === 'meso') return true;
       if (row.kind === 'equip') {
-        let free = 0;
-        if (typeof playerInventoryEquip !== 'undefined') {
-          for (let i = 0; i < playerInventoryEquip.length; i++) {
-            if (!playerInventoryEquip[i]) free += 1;
-          }
-        }
-        if (sim.equipTaken >= free) return false;
+        if (sim.equipTaken >= freeEquip) return false;
         sim.equipTaken += 1;
         return true;
       }
@@ -495,24 +509,12 @@ const ItemDropController = (() => {
         const hasStack = typeof playerInventoryEtc !== 'undefined'
           && playerInventoryEtc.some((e) => e && String(e.itemId) === id);
         if (hasStack) return true;
-        let free = 0;
-        if (typeof playerInventoryEtc !== 'undefined') {
-          for (let i = 0; i < playerInventoryEtc.length; i++) {
-            if (!playerInventoryEtc[i]) free += 1;
-          }
-        }
-        if (free - sim.etcTaken <= 0) return false;
+        if (freeEtc - sim.etcTaken <= 0) return false;
         sim.etcTaken += 1;
         return true;
       }
       if (typeof InventoryModule !== 'undefined' && InventoryModule.consumeDropNeedsNewSlot?.(row)) {
-        let free = 0;
-        if (typeof playerInventoryConsume !== 'undefined') {
-          for (let i = 0; i < playerInventoryConsume.length; i++) {
-            if (!playerInventoryConsume[i]) free += 1;
-          }
-        }
-        if (free - sim.consumeTaken <= 0) return false;
+        if (freeConsume - sim.consumeTaken <= 0) return false;
         sim.consumeTaken += 1;
       }
       return true;
@@ -537,18 +539,19 @@ const ItemDropController = (() => {
       tryStartLootPass();
     }
 
-    [...items].forEach((item) => {
+    for (let i = items.length - 1; i >= 0; i -= 1) {
+      const item = items[i];
       item.spawnAge += step;
       if (item.state !== STATE.LOOTING && item.spawnAge >= DESPAWN_AGE) {
         destroyItem(item);
-        return;
+        continue;
       }
       if (item.mesoFrames) tickMesoAnim(item, step);
       if (item.state === STATE.SPAWNING) tickSpawning(item, step);
       else if (item.state === STATE.FLOATING) tickFloating(item, step);
       else if (item.state === STATE.LOOTING) tickLooting(item, step);
-      if (items.includes(item)) syncDom(item);
-    });
+      if (item.el?.isConnected) syncDom(item);
+    }
   }
 
   function loop(ts) {
@@ -574,7 +577,10 @@ const ItemDropController = (() => {
   }
 
   function init(stage, opts = {}) {
-    if (stageEl !== stage) layerEl = null;
+    if (stageEl !== stage) {
+      layerEl = null;
+      cachedPlayerPoint = null;
+    }
     stageEl = stage || null;
     onDropText = typeof opts.onDropText === 'function' ? opts.onDropText : null;
     onGrantMeso = typeof opts.onGrantMeso === 'function' ? opts.onGrantMeso : null;
@@ -621,13 +627,17 @@ const ItemDropController = (() => {
       : null;
     const landXs = resolveLandXs(ox.x, list.length, LAND_SPACING);
     const nearXs = resolveLandXs(ox.x, list.length, FIRST_LAND_SPACING);
+    const layer = ensureLayer();
+    const frag = document.createDocumentFragment();
     list.forEach((row, i) => {
       const ent = createEntity(row, ox, gy, i, list.length, landXs[i], nearXs[i]);
       if (ent) {
         if (delayOverride != null) ent.lootAfter = delayOverride;
+        if (ent.el) frag.appendChild(ent.el);
         items.push(ent);
       }
     });
+    if (layer && frag.childNodes.length) layer.appendChild(frag);
     startLoop();
   }
 

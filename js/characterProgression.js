@@ -176,7 +176,13 @@ const CharacterProgression = (() => {
     } catch (_) { /* ignore */ }
   }
 
+  let expSaveTimer = 0;
+
   function notify() {
+    if (expSaveTimer) {
+      clearTimeout(expSaveTimer);
+      expSaveTimer = 0;
+    }
     save();
     if (typeof CharacterCombatPanel !== 'undefined') CharacterCombatPanel.syncToCombatPower?.();
     if (typeof UiCharacterInfo !== 'undefined') UiCharacterInfo.refresh?.();
@@ -191,8 +197,19 @@ const CharacterProgression = (() => {
   }
 
   function notifyExpOnly() {
+    if (expSaveTimer) return;
+    expSaveTimer = setTimeout(() => {
+      expSaveTimer = 0;
+      save();
+    }, 400);
+  }
+
+  function flushSave() {
+    if (expSaveTimer) {
+      clearTimeout(expSaveTimer);
+      expSaveTimer = 0;
+    }
     save();
-    if (typeof UiApDistribution !== 'undefined') UiApDistribution.refresh?.();
   }
 
   function expToNext() {
@@ -610,6 +627,7 @@ const CharacterProgression = (() => {
     expToNext,
     expProgress,
     save,
+    flushSave,
     reloadFromStorage,
     resetDefault,
     getCombatBonus,

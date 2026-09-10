@@ -16,6 +16,7 @@ const InventoryModule = {
   disassemblePick: null,
   /** 鎖定模式：null | 'slot' | 'item' */
   lockMode: null,
+  _renderRaf: 0,
 
   SLOT_COUNT: INVENTORY_SLOT_COUNT,
   /** 小背包：4 欄 × 32 列 */
@@ -1063,6 +1064,18 @@ const InventoryModule = {
     this.hideEtcTooltip?.();
   },
 
+  scheduleRender() {
+    if (this._renderRaf) return;
+    const raf = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame.bind(window)
+      : (fn) => setTimeout(fn, 16);
+    this._renderRaf = raf(() => {
+      this._renderRaf = 0;
+      this.render();
+      this.updateSlotCount();
+    });
+  },
+
   render() {
     const grid = document.getElementById('inventoryGrid');
     if (!grid) return;
@@ -1457,7 +1470,10 @@ const InventoryModule = {
 
     if (typeof SessionPersistenceModule !== 'undefined') SessionPersistenceModule.scheduleSave();
     if (opts.switchTab && this.tab !== 'etc') this.setTab('etc');
-    else if (this.tab === 'etc') this.render();
+    else if (this.tab === 'etc') {
+      if (opts.silent) this.scheduleRender();
+      else this.render();
+    }
     this.updateSlotCount();
     if (!opts.silent && typeof addLog === 'function') {
       addLog(`[${opts.logTag || '放置'}] 已將【${name}】放入其他欄。`, 'log-success');
@@ -2138,8 +2154,11 @@ const InventoryModule = {
     if (typeof SessionPersistenceModule !== 'undefined') {
       SessionPersistenceModule.scheduleSave();
     }
-    this.render();
-    this.updateSlotCount();
+    if (opts.silent) this.scheduleRender();
+    else {
+      this.render();
+      this.updateSlotCount();
+    }
     const name = ITEM_DATABASE[itemId]?.name || itemId;
     if (!opts.silent && typeof addLog === 'function') {
       addLog(`[${opts.logTag || '清單'}] 已將【${name}】放入物品欄。`, 'log-success');
@@ -2284,8 +2303,11 @@ const InventoryModule = {
     if (ok) {
       if (typeof SessionPersistenceModule !== 'undefined') SessionPersistenceModule.scheduleSave();
       if (opts.switchTab && this.tab !== 'consume') this.setTab('consume');
-      this.render();
-      this.updateSlotCount();
+      else if (opts.silent) this.scheduleRender();
+      else {
+        this.render();
+        this.updateSlotCount();
+      }
       if (!opts.silent && typeof addLog === 'function') {
         addLog(`[${logTag}] 已將【${name}】放入消耗欄。`, 'log-success');
       }

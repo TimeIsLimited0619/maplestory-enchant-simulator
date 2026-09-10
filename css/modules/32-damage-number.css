@@ -17,7 +17,6 @@
   flex-direction: row;
   align-items: flex-end;
   transform-origin: center bottom;
-  will-change: transform, opacity;
   pointer-events: none;
   line-height: 0;
 }

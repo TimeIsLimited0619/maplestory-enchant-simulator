@@ -85,6 +85,7 @@ const IdleHunt = (() => {
   let lastMemReleaseAt = 0;
   /** @type {ReturnType<typeof setInterval>|null} */
   let memReleaseTimer = null;
+  let saveTimer = 0;
   let spawnSeq = 0;
   let mobWalkSeq = 0;
   let mobDamageSeq = 0;
@@ -890,7 +891,23 @@ const IdleHunt = (() => {
     }
   }
 
-  function save() {
+  function save(opts = {}) {
+    if (opts.flush) {
+      if (saveTimer) {
+        clearTimeout(saveTimer);
+        saveTimer = 0;
+      }
+      writeSave();
+      return;
+    }
+    if (saveTimer) return;
+    saveTimer = window.setTimeout(() => {
+      saveTimer = 0;
+      writeSave();
+    }, 400);
+  }
+
+  function writeSave() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         kills: state.kills,
@@ -2183,7 +2200,7 @@ const IdleHunt = (() => {
       resetMobAtkAccums();
     }
     fillQueue();
-    if (open) render();
+    scheduleHuntRender();
   }
 
   function flushDeferredKills() {
@@ -2816,10 +2833,18 @@ const IdleHunt = (() => {
   function pruneDying() {
     const minMs = typeof IdleMobAnim !== 'undefined' ? IdleMobAnim.DIE_MIN_MS : 800;
     const maxMs = typeof IdleMobAnim !== 'undefined' ? IdleMobAnim.DIE_MAX_MS : 1600;
+    const stage = $('idleHuntField')?.querySelector('.idle-hunt-stage');
+    const byUid = new Map();
+    if (stage) {
+      stage.querySelectorAll('.idle-actor--mob').forEach((el) => {
+        const uid = el.getAttribute('data-uid');
+        if (uid) byUid.set(String(uid), el);
+      });
+    }
     const keep = [];
     state.dying.forEach((row) => {
       row.elapsed = (Number(row.elapsed) || 0) + TICK_MS;
-      const el = $('idleHuntField')?.querySelector(`.idle-actor--mob[data-uid="${row.uid}"]`);
+      const el = byUid.get(String(row.uid));
       const done = el?.dataset.dieDone === '1';
       if ((done && row.elapsed >= minMs) || row.elapsed >= maxMs) {
         el?.remove();
@@ -3418,20 +3443,17 @@ const IdleHunt = (() => {
     }
     state.power = readPower();
     fillQueue();
-    if (!skipVisual) pruneDying();
+    const combatCtx = skipVisual ? huntCombatCtx({ quietFx: true }) : huntCombatCtx();
     if (typeof SkillBuffRuntime !== 'undefined') {
-      SkillBuffRuntime.tick?.(undefined, huntCombatCtx());
+      SkillBuffRuntime.tick?.(undefined, combatCtx);
     }
     if (typeof SkillMobStatus !== 'undefined') {
-      SkillMobStatus.tick?.(undefined, huntCombatCtx(), dt);
+      SkillMobStatus.tick?.(undefined, combatCtx, dt);
     }
     tickPassiveRegen(dt);
     state.atkAcc += dt;
     const delay = attackDelaySec();
     let hits = 0;
-    const playerEl = skipVisual
-      ? null
-      : $('idleHuntField')?.querySelector('.idle-actor--player');
     while (state.atkAcc >= delay && hits < 20) {
       if (isPlayerDead()) break;
 
@@ -3511,7 +3533,6 @@ const IdleHunt = (() => {
       }
       if (!skipVisual) flashHit(front.uid);
     }
-    if (!skipVisual) pruneDying();
     tickMobAttacks(dt);
     if (state.dungeon && typeof IdleDungeon !== 'undefined') IdleDungeon.onHuntTick?.(dt);
     if (isPlayerDead()) {
@@ -3533,7 +3554,7 @@ const IdleHunt = (() => {
     tryAfkStep();
     if (!skipVisual) {
       syncHuntOverlayBars();
-      if (open) render();
+      if (open) scheduleHuntRender();
     }
   }
 
@@ -3697,7 +3718,8 @@ const IdleHunt = (() => {
         if (state.running) scheduleCatchUp();
       } else if (state.running) {
         // 進背景立刻存一次進度（sessionPersistence 也會存）
-        try { save(); } catch (_) { /* ignore */ }
+        try { save({ flush: true }); } catch (_) { /* ignore */ }
+        try { CharacterProgression.flushSave?.(); } catch (_) { /* ignore */ }
         // 背景看不到畫面：立刻軟釋放視覺／解碼圖，降低長掛記憶體
         maybeAutoReleaseMemory(true);
       }
@@ -3848,7 +3870,8 @@ const IdleHunt = (() => {
     }
     stopTimer();
     try { SkillCombat.invalidateAsyncCasts?.(); } catch (_) { /* ignore */ }
-    if (doSave !== false) save();
+    if (doSave !== false) save({ flush: true });
+    try { CharacterProgression.flushSave?.(); } catch (_) { /* ignore */ }
     render();
     if (typeof Paperdoll !== 'undefined') Paperdoll.refresh?.();
   }

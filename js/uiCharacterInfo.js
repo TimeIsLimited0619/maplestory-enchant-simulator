@@ -611,6 +611,10 @@ const UiCharacterInfo = (() => {
     return { dmg, isCritical: !!isCritical };
   }
 
+  function getHuntCritMultiplier() {
+    return readHuntCritMultiplier(resolveHuntCombat());
+  }
+
   function extraFlatStat(snapshot, key) {
     if (!snapshot) return 0;
     let n = 0;
@@ -1213,6 +1217,7 @@ const UiCharacterInfo = (() => {
     isOpen: () => !!open,
     getCombatPower,
     getHuntHitDamage,
+    getHuntCritMultiplier,
     rollHuntHit,
     applyMobDefense,
     getHuntIedPct,

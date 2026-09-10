@@ -21,11 +21,12 @@ const DamageNumber = (() => {
 
   /**
    * 場上同時存在的數字上限。
-   * 需能覆蓋「隊列 mob × 多段」一次打出（例 10×5＝50），過低會砍掉第一隻怪的前幾段。
+   * 需能覆蓋「可見隊列 × 多段」一波（約 10×8＋追擊），再高只會讓 RAF 寫 style 卡死。
    */
-  const MAX_ON_FIELD = 640;
+  const MAX_ON_FIELD = 200;
   /** 連鎖等同幀大量數字：每幀最多掛載幾個，避免主執行緒卡頓 */
-  const SPAWN_PER_FRAME = 28;
+  const SPAWN_PER_FRAME = 16;
+  const STACK_PRUNE_EVERY_TICKS = 45;
   const PLAYER_STACK_KEY = 'player';
 
   let layerEl = null;
@@ -41,6 +42,7 @@ const DamageNumber = (() => {
   let mobViewCacheFrame = 0;
   let rafId = null;
   let lastTs = 0;
+  let poseTicks = 0;
 
   function playerSkinId() {
     if (typeof DamageSkinCatalog === 'undefined') return '18';
@@ -121,11 +123,12 @@ const DamageNumber = (() => {
 
   function trimOldestIfNeeded() {
     while (instances.size >= MAX_ON_FIELD) {
-      // 優先清「已開始播放」且最老的；避免砍到尚在 delay、還沒冒出的段
+      // Set 插入序＝生成序：清最早已開始播放的，避免掃全體找 max age
       let victim = null;
       for (const inst of instances) {
         if (inst.age < inst.delay) continue;
-        if (!victim || inst.age - inst.delay > victim.age - victim.delay) victim = inst;
+        victim = inst;
+        break;
       }
       if (!victim) victim = instances.values().next().value;
       if (!victim) break;
@@ -267,8 +270,6 @@ const DamageNumber = (() => {
     }
 
     const { yOff, scale, alpha } = pose;
-    inst.el.style.left = `${inst.baseX}px`;
-    inst.el.style.top = `${inst.baseY}px`;
     inst.el.style.opacity = String(Math.max(0, Math.min(1, alpha)));
     inst.el.style.transform = `translate(-50%, -100%) translateY(${yOff}px) scale(${scale})`;
     return true;
@@ -280,10 +281,15 @@ const DamageNumber = (() => {
     const dt = Math.min(0.05, Math.max(0, (ts - lastTs) / 1000));
     lastTs = ts;
     if (!instances.size) return;
-    [...instances].forEach((inst) => {
+    for (const inst of instances) {
       inst.age += dt;
       applyPose(inst);
-    });
+    }
+    poseTicks += 1;
+    if (poseTicks >= STACK_PRUNE_EVERY_TICKS) {
+      poseTicks = 0;
+      pruneStaleStacks();
+    }
   }
 
   function startLoop() {
@@ -368,6 +374,8 @@ const DamageNumber = (() => {
       const el = buildPopEl(glyphs, skinId);
       const z = Number(item.opts.zIndex);
       if (Number.isFinite(z)) el.style.zIndex = String(Math.round(z));
+      el.style.left = `${Math.round(Number(item.targetX) || 0)}px`;
+      el.style.top = `${Math.round(Number(item.targetY) || 0)}px`;
       frag.appendChild(el);
 
       const waited = Math.max(0, (performance.now() - item.queuedAt) / 1000);
@@ -659,6 +667,8 @@ const DamageNumber = (() => {
       const { stackIndex, delay } = resolveStackOpts(opts, PLAYER_STACK_KEY);
       const zIndex = resolveActorStackZ(player, 3) + 1;
       pop.style.zIndex = String(zIndex);
+      pop.style.left = `${Math.round(point.x + jitter)}px`;
+      pop.style.top = `${Math.round(point.y)}px`;
       layer.appendChild(pop);
 
       const inst = {
