@@ -783,20 +783,21 @@ const EQUIP_CRAFT_MAKE_LIST = [
       materials: { '02434585': 10 },
       meso: 500000000,
       variants: [
-        { id: 'warrior', label: '劍士', output: '01042254' },
-        { id: 'warrior', label: '劍士', output: '01062165' },
-        { id: 'mage', label: '法師', output: '01042255' },
-        { id: 'mage', label: '法師', output: '01062166' },
-        { id: 'bowman', label: '弓箭手', output: '01042256' },
-        { id: 'bowman', label: '弓箭手', output: '01062167' },
-        { id: 'thief', label: '盜賊', output: '01042257' },
-        { id: 'thief', label: '盜賊', output: '01062168' },
-        { id: 'pirate', label: '海盜', output: '01042258' },
-        { id: 'pirate', label: '海盜', output: '01062169' },
+        { id: 'warrior_coat', label: '劍士', output: '01042254' },
+        { id: 'warrior_pants', label: '劍士', output: '01062165' },
+        { id: 'mage_coat', label: '法師', output: '01042255' },
+        { id: 'mage_pants', label: '法師', output: '01062166' },
+        { id: 'bowman_coat', label: '弓箭手', output: '01042256' },
+        { id: 'bowman_pants', label: '弓箭手', output: '01062167' },
+        { id: 'thief_coat', label: '盜賊', output: '01042257' },
+        { id: 'thief_pants', label: '盜賊', output: '01062168' },
+        { id: 'pirate_coat', label: '海盜', output: '01042258' },
+        { id: 'pirate_pants', label: '海盜', output: '01062169' },
       ],
     },
   ],
 },
+
 
 //濃姬副手
 {
