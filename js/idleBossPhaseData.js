@@ -428,11 +428,14 @@ const IDLE_BOSS_PHASE = {
       },
       {
         id: 'normal',
-        hpMult: 400,
+        hpMult: 350,
         dmgMult: 20,
-        reqLevel: 155,
+        reqLevel: 140,
         timeLimitSec: 1800,
         rewards: [
+          { kind: 'equip', itemId: '01662306', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01662308', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01672073', amount: 1, chance: 5 },
           { kind: 'consume', itemId: 'Reindeer-milk', amount: 5 },
           { kind: 'consume', itemId: 'Reindeer-milk', amount: 5 },
           { kind: 'consume', itemId: 'Reindeer-milk', amount: 5 },
@@ -448,7 +451,7 @@ const IDLE_BOSS_PHASE = {
         id: 'hard',
         hpMult: 1225,
         dmgMult: 100,
-        reqLevel: 190,
+        reqLevel: 160,
         timeLimitSec: 1800,
         rewards: [
           { kind: 'equip', itemId: '01190544', amount: 1, chance: 5 },

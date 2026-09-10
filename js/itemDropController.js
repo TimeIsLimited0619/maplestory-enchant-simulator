@@ -118,6 +118,12 @@ const ItemDropController = (() => {
     if (row.iconRaw) return String(row.iconRaw);
     const id = String(row.itemId || row.id || '').trim();
     const db = typeof ITEM_DATABASE !== 'undefined' && id ? ITEM_DATABASE[id] : null;
+    // 機器人無 equipRaw／一般 icon，裝備欄用 D 圖
+    if (db && (typeof isAndroidItem === 'function' ? isAndroidItem(db) : db.subType === 'android')) {
+      return (typeof getEquipDisplayIcon === 'function'
+        ? getEquipDisplayIcon(db)
+        : (db.equipIcon || `images/equip/${id}D.png`)) || '';
+    }
     if (db?.iconRaw) return String(db.iconRaw);
 
     let icon = '';

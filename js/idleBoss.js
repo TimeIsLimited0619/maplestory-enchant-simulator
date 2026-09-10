@@ -778,6 +778,14 @@ const IdleBoss = (() => {
       return ItemDropController.resolveDropIcon(row) || '';
     }
     const id = String(row?.itemId || '').trim();
+    if (row?.kind === 'equip' && id && typeof ITEM_DATABASE !== 'undefined') {
+      const db = ITEM_DATABASE[id];
+      if (db && (typeof isAndroidItem === 'function' ? isAndroidItem(db) : db.subType === 'android')) {
+        return (typeof getEquipDisplayIcon === 'function'
+          ? getEquipDisplayIcon(db)
+          : (db.equipIcon || `images/equip/${id}D.png`)) || '';
+      }
+    }
     if (row?.kind === 'equip' && id) return `images/equipRaw/${id}.png`;
     if (typeof IdlePotionStore !== 'undefined' && IdlePotionStore.isPotionId?.(id)) {
       const p = IdlePotionStore.get(id);
