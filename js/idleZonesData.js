@@ -1585,15 +1585,15 @@ const IDLE_ZONE_BAND_DEFS = [
         "name": "武器魔力(智慧)卷軸15%",
         "chance": 1,
         "amount": 1
-      }
-    ],
-    "bossDrops": [
+      },
       {
         "kind": "equip",
         "itemId": "01112438",
-        "chance": 5,
+        "chance": 1,
         "amount": 1
-      },
+      }
+    ],
+    "bossDrops": [
       {
         "kind": "consume",
         "consumeType": "glory_scroll",
@@ -1630,6 +1630,12 @@ const IDLE_ZONE_BAND_DEFS = [
         "soulId": "",
         "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
         "name": "武器魔力(智慧)卷軸15%",
+        "chance": 5,
+        "amount": 1
+      },
+      {
+        "kind": "equip",
+        "itemId": "01112438",
         "chance": 5,
         "amount": 1
       }

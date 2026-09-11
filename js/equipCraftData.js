@@ -801,6 +801,7 @@ const EQUIP_CRAFT_MAKE_LIST = [
         { id: 'job1', label: '英雄', output: '01352216' },
         { id: 'job2', label: '冰雷', output: '01352246' },
         { id: 'job3', label: '精靈遊俠', output: '01352009' },
+        { id: 'job4', label: '夜使者', output: '01352296' },
       ],
     },
   ],

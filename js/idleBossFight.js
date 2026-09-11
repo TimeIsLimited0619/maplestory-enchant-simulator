@@ -350,7 +350,10 @@ const IdleBossFight = (() => {
         img.dataset.frameAcc = '0';
         img.dataset.bodyDone = '0';
       }
-      const timeout = (IdleMobAnim.actionDurationMs(id, introAct, introAct) || 1200) + 200;
+      const speed = Math.max(0.1, Number(el.dataset.animSpeed) || 1);
+      const timeout = scaleDelayMs(
+        (IdleMobAnim.actionDurationMs(id, introAct, introAct) || 1200) + 200,
+      ) / speed;
       const start = Date.now();
       while (Date.now() - start < timeout) {
         if (img?.dataset.bodyDone === '1') break;
@@ -900,6 +903,8 @@ const IdleBossFight = (() => {
 
   /** 西格諾斯轉階段（鎖血／覺醒）動畫倍率 */
   const CYGNUS_PHASE_ANIM_SPEED = 2;
+  /** 粉豆轉階段（殼 die1 群體復活／雕像 regen）動畫倍率 */
+  const PINKBEAN_PHASE_ANIM_SPEED = 2;
 
   function setActorAnimSpeed(key, speed) {
     const el = slotEl(key);
@@ -907,6 +912,17 @@ const IdleBossFight = (() => {
     const n = Number(speed);
     if (Number.isFinite(n) && n > 0 && n !== 1) el.dataset.animSpeed = String(n);
     else delete el.dataset.animSpeed;
+  }
+
+  async function playAnimAtSpeed(key, mobId, action, speed) {
+    const n = Number(speed);
+    const use = (Number.isFinite(n) && n > 0) ? n : 1;
+    setActorAnimSpeed(key, use);
+    try {
+      await playAnim(key, mobId, action);
+    } finally {
+      setActorAnimSpeed(key, 1);
+    }
   }
 
   async function playCygnusBodyAction(actionKey, fallbackMs = 1200) {
@@ -1722,7 +1738,7 @@ const IdleBossFight = (() => {
     return newly;
   }
 
-  /** 只對「新解鎖」且真有多幀 regen 的雕像播一次復活 */
+  /** 只對「新解鎖」且真有多幀 regen 的雕像播一次復活（轉階／進場倍速） */
   async function playPinkBeanStatueRegen(arms) {
     const list = (arms || []).filter((arm) => {
       if (!arm) return false;
@@ -1738,11 +1754,13 @@ const IdleBossFight = (() => {
       (arms || []).forEach((arm) => bindVisual(arm.key, arm.visualId, 'stand'));
       return;
     }
+    const speed = PINKBEAN_PHASE_ANIM_SPEED;
     list.forEach((arm) => {
       const el = slotEl(arm.key);
       if (!el || typeof IdleMobAnim === 'undefined') return;
       el.dataset.mobId = pad(arm.visualId);
       el.dataset.introAction = 'regen';
+      setActorAnimSpeed(arm.key, speed);
       IdleMobAnim.bindActorSprite(el, pad(arm.visualId), 'regen');
       const img = IdleMobAnim.actorBodyImg?.(el);
       if (img) {
@@ -1750,7 +1768,11 @@ const IdleBossFight = (() => {
         img.dataset.bodyDone = '0';
       }
     });
-    await Promise.all(list.map((arm) => playAnim(arm.key, arm.visualId, 'regen')));
+    try {
+      await Promise.all(list.map((arm) => playAnim(arm.key, arm.visualId, 'regen')));
+    } finally {
+      list.forEach((arm) => setActorAnimSpeed(arm.key, 1));
+    }
     list.forEach((arm) => bindVisual(arm.key, arm.visualId, 'stand'));
     (arms || []).forEach((arm) => {
       if (!list.includes(arm)) bindVisual(arm.key, arm.visualId, 'stand');
@@ -1765,7 +1787,7 @@ const IdleBossFight = (() => {
     return keys.every((k) => unlock.has(k));
   }
 
-  /** 五尊齊全階段結束：並行播各雕像 die1 */
+  /** 五尊齊全階段結束：並行播各雕像 die1（轉階倍速） */
   async function playPinkBeanStatueDieAll() {
     if (!fight || !isPinkBean()) return;
     const seq = atkFxSeq;
@@ -1784,7 +1806,13 @@ const IdleBossFight = (() => {
       });
       return;
     }
-    await Promise.all(playable.map((arm) => playAnim(arm.key, arm.visualId, 'die1')));
+    const speed = PINKBEAN_PHASE_ANIM_SPEED;
+    playable.forEach((arm) => setActorAnimSpeed(arm.key, speed));
+    try {
+      await Promise.all(playable.map((arm) => playAnim(arm.key, arm.visualId, 'die1')));
+    } finally {
+      playable.forEach((arm) => setActorAnimSpeed(arm.key, 1));
+    }
     if (seq !== atkFxSeq || !fight) return;
     statues.forEach((arm) => {
       arm.dead = true;
@@ -1845,7 +1873,7 @@ const IdleBossFight = (() => {
       seq = atkFxSeq;
     }
 
-    // 殼有 die1 就掛隱藏槽播一下（群體復活／解鎖演出）
+    // 殼有 die1 就掛隱藏槽播一下（群體復活／解鎖演出；轉階倍速）
     if (shellId && typeof IdleMobAnim !== 'undefined'
       && IdleMobAnim.resolveAction?.(shellId, 'die1')) {
       const bossPos = hooks?.getBossPos?.() || { x: 700, y: 580 };
@@ -1859,7 +1887,7 @@ const IdleBossFight = (() => {
           </div>
         </div>`);
       }
-      await playAnim('shellDie', shellId, 'die1');
+      await playAnimAtSpeed('shellDie', shellId, 'die1', PINKBEAN_PHASE_ANIM_SPEED);
       removeSlot('shellDie');
     }
     if (seq !== atkFxSeq || !fight) return;
