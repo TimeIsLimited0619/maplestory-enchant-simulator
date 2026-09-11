@@ -220,6 +220,7 @@ const UiNpcShop = (() => {
     });
     $('npcShopBuyYes')?.addEventListener('click', confirmBuy);
     $('npcShopBuyNo')?.addEventListener('click', hideBuyPopup);
+    window.addEventListener('keydown', onShopPopupKeyDown, true);
     $('npcShopSellMinus')?.addEventListener('click', () => setSellQty(sellQty - 1));
     $('npcShopSellPlus')?.addEventListener('click', () => setSellQty(sellQty + 1));
     $('npcShopSellQty')?.addEventListener('change', (e) => {
@@ -648,6 +649,11 @@ const UiNpcShop = (() => {
     setBuyQty(1);
     pop?.classList.remove('hidden');
     pop?.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => {
+      const input = $('npcShopBuyQty');
+      input?.focus();
+      input?.select();
+    });
   }
 
   function hideBuyPopup() {
@@ -751,6 +757,15 @@ const UiNpcShop = (() => {
     return true;
   }
 
+  function onShopPopupKeyDown(event) {
+    if (!open || event.key !== 'Enter') return;
+    if (event.isComposing || event.keyCode === 229) return;
+    if (!isBuyPopupOpen()) return;
+    event.preventDefault();
+    event.stopPropagation();
+    confirmBuy();
+  }
+
   function confirmSell() {
     if (!sellTarget) return;
     const qty = sellQty;
@@ -772,6 +787,7 @@ const UiNpcShop = (() => {
   }
 
   function confirmBuy() {
+    if (!isBuyPopupOpen()) return;
     const shop = currentShop();
     if (!shop) return;
     const row = selectedBuyRow();
