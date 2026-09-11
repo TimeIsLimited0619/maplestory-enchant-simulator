@@ -222,6 +222,10 @@ const UiStatInfo = (() => {
         pushRow(rows, 'desc', '角色加成', bonus.mp, false);
         pushRow(rows, 'desc', '角色 MP%', bonus.mpPercent, true);
       }
+      if (key === '防禦力') {
+        const hyperLv = CharacterProgression.getState()?.hyper?.df || 0;
+        pushRow(rows, 'desc', '極限屬性', CharacterProgression.hyperBonusAt?.('df', hyperLv), false);
+      }
     }
 
     if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {

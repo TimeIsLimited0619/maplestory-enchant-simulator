@@ -960,6 +960,9 @@ const UiCharacterInfo = (() => {
         if (key === '一般怪物傷害') n += bonus.normalDmg || 0;
         if (key === '獲得追加經驗值') n += bonus.expPercent || 0;
         if (key === '神秘力量') n += bonus.arcane || 0;
+        if (key === '防禦力' || key === '物理防禦力' || key === '魔法防禦力') {
+          n += bonus.def || 0;
+        }
       } else if (source !== 'main') {
         // 非 main 來源的四維（理論上少見）：維持舊加總
         n += CharacterProgression.apStat?.(apKey) || CharacterProgression.AP_BASE_STAT || 0;

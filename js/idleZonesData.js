@@ -158,31 +158,6 @@ const IDLE_ZONE_BAND_DEFS = [
     "name": "弓箭手村",
     "mobDrops": [
       {
-        "kind": "equip",
-        "itemId": "01002001",
-        "chance": 0.5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072009",
-        "chance": 0.5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060009",
-        "chance": 0.5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040009",
-        "chance": 0.5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402018",
-        "chance": 0.25
-      },
-      {
         "kind": "consume",
         "consumeType": "glory_scroll",
         "scrollId": "scroll_normal_weapon_atk_100",
@@ -237,31 +212,6 @@ const IDLE_ZONE_BAND_DEFS = [
     ],
     "bossDrops": [
       {
-        "kind": "equip",
-        "itemId": "01002001",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072009",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060009",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040009",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402018",
-        "chance": 5
-      },
-      {
         "kind": "consume",
         "consumeType": "glory_scroll",
         "scrollId": "scroll_normal_weapon_atk_100",
@@ -308,41 +258,6 @@ const IDLE_ZONE_BAND_DEFS = [
     "max": 25,
     "name": "勇士之村",
     "mobDrops": [
-      {
-        "kind": "equip",
-        "itemId": "01102053",
-        "chance": 0.1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060030",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072052",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040040",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01002005",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01022047",
-        "chance": 0.1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402008",
-        "chance": 0.2
-      },
       {
         "kind": "consume",
         "consumeType": "glory_scroll",
@@ -409,12 +324,6 @@ const IDLE_ZONE_BAND_DEFS = [
         "amount": 1
       },
       {
-        "kind": "equip",
-        "itemId": "01372004",
-        "chance": 0.2,
-        "amount": 1
-      },
-      {
         "kind": "consume",
         "consumeType": "glory_scroll",
         "scrollId": "scroll_normal_weapon_matk_100",
@@ -442,36 +351,6 @@ const IDLE_ZONE_BAND_DEFS = [
       }
     ],
     "bossDrops": [
-      {
-        "kind": "equip",
-        "itemId": "01022047",
-        "chance": 2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01102053",
-        "chance": 2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060030",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072052",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040040",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01002005",
-        "chance": 5
-      },
       {
         "kind": "consume",
         "consumeType": "glory_scroll",
@@ -559,41 +438,6 @@ const IDLE_ZONE_BAND_DEFS = [
     "name": "魔法森林",
     "mobDrops": [
       {
-        "kind": "equip",
-        "itemId": "01082004",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072007",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01002011",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060010",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040012",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01002009",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402000",
-        "chance": 0.2
-      },
-      {
         "kind": "consume",
         "consumeType": "glory_scroll",
         "scrollId": "scroll_normal_weapon_atk_100",
@@ -659,12 +503,6 @@ const IDLE_ZONE_BAND_DEFS = [
         "amount": 1
       },
       {
-        "kind": "equip",
-        "itemId": "01372002",
-        "chance": 0.2,
-        "amount": 1
-      },
-      {
         "kind": "consume",
         "consumeType": "glory_scroll",
         "scrollId": "scroll_normal_weapon_matk_100",
@@ -692,36 +530,6 @@ const IDLE_ZONE_BAND_DEFS = [
       }
     ],
     "bossDrops": [
-      {
-        "kind": "equip",
-        "itemId": "01082004",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072007",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01002011",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060010",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040012",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01002009",
-        "chance": 5
-      },
       {
         "kind": "consume",
         "consumeType": "glory_scroll",
@@ -822,41 +630,6 @@ const IDLE_ZONE_BAND_DEFS = [
     "name": "墮落城市",
     "mobDrops": [
       {
-        "kind": "equip",
-        "itemId": "01402002",
-        "chance": 0.1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040021",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060016",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01002023",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072040",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01082005",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402010",
-        "chance": 0.1
-      },
-      {
         "kind": "consume",
         "consumeType": "potion",
         "scrollId": "",
@@ -938,12 +711,6 @@ const IDLE_ZONE_BAND_DEFS = [
         "kind": "equip",
         "itemId": "01112018",
         "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01372003",
-        "chance": 0.1,
-        "amount": 1
       },
       {
         "kind": "consume",
@@ -1039,41 +806,6 @@ const IDLE_ZONE_BAND_DEFS = [
     "name": "遺跡發掘地",
     "mobDrops": [
       {
-        "kind": "equip",
-        "itemId": "01002091",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01082011",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060076",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01102004",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072135",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402003",
-        "chance": 0.1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01372007",
-        "chance": 0.1
-      },
-      {
         "kind": "consume",
         "consumeType": "glory_scroll",
         "scrollId": "scroll_normal_weapon_atk_30",
@@ -1111,11 +843,6 @@ const IDLE_ZONE_BAND_DEFS = [
         "name": "烤鰻魚",
         "chance": 10,
         "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040087",
-        "chance": 0.2
       },
       {
         "kind": "equip",
@@ -1190,41 +917,6 @@ const IDLE_ZONE_BAND_DEFS = [
     "name": "天空之塔",
     "mobDrops": [
       {
-        "kind": "equip",
-        "itemId": "01002029",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040093",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060080",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072149",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01082061",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01102018",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402011",
-        "chance": 0.1
-      },
-      {
         "kind": "consume",
         "consumeType": "glory_scroll",
         "scrollId": "scroll_normal_non_weapon_str_30",
@@ -1293,12 +985,6 @@ const IDLE_ZONE_BAND_DEFS = [
         "kind": "equip",
         "itemId": "01112019",
         "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01372014",
-        "chance": 0.1,
-        "amount": 1
       },
       {
         "kind": "consume",
@@ -1420,41 +1106,6 @@ const IDLE_ZONE_BAND_DEFS = [
     "name": "冰原雪域",
     "mobDrops": [
       {
-        "kind": "equip",
-        "itemId": "01002029",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040093",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060080",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072149",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01082061",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01102018",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402011",
-        "chance": 0.1
-      },
-      {
         "kind": "consume",
         "consumeType": "glory_scroll",
         "scrollId": "scroll_normal_non_weapon_str_30",
@@ -1518,11 +1169,6 @@ const IDLE_ZONE_BAND_DEFS = [
         "name": "馴鹿奶",
         "chance": 5,
         "amount": 2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01372014",
-        "chance": 0.1
       },
       {
         "kind": "consume",
@@ -1637,46 +1283,6 @@ const IDLE_ZONE_BAND_DEFS = [
       },
       {
         "kind": "equip",
-        "itemId": "01002029",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040093",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060080",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01082061",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072149",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01102018",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402011",
-        "chance": 2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01372014",
-        "chance": 2
-      },
-      {
-        "kind": "equip",
         "itemId": "01112436",
         "chance": 5
       },
@@ -1715,36 +1321,6 @@ const IDLE_ZONE_BAND_DEFS = [
     "name": "玩具城",
     "mobDrops": [
       {
-        "kind": "equip",
-        "itemId": "01002340",
-        "chance": 0.2,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01082117",
-        "chance": 0.2,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072212",
-        "chance": 0.2,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402004",
-        "chance": 0.1,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402015",
-        "chance": 0.1,
-        "amount": 1
-      },
-      {
         "kind": "consume",
         "consumeType": "glory_scroll",
         "scrollId": "scroll_normal_non_weapon_str_15",
@@ -1754,7 +1330,7 @@ const IDLE_ZONE_BAND_DEFS = [
         "soulId": "",
         "catalogId": "consume-glory-scroll_normal_non_weapon_str_15",
         "name": "力量卷軸15%",
-        "chance": 10,
+        "chance": 2,
         "amount": 1
       },
       {
@@ -1767,7 +1343,7 @@ const IDLE_ZONE_BAND_DEFS = [
         "soulId": "",
         "catalogId": "consume-glory-scroll_normal_weapon_atk_15",
         "name": "武器攻擊力(力量)卷軸15%",
-        "chance": 5,
+        "chance": 1,
         "amount": 1
       },
       {
@@ -1786,18 +1362,6 @@ const IDLE_ZONE_BAND_DEFS = [
       {
         "kind": "equip",
         "itemId": "01112437",
-        "chance": 0.1,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01102035",
-        "chance": 0.1,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01372016",
         "chance": 0.1,
         "amount": 1
       },
@@ -1898,42 +1462,6 @@ const IDLE_ZONE_BAND_DEFS = [
     "mobDrops": [
       {
         "kind": "equip",
-        "itemId": "01002532",
-        "chance": 0.2,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01082130",
-        "chance": 0.2,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072198",
-        "chance": 0.2,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01372009",
-        "chance": 0.1,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402005",
-        "chance": 0.1,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402016",
-        "chance": 0.1,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
         "itemId": "01112020",
         "chance": 0.1,
         "amount": 1
@@ -1948,7 +1476,7 @@ const IDLE_ZONE_BAND_DEFS = [
         "soulId": "",
         "catalogId": "consume-glory-scroll_normal_weapon_atk_15",
         "name": "武器攻擊力(力量)卷軸15%",
-        "chance": 5,
+        "chance": 1,
         "amount": 1
       },
       {
@@ -1961,19 +1489,7 @@ const IDLE_ZONE_BAND_DEFS = [
         "soulId": "",
         "catalogId": "consume-glory-scroll_normal_non_weapon_str_15",
         "name": "力量卷軸15%",
-        "chance": 10,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040113",
-        "chance": 0.1,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060102",
-        "chance": 0.1,
+        "chance": 2,
         "amount": 1
       },
       {
@@ -1999,7 +1515,7 @@ const IDLE_ZONE_BAND_DEFS = [
         "soulId": "",
         "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
         "name": "武器魔力(智慧)卷軸15%",
-        "chance": 5,
+        "chance": 1,
         "amount": 1
       }
     ],
@@ -2019,54 +1535,6 @@ const IDLE_ZONE_BAND_DEFS = [
     "name": "神木村",
     "mobDrops": [
       {
-        "kind": "equip",
-        "itemId": "01372010",
-        "chance": 0.1,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01002379",
-        "chance": 0.2,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040122",
-        "chance": 0.2,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060111",
-        "chance": 0.2,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01082141",
-        "chance": 0.2,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072222",
-        "chance": 0.2,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402037",
-        "chance": 0.1,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402035",
-        "chance": 0.1,
-        "amount": 1
-      },
-      {
         "kind": "consume",
         "consumeType": "glory_scroll",
         "scrollId": "scroll_normal_weapon_atk_15",
@@ -2076,7 +1544,7 @@ const IDLE_ZONE_BAND_DEFS = [
         "soulId": "",
         "catalogId": "consume-glory-scroll_normal_weapon_atk_15",
         "name": "武器攻擊力(力量)卷軸15%",
-        "chance": 5,
+        "chance": 1,
         "amount": 1
       },
       {
@@ -2089,7 +1557,7 @@ const IDLE_ZONE_BAND_DEFS = [
         "soulId": "",
         "catalogId": "consume-glory-scroll_normal_non_weapon_str_15",
         "name": "力量卷軸15%",
-        "chance": 10,
+        "chance": 2,
         "amount": 1
       },
       {
@@ -2115,7 +1583,7 @@ const IDLE_ZONE_BAND_DEFS = [
         "soulId": "",
         "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
         "name": "武器魔力(智慧)卷軸15%",
-        "chance": 5,
+        "chance": 1,
         "amount": 1
       }
     ],
@@ -2196,7 +1664,7 @@ const IDLE_ZONE_BAND_DEFS = [
         "soulId": "",
         "catalogId": "consume-glory-scroll_normal_non_weapon_str_15",
         "name": "力量卷軸15%",
-        "chance": 10,
+        "chance": 2,
         "amount": 1
       },
       {
@@ -2209,7 +1677,7 @@ const IDLE_ZONE_BAND_DEFS = [
         "soulId": "",
         "catalogId": "consume-glory-scroll_normal_weapon_atk_15",
         "name": "武器攻擊力(力量)卷軸15%",
-        "chance": 5,
+        "chance": 1,
         "amount": 1
       },
       {
@@ -2222,7 +1690,7 @@ const IDLE_ZONE_BAND_DEFS = [
         "soulId": "",
         "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
         "name": "武器魔力(智慧)卷軸15%",
-        "chance": 5,
+        "chance": 1,
         "amount": 1
       }
     ],
@@ -2299,6 +1767,45 @@ const IDLE_ZONE_BAND_DEFS = [
         "name": "特殊藥水",
         "chance": 5,
         "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_non_weapon_str_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_non_weapon_str_15",
+        "name": "裝備卷軸15%",
+        "chance": 2,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_atk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_atk_15",
+        "name": "武器攻擊力卷軸15%",
+        "chance": 1,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力卷軸15%",
+        "chance": 1,
+        "amount": 1
       }
     ],
     "bossDrops": []
@@ -2321,9 +1828,88 @@ const IDLE_ZONE_BAND_DEFS = [
         "name": "特殊藥水",
         "chance": 5,
         "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_non_weapon_str_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_non_weapon_str_15",
+        "name": "裝備卷軸15%",
+        "chance": 2,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力卷軸15%",
+        "chance": 1,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_atk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_atk_15",
+        "name": "武器攻擊力卷軸15%",
+        "chance": 1,
+        "amount": 1
       }
     ],
-    "bossDrops": []
+    "bossDrops": [
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_non_weapon_str_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_non_weapon_str_15",
+        "name": "裝備卷軸15%",
+        "chance": 10,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力卷軸15%",
+        "chance": 5,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_atk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_atk_15",
+        "name": "武器攻擊力卷軸15%",
+        "chance": 5,
+        "amount": 1
+      }
+    ]
   },
   {
     "id": "band-1787462987374",
@@ -2331,26 +1917,6 @@ const IDLE_ZONE_BAND_DEFS = [
     "max": 10,
     "name": "維多利亞島",
     "mobDrops": [
-      {
-        "kind": "equip",
-        "itemId": "01002002",
-        "chance": 0.5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01082003",
-        "chance": 0.5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060028",
-        "chance": 0.5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040038",
-        "chance": 0.5
-      },
       {
         "kind": "consume",
         "consumeType": "glory_scroll",
@@ -2363,16 +1929,6 @@ const IDLE_ZONE_BAND_DEFS = [
         "name": "力量卷軸100%",
         "chance": 0.5,
         "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402001",
-        "chance": 0.5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01372005",
-        "chance": 0.5
       },
       {
         "kind": "consume",
@@ -2389,26 +1945,6 @@ const IDLE_ZONE_BAND_DEFS = [
       }
     ],
     "bossDrops": [
-      {
-        "kind": "equip",
-        "itemId": "01002002",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01082003",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060028",
-        "chance": 5
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040038",
-        "chance": 5
-      },
       {
         "kind": "consume",
         "consumeType": "glory_scroll",
@@ -2456,41 +1992,6 @@ const IDLE_ZONE_BAND_DEFS = [
     "max": 50,
     "name": "奇幻村",
     "mobDrops": [
-      {
-        "kind": "equip",
-        "itemId": "01402007",
-        "chance": 0.1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01372000",
-        "chance": 0.1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040086",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01002098",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01082025",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060000",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072127",
-        "chance": 0.2
-      },
       {
         "kind": "consume",
         "consumeType": "glory_scroll",
@@ -2629,26 +2130,6 @@ const IDLE_ZONE_BAND_DEFS = [
     "name": "秘密森林埃羅汀",
     "mobDrops": [
       {
-        "kind": "equip",
-        "itemId": "01040030",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01372001",
-        "chance": 0.1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072113",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01002004",
-        "chance": 0.2
-      },
-      {
         "kind": "consume",
         "consumeType": "glory_scroll",
         "scrollId": "scroll_normal_weapon_atk_30",
@@ -2673,11 +2154,6 @@ const IDLE_ZONE_BAND_DEFS = [
         "name": "力量卷軸30%",
         "chance": 1,
         "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402006",
-        "chance": 0.1
       },
       {
         "kind": "consume",
@@ -2764,46 +2240,6 @@ const IDLE_ZONE_BAND_DEFS = [
     "max": 60,
     "name": "天空之城",
     "mobDrops": [
-      {
-        "kind": "equip",
-        "itemId": "01402003",
-        "chance": 0.1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01002091",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01082011",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072135",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01102004",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040087",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060076",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01372007",
-        "chance": 0.1
-      },
       {
         "kind": "consume",
         "consumeType": "glory_scroll",
@@ -2968,46 +2404,6 @@ const IDLE_ZONE_BAND_DEFS = [
     "name": "廢棄礦坑",
     "mobDrops": [
       {
-        "kind": "equip",
-        "itemId": "01002030",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01040103",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01060091",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01082105",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01072156",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01102024",
-        "chance": 0.2
-      },
-      {
-        "kind": "equip",
-        "itemId": "01402012",
-        "chance": 0.1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01372015",
-        "chance": 0.1
-      },
-      {
         "kind": "consume",
         "consumeType": "glory_scroll",
         "scrollId": "scroll_normal_non_weapon_str_30",
@@ -3043,7 +2439,7 @@ const IDLE_ZONE_BAND_DEFS = [
         "soulId": "",
         "catalogId": "consume-glory-scroll_normal_non_weapon_str_15",
         "name": "力量卷軸15%",
-        "chance": 5,
+        "chance": 2,
         "amount": 1
       },
       {
@@ -3056,7 +2452,7 @@ const IDLE_ZONE_BAND_DEFS = [
         "soulId": "",
         "catalogId": "consume-glory-scroll_normal_weapon_atk_15",
         "name": "武器攻擊力(力量)卷軸15%",
-        "chance": 2,
+        "chance": 1,
         "amount": 1
       },
       {
@@ -3091,12 +2487,6 @@ const IDLE_ZONE_BAND_DEFS = [
         "amount": 1
       },
       {
-        "kind": "equip",
-        "itemId": "01102030",
-        "chance": 0.1,
-        "amount": 1
-      },
-      {
         "kind": "consume",
         "consumeType": "glory_scroll",
         "scrollId": "scroll_normal_weapon_matk_15",
@@ -3106,7 +2496,7 @@ const IDLE_ZONE_BAND_DEFS = [
         "soulId": "",
         "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
         "name": "武器魔力(智慧)卷軸15%",
-        "chance": 2,
+        "chance": 1,
         "amount": 1
       }
     ],
@@ -3148,12 +2538,6 @@ const IDLE_ZONE_BAND_DEFS = [
         "catalogId": "consume-glory-scroll_normal_non_weapon_str_15",
         "name": "力量卷軸15%",
         "chance": 10,
-        "amount": 1
-      },
-      {
-        "kind": "equip",
-        "itemId": "01102030",
-        "chance": 5,
         "amount": 1
       },
       {
@@ -3210,9 +2594,88 @@ const IDLE_ZONE_BAND_DEFS = [
         "name": "特殊藥水",
         "chance": 5,
         "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_non_weapon_str_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_non_weapon_str_15",
+        "name": "裝備卷軸15%",
+        "chance": 2,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力卷軸15%",
+        "chance": 1,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_atk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_atk_15",
+        "name": "武器攻擊力卷軸15%",
+        "chance": 1,
+        "amount": 1
       }
     ],
-    "bossDrops": []
+    "bossDrops": [
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_non_weapon_str_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_non_weapon_str_15",
+        "name": "裝備卷軸15%",
+        "chance": 10,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力卷軸15%",
+        "chance": 5,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_atk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_atk_15",
+        "name": "武器攻擊力卷軸15%",
+        "chance": 5,
+        "amount": 1
+      }
+    ]
   },
   {
     "id": "band-1788873703017",
@@ -3232,9 +2695,88 @@ const IDLE_ZONE_BAND_DEFS = [
         "name": "特殊藥水",
         "chance": 5,
         "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_non_weapon_str_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_non_weapon_str_15",
+        "name": "裝備卷軸15%",
+        "chance": 2,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力卷軸15%",
+        "chance": 1,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_atk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_atk_15",
+        "name": "武器攻擊力卷軸15%",
+        "chance": 5,
+        "amount": 1
       }
     ],
-    "bossDrops": []
+    "bossDrops": [
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_non_weapon_str_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_non_weapon_str_15",
+        "name": "裝備卷軸15%",
+        "chance": 10,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力卷軸15%",
+        "chance": 5,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_atk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_atk_15",
+        "name": "武器攻擊力卷軸15%",
+        "chance": 5,
+        "amount": 1
+      }
+    ]
   },
   {
     "id": "band-1788938795162",
@@ -12969,7 +12511,47 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossKillExp": 50000,
     "bossKillGold": 500000,
     "mobDrops": [],
-    "bossDrops": [],
+    "bossDrops": [
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_non_weapon_str_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_non_weapon_str_15",
+        "name": "裝備卷軸15%",
+        "chance": 10,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_atk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_atk_15",
+        "name": "武器攻擊力卷軸15%",
+        "chance": 5,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "glory_scroll",
+        "scrollId": "scroll_normal_weapon_matk_15",
+        "cubeId": "",
+        "itemId": "",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-glory-scroll_normal_weapon_matk_15",
+        "name": "武器魔力卷軸15%",
+        "chance": 5,
+        "amount": 1
+      }
+    ],
     "drops": [],
     "custom": true,
     "bossScaleSprite": true,
@@ -15581,21 +15163,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "killGold": 118000,
     "bossKillExp": 118000,
     "bossKillGold": 118000,
-    "mobDrops": [
-      {
-        "kind": "consume",
-        "consumeType": "cube",
-        "scrollId": "",
-        "cubeId": "union",
-        "itemId": "",
-        "hammerId": "",
-        "soulId": "",
-        "catalogId": "consume-cube-union",
-        "name": "結合方塊",
-        "chance": 5,
-        "amount": 1
-      }
-    ],
+    "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
@@ -16932,9 +16500,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 3472900000,
     "bossHp": 52093500000,
     "killExp": 31600,
-    "killGold": 101,
+    "killGold": 316000,
     "bossKillExp": 316000,
-    "bossKillGold": 812,
+    "bossKillGold": 316000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -16944,7 +16512,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandName": "黑暗天堂",
     "bandMin": 180,
     "bandMax": 190,
-    "replayBossKills": 415,
+    "replayBossKills": 250,
     "smallKills": 2400,
     "mobAtk1Dmg": 239000,
     "mobAtk1Cd": 0.6,
@@ -16999,9 +16567,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 3782100000,
     "bossHp": 56731500000,
     "killExp": 32800,
-    "killGold": 91,
+    "killGold": 328000,
     "bossKillExp": 328000,
-    "bossKillGold": 732,
+    "bossKillGold": 328000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -17009,7 +16577,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "黑暗天堂",
-    "replayBossKills": 420,
+    "replayBossKills": 250,
     "smallKills": 2425,
     "mobAtk1Dmg": 246000,
     "mobAtk1Cd": 0.6,
@@ -17066,9 +16634,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 4118800000,
     "bossHp": 61782000000,
     "killExp": 34000,
-    "killGold": 93,
+    "killGold": 340000,
     "bossKillExp": 340000,
-    "bossKillGold": 748,
+    "bossKillGold": 340000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -17076,7 +16644,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "黑暗天堂",
-    "replayBossKills": 425,
+    "replayBossKills": 250,
     "smallKills": 2475,
     "mobAtk1Dmg": 254000,
     "mobAtk1Cd": 0.6,
@@ -17133,9 +16701,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 4485500000,
     "bossHp": 67282500000,
     "killExp": 35300,
-    "killGold": 95,
+    "killGold": 353000,
     "bossKillExp": 353000,
-    "bossKillGold": 760,
+    "bossKillGold": 353000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -17143,7 +16711,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "黑暗天堂",
-    "replayBossKills": 430,
+    "replayBossKills": 250,
     "smallKills": 2500,
     "mobAtk1Dmg": 261000,
     "mobAtk1Cd": 0.6,
@@ -17200,9 +16768,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 4884800000,
     "bossHp": 73272000000,
     "killExp": 36600,
-    "killGold": 96,
+    "killGold": 366000,
     "bossKillExp": 366000,
-    "bossKillGold": 772,
+    "bossKillGold": 366000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -17210,7 +16778,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "黑暗天堂",
-    "replayBossKills": 435,
+    "replayBossKills": 250,
     "smallKills": 2525,
     "mobAtk1Dmg": 269000,
     "mobAtk1Cd": 0.6,
@@ -17267,9 +16835,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 5319700000,
     "bossHp": 79795500000,
     "killExp": 37900,
-    "killGold": 98,
+    "killGold": 379000,
     "bossKillExp": 379000,
-    "bossKillGold": 788,
+    "bossKillGold": 379000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -17277,7 +16845,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "黑暗天堂",
-    "replayBossKills": 440,
+    "replayBossKills": 250,
     "smallKills": 2575,
     "mobAtk1Dmg": 277000,
     "mobAtk1Cd": 0.6,
@@ -17334,9 +16902,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 5793200000,
     "bossHp": 86898000000,
     "killExp": 39300,
-    "killGold": 100,
+    "killGold": 393000,
     "bossKillExp": 393000,
-    "bossKillGold": 800,
+    "bossKillGold": 393000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -17344,7 +16912,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "黑暗天堂",
-    "replayBossKills": 445,
+    "replayBossKills": 250,
     "smallKills": 2600,
     "mobAtk1Dmg": 286000,
     "mobAtk1Cd": 0.6,
@@ -17401,9 +16969,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 6309000000,
     "bossHp": 94635000000,
     "killExp": 40800,
-    "killGold": 101,
+    "killGold": 408000,
     "bossKillExp": 408000,
-    "bossKillGold": 812,
+    "bossKillGold": 408000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -17411,7 +16979,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "黑暗天堂",
-    "replayBossKills": 450,
+    "replayBossKills": 250,
     "smallKills": 2625,
     "mobAtk1Dmg": 294000,
     "mobAtk1Cd": 0.6,
@@ -17468,9 +17036,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 6870600000,
     "bossHp": 103059000000,
     "killExp": 42300,
-    "killGold": 103,
+    "killGold": 423000,
     "bossKillExp": 423000,
-    "bossKillGold": 828,
+    "bossKillGold": 423000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -17478,7 +17046,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "黑暗天堂",
-    "replayBossKills": 450,
+    "replayBossKills": 250,
     "smallKills": 2675,
     "mobAtk1Dmg": 303000,
     "mobAtk1Cd": 0.6,
@@ -17535,9 +17103,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 7482200000,
     "bossHp": 112233000000,
     "killExp": 43900,
-    "killGold": 105,
+    "killGold": 439000,
     "bossKillExp": 439000,
-    "bossKillGold": 840,
+    "bossKillGold": 439000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -17545,7 +17113,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "黑暗天堂",
-    "replayBossKills": 455,
+    "replayBossKills": 250,
     "smallKills": 2700,
     "mobAtk1Dmg": 312000,
     "mobAtk1Cd": 0.6,
@@ -17602,9 +17170,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 7482200000,
     "bossHp": 112233000000,
     "killExp": 43900,
-    "killGold": 106,
+    "killGold": 439000,
     "bossKillExp": 439000,
-    "bossKillGold": 852,
+    "bossKillGold": 439000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -17614,7 +17182,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandName": "世界樹",
     "bandMin": 190,
     "bandMax": 200,
-    "replayBossKills": 455,
+    "replayBossKills": 250,
     "smallKills": 2700,
     "mobAtk1Dmg": 312000,
     "mobAtk1Cd": 0.6,
@@ -17669,9 +17237,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 8148300000,
     "bossHp": 122224500000,
     "killExp": 45500,
-    "killGold": 96,
+    "killGold": 455000,
     "bossKillExp": 455000,
-    "bossKillGold": 772,
+    "bossKillGold": 455000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -17679,7 +17247,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "世界樹",
-    "replayBossKills": 460,
+    "replayBossKills": 250,
     "smallKills": 2725,
     "mobAtk1Dmg": 322000,
     "mobAtk1Cd": 0.6,
@@ -17736,9 +17304,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 8873700000,
     "bossHp": 133105500000,
     "killExp": 47200,
-    "killGold": 98,
+    "killGold": 472000,
     "bossKillExp": 472000,
-    "bossKillGold": 788,
+    "bossKillGold": 472000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -17746,7 +17314,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "世界樹",
-    "replayBossKills": 465,
+    "replayBossKills": 250,
     "smallKills": 2775,
     "mobAtk1Dmg": 332000,
     "mobAtk1Cd": 0.6,
@@ -17803,9 +17371,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 9663700000,
     "bossHp": 144955500000,
     "killExp": 49000,
-    "killGold": 100,
+    "killGold": 490000,
     "bossKillExp": 490000,
-    "bossKillGold": 800,
+    "bossKillGold": 490000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -17813,7 +17381,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "世界樹",
-    "replayBossKills": 470,
+    "replayBossKills": 250,
     "smallKills": 2800,
     "mobAtk1Dmg": 342000,
     "mobAtk1Cd": 0.6,
@@ -17870,9 +17438,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 10524000000,
     "bossHp": 157860000000,
     "killExp": 50800,
-    "killGold": 101,
+    "killGold": 508000,
     "bossKillExp": 508000,
-    "bossKillGold": 812,
+    "bossKillGold": 508000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -17880,7 +17448,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "世界樹",
-    "replayBossKills": 475,
+    "replayBossKills": 250,
     "smallKills": 2825,
     "mobAtk1Dmg": 352000,
     "mobAtk1Cd": 0.6,
@@ -17937,9 +17505,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 11460900000,
     "bossHp": 171913500000,
     "killExp": 52700,
-    "killGold": 103,
+    "killGold": 527000,
     "bossKillExp": 527000,
-    "bossKillGold": 828,
+    "bossKillGold": 527000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -17947,7 +17515,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "世界樹",
-    "replayBossKills": 480,
+    "replayBossKills": 250,
     "smallKills": 2875,
     "mobAtk1Dmg": 363000,
     "mobAtk1Cd": 0.6,
@@ -18004,9 +17572,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 12481100000,
     "bossHp": 187216500000,
     "killExp": 54700,
-    "killGold": 105,
+    "killGold": 547000,
     "bossKillExp": 547000,
-    "bossKillGold": 840,
+    "bossKillGold": 547000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -18014,7 +17582,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "世界樹",
-    "replayBossKills": 485,
+    "replayBossKills": 250,
     "smallKills": 2900,
     "mobAtk1Dmg": 374000,
     "mobAtk1Cd": 0.6,
@@ -18071,9 +17639,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 13592200000,
     "bossHp": 203883000000,
     "killExp": 56700,
-    "killGold": 106,
+    "killGold": 567000,
     "bossKillExp": 567000,
-    "bossKillGold": 852,
+    "bossKillGold": 567000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -18081,7 +17649,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "世界樹",
-    "replayBossKills": 490,
+    "replayBossKills": 250,
     "smallKills": 2925,
     "mobAtk1Dmg": 385000,
     "mobAtk1Cd": 0.6,
@@ -18138,9 +17706,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 14802300000,
     "bossHp": 222034500000,
     "killExp": 58800,
-    "killGold": 108,
+    "killGold": 588000,
     "bossKillExp": 588000,
-    "bossKillGold": 868,
+    "bossKillGold": 588000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -18148,7 +17716,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "世界樹",
-    "replayBossKills": 495,
+    "replayBossKills": 250,
     "smallKills": 2975,
     "mobAtk1Dmg": 397000,
     "mobAtk1Cd": 0.6,
@@ -18205,9 +17773,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "monsterHp": 16120000000,
     "bossHp": 241800000000,
     "killExp": 61000,
-    "killGold": 110,
+    "killGold": 610000,
     "bossKillExp": 610000,
-    "bossKillGold": 880,
+    "bossKillGold": 610000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
@@ -18215,7 +17783,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "世界樹",
-    "replayBossKills": 500,
+    "replayBossKills": 250,
     "smallKills": 3000,
     "mobAtk1Dmg": 409000,
     "mobAtk1Cd": 0.6,

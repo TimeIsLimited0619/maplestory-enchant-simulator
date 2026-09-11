@@ -16,7 +16,7 @@ const UiHyperStat = (() => {
     luk: { desc: '會增加幸運。', effect: (n) => `提高幸運 ${n}` },
     hp: { desc: '會增加最大 HP。', effect: (n) => `提高最大 HP ${n}%` },
     mp: { desc: '會增加最大 MP。', effect: (n) => `提高最大 MP ${n}%` },
-    df: { desc: '會增加惡魔力量／精氣。', effect: (n) => `提高 DF / TF ${n}` },
+    df: { desc: '會增加防禦力。', effect: (n) => `提高防禦力 ${n}` },
     critRate: { desc: '會增加爆擊機率。', effect: (n) => `提高爆擊機率 ${n}%` },
     critDmg: { desc: '會增加爆擊傷害。', effect: (n) => `提高爆擊傷害 ${n}%` },
     ied: { desc: '會增加無視防禦率。', effect: (n) => `提高無視防禦率 ${n}%` },

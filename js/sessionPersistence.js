@@ -278,6 +278,7 @@ const SessionPersistenceModule = {
     if (typeof calculateCost === 'function') calculateCost();
     this.restoreUiEquipState();
     this.restoreEquippedItem();
+    if (typeof GrowingEquip !== 'undefined') GrowingEquip.sync?.({ log: false });
     if (typeof CharacterCombatPanel !== 'undefined') CharacterCombatPanel.syncToCombatPower?.();
     if (typeof UiCharacterInfo !== 'undefined') UiCharacterInfo.refresh?.();
     if (typeof UiHyperStat !== 'undefined') UiHyperStat.refresh?.();
@@ -469,6 +470,7 @@ const SessionPersistenceModule = {
     if (!data) return;
     this.applyExtraPayload(data);
     this.grantIdleStarterIfNeeded();
+    if (typeof GrowingEquip !== 'undefined') GrowingEquip.sync?.({ log: true });
   },
 
   applyExtraPayload(data) {

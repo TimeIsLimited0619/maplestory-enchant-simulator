@@ -1121,13 +1121,20 @@ const UiEquipModule = (() => {
 
   function getWornItemIds() {
     const set = new Set();
-    [1, 2, 3].forEach((n) => {
-      SLOT_IDS.forEach((id) => {
-        const itemId = presetWear[n][id]?.itemId;
-        if (itemId) set.add(itemId);
-      });
+    forEachWornEntry((entry) => {
+      if (entry?.itemId) set.add(entry.itemId);
     });
     return set;
+  }
+
+  function forEachWornEntry(fn) {
+    if (typeof fn !== 'function') return;
+    [1, 2, 3].forEach((n) => {
+      SLOT_IDS.forEach((id) => {
+        const entry = presetWear[n][id];
+        if (entry?.itemId) fn(entry, id, n);
+      });
+    });
   }
 
   function getWornEntry(uiSlotId) {
@@ -1185,6 +1192,7 @@ const UiEquipModule = (() => {
     destroyWornItem,
     isItemWorn,
     getWornItemIds,
+    forEachWornEntry,
     unequipBagIndex,
     isBagWornAnywhere,
     isBagWornActive,

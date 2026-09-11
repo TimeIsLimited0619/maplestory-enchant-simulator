@@ -61,7 +61,7 @@ const CharacterProgression = (() => {
     { key: 'luk', skillId: '80000403', max: HYPER_MAX_LEVEL, label: 'LUK' },
     { key: 'hp', skillId: '80000404', max: HYPER_MAX_LEVEL, label: 'HP' },
     { key: 'mp', skillId: '80000405', max: HYPER_MAX_LEVEL, label: 'MP' },
-    { key: 'df', skillId: '80000406', max: HYPER_MAX_LEVEL, label: 'DF / TF' },
+    { key: 'df', skillId: '80000406', max: HYPER_MAX_LEVEL, label: '防禦力' },
     { key: 'critRate', skillId: '80000409', max: HYPER_MAX_LEVEL, label: '爆擊機率' },
     { key: 'critDmg', skillId: '80000410', max: HYPER_MAX_LEVEL, label: '爆擊傷害' },
     { key: 'ied', skillId: '80000412', max: HYPER_MAX_LEVEL, label: '無視防禦率' },
@@ -127,7 +127,7 @@ const CharacterProgression = (() => {
     if (!lv) return 0;
     if (key === 'str' || key === 'dex' || key === 'int' || key === 'luk') return lv * 30;
     if (key === 'hp' || key === 'mp') return lv * 2;
-    if (key === 'df') return lv * 10;
+    if (key === 'df') return lv * 300;
     if (key === 'critRate') return lv <= 5 ? lv : 5 + (lv - 5) * 2;
     if (key === 'critDmg') return lv;
     if (key === 'ied' || key === 'dmg') return lv * 3;
@@ -286,6 +286,14 @@ const CharacterProgression = (() => {
     if (state.apInstant) autoAssignAp();
     else notify();
     if (typeof IdleHunt !== 'undefined') IdleHunt.healToFull?.();
+    if (typeof GrowingEquip !== 'undefined') {
+      const before = state.level - gained;
+      const grantLv = GrowingEquip.GRANT_LEVEL || 10;
+      GrowingEquip.sync?.({
+        log: true,
+        crossedGrantLevel: before < grantLv && state.level >= grantLv,
+      });
+    }
   }
 
   function addHuntExp(base, mobLevel) {
@@ -500,6 +508,7 @@ const CharacterProgression = (() => {
         CharacterSkills.onCharacterLevelUp?.();
       }
       notify();
+      if (typeof GrowingEquip !== 'undefined') GrowingEquip.sync?.({ log: false, refresh: true });
     }
   }
 
@@ -547,6 +556,7 @@ const CharacterProgression = (() => {
       normalDmg: hyperBonusAt('normal', hyper.normal),
       expPercent: hyperBonusAt('exp', hyper.exp),
       arcane: hyperBonusAt('arcane', hyper.arcane),
+      def: hyperBonusAt('df', hyper.df),
     };
   }
 
@@ -565,6 +575,7 @@ const CharacterProgression = (() => {
     applyDefaults();
     load();
     notify();
+    if (typeof GrowingEquip !== 'undefined') GrowingEquip.sync?.({ log: false, refresh: true });
   }
 
   function resetDefault() {

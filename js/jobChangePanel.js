@@ -154,13 +154,28 @@ const JobChangePanel = (() => {
     </section>`;
   }
 
+  function starterClaimMarkup() {
+    const grantLv = (typeof GrowingEquip !== 'undefined' && GrowingEquip.GRANT_LEVEL) || 10;
+    const level = typeof CharacterProgression !== 'undefined'
+      ? Math.max(1, Math.floor(Number(CharacterProgression.getState?.()?.level) || 1))
+      : 1;
+    const canClaim = level >= grantLv;
+    return `<section class="job-change-starter" aria-label="新手套裝">
+      <h3 class="job-change-section-title">新手套裝</h3>
+      <p class="job-change-hint">首次達到 Lv.${grantLv} 會自動發放一次；賣掉後不會在重整時重發。缺少件數可於此補領。</p>
+      <button type="button" class="job-change-starter-btn" data-action="claim-starter" ${canClaim ? '' : 'disabled'}>
+        補領新手套裝
+      </button>
+    </section>`;
+  }
+
   function render() {
     ensureDom();
     syncChrome();
     const body = $('jobChangeBody');
     if (!body) return;
     if (!open) return;
-    body.innerHTML = `${costSectionMarkup()}${jobListMarkup()}`;
+    body.innerHTML = `${costSectionMarkup()}${jobListMarkup()}${starterClaimMarkup()}`;
   }
 
   function failMessage(reason) {
@@ -256,6 +271,18 @@ const JobChangePanel = (() => {
     });
 
     $('jobChangeBody')?.addEventListener('click', (e) => {
+      const claimBtn = e.target.closest?.('[data-action="claim-starter"]');
+      if (claimBtn) {
+        e.preventDefault();
+        if (claimBtn.disabled) return;
+        if (typeof GrowingEquip === 'undefined' || typeof GrowingEquip.claimStarterSet !== 'function') {
+          if (typeof addLog === 'function') addLog('[成長裝備] 補領功能尚未就緒。', 'log-fail');
+          return;
+        }
+        GrowingEquip.claimStarterSet({ log: true });
+        render();
+        return;
+      }
       const row = e.target.closest?.('[data-action="pick-job"]');
       if (!row || row.disabled) return;
       e.preventDefault();
