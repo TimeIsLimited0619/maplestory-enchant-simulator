@@ -412,6 +412,7 @@ const EQUIP_CRAFT_MAKE_LIST = [
         { id: 'twohanded_sword', label: '雙手劍', output: '01402112' },
         { id: 'short_wand', label: '短杖', output: '01372101' },
         { id: 'dual_crossbow', label: '雙弩槍', output: '01522021' },
+        { id: 'fist_weapon', label: '拳套', output: '01472142' },
       ],
     },
     {
@@ -637,6 +638,7 @@ const EQUIP_CRAFT_MAKE_LIST = [
         { id: 'twohanded_sword', label: '雙手劍', output: '01402095' },
         { id: 'short_wand', label: '短杖', output: '01372084' },
         { id: 'dual_crossbow', label: '雙弩槍', output: '01522018' },
+        { id: 'fist_weapon', label: '拳套', output: '01472122' },
       ],
     },
     {
@@ -742,61 +744,45 @@ const EQUIP_CRAFT_MAKE_LIST = [
         { id: 'twohanded_sword', label: '雙手劍', output: '01402196' },
         { id: 'short_wand', label: '短杖', output: '01372177' },
         { id: 'dual_crossbow', label: '雙弩槍', output: '01522094' },
+        { id: 'fist_weapon', label: '拳套', output: '01472214' },
       ],
     },
-  ],
+      {
+          id: 'abyss_cap',
+          name: '深淵帽子',
+          iconItemId: '01003797',
+          materials: { '02434586': 10 },
+          meso: 500000000,
+          variants: [
+            { id: 'warrior', label: '劍士', output: '01003797' },
+            { id: 'mage', label: '法師', output: '01003798' },
+            { id: 'bowman', label: '弓箭手', output: '01003799' },
+            { id: 'thief', label: '盜賊', output: '01003800' },
+            { id: 'pirate', label: '海盜', output: '01003801' },
+          ],
+        },
+        {
+          id: 'abyss_armor',
+          name: '深淵衣褲',
+          iconItemId: '01042254',
+          materials: { '02434585': 10 },
+          meso: 500000000,
+          variants: [
+            { id: 'warrior_coat', label: '劍士', output: '01042254' },
+            { id: 'warrior_pants', label: '劍士', output: '01062165' },
+            { id: 'mage_coat', label: '法師', output: '01042255' },
+            { id: 'mage_pants', label: '法師', output: '01062166' },
+            { id: 'bowman_coat', label: '弓箭手', output: '01042256' },
+            { id: 'bowman_pants', label: '弓箭手', output: '01062167' },
+            { id: 'thief_coat', label: '盜賊', output: '01042257' },
+            { id: 'thief_pants', label: '盜賊', output: '01062168' },
+            { id: 'pirate_coat', label: '海盜', output: '01042258' },
+            { id: 'pirate_pants', label: '海盜', output: '01062169' },
+          ],
+        },
+    ],
 },
 
-//深淵帽子
-{
-  id: 'abyss_cap',
-  name: '深淵帽子',
-  iconItemId: '01003797',
-  categories: [
-    {
-      id: 'abyss_cap',
-      name: '深淵帽子',
-      iconItemId: '01003797',
-      materials: { '02434586': 10 },
-      meso: 500000000,
-      variants: [
-        { id: 'warrior', label: '劍士', output: '01003797' },
-        { id: 'mage', label: '法師', output: '01003798' },
-        { id: 'bowman', label: '弓箭手', output: '01003799' },
-        { id: 'thief', label: '盜賊', output: '01003800' },
-        { id: 'pirate', label: '海盜', output: '01003801' },
-      ],
-    },
-  ],
-},
-
-//深淵衣褲
-{
-  id: 'abyss_armor',
-  name: '深淵衣褲',
-  iconItemId: '01042254',
-  categories: [
-    {
-      id: 'abyss_armor',
-      name: '深淵衣褲',
-      iconItemId: '01042254',
-      materials: { '02434585': 10 },
-      meso: 500000000,
-      variants: [
-        { id: 'warrior_coat', label: '劍士', output: '01042254' },
-        { id: 'warrior_pants', label: '劍士', output: '01062165' },
-        { id: 'mage_coat', label: '法師', output: '01042255' },
-        { id: 'mage_pants', label: '法師', output: '01062166' },
-        { id: 'bowman_coat', label: '弓箭手', output: '01042256' },
-        { id: 'bowman_pants', label: '弓箭手', output: '01062167' },
-        { id: 'thief_coat', label: '盜賊', output: '01042257' },
-        { id: 'thief_pants', label: '盜賊', output: '01062168' },
-        { id: 'pirate_coat', label: '海盜', output: '01042258' },
-        { id: 'pirate_pants', label: '海盜', output: '01062169' },
-      ],
-    },
-  ],
-},
 
 
 //濃姬副手
