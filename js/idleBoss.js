@@ -55,6 +55,8 @@ const IdleBoss = (() => {
   let repeatLeft = 0;
   let repeatCancel = false;
   let repeatWanted = 1;
+  /** 自動挑戰結束後：push＝自動推圖／farm＝自動掛機 */
+  let afterAfkMode = 'push';
   let autoReenterBusy = false;
 
   function $(id) {
@@ -126,6 +128,31 @@ const IdleBoss = (() => {
     }
   }
 
+  function afterAfkModeLabel(mode) {
+    return (mode || afterAfkMode) === 'farm' ? '自動掛機' : '自動推圖';
+  }
+
+  function syncAfterAfkModeBtn() {
+    ensureRepeatField();
+    const btn = $('idleBossAfterMode');
+    if (!btn) return;
+    const mode = afterAfkMode === 'farm' ? 'farm' : 'push';
+    afterAfkMode = mode;
+    btn.disabled = !!challengeLocked;
+    btn.textContent = afterAfkModeLabel(mode);
+    btn.classList.toggle('is-push', mode === 'push');
+    btn.classList.toggle('is-farm', mode === 'farm');
+    btn.title = mode === 'farm'
+      ? '結束後進入自動掛機（點一下改為自動推圖）'
+      : '結束後進入自動推圖（點一下改為自動掛機）';
+  }
+
+  function toggleAfterAfkMode() {
+    if (challengeLocked) return;
+    afterAfkMode = afterAfkMode === 'farm' ? 'push' : 'farm';
+    syncAfterAfkModeBtn();
+  }
+
   function bindRepeatInput() {
     const el = $('idleBossRepeat');
     if (!el || el.dataset.bound === '1') return;
@@ -139,12 +166,27 @@ const IdleBoss = (() => {
   }
 
   function ensureRepeatField() {
-    if ($('idleBossRepeat')) return;
     const enter = $('idleBossEnter');
     if (!enter || !enter.parentElement) return;
-    enter.insertAdjacentHTML('beforebegin', `<label class="idle-boss-repeat">挑戰次數
-      <input id="idleBossRepeat" type="number" min="1" max="1" step="1" value="1" title="最多為身上 BOSS 入場券數量">
-    </label>`);
+    if (!$('idleBossRepeat')) {
+      enter.insertAdjacentHTML('beforebegin', `<div class="idle-boss-repeat-bar">
+        <label class="idle-boss-repeat">挑戰次數
+          <input id="idleBossRepeat" type="number" min="1" max="1" step="1" value="1" title="最多為身上 BOSS 入場券數量">
+        </label>
+        <button type="button" id="idleBossAfterMode" class="idle-boss-after-mode">自動推圖</button>
+      </div>`);
+      return;
+    }
+    if ($('idleBossAfterMode')) return;
+    const label = $('idleBossRepeat')?.closest('label.idle-boss-repeat');
+    if (label && !label.parentElement?.classList.contains('idle-boss-repeat-bar')) {
+      const bar = document.createElement('div');
+      bar.className = 'idle-boss-repeat-bar';
+      label.parentElement?.insertBefore(bar, label);
+      bar.appendChild(label);
+      bar.insertAdjacentHTML('beforeend',
+        '<button type="button" id="idleBossAfterMode" class="idle-boss-after-mode">自動推圖</button>');
+    }
   }
 
   function repeatHudTag() {
@@ -488,9 +530,8 @@ const IdleBoss = (() => {
         const t = ensureChallengeTimer();
         if (!t) return;
         exitCountdownActive = true;
-        // 自動下一場時縮短離場等待，仍留一點時間撿掉落
-        let wait = Math.max(1, Math.floor(Number(sec) || 30));
-        if (repeatLeft > 0 && !repeatCancel) wait = Math.min(wait, 5);
+        // 通關後固定 5 秒離場（仍可撿掉落）
+        const wait = 5;
         t.reset(wait);
         t.setVisible(true);
         t.start();
@@ -562,9 +603,12 @@ const IdleBoss = (() => {
         <div id="idleBossReqLevel" class="idle-boss-req-level" aria-live="polite"></div>
         <div class="idle-boss-challenge-foot">
           <div id="idleBossDiffRow" class="idle-boss-diff-row" role="group" aria-label="難度"></div>
-          <label class="idle-boss-repeat">挑戰次數
-            <input id="idleBossRepeat" type="number" min="1" max="1" step="1" value="1" title="最多為身上 BOSS 入場券數量">
-          </label>
+          <div class="idle-boss-repeat-bar">
+            <label class="idle-boss-repeat">挑戰次數
+              <input id="idleBossRepeat" type="number" min="1" max="1" step="1" value="1" title="最多為身上 BOSS 入場券數量">
+            </label>
+            <button type="button" id="idleBossAfterMode" class="idle-boss-after-mode">自動推圖</button>
+          </div>
           <button type="button" id="idleBossEnter" class="idle-boss-enter">挑戰</button>
         </div>
       </div>
@@ -1044,6 +1088,7 @@ const IdleBoss = (() => {
     renderDiffRow();
     renderRewardPreview();
     syncChallengeBtn();
+    syncAfterAfkModeBtn();
   }
 
   function formatHp(hp, maxHp) {
@@ -1310,6 +1355,7 @@ const IdleBoss = (() => {
   function setChallengeLocked(next) {
     challengeLocked = !!next;
     syncChallengeBtn();
+    syncAfterAfkModeBtn();
     renderDiffRow();
     syncArenaCloseBtn();
     syncNavLock();
@@ -2144,13 +2190,23 @@ const IdleBoss = (() => {
     if (wantRetry && hasTicket() && selectedId && meetsEntryLevel(selectedId)) {
       scheduleAutoReenter();
     } else {
+      const finishedBatch = !repeatCancel && !cancelRepeat && repeatTotal > 0 && repeatLeft <= 0;
+      const done = Math.max(0, repeatTotal - repeatLeft);
       if (repeatTotal > 1 && typeof addLog === 'function') {
-        const done = Math.max(0, repeatTotal - repeatLeft);
-        if (repeatCancel) addLog(`已取消 BOSS 自動挑戰。共完成 ${done} 場。`, 'log-info');
+        if (repeatCancel || cancelRepeat) addLog(`已取消 BOSS 自動挑戰。共完成 ${done} 場。`, 'log-info');
         else if (done > 0) addLog(`BOSS 自動挑戰結束。共完成 ${done} 場。`, 'log-info');
       }
       clearRepeatState();
       syncChallengeBtn();
+      if (finishedBatch) {
+        const mode = afterAfkMode === 'farm' ? 'farm' : 'push';
+        const modeLabel = afterAfkModeLabel(mode);
+        if (typeof addLog === 'function') {
+          addLog(`BOSS 自動挑戰完成（${done} 場），已切換${modeLabel}。`, 'log-info');
+        }
+        setOpen(false);
+        if (typeof IdleHunt !== 'undefined') IdleHunt.setAfkMode?.(mode, { resume: true });
+      }
     }
     if (open) render();
     return true;
@@ -2220,6 +2276,11 @@ const IdleBoss = (() => {
       if (e.target.closest('#idleBossClose')) {
         e.preventDefault();
         setOpen(false);
+        return;
+      }
+      if (e.target.closest('#idleBossAfterMode')) {
+        e.preventDefault();
+        toggleAfterAfkMode();
         return;
       }
       if (e.target.closest('#idleBossEnter')) {

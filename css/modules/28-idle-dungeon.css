@@ -112,6 +112,41 @@
   max-width: 140px;
 }
 
+.idle-dungeon-repeat-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+  width: 100%;
+}
+
+.idle-dungeon-after-mode {
+  flex: 0 0 auto;
+  min-width: 96px;
+  padding: 6px 10px;
+  border: 1px solid #55616d;
+  border-radius: 4px;
+  background: #1a1e22;
+  color: #c5ced6;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.idle-dungeon-after-mode.is-push {
+  border-color: #4a9a58;
+  color: #b6e0be;
+}
+
+.idle-dungeon-after-mode.is-farm {
+  border-color: #8a7a3a;
+  color: #e6d89a;
+}
+
+.idle-dungeon-after-mode:hover {
+  background: #2a333a;
+}
+
 .idle-dungeon-enter .idle-dungeon-repeat input {
   width: 100%;
   box-sizing: border-box;
@@ -158,8 +193,19 @@
 
 .idle-dungeon-picker .idle-dungeon-enter label,
 .idle-dungeon-picker .idle-dungeon-enter select,
-.idle-dungeon-picker .idle-dungeon-enter button {
+.idle-dungeon-picker .idle-dungeon-enter > button {
   width: 100%;
+}
+
+.idle-dungeon-picker .idle-dungeon-repeat-bar .idle-dungeon-repeat {
+  flex: 1;
+  max-width: none;
+  min-width: 0;
+}
+
+.idle-dungeon-picker .idle-dungeon-after-mode {
+  width: auto;
+  align-self: end;
 }
 
 #idleGmPageDungeon textarea,

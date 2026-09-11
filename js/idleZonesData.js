@@ -2789,7 +2789,21 @@ const IDLE_ZONE_BAND_DEFS = [
     "min": 160,
     "max": 170,
     "name": "克里堤亞斯",
-    "mobDrops": [],
+    "mobDrops": [
+      {
+        "kind": "consume",
+        "consumeType": "potion",
+        "scrollId": "",
+        "cubeId": "",
+        "itemId": "special-potion",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-potion-special-potion",
+        "name": "特殊藥水",
+        "chance": 5,
+        "amount": 1
+      }
+    ],
     "bossDrops": []
   },
   {

@@ -1268,6 +1268,34 @@ const IdleHunt = (() => {
     if (isAfkActive() && state.running) scheduleAfkStep(0);
   }
 
+  /**
+   * 外部（副本／BOSS 自動挑戰結束）切換託管模式。
+   * @param {'off'|'push'|'farm'} mode
+   * @param {{ resume?: boolean }} [opts] resume≠false 時確保開著狩獵並開打
+   */
+  function setAfkMode(mode, opts = {}) {
+    const next = (mode === 'push' || mode === 'farm' || mode === 'off') ? mode : 'off';
+    state.afkMode = next;
+    syncAfkFlag();
+    state.afkHoldAdvance = false;
+    if (next !== 'push') {
+      if (fieldTransition?.resumeAfter) fieldTransition.resumeAfter = false;
+    }
+    if (afkStepTimer != null) {
+      window.clearTimeout(afkStepTimer);
+      afkStepTimer = null;
+    }
+    save();
+    if (opts.resume !== false) {
+      if (!open) setOpen(true);
+      if (!state.running && !isPlayerDead() && canFight() && !jobLinePickerOpen && !isBlockingPanelOpen()) {
+        start();
+      }
+      if (isAfkActive() && state.running) scheduleAfkStep(80);
+    }
+    if (open) render();
+  }
+
   function toggleAfk() {
     cycleAfkMode();
   }
@@ -5025,6 +5053,8 @@ const IdleHunt = (() => {
     resolveMobHitDamage,
     applyPlayerHitToMob,
     setPickerOpen,
+    setAfkMode,
+    getAfkMode: () => state.afkMode,
     getZoneId: () => state.zoneId,
   };
 })();

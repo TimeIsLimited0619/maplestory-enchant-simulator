@@ -16,6 +16,8 @@ const IdleDungeon = (() => {
   let repeatLeft = 0;
   let repeatCancel = false;
   let repeatWanted = 1;
+  /** 自動挑戰結束後：push＝自動推圖／farm＝自動掛機 */
+  let afterAfkMode = 'push';
   let pickerView = 'cats';
   let pickerCat = 'gold';
   let selectedId = '';
@@ -401,6 +403,29 @@ const IdleDungeon = (() => {
     return `自動 ${curIdx}/${repeatTotal}`;
   }
 
+  function afterAfkModeLabel(mode) {
+    return (mode || afterAfkMode) === 'farm' ? '自動掛機' : '自動推圖';
+  }
+
+  function syncAfterAfkModeBtn() {
+    const btn = $('idleDungeonAfterMode');
+    if (!btn) return;
+    const mode = afterAfkMode === 'farm' ? 'farm' : 'push';
+    afterAfkMode = mode;
+    btn.textContent = afterAfkModeLabel(mode);
+    btn.classList.toggle('is-push', mode === 'push');
+    btn.classList.toggle('is-farm', mode === 'farm');
+    btn.title = mode === 'farm'
+      ? '結束後進入自動掛機（點一下改為自動推圖）'
+      : '結束後進入自動推圖（點一下改為自動掛機）';
+    btn.setAttribute('aria-pressed', 'true');
+  }
+
+  function toggleAfterAfkMode() {
+    afterAfkMode = afterAfkMode === 'farm' ? 'push' : 'farm';
+    syncAfterAfkModeBtn();
+  }
+
   function bindRepeatInput(dungeon) {
     const el = $('idleDungeonRepeat');
     if (!el || !dungeon) return;
@@ -520,9 +545,12 @@ const IdleDungeon = (() => {
         ? '達成擊殺數後召喚頭目，擊敗頭目才可獲得通關獎勵。'
         : '限定時間內擊殺的怪物越多，獲得的楓幣越多。');
     const repeatVal = n < 1 ? 0 : clampRepeatCount(repeatWanted, n);
-    const repeatField = `<label class="idle-dungeon-repeat">挑戰次數
-      <input id="idleDungeonRepeat" type="number" min="1" max="${Math.max(1, n)}" step="1" value="${repeatVal}" title="最多 ${n}（身上入場券）">
-    </label>`;
+    const repeatField = `<div class="idle-dungeon-repeat-bar">
+      <label class="idle-dungeon-repeat">挑戰次數
+        <input id="idleDungeonRepeat" type="number" min="1" max="${Math.max(1, n)}" step="1" value="${repeatVal}" title="最多 ${n}（身上入場券）">
+      </label>
+      <button type="button" id="idleDungeonAfterMode" class="idle-dungeon-after-mode">自動推圖</button>
+    </div>`;
     wrap.innerHTML = isDamage
       ? `<p class="idle-dungeon-lead">${typeLabel(d.type)} · ${d.ticketName} × ${n}<br>${leadHint}</p>
         <p id="idleDungeonReqLevel" class="idle-dungeon-req-level" hidden></p>
@@ -557,6 +585,7 @@ const IdleDungeon = (() => {
     }
     syncRepeatInput(d);
     bindRepeatInput(d);
+    syncAfterAfkModeBtn();
     const leave = $('idleDungeonLeave');
     if (leave) {
       leave.disabled = !run();
@@ -835,6 +864,7 @@ const IdleDungeon = (() => {
     pickerView = 'enter';
 
     const doneCount = Math.max(0, repeatTotal - repeatLeft);
+    const finishedBatch = !repeatCancel && repeatTotal > 0 && repeatLeft <= 0;
     const canContinue = !repeatCancel
       && repeatLeft > 0
       && d
@@ -858,6 +888,20 @@ const IdleDungeon = (() => {
     } else {
       resultText = line;
     }
+
+    if (finishedBatch) {
+      const mode = afterAfkMode === 'farm' ? 'farm' : 'push';
+      const modeLabel = afterAfkModeLabel(mode);
+      clearRepeatState();
+      resultText = `${resultText}\n已切換為${modeLabel}。`;
+      setOpen(false);
+      IdleHunt.setAfkMode?.(mode, { resume: true });
+      if (typeof addLog === 'function') {
+        addLog(`副本自動挑戰完成（${doneCount} 場），已切換${modeLabel}。`, 'log-info');
+      }
+      return;
+    }
+
     clearRepeatState();
     setOpen(true, { keepView: true });
   }
@@ -1849,6 +1893,11 @@ const IdleDungeon = (() => {
         pickerView = 'enter';
         resultText = '';
         renderPicker();
+        return;
+      }
+      if (e.target.closest('#idleDungeonAfterMode')) {
+        e.preventDefault();
+        toggleAfterAfkMode();
         return;
       }
       if (e.target.closest('#idleDungeonStart')) {

@@ -86,13 +86,16 @@ const UiToadsHammer = (() => {
     return Number.isInteger(n) && n >= 0 ? n : -1;
   }
 
+  function isSuperiorEquip(item) {
+    if (!item) return false;
+    if (typeof isSuperiorStarForceItem === 'function' && isSuperiorStarForceItem(item)) return true;
+    return Boolean(item.superiorEqp || item.superiorStarForce);
+  }
+
   function canUseToadsHammer(itemId) {
     const data = typeof ITEM_DATABASE !== 'undefined' ? ITEM_DATABASE[itemId] : null;
     if (!data) return false;
     if (data.exceptToadsHammer) return false;
-    // 尊貴裝備（Superior／暴君等）不可使用蟾蜍鐵鎚
-    if (typeof isSuperiorStarForceItem === 'function' && isSuperiorStarForceItem(data)) return false;
-    if (data.superiorEqp || data.superiorStarForce) return false;
     if (typeof isEnhancementLockedItem === 'function' && isEnhancementLockedItem(data)) return false;
     return true;
   }
@@ -162,10 +165,19 @@ const UiToadsHammer = (() => {
   /** 119 級以下裝備可繼承至同部位、高 1～25 等；120 級以上需同等級以上同部位 */
   const MAX_INHERIT_LEVEL_GAP = 25;
 
-  /** 同部位；≤119 可傳給高 1～25 等；>119 需同等級以上同部位 */
+  /**
+   * 同部位。
+   * 尊貴裝備：僅可與同等級尊貴裝備互傳（不可與一般裝備混傳）。
+   * 一般裝備：≤119 可傳給高 1～25 等；>119 需同等級以上。
+   */
   function canInheritTo(src, dst) {
     if (!src || !dst) return false;
     if (String(src.islot || '') !== String(dst.islot || '')) return false;
+    const srcSup = isSuperiorEquip(src);
+    const dstSup = isSuperiorEquip(dst);
+    if (srcSup || dstSup) {
+      return srcSup && dstSup && reqLevelOf(src) === reqLevelOf(dst);
+    }
     const sl = reqLevelOf(src);
     const dl = reqLevelOf(dst);
     if (sl <= 119) return dl >= sl && dl <= sl + MAX_INHERIT_LEVEL_GAP;
@@ -283,7 +295,7 @@ const UiToadsHammer = (() => {
     });
     $('thHelp')?.addEventListener('click', () => {
       if (typeof addLog === 'function') {
-        addLog('[裝備繼承] ① 左欄選抽取裝備 → ② 右欄選繼承裝備 → ③ 確認傳授。傳授後來源裝備會消失。', 'log-info');
+        addLog('[裝備繼承] ① 左欄選抽取裝備 → ② 右欄選繼承裝備 → ③ 確認傳授。傳授後來源裝備會消失。尊貴裝備僅可與同等級、同部位的尊貴裝備互相繼承。', 'log-info');
       }
     });
     $('thOnlyExtractable')?.addEventListener('click', () => {
@@ -650,7 +662,9 @@ const UiToadsHammer = (() => {
     const dst = loadSlotState(targetSlot);
     if (!src || !dst) return;
     if (!canInheritTo(src, dst)) {
-      if (typeof addLog === 'function') addLog('[裝備繼承] 來源與目標不符合繼承條件（部位／等級）。', 'log-fail');
+      if (typeof addLog === 'function') {
+        addLog('[裝備繼承] 來源與目標不符合繼承條件（部位／等級；尊貴裝備僅限同等級互傳）。', 'log-fail');
+      }
       return;
     }
     if (!hasExtractableProgress(src)) {

@@ -2530,7 +2530,7 @@ const IdleBossFight = (() => {
 
   function startExitCountdown() {
     stopExitCountdown();
-    exitLeftSec = Math.max(1, Math.floor(Number(fight?.script?.exitSec) || 30));
+    exitLeftSec = Math.max(1, Math.floor(Number(fight?.script?.exitSec) || 5));
     // 優先交給宿主用 IdleUiTimer 顯示／倒數並在歸零時關場
     if (typeof hooks?.onExitStart === 'function') {
       hooks.onExitStart(exitLeftSec);
