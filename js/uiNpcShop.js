@@ -314,6 +314,11 @@ const UiNpcShop = (() => {
       if (!potion) return null;
       return { kind: 'potion', potion };
     }
+    if (entry.type === T.THROWING_STAR || entry.type === 'throwing_star') {
+      const star = typeof ThrowingStarStore !== 'undefined' ? ThrowingStarStore.get(entry.itemId) : null;
+      if (!star) return null;
+      return { kind: 'throwing_star', star };
+    }
 
     const disp = typeof IdleNpcShopCatalog !== 'undefined'
       ? IdleNpcShopCatalog.resolveConsumeEntryDisplay(entry)
@@ -339,6 +344,13 @@ const UiNpcShop = (() => {
     if (row.consumeType === 'recovery_card' || row.itemId === 'recovery_card') {
       return { type: T.RECOVERY_CARD };
     }
+    if (row.consumeType === 'throwing_star'
+      || (row.kind === 'consume'
+        && !row.consumeType
+        && typeof ThrowingStarStore !== 'undefined'
+        && ThrowingStarStore.isThrowingStarId?.(row.itemId))) {
+      return { type: T.THROWING_STAR || 'throwing_star', itemId: row.itemId };
+    }
     if (row.consumeType === 'starforce_scroll') {
       return { type: T.STARFORCE_SCROLL, scrollId: row.scrollId || row.itemId };
     }
@@ -362,7 +374,8 @@ const UiNpcShop = (() => {
     }
     if (row.kind === 'consume'
       && typeof getBonusStatItemById === 'function'
-      && getBonusStatItemById(row.itemId)) {
+      && getBonusStatItemById(row.itemId)
+      && !row.consumeType) {
       return { type: T.BONUS_STAT, itemId: row.itemId };
     }
     if (row.consumeType === 'exceptional_hammer') {
@@ -372,12 +385,11 @@ const UiNpcShop = (() => {
       return { type: T.SOUL, soulId: row.soulId };
     }
     if (row.consumeType === 'potion'
-      || (row.kind === 'consume' && typeof IdlePotionStore !== 'undefined' && IdlePotionStore.isPotionId?.(row.itemId))) {
+      || (row.kind === 'consume'
+        && !row.consumeType
+        && typeof IdlePotionStore !== 'undefined'
+        && IdlePotionStore.isPotionId?.(row.itemId))) {
       return { type: T.POTION, itemId: row.itemId };
-    }
-    if (row.consumeType === 'throwing_star'
-      || (row.kind === 'consume' && typeof ThrowingStarStore !== 'undefined' && ThrowingStarStore.isThrowingStarId?.(row.itemId))) {
-      return { type: T.THROWING_STAR, itemId: row.itemId };
     }
     return null;
   }
@@ -400,6 +412,10 @@ const UiNpcShop = (() => {
     if (row.consumeType === 'potion'
       || (row.kind === 'consume' && typeof IdlePotionStore !== 'undefined' && IdlePotionStore.isPotionId?.(row.itemId))) {
       return { consumeType: 'potion', itemId: row.itemId, amount };
+    }
+    if (row.consumeType === 'throwing_star'
+      || (row.kind === 'consume' && typeof ThrowingStarStore !== 'undefined' && ThrowingStarStore.isThrowingStarId?.(row.itemId))) {
+      return { consumeType: 'throwing_star', itemId: row.itemId, amount };
     }
     if (row.consumeType === 'bonus_stat'
       || (row.kind === 'consume'
@@ -500,6 +516,26 @@ const UiNpcShop = (() => {
     }
     if (payload.kind === 'potion' && payload.potion && typeof InventoryModule !== 'undefined') {
       InventoryModule.showPotionTooltip?.(anchorEl, payload.potion);
+      return;
+    }
+    if (payload.kind === 'throwing_star' && payload.star && typeof InventoryModule !== 'undefined') {
+      if (typeof InventoryModule.showThrowingStarTooltip === 'function') {
+        InventoryModule.showThrowingStarTooltip(anchorEl, payload.star);
+      } else {
+        const star = payload.star;
+        const desc = (typeof ThrowingStarStore !== 'undefined'
+          && typeof ThrowingStarStore.formatTooltipDesc === 'function')
+          ? ThrowingStarStore.formatTooltipDesc(star)
+          : (typeof ThrowingStarStore !== 'undefined'
+            ? ThrowingStarStore.formatBoost?.(star)
+            : '');
+        InventoryModule.showEtcTooltip?.(
+          anchorEl,
+          star.name,
+          desc || '飛鏢',
+          star.icon || star.iconRaw || '',
+        );
+      }
     }
   }
 

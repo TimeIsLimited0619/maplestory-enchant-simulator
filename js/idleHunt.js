@@ -377,6 +377,14 @@ const IdleHunt = (() => {
     `);
     }
     ensureDeathModal();
+    if (!field.querySelector('.idle-hunt-skill-fx-behind')) {
+      const stage = field.querySelector('.idle-hunt-stage');
+      const behind = document.createElement('div');
+      behind.className = 'idle-hunt-skill-fx-behind';
+      behind.setAttribute('aria-hidden', 'true');
+      if (stage) stage.insertAdjacentElement('beforebegin', behind);
+      else field.appendChild(behind);
+    }
     if (!field.querySelector('.idle-hunt-skill-fx')) {
       const stage = field.querySelector('.idle-hunt-stage');
       const layer = document.createElement('div');
@@ -2145,7 +2153,8 @@ const IdleHunt = (() => {
     }
     fillQueue();
     syncComboOrbsUi();
-    // 連鎖同幀可能多次 sync：合併到下一 animation frame 再 render，避免卡頓
+    // 連鎖同幀可能多次 sync：合併到下一 animation frame 再 render
+    // 掉落另延 ~28ms，與死亡／場刷錯開
     scheduleHuntRender();
   }
 
@@ -2426,47 +2435,54 @@ const IdleHunt = (() => {
     return formatCount(power);
   }
 
-  function grantDrop(isBoss, origin, extraRows = [], opts = {}) {
+  /** 掉落生成比死亡動畫／場刷晚一點，並在多殺時錯開，避免同幀尖峰 */
+  const DROP_SPAWN_DELAY_MS = 28;
+  const DROP_SPAWN_STAGGER_MS = 12;
+  /** @type {Array<{ origin: { x: number, y: number }, rows: object[] }>} */
+  const pendingDropSpawns = [];
+  /** @type {ReturnType<typeof setTimeout>|null} */
+  let dropSpawnTimer = null;
+
+  function formatDropRowsLabel(rows) {
+    return (rows || []).map((r) => {
+      if (r.kind === 'meso') return `楓幣 ×${Math.floor(Number(r.amount) || 0)}`;
+      const amt = Math.max(1, Math.floor(Number(r.amount) || 1));
+      let name = r.name || r.itemId || '掉落';
+      if (r.kind === 'equip' && typeof ITEM_DATABASE !== 'undefined') {
+        name = ITEM_DATABASE[r.itemId]?.name || r.itemId;
+      }
+      return amt > 1 ? `${name} ×${amt}` : name;
+    }).join('、') || '無';
+  }
+
+  function buildDropRows(isBoss, extraRows = [], opts = {}) {
     const allowItems = opts.allowItems !== false;
     if (typeof IdleHuntDropData === 'undefined' && !(extraRows && extraRows.length)) {
-      state.lastDrop = '（無掉落表）';
-      return;
+      return null;
     }
     const zone = typeof IdleZones !== 'undefined' ? IdleZones.get(state.zoneId) : null;
     const rolled = allowItems && typeof IdleHuntDropData !== 'undefined'
       ? IdleHuntDropData.roll(zone, !!isBoss)
       : [];
-    const rows = [...(Array.isArray(extraRows) ? extraRows : []), ...rolled];
-    if (!rows.length) {
-      state.lastDrop = '無';
-      return;
-    }
+    return [...(Array.isArray(extraRows) ? extraRows : []), ...rolled];
+  }
+
+  function spawnDropRowsVisual(origin, rows) {
+    if (!rows?.length || typeof ItemDropController === 'undefined') return;
+    ensureDropController();
     const ox = Number(origin?.x);
     const oy = Number(origin?.y);
-    const point = {
-      x: Number.isFinite(ox) ? ox : 360,
-      y: Number.isFinite(oy) ? oy : 390,
-    };
-    if (typeof ItemDropController !== 'undefined') {
-      ensureDropController();
-      // origin = 怪物死亡腳底（散開中心）；controller 內再略抬高拋出
-      ItemDropController.spawnBatch({
-        origin: { x: point.x, y: point.y },
-        groundY: point.y,
-        rows,
-      });
-      state.lastDrop = rows.map((r) => {
-        if (r.kind === 'meso') return `楓幣 ×${Math.floor(Number(r.amount) || 0)}`;
-        const amt = Math.max(1, Math.floor(Number(r.amount) || 1));
-        let name = r.name || r.itemId || '掉落';
-        if (r.kind === 'equip' && typeof ITEM_DATABASE !== 'undefined') {
-          name = ITEM_DATABASE[r.itemId]?.name || r.itemId;
-        }
-        return amt > 1 ? `${name} ×${amt}` : name;
-      }).join('、') || '無';
-      return;
-    }
-    // fallback：無 controller 時直接入包／加楓幣
+    ItemDropController.spawnBatch({
+      origin: {
+        x: Number.isFinite(ox) ? ox : 360,
+        y: Number.isFinite(oy) ? oy : 390,
+      },
+      groundY: Number.isFinite(oy) ? oy : 390,
+      rows,
+    });
+  }
+
+  function grantDropRowsFallback(rows) {
     const parts = [];
     let gainedMeso = false;
     rows.forEach((row) => {
@@ -2499,6 +2515,72 @@ const IdleHunt = (() => {
       syncInventoryMesoDisplay();
     }
     state.lastDrop = parts.join('、') || '無';
+  }
+
+  function clearPendingDropSpawns({ grant = false } = {}) {
+    if (dropSpawnTimer != null) {
+      clearTimeout(dropSpawnTimer);
+      dropSpawnTimer = null;
+    }
+    const jobs = pendingDropSpawns.splice(0, pendingDropSpawns.length);
+    if (!grant || !jobs.length) return;
+    jobs.forEach((job) => {
+      if (typeof ItemDropController !== 'undefined') {
+        spawnDropRowsVisual(job.origin, job.rows);
+      } else {
+        grantDropRowsFallback(job.rows);
+      }
+    });
+  }
+
+  function pumpPendingDropSpawns() {
+    dropSpawnTimer = null;
+    const job = pendingDropSpawns.shift();
+    if (!job) return;
+    spawnDropRowsVisual(job.origin, job.rows);
+    if (pendingDropSpawns.length) {
+      dropSpawnTimer = window.setTimeout(pumpPendingDropSpawns, DROP_SPAWN_STAGGER_MS);
+    }
+  }
+
+  function scheduleDropSpawn(origin, rows) {
+    if (!rows?.length) return;
+    const ox = Number(origin?.x);
+    const oy = Number(origin?.y);
+    const point = {
+      x: Number.isFinite(ox) ? ox : 360,
+      y: Number.isFinite(oy) ? oy : 390,
+    };
+    // 背景分頁不需錯開，直接生成以免切回時堆積
+    if (typeof document !== 'undefined' && document.hidden) {
+      spawnDropRowsVisual(point, rows);
+      return;
+    }
+    pendingDropSpawns.push({ origin: point, rows });
+    if (dropSpawnTimer != null) return;
+    dropSpawnTimer = window.setTimeout(pumpPendingDropSpawns, DROP_SPAWN_DELAY_MS);
+  }
+
+  function grantDrop(isBoss, origin, extraRows = [], opts = {}) {
+    const rows = buildDropRows(isBoss, extraRows, opts);
+    if (rows == null) {
+      state.lastDrop = '（無掉落表）';
+      return;
+    }
+    if (!rows.length) {
+      state.lastDrop = '無';
+      return;
+    }
+    state.lastDrop = formatDropRowsLabel(rows);
+    if (typeof ItemDropController === 'undefined') {
+      grantDropRowsFallback(rows);
+      return;
+    }
+    if (opts.immediate) {
+      spawnDropRowsVisual(origin, rows);
+      return;
+    }
+    scheduleDropSpawn(origin, rows);
   }
 
   function ensureDamageNumber() {
@@ -2570,7 +2652,11 @@ const IdleHunt = (() => {
       SkillEffectPlayer.clearLocalPreloadCache?.();
     }
     if (!soft && typeof ItemDropController !== 'undefined') {
+      // 轉場／離場：待生成掉落先吐出再 clear，避免漏發或重複尖峰
+      clearPendingDropSpawns({ grant: grantPending });
       ItemDropController.clear({ grantPending });
+    } else if (!soft) {
+      clearPendingDropSpawns({ grant: grantPending });
     }
     if (typeof SkillMobStatus !== 'undefined') {
       SkillMobStatus.prune?.();
@@ -3480,10 +3566,12 @@ const IdleHunt = (() => {
           // 背景：略過傷害數字／受擊閃光，保留結算
           quietFx: skipVisual,
         }));
-        state.atkAcc = 0;
         // 與 BOSS tickPlayer：result.cast 後 afterExternalHits 同一套——依實際 hp 清隊
         if (result?.cast) applySkillMobStateSync(result.kills || []);
         if (!skipVisual) syncComboOrbsUi();
+        // 有 CD：特效／傷害背景結算，不佔普攻節拍、不中斷連打
+        if (picked.hasCd) continue;
+        state.atkAcc = 0;
         break;
       }
 

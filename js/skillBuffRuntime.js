@@ -11,7 +11,7 @@ const SkillBuffRuntime = (() => {
   const SUMMON_PLACEMENT = {
     2221005: { slot: 'feet-behind', classSuffix: 'summon-ice', zIndex: 38, behindExtra: -42 },
     2211011: { slot: 'head', classSuffix: 'summon-orbit', zIndex: 52, headLift: -48 },
-    4111007: { slot: 'target-feet', classSuffix: 'nl-flare', zIndex: 36 },
+    4111007: { slot: 'target-feet', classSuffix: 'nl-flare', zIndex: 36, behind: true },
   };
 
   function nowMs() {
@@ -92,6 +92,7 @@ const SkillBuffRuntime = (() => {
       slot: cfg?.slot || 'default',
       classSuffix: cfg?.classSuffix || '',
       zIndex: cfg?.zIndex ?? 40,
+      behind: !!cfg?.behind,
       behindExtra: cfg?.behindExtra ?? 0,
       headLift: cfg?.headLift ?? 0,
       offsetX: Number(stat?.s) || 0,
@@ -204,6 +205,7 @@ const SkillBuffRuntime = (() => {
         className,
         mirrorX: facingRight,
         zIndex: placement.zIndex,
+        behind: !!placement.behind,
       });
     };
 
@@ -217,6 +219,7 @@ const SkillBuffRuntime = (() => {
         className,
         mirrorX: facingRight,
         zIndex: placement.zIndex,
+        behind: !!placement.behind,
         onDone: () => {},
       });
       const dur = SkillEffectPlayer.framesDurationMs?.(summoned) || 400;
@@ -453,6 +456,7 @@ const SkillBuffRuntime = (() => {
       loopFrom,
       className: 'idle-skill-fx-stage idle-skill-fx-stage--summon idle-skill-fx-stage--nl-domain',
       zIndex: 28,
+      behind: true,
       forcePlay: true,
     });
     summons.push({
@@ -498,6 +502,7 @@ const SkillBuffRuntime = (() => {
           className: attackClass,
           mirrorX: state.facingRight != null ? !!state.facingRight : true,
           zIndex: state.placement?.zIndex,
+          behind: !!state.placement?.behind,
         });
       }
     }

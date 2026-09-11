@@ -3210,13 +3210,15 @@ const IdleBossFight = (() => {
           wzAttackSpeed: wzAttackSpeed(),
           attackSpeedStage: wzAttackSpeed(),
         }));
-        playerAtkAcc = 0;
         // 優先 touched：同步施法若已在 skill 內 sync，這裡只補轉階
         if (result?.cast) {
           const touched = Array.isArray(result.kills) ? result.kills : [];
           afterExternalHits(touched);
         }
         hooks?.syncOverlay?.();
+        // 有 CD：不佔普攻節拍、不中斷連打
+        if (picked.hasCd) continue;
+        playerAtkAcc = 0;
         break;
       }
 

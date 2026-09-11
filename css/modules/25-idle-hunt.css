@@ -386,6 +386,18 @@
   pointer-events: none;
 }
 
+/* 地面領域等：與 stage 同階、DOM 在 stage 前 → 整層在怪物後面 */
+.idle-hunt-skill-fx-behind {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 800px;
+  height: 500px;
+  z-index: 1;
+  pointer-events: none;
+  overflow: visible;
+}
+
 /* 技能特效專用層：高於 stage 內怪物堆疊 */
 .idle-hunt-skill-fx {
   position: absolute;
@@ -899,7 +911,9 @@
 .idle-hunt-skill-fx > .idle-skill-fx-stage--ball-beam,
 .idle-hunt-skill-fx > .idle-skill-fx-stage--ball-special,
 .idle-hunt-skill-fx > .idle-skill-fx-stage--summon,
-.idle-hunt-skill-fx > .idle-skill-fx-stage--summon-attack {
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon-attack,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--summon,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--summon-attack {
   position: absolute;
   left: 0;
   top: 0;
@@ -911,7 +925,8 @@
   transform: none;
 }
 
-.idle-hunt-skill-fx > .idle-skill-fx-stage--summon {
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--summon {
   z-index: 40;
 }
 
@@ -928,12 +943,15 @@
   z-index: 52;
 }
 
-.idle-hunt-skill-fx > .idle-skill-fx-stage--nl-domain {
+.idle-hunt-skill-fx > .idle-skill-fx-stage--nl-domain,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--nl-domain {
   z-index: 26;
 }
 
 .idle-hunt-skill-fx > .idle-skill-fx-stage--nl-flare,
-.idle-hunt-skill-fx > .idle-skill-fx-stage--summon-attack.idle-skill-fx-stage--nl-flare {
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon-attack.idle-skill-fx-stage--nl-flare,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--nl-flare,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--summon-attack.idle-skill-fx-stage--nl-flare {
   z-index: 36;
 }
 

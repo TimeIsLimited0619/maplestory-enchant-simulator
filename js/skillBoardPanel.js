@@ -73,6 +73,10 @@ const SkillBoardPanel = (() => {
           <div class="skb-skill-link" id="skbSkillLink" aria-label="技能連鎖">
             <img class="skb-skill-link__bg" src="images/UIskillboard/slot_skill_link.png" alt="" draggable="false" decoding="async">
             <div class="skb-skill-link__slots" id="skbSkillLinkSlots"></div>
+            <label class="skb-dmg-toggle" title="隱藏玩家對怪物造成的傷害數字（怪物打你仍會顯示）">
+              <input type="checkbox" id="skbHideDamageNumbers">
+              <span>透明字形</span>
+            </label>
           </div>
         </div>
 
@@ -408,6 +412,10 @@ const SkillBoardPanel = (() => {
     renderTypeTabs();
     renderSp();
     renderSkillList();
+    const hideDmg = $('skbHideDamageNumbers');
+    if (hideDmg && typeof DamageNumber !== 'undefined') {
+      hideDmg.checked = !!DamageNumber.getHideDamageNumbers?.();
+    }
   }
 
   function bindDrag() {
@@ -467,6 +475,11 @@ const SkillBoardPanel = (() => {
       SkillModifiers.setShowStackBuffCounts?.(!!e.target.checked);
       if (typeof IdleHunt !== 'undefined') IdleHunt.syncHuntOverlayBars?.();
       if (typeof IdleBoss !== 'undefined') IdleBoss.syncBossOverlayBars?.();
+    });
+
+    $('skbHideDamageNumbers')?.addEventListener('change', (e) => {
+      if (typeof DamageNumber === 'undefined') return;
+      DamageNumber.setHideDamageNumbers?.(!!e.target.checked);
     });
 
     document.addEventListener('click', (e) => {

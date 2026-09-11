@@ -2758,17 +2758,23 @@ const SkillCombat = (() => {
     const timedBuff = typeof SkillBuffRuntime !== 'undefined'
       && SkillBuffRuntime.isTimedBuffSkill?.(skill, baseCommon);
     const buffOnly = !!timedBuff || isBuffSkill(skill, baseCommon);
+    // 有 CD 主動／Buff：不播角色出手動作（紙娃娃揮砍）、不鎖選招
+    const hasSkillCd = Number(baseCommon.cooltimeSec) > 0;
+    const skipBodyAction = buffOnly || hasSkillCd;
 
-    // Buff：施放無延遲（不鎖選招、不播揮砍動作）
+    // Buff／有 CD 攻擊：施放無延遲（特效背景播，不中斷普攻／下一招）
+    // 無 CD 攻擊：依攻速 delay／身體 instruction／施放特效鎖選招
     let lockMs = 0;
     let instructionMs = 0;
     let effectMs = 0;
-    if (!buffOnly) {
-      const instructionNaturalMs = (typeof Paperdoll !== 'undefined'
-        && typeof Paperdoll.getInstructionDurationMs === 'function')
-        ? (Paperdoll.getInstructionDurationMs(skillAction) || 0)
-        : 0;
-      instructionMs = scaleDurationByAttackSpeed(instructionNaturalMs, wzForDelay);
+    if (!buffOnly && !hasSkillCd) {
+      if (!skipBodyAction) {
+        const instructionNaturalMs = (typeof Paperdoll !== 'undefined'
+          && typeof Paperdoll.getInstructionDurationMs === 'function')
+          ? (Paperdoll.getInstructionDurationMs(skillAction) || 0)
+          : 0;
+        instructionMs = scaleDurationByAttackSpeed(instructionNaturalMs, wzForDelay);
+      }
       effectMs = scaleDurationByAttackSpeed(skillFxDurationMs(fx), wzForDelay);
       // 施放鎖定＝攻速後 delay／身體 instruction／施放特效 三者取長（含前搖後搖）
       lockMs = scaleGameDelayMs(Math.max(actionDelayMs, instructionMs, effectMs, 30));
@@ -2786,7 +2792,7 @@ const SkillCombat = (() => {
       && typeof SkillChannelCast !== 'undefined'
       && SkillChannelCast.isChannelCastSkill?.(skill, fx);
 
-    if (!buffOnly
+    if (!skipBodyAction
       && !(ctx.quietFx || (typeof document !== 'undefined' && document.hidden))
       && typeof Paperdoll !== 'undefined' && typeof Paperdoll.playHuntSwing === 'function'
       && !willSustainChannel
@@ -3047,7 +3053,8 @@ const SkillCombat = (() => {
       if (channelResult.sustain) {
         const channelLock = scaleGameDelayMs(channelResult.channelLockMs);
         castLockUntil = Math.max(castLockUntil, t + channelLock);
-        if (!(ctx.quietFx || (typeof document !== 'undefined' && document.hidden))
+        if (!skipBodyAction
+          && !(ctx.quietFx || (typeof document !== 'undefined' && document.hidden))
           && typeof Paperdoll !== 'undefined') {
           if (typeof Paperdoll.playHuntSwingLoop === 'function') {
             Paperdoll.playHuntSwingLoop(skillAction);
@@ -3059,7 +3066,8 @@ const SkillCombat = (() => {
         // 無 CD 有限引導：延長施放鎖，避免一直重播 prepare
         const channelLock = scaleGameDelayMs(channelResult.channelLockMs);
         castLockUntil = Math.max(castLockUntil, t + channelLock);
-        if (!(ctx.quietFx || (typeof document !== 'undefined' && document.hidden))
+        if (!skipBodyAction
+          && !(ctx.quietFx || (typeof document !== 'undefined' && document.hidden))
           && typeof Paperdoll !== 'undefined' && typeof Paperdoll.playHuntSwing === 'function') {
           Paperdoll.playHuntSwing(channelLock, skillAction);
         }

@@ -451,6 +451,14 @@
   z-index: 1;
 }
 
+.idle-boss-field > .idle-hunt-skill-fx-behind {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: visible;
+}
+
 .idle-boss-map--obj {
   z-index: 2;
   background: transparent;

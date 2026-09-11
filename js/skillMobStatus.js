@@ -118,22 +118,55 @@ const SkillMobStatus = (() => {
     return String(mob.uid);
   }
 
-  function stopStatusFx(row) {
+  /** 同一隻怪多個 debuff 特效水平間距（px） */
+  const STATUS_FX_GAP_PX = 36;
+  /** fxId → 水平偏移；apply 刷新會換新 row，但特效閉包仍靠 fxId 讀最新偏移 */
+  const statusFxOffsetById = new Map();
+
+  function statusMaps() {
+    return [scars, incising, defDown, nlMarks, freeze];
+  }
+
+  /** 並排：以怪中心為基準，多個狀態左右展開；resolveAnchor 每幀讀偏移 */
+  function reflowMobStatusFx(uid, pendingRow = null) {
+    if (!uid) return;
+    const rows = [];
+    statusMaps().forEach((map) => {
+      const row = map.get(uid);
+      if (!row) return;
+      if (row.fxId != null || row === pendingRow) rows.push(row);
+    });
+    const n = rows.length;
+    if (!n) return;
+    const start = -((n - 1) * STATUS_FX_GAP_PX) / 2;
+    rows.forEach((row, i) => {
+      const ox = n <= 1 ? 0 : start + i * STATUS_FX_GAP_PX;
+      row.fxOffsetX = ox;
+      if (row.fxId != null) statusFxOffsetById.set(row.fxId, ox);
+    });
+  }
+
+  function stopStatusFx(row, uid = '') {
     if (!row) return;
     if (row.timerId != null) {
       clearTimeout(row.timerId);
       row.timerId = null;
     }
-    stopStatusFxVisual(row);
+    stopStatusFxVisual(row, uid);
   }
 
-  function stopStatusFxVisual(row) {
+  function stopStatusFxVisual(row, uid = '') {
     if (!row) return;
-    if (row.fxId != null && typeof SkillEffectPlayer !== 'undefined') {
-      SkillEffectPlayer.stopFx?.(row.fxId);
+    if (row.fxId != null) {
+      statusFxOffsetById.delete(row.fxId);
+      if (typeof SkillEffectPlayer !== 'undefined') {
+        SkillEffectPlayer.stopFx?.(row.fxId);
+      }
     }
     row.fxId = null;
     row.fxStacks = null;
+    row.fxOffsetX = 0;
+    if (uid) reflowMobStatusFx(uid);
   }
 
   function resolveSkillMobFrames(skillId) {
@@ -165,17 +198,43 @@ const SkillMobStatus = (() => {
     return resolveSkillMobFrames(FREEZE_FX_SKILL_ID);
   }
 
+  function statusFxResolveAnchor(row) {
+    return (live) => {
+      const base = (typeof SkillEffectPlayer !== 'undefined'
+        && typeof SkillEffectPlayer.resolveMobCenterLocal === 'function')
+        ? SkillEffectPlayer.resolveMobCenterLocal(live)
+        : { x: 0, y: -32 };
+      const ox = (row.fxId != null && statusFxOffsetById.has(row.fxId))
+        ? Number(statusFxOffsetById.get(row.fxId)) || 0
+        : (Number(row.fxOffsetX) || 0);
+      return {
+        x: (Number(base?.x) || 0) + ox,
+        y: Number(base?.y) || 0,
+      };
+    };
+  }
+
   function startMobStatusFx(mob, row, skillId) {
     if (!mob || !row) return;
     const frames = resolveSkillMobFrames(skillId);
     if (!frames?.length || typeof SkillEffectPlayer === 'undefined') return;
     if (typeof SkillEffectPlayer.playOnMob !== 'function') return;
-    if (row.fxId != null) return;
+    const uid = uidOf(mob);
+    if (row.fxId != null) {
+      reflowMobStatusFx(uid);
+      return;
+    }
+    reflowMobStatusFx(uid, row);
     const fxId = SkillEffectPlayer.playOnMob(mob, frames, {
       loop: true,
       className: 'idle-skill-fx-stage idle-skill-fx-stage--mob-status',
+      resolveAnchor: statusFxResolveAnchor(row),
     });
     row.fxId = fxId != null ? fxId : null;
+    if (row.fxId != null) {
+      statusFxOffsetById.set(row.fxId, Number(row.fxOffsetX) || 0);
+      reflowMobStatusFx(uid);
+    }
   }
 
   /** 結冰層數：使用 2200011 結冰特效 mobStacks，層數變化時重播 */
@@ -185,16 +244,26 @@ const SkillMobStatus = (() => {
       return;
     }
     const stacks = Math.max(1, Math.floor(Number(row.stacks) || 1));
-    if (row.fxId != null && Number(row.fxStacks) === stacks) return;
-    stopStatusFxVisual(row);
+    const uid = uidOf(mob);
+    if (row.fxId != null && Number(row.fxStacks) === stacks) {
+      reflowMobStatusFx(uid);
+      return;
+    }
+    stopStatusFxVisual(row, uid);
     const frames = resolveFreezeStatusFrames(stacks);
     if (!frames?.length) return;
+    reflowMobStatusFx(uid, row);
     const fxId = SkillEffectPlayer.playOnMob(mob, frames, {
       loop: true,
       className: 'idle-skill-fx-stage idle-skill-fx-stage--mob-status idle-skill-fx-stage--freeze',
+      resolveAnchor: statusFxResolveAnchor(row),
     });
     row.fxId = fxId != null ? fxId : null;
     row.fxStacks = stacks;
+    if (row.fxId != null) {
+      statusFxOffsetById.set(row.fxId, Number(row.fxOffsetX) || 0);
+      reflowMobStatusFx(uid);
+    }
   }
 
   function scheduleMapExpiry(map, uid, row) {
@@ -211,7 +280,7 @@ const SkillMobStatus = (() => {
         scheduleMapExpiry(map, uid, cur);
         return;
       }
-      stopStatusFx(cur);
+      stopStatusFx(cur, uid);
       map.delete(uid);
     }, remain);
   }
@@ -219,7 +288,7 @@ const SkillMobStatus = (() => {
   function pruneMap(map, t = nowMs()) {
     map.forEach((row, uid) => {
       if (!row || !(row.expiresAt > t)) {
-        stopStatusFx(row);
+        stopStatusFx(row, uid);
         map.delete(uid);
       }
     });
@@ -232,7 +301,7 @@ const SkillMobStatus = (() => {
     const row = map.get(uid);
     if (!row || !(row.expiresAt > t)) {
       if (row) {
-        stopStatusFx(row);
+        stopStatusFx(row, uid);
         map.delete(uid);
       }
       return null;
@@ -292,7 +361,7 @@ const SkillMobStatus = (() => {
       : uidOf(mobOrUid);
     if (!uid) return;
     const row = scars.get(uid);
-    stopStatusFx(row);
+    stopStatusFx(row, uid);
     scars.delete(uid);
   }
 
@@ -302,7 +371,7 @@ const SkillMobStatus = (() => {
       : uidOf(mobOrUid);
     if (!uid) return;
     const row = incising.get(uid);
-    stopStatusFx(row);
+    stopStatusFx(row, uid);
     incising.delete(uid);
   }
 
@@ -312,7 +381,7 @@ const SkillMobStatus = (() => {
       : uidOf(mobOrUid);
     if (!uid) return;
     const row = defDown.get(uid);
-    stopStatusFx(row);
+    stopStatusFx(row, uid);
     defDown.delete(uid);
   }
 
@@ -322,7 +391,7 @@ const SkillMobStatus = (() => {
       : uidOf(mobOrUid);
     if (!uid) return;
     const row = nlMarks.get(uid);
-    stopStatusFx(row);
+    stopStatusFx(row, uid);
     nlMarks.delete(uid);
   }
 
@@ -332,21 +401,22 @@ const SkillMobStatus = (() => {
       : uidOf(mobOrUid);
     if (!uid) return;
     const row = freeze.get(uid);
-    stopStatusFx(row);
+    stopStatusFx(row, uid);
     freeze.delete(uid);
   }
 
   function clearAll() {
-    scars.forEach((row) => stopStatusFx(row));
+    scars.forEach((row, uid) => stopStatusFx(row, uid));
     scars.clear();
-    incising.forEach((row) => stopStatusFx(row));
+    incising.forEach((row, uid) => stopStatusFx(row, uid));
     incising.clear();
-    defDown.forEach((row) => stopStatusFx(row));
+    defDown.forEach((row, uid) => stopStatusFx(row, uid));
     defDown.clear();
-    nlMarks.forEach((row) => stopStatusFx(row));
+    nlMarks.forEach((row, uid) => stopStatusFx(row, uid));
     nlMarks.clear();
-    freeze.forEach((row) => stopStatusFx(row));
+    freeze.forEach((row, uid) => stopStatusFx(row, uid));
     freeze.clear();
+    statusFxOffsetById.clear();
     iceBarrierAcc = 0;
   }
 
@@ -441,7 +511,7 @@ const SkillMobStatus = (() => {
     const n = Math.max(1, Math.floor(Number(amount) || 1));
     row.stacks = Math.max(0, Math.floor(Number(row.stacks) || 0) - n);
     if (!(row.stacks > 0)) {
-      stopStatusFx(row);
+      stopStatusFx(row, uid);
       freeze.delete(uid);
       return n;
     }
@@ -977,7 +1047,7 @@ const SkillMobStatus = (() => {
     const t = nowMs();
     [...incising.entries()].forEach(([uid, row]) => {
       if (!row || !(row.expiresAt > t)) {
-        stopStatusFx(row);
+        stopStatusFx(row, uid);
         incising.delete(uid);
         return;
       }

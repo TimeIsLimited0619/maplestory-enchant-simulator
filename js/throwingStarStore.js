@@ -44,6 +44,83 @@ const ThrowingStarStore = (() => {
     return pad > 0 ? `攻擊力 +${pad}` : '飛鏢';
   }
 
+  /** tooltip 內文：優先官方 String.Consume desc */
+  function formatTooltipDesc(item) {
+    if (!item) return '飛鏢';
+    const rawDesc = String(item.desc || '')
+      .replace(/#c/gi, '')
+      .replace(/#/g, '')
+      .trim();
+    if (rawDesc) return rawDesc;
+    const lines = [];
+    const pad = Math.max(0, Math.floor(Number(item.incPAD) || 0));
+    if (pad > 0) lines.push(`攻擊力 +${pad}`);
+    const req = Math.max(0, Math.floor(Number(item.reqLevel) || 0));
+    if (req > 0) lines.push(`需求等級：${req}`);
+    if (!lines.length) lines.push('飛鏢');
+    return lines.join('\n');
+  }
+
+  function buildTooltipHtml(item) {
+    if (!item) return '';
+    const assets = (typeof EQUIP_TOOLTIP_ASSETS !== 'undefined' && EQUIP_TOOLTIP_ASSETS) || {};
+    const frame = assets.equipFrame || {};
+    const itemIcon = assets.itemIcon || {};
+    const line = frame.line || (assets.frame && assets.frame.dotline) || '';
+    const topBg = frame.top ? ` style="background-image:url('${frame.top}')"` : '';
+    const midBg = frame.mid ? ` style="background-image:url('${frame.mid}')"` : '';
+    const btmBg = frame.btm ? ` style="background-image:url('${frame.btm}')"` : '';
+    const lineStyle = line ? ` style="background-image:url('${line}')"` : '';
+    const baseSrc = itemIcon.base || '';
+    const shadeSrc = itemIcon.shade || '';
+    const esc = (s) => String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    const iconSrc = esc(item.icon || item.iconRaw || '');
+    const descHtml = esc(formatTooltipDesc(item)).replace(/\n/g, '<br>');
+    const pad = Math.max(0, Math.floor(Number(item.incPAD) || 0));
+    const req = Math.max(0, Math.floor(Number(item.reqLevel) || 0));
+    const hasPadInDesc = /攻擊力/.test(String(item.desc || ''));
+    const hasReqInDesc = /等級/.test(String(item.desc || ''));
+    const stats = [];
+    if (pad > 0 && !hasPadInDesc) stats.push(`攻擊力 +${pad}`);
+    if (req > 0 && !hasReqInDesc) stats.push(`需求等級：${req}`);
+    const statsHtml = stats.length
+      ? `<div class="sc-scroll-tip-stats idle-potion-tip-stats">${
+        stats.map((s) => `<div class="sc-scroll-tip-stat">${esc(s)}</div>`).join('')
+      }</div>`
+      : '';
+    return `
+      <div class="eq-tooltip-frame inv-etc-frame idle-potion-tip-frame">
+        <div class="eq-tooltip-frame-top"${topBg}></div>
+        <div class="eq-tooltip-mid-wrap">
+          <div class="eq-tooltip-frame-mid"${midBg}></div>
+          <div class="eq-tooltip-body">
+            <div class="eq-tooltip-content">
+              <div class="eq-tip-name-row">
+                <div class="eq-tip-name">${esc(item.name || '飛鏢')}</div>
+              </div>
+              <div class="eq-tip-dotline"${lineStyle}></div>
+              <div class="inv-etc-main">
+                <div class="eq-tip-icon-wrap">
+                  ${baseSrc ? `<img class="eq-tip-icon-base" src="${baseSrc}" alt="">` : ''}
+                  ${shadeSrc ? `<img class="eq-tip-icon-shade" src="${shadeSrc}" alt="">` : ''}
+                  ${iconSrc ? `<img class="eq-tip-icon" src="${iconSrc}" alt="">` : ''}
+                </div>
+                <div class="sc-scroll-tip-copy idle-potion-tip-copy">
+                  <div class="inv-etc-desc">${descHtml}</div>
+                  ${statsHtml}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="eq-tooltip-frame-btm"${btmBg}></div>
+      </div>
+    `;
+  }
+
   function consumeCatalogRows() {
     return list().map((item) => ({
       id: `consume-star-${item.id}`,
@@ -99,6 +176,8 @@ const ThrowingStarStore = (() => {
     isEntry,
     resolveIcon,
     formatBoost,
+    formatTooltipDesc,
+    buildTooltipHtml,
     consumeCatalogRows,
     notifyCombatPad,
     frontEntry,

@@ -9,8 +9,6 @@ const SkillModifiers = (() => {
     '1100013', '1110013', '1120003',
     '1120043', '1120044', '1120045',
   ]);
-  /** 有 CD 的主動攻擊技：鎖定怪物數全域倍率 */
-  const CD_ACTIVE_ATTACK_MOB_MULTIPLIER = 2;
   /** 精靈遊俠技能減傷（damAbsorb／耐性近似）模擬倍率 */
   const MERCEDES_DAM_ABSORB_SCALE = 0.5;
   /** @type {Array<Record<string, number> & { id: string, expiresAt: number }>} */
@@ -656,30 +654,11 @@ const SkillModifiers = (() => {
     return sum;
   }
 
-  /**
-   * 有 CD 的主動攻擊技（非 Buff）：鎖定怪物數 × CD_ACTIVE_ATTACK_MOB_MULTIPLIER
-   */
-  function isCdActiveAttackSkill(skill, common) {
-    if (!skill || String(skill.type) !== 'active') return false;
-    if (!(Number(common?.cooltimeSec) > 0)) return false;
-    if (typeof SkillBuffRuntime !== 'undefined'
-      && typeof SkillBuffRuntime.isTimedBuffSkill === 'function'
-      && SkillBuffRuntime.isTimedBuffSkill(skill, common)) {
-      return false;
-    }
-    const damagePct = Number(common?.damagePct) || 0;
-    const attackCount = Number(common?.attackCount) || 0;
-    return damagePct > 0 && attackCount >= 1;
-  }
-
+  /** 施放用 common 的全域標記（過去曾對 CD 主動攻擊 ×mobCount，已取消） */
   function applyGlobalCombatRules(skill, common) {
     const base = common && typeof common === 'object' ? { ...common } : {};
     if (base._globalCombatRules) return base;
     base._globalCombatRules = true;
-    if (!isCdActiveAttackSkill(skill, base)) return base;
-    const mult = CD_ACTIVE_ATTACK_MOB_MULTIPLIER;
-    if (!(mult > 1)) return base;
-    base.mobCount = Math.max(1, Math.floor((Number(base.mobCount) || 1) * mult));
     return base;
   }
 
@@ -911,10 +890,8 @@ const SkillModifiers = (() => {
     getSkillDamPlusBonus,
     applySkillEnhance,
     applyGlobalCombatRules,
-    isCdActiveAttackSkill,
     resolveCastCommon,
     resolvePanelCommon,
-    CD_ACTIVE_ATTACK_MOB_MULTIPLIER,
     getBuffDurationMultiplier,
     resolveHyperTargetId,
     applyBuff,

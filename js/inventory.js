@@ -529,6 +529,49 @@ const InventoryModule = {
     });
   },
 
+  showThrowingStarTooltip(anchorEl, star) {
+    if (!star || !anchorEl) return;
+    this.ensureEtcTooltip();
+    const tip = document.getElementById('invEtcTooltip');
+    if (!tip) return;
+    this._etcTooltipToken = (this._etcTooltipToken || 0) + 1;
+    const token = this._etcTooltipToken;
+    this._etcTooltipAnchor = anchorEl;
+    if (typeof HoverTooltipGuard !== 'undefined') {
+      HoverTooltipGuard.watch('inv-etc', anchorEl, { hide: () => this.hideEtcTooltip() });
+    }
+    const icon = star.icon || star.iconRaw || '';
+    const desc = (typeof ThrowingStarStore !== 'undefined'
+      && typeof ThrowingStarStore.formatTooltipDesc === 'function')
+      ? ThrowingStarStore.formatTooltipDesc(star)
+      : ((typeof ThrowingStarStore !== 'undefined'
+        ? ThrowingStarStore.formatBoost?.(star)
+        : '') || '飛鏢');
+    tip.innerHTML = (typeof ThrowingStarStore !== 'undefined'
+      && typeof ThrowingStarStore.buildTooltipHtml === 'function')
+      ? ThrowingStarStore.buildTooltipHtml(star)
+      : this.buildEtcTooltipHtml(star.name, desc, icon);
+    tip.classList.remove('hidden');
+    tip.setAttribute('aria-hidden', 'false');
+    this.placeEtcTooltip(anchorEl);
+    const iconEl = tip.querySelector('.eq-tip-icon');
+    if (iconEl) {
+      const applyScale = () => {
+        if (token !== this._etcTooltipToken) return;
+        if (!iconEl.naturalWidth) return;
+        iconEl.style.width = `${Math.round(iconEl.naturalWidth * 2)}px`;
+        iconEl.style.height = `${Math.round(iconEl.naturalHeight * 2)}px`;
+        this.placeEtcTooltip(anchorEl);
+      };
+      if (iconEl.complete) applyScale();
+      else iconEl.addEventListener('load', applyScale, { once: true });
+    }
+    requestAnimationFrame(() => {
+      if (token !== this._etcTooltipToken) return;
+      this.placeEtcTooltip(anchorEl);
+    });
+  },
+
   resolveEtcCatalog(itemId) {
     const id = String(itemId || '').trim();
     if (!id) return null;
@@ -1972,7 +2015,7 @@ const InventoryModule = {
     const img = slot.querySelector('img');
     if (img) {
       img.addEventListener('mouseenter', () => {
-        this.showEtcTooltip?.(img, star.name, boost || '飛鏢', icon);
+        this.showThrowingStarTooltip?.(img, star);
       });
       img.addEventListener('mouseleave', () => this.hideEtcTooltip());
     }

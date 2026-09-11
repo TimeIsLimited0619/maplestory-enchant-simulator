@@ -273,9 +273,32 @@ const SkillEffectPlayer = (() => {
       layer = document.createElement('div');
       layer.className = 'idle-hunt-skill-fx';
       layer.setAttribute('aria-hidden', 'true');
-      const stage = field.querySelector('.idle-hunt-stage');
+      const stage = field.querySelector('.idle-hunt-stage')
+        || field.querySelector('.idle-boss-stage--player')
+        || field.querySelector('.idle-boss-stage--mobs');
       if (stage) stage.insertAdjacentElement('afterend', layer);
       else field.appendChild(layer);
+    }
+    return layer;
+  }
+
+  /** 地面領域等：插在怪物 stage 之前，整層畫在怪物後面 */
+  function getSkillFxBehindLayer(fieldEl) {
+    const field = fieldEl || activeCombatField();
+    if (!field) return null;
+    let layer = field.querySelector('.idle-hunt-skill-fx-behind');
+    if (!layer) {
+      layer = document.createElement('div');
+      layer.className = 'idle-hunt-skill-fx-behind';
+      layer.setAttribute('aria-hidden', 'true');
+      const mobStage = field.querySelector('.idle-hunt-stage')
+        || field.querySelector('.idle-boss-stage--mobs');
+      if (mobStage) mobStage.insertAdjacentElement('beforebegin', layer);
+      else {
+        const front = field.querySelector('.idle-hunt-skill-fx');
+        if (front) front.insertAdjacentElement('beforebegin', layer);
+        else field.appendChild(layer);
+      }
     }
     return layer;
   }
@@ -1416,6 +1439,7 @@ const SkillEffectPlayer = (() => {
       className = 'idle-skill-fx-stage idle-skill-fx-stage--summon',
       mirrorX = false,
       zIndex,
+      behind = false,
       onDone,
     } = opts;
     const list = (frames || []).filter((f) => f && f.src);
@@ -1423,7 +1447,9 @@ const SkillEffectPlayer = (() => {
       if (typeof onDone === 'function') onDone();
       return null;
     }
-    const fxLayer = getSkillFxLayer(fieldEl);
+    const fxLayer = behind
+      ? getSkillFxBehindLayer(fieldEl)
+      : getSkillFxLayer(fieldEl);
     if (!fxLayer) {
       if (typeof onDone === 'function') onDone();
       return null;
@@ -1500,7 +1526,7 @@ const SkillEffectPlayer = (() => {
 
   function scrubTransientFxDom({ includeLoop = false } = {}) {
     const sel = includeLoop
-      ? '.idle-hunt-skill-fx'
+      ? '.idle-hunt-skill-fx, .idle-hunt-skill-fx-behind'
       : [
         '.idle-skill-fx-stage--shootobj',
         '.idle-skill-fx-stage--ball',
@@ -1652,6 +1678,7 @@ const SkillEffectPlayer = (() => {
     playerFacingRight,
     activeCombatField,
     getSkillFxLayer,
+    getSkillFxBehindLayer,
   };
 })();
 

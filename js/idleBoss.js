@@ -35,7 +35,7 @@ const IdleBoss = (() => {
   let playerAtkAcc = 0;
   /** @type {Record<string, Record<string, number>>} */
   let partAtkAcc = Object.create(null);
-  const ARENA_UI_VER = '15';
+  const ARENA_UI_VER = '16';
   let exitConfirmPending = false;
   /** 死亡失敗彈窗（你已死亡／挑戰失敗） */
   let failModalOpen = false;
@@ -616,6 +616,7 @@ const IdleBoss = (() => {
         <div class="idle-boss-arena-body">
           <div id="idleBossField" class="idle-boss-field" style="width:${FIELD_W}px;height:${FIELD_H}px">
             <img id="idleBossMapBack" class="idle-boss-map idle-boss-map--back" alt="" draggable="false" width="${FIELD_W}" height="${FIELD_H}">
+            <div class="idle-hunt-skill-fx-behind" aria-hidden="true"></div>
             <div id="idleBossStage" class="idle-boss-stage idle-boss-stage--mobs" aria-hidden="true"></div>
             <img id="idleBossMapObj" class="idle-boss-map idle-boss-map--obj" alt="" draggable="false" width="${FIELD_W}" height="${FIELD_H}" hidden>
             <div id="idleBossStagePlayer" class="idle-boss-stage idle-boss-stage--player" aria-hidden="true"></div>
@@ -1353,6 +1354,14 @@ const IdleBoss = (() => {
   function ensureBossDamageFx() {
     const field = $('idleBossField');
     if (field) {
+      if (!field.querySelector('.idle-hunt-skill-fx-behind')) {
+        const mobStage = field.querySelector('.idle-boss-stage--mobs');
+        const behind = document.createElement('div');
+        behind.className = 'idle-hunt-skill-fx-behind';
+        behind.setAttribute('aria-hidden', 'true');
+        if (mobStage) mobStage.insertAdjacentElement('beforebegin', behind);
+        else field.insertAdjacentElement('afterbegin', behind);
+      }
       if (!field.querySelector('.idle-hunt-skill-fx')) {
         field.insertAdjacentHTML('beforeend', '<div class="idle-hunt-skill-fx" aria-hidden="true"></div>');
       }

@@ -12,8 +12,9 @@
  * kind: 'scroll' 會依 itemId 自動辨識：
  *   潛能卷軸（getPotentialScrollById）／星力卷軸／榮耀卷軸
  * kind: 'consume' 會依 itemId 自動辨識：
- *   藥水（IdlePotionStore）／星火（getBonusStatItemById，如 eternalFlame）
+ *   藥水（IdlePotionStore）／星火（getBonusStatItemById，如 eternalFlame）／飛鏢（ThrowingStarStore）
  * 也可明示：{ kind: 'consume', consumeType: 'bonus_stat', itemId: 'eternalFlame', buyPrice }
+ * 也可明示：{ kind: 'consume', consumeType: 'throwing_star', itemId: '02070000', buyPrice }
  * 也可明示：{ kind: 'consume', consumeType: 'potential_scroll', scrollId: 'scroll_epic_potential', buyPrice }
  * 特殊商品 specialType:
  *   hyper_point — 購入極限屬性點（直接加點，不進背包）
@@ -213,6 +214,23 @@ const IDLE_NPC_SHOP = {
     { kind: 'consume', itemId: 'Reindeer-milk', buyPrice: 5000, amount: 1, minLevel: 65 },
     { kind: 'consume', itemId: '02022089', buyPrice: 10000, amount: 1, minLevel: 100 },
     { kind: 'consume', itemId: '02020031', buyPrice: 30000, amount: 1, minLevel: 100 },
+
+    // 飛鏢（Consume 0207；售價／等級依 WZ，price≤0 時用 PAD×1000）
+    { kind: 'consume', consumeType: 'throwing_star', itemId: '02070022', buyPrice: 100, amount: 1, minLevel: 10 },
+    { kind: 'consume', consumeType: 'throwing_star', itemId: '02070000', buyPrice: 100, amount: 1, minLevel: 10 },
+    { kind: 'consume', consumeType: 'throwing_star', itemId: '02070001', buyPrice: 5000, amount: 1, minLevel: 20 },
+    { kind: 'consume', consumeType: 'throwing_star', itemId: '02070002', buyPrice: 10000, amount: 1, minLevel: 30 },
+    { kind: 'consume', consumeType: 'throwing_star', itemId: '02070011', buyPrice: 50000, amount: 1, minLevel: 40 },
+    { kind: 'consume', consumeType: 'throwing_star', itemId: '02070003', buyPrice: 50000, amount: 1, minLevel: 40 },
+    { kind: 'consume', consumeType: 'throwing_star', itemId: '02070004', buyPrice: 100000, amount: 1, minLevel: 60 },
+    { kind: 'consume', consumeType: 'throwing_star', itemId: '02070005', buyPrice: 150000, amount: 1, minLevel: 80 },
+    { kind: 'consume', consumeType: 'throwing_star', itemId: '02070006', buyPrice: 200000, amount: 1, minLevel: 100 },
+    { kind: 'consume', consumeType: 'throwing_star', itemId: '02070024', buyPrice: 200000, amount: 1, minLevel: 100 },
+    { kind: 'consume', consumeType: 'throwing_star', itemId: '02070007', buyPrice: 200000, amount: 1, minLevel: 100 },
+    { kind: 'consume', consumeType: 'throwing_star', itemId: '02070026', buyPrice: 250000, amount: 1, minLevel: 110 },
+    { kind: 'consume', consumeType: 'throwing_star', itemId: '02070023', buyPrice: 300000, amount: 1, minLevel: 120 },
+    { kind: 'consume', consumeType: 'throwing_star', itemId: '02070018', buyPrice: 500000, amount: 1, minLevel: 130 },
+    { kind: 'consume', consumeType: 'throwing_star', itemId: '02070019', buyPrice: 500000, amount: 1, minLevel: 130 },
 
 
     { kind: 'scroll', itemId: 'scroll_normal_non_weapon_str_100', buyPrice: 5000, amount: 1, minLevel: 10 },
@@ -474,6 +492,15 @@ const IdleNpcShopCatalog = {
         return {
           name: potion?.name || row.name || row.itemId || '藥水',
           icon: potion ? IdlePotionStore.resolveIcon(potion.icon) : (row.icon || ''),
+          price,
+        };
+      }
+      if (row.consumeType === 'throwing_star'
+        || (typeof ThrowingStarStore !== 'undefined' && ThrowingStarStore.isThrowingStarId?.(row.itemId))) {
+        const star = typeof ThrowingStarStore !== 'undefined' ? ThrowingStarStore.get(row.itemId) : null;
+        return {
+          name: star?.name || row.name || row.itemId || '飛鏢',
+          icon: star?.icon || star?.iconRaw || row.icon || '',
           price,
         };
       }

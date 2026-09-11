@@ -28,10 +28,60 @@ const DamageNumber = (() => {
   const SPAWN_PER_FRAME = 28;
   const STACK_PRUNE_EVERY_TICKS = 45;
   const PLAYER_STACK_KEY = 'player';
+  const HIDE_DAMAGE_KEY = 'idle.damage.hideNumbers.v1';
 
   let layerEl = null;
   let stageEl = null;
+  let hideDamageNumbers = false;
   const instances = new Set();
+
+  function loadHideDamageNumbers() {
+    try {
+      const raw = localStorage.getItem(HIDE_DAMAGE_KEY);
+      if (raw == null) return false;
+      return raw === '1' || raw === 'true';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function persistHideDamageNumbers() {
+    try {
+      localStorage.setItem(HIDE_DAMAGE_KEY, hideDamageNumbers ? '1' : '0');
+    } catch (_) { /* ignore */ }
+  }
+
+  function isDamageHidden() {
+    return !!hideDamageNumbers;
+  }
+
+  function getHideDamageNumbers() {
+    return !!hideDamageNumbers;
+  }
+
+  function setHideDamageNumbers(next) {
+    hideDamageNumbers = !!next;
+    persistHideDamageNumbers();
+    if (hideDamageNumbers) clearOutgoingDamageNumbers();
+    return hideDamageNumbers;
+  }
+
+  /** 只清「玩家→怪」數字，保留怪物打玩家的字形 */
+  function clearOutgoingDamageNumbers() {
+    const keepSkin = mobSkinId();
+    [...instances].forEach((inst) => {
+      if (inst?.skinId === keepSkin) return;
+      destroy(inst);
+    });
+    for (let i = spawnQueue.length - 1; i >= 0; i -= 1) {
+      const item = spawnQueue[i];
+      const skin = item?.opts?.skinId || playerSkinId();
+      if (skin === keepSkin) continue;
+      spawnQueue.splice(i, 1);
+    }
+  }
+
+  hideDamageNumbers = loadHideDamageNumbers();
   /** @type {Map<string, { count: number, lastMs: number }>} */
   const targetStacks = new Map();
   /** @type {Array<object>} */
@@ -397,6 +447,8 @@ const DamageNumber = (() => {
   }
 
   function spawn(damageValue, targetX, targetY, isCritical = false, opts = {}) {
+    // ignoreHide：怪物打玩家等受擊數字，不受「透明字形」影響
+    if (isDamageHidden() && !opts.ignoreHide) return null;
     if (typeof DamageSkinCatalog === 'undefined') return null;
     const skinId = opts.skinId || playerSkinId();
     const payload = { ...opts, skinId };
@@ -621,7 +673,7 @@ const DamageNumber = (() => {
       point.x + jitter,
       point.y,
       false,
-      { skinId: mobSkinId(), stackIndex, delay, zIndex },
+      { skinId: mobSkinId(), stackIndex, delay, zIndex, ignoreHide: true },
     );
   }
 
@@ -738,6 +790,9 @@ const DamageNumber = (() => {
     warmUp,
     clear,
     pruneStaleStacks,
+    isDamageHidden,
+    getHideDamageNumbers,
+    setHideDamageNumbers,
     activeCount: () => instances.size,
   };
 })();
