@@ -720,7 +720,10 @@ const UiCharacterInfo = (() => {
       + extraFlatStat(snapshot, '物理防禦力')
       + extraFlatStat(snapshot, '魔法防禦力');
     if (!snapshot && typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
-      def += Number(SkillModifiers.getTotals().flatPdd) || 0;
+      const mods = SkillModifiers.getTotals();
+      const level = Math.max(1, Number(CharacterProgression?.getState?.()?.level) || 1);
+      def += Number(mods.flatPdd) || 0;
+      def += (Number(mods.flatPddPerLevel) || 0) * level;
     }
     const value = Math.max(0, def);
     return {
@@ -981,7 +984,11 @@ const UiCharacterInfo = (() => {
       if (key === '爆擊傷害') n += Number(mods.critDmg) || 0;
       if (key === '最終傷害') n += Number(mods.finalDamR) || 0;
       if (key === '無視防禦率') n += Number(mods.ied) || 0;
-      if (key === '防禦力' || key === '物理防禦力' || key === '魔法防禦力') n += Number(mods.flatPdd) || 0;
+      if (key === '防禦力' || key === '物理防禦力' || key === '魔法防禦力') {
+        const level = Math.max(1, Number(CharacterProgression?.getState?.()?.level) || 1);
+        n += Number(mods.flatPdd) || 0;
+        n += (Number(mods.flatPddPerLevel) || 0) * level;
+      }
       if (key === '格擋') n += Number(mods.blockPct) || 0;
     }
     return n;

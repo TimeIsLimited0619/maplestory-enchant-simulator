@@ -205,7 +205,7 @@ const SkillComboOrbs = (() => {
       ? SkillModifiers.emptyTotals()
       : {
         flatPad: 0, damR: 0, bdR: 0, finalDamR: 0, critRate: 0, critDmg: 0, ied: 0,
-        flatStr: 0, flatDex: 0, flatInt: 0, flatLuk: 0, flatPdd: 0, mhpR: 0, flatHpPerLevel: 0,
+        flatStr: 0, flatDex: 0, flatInt: 0, flatLuk: 0, flatPdd: 0, flatPddPerLevel: 0, mhpR: 0, flatHpPerLevel: 0,
         speedStages: 0, speedModifiers: 0, damAbsorbPct: 0, reflectPct: 0,
       };
     const cfg = getConfig();

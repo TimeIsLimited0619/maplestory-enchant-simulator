@@ -24,6 +24,10 @@ const SkillMobStatus = (() => {
   const NL_VENOM_IDS = ['4120011', '4110011'];
   const NL_BLEED_BUFF_ID = '4121054';
   const NL_DOMAIN_ID = '4121015';
+  const NL_DOMAIN_HYPER_TAKEN_ID = '4120046'; // 絕對領域-強化效果：+承受傷害
+  const NL_DOMAIN_HYPER_ATK_ID = '4120047'; // 絕對領域-緩慢：+攻擊力減少
+  const NL_DOMAIN_HYPER_TAKEN_BONUS = 10;
+  const NL_DOMAIN_HYPER_ATK_BONUS = 5;
 
   const FREEZE_SHATTER_ID = '2210013';
   const FREEZE_FX_SKILL_ID = '2200011'; // 結冰特效（mob 層數動畫）
@@ -278,7 +282,8 @@ const SkillMobStatus = (() => {
     const cut = getMapRow(incising, mob, t);
     const def = getMapRow(defDown, mob, t);
     return Math.max(0, Number(cut?.damageTakenPct) || 0)
-      + Math.max(0, Number(def?.damageTakenPct) || 0);
+      + Math.max(0, Number(def?.damageTakenPct) || 0)
+      + getNlDomainDamageTakenPct();
   }
 
   function clearScar(mobOrUid) {
@@ -788,21 +793,45 @@ const SkillMobStatus = (() => {
     return applied;
   }
 
-  function tryApplyNlDomainOnHit(mob) {
-    if (!mob) return false;
+  /**
+   * 絕對領域光環（buff 期間對所有怪物）：
+   * w＝攻擊力減少％、x＝受到傷害提升％（滿等 15／20，依技能等浮動）
+   * 超技：強化效果 +10% 承受傷害；緩慢 +5% 攻擊力減少
+   */
+  function getNlDomainAuraMods() {
     if (typeof SkillModifiers === 'undefined' || !SkillModifiers.hasBuff?.(NL_DOMAIN_ID)) {
-      return false;
+      return { atkDownPct: 0, damageTakenPct: 0 };
     }
-    const info = evalSkillStat(NL_DOMAIN_ID);
-    if (!info?.stat) return false;
-    const defDownPct = Math.max(0, Number(info.stat.w) || 0);
-    if (!(defDownPct > 0)) return false;
-    const durationMs = Math.max(1000, (Number(info.stat.timeSec) || 2) * 1000);
-    return applyDefDown(mob, {
-      durationMs,
-      damageTakenPct: defDownPct,
-      skillId: NL_DOMAIN_ID,
-    });
+    const level = readSkillLevel(NL_DOMAIN_ID);
+    if (!(level > 0) || typeof SkillCatalog === 'undefined' || typeof SkillFormula === 'undefined') {
+      return { atkDownPct: 0, damageTakenPct: 0 };
+    }
+    const skill = SkillCatalog.getSkill?.(NL_DOMAIN_ID);
+    const common = skill?.common;
+    if (!common) return { atkDownPct: 0, damageTakenPct: 0 };
+    const x = { x: level };
+    let atkDownPct = Math.max(0, SkillFormula.evalExpr(common.w, x) || 0);
+    let damageTakenPct = Math.max(0, SkillFormula.evalExpr(common.x, x) || 0);
+    if (readSkillLevel(NL_DOMAIN_HYPER_ATK_ID) > 0) {
+      atkDownPct += NL_DOMAIN_HYPER_ATK_BONUS;
+    }
+    if (readSkillLevel(NL_DOMAIN_HYPER_TAKEN_ID) > 0) {
+      damageTakenPct += NL_DOMAIN_HYPER_TAKEN_BONUS;
+    }
+    return { atkDownPct, damageTakenPct };
+  }
+
+  function getNlDomainAtkDownPct() {
+    return getNlDomainAuraMods().atkDownPct;
+  }
+
+  function getNlDomainDamageTakenPct() {
+    return getNlDomainAuraMods().damageTakenPct;
+  }
+
+  /** @deprecated 改為光環；保留空實作避免舊呼叫報錯 */
+  function tryApplyNlDomainOnHit() {
+    return false;
   }
 
   /** 挑釁契約：WZ y=5000 不可當防禦下降%；用固定近似，時長吃 time */
@@ -876,8 +905,8 @@ const SkillMobStatus = (() => {
 
   function applyIncomingMobDamageMods(mob, dmg) {
     let out = Math.max(0, Math.floor(Number(dmg) || 0));
-    if (!(out > 0) || !mob) return out;
-    const pct = getScarAtkDownPct(mob);
+    if (!(out > 0)) return out;
+    const pct = (mob ? getScarAtkDownPct(mob) : 0) + getNlDomainAtkDownPct();
     if (!(pct > 0)) return out;
     return Math.max(0, Math.floor(out * (1 - Math.min(100, pct) / 100)));
   }
@@ -1023,7 +1052,6 @@ const SkillMobStatus = (() => {
     tryApplyDefDownOnHit(mob, opts.skillId);
     tryApplyShowdownOnHit(mob, opts.skillId);
     tryApplyVenomOnHit(mob);
-    tryApplyNlDomainOnHit(mob);
     applyOrConsumeFreeze(mob, opts.skillId);
     if (typeof SkillModifiers !== 'undefined') {
       if (typeof SkillModifiers.extendIgnisRoarFromHit === 'function') {

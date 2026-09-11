@@ -93,6 +93,8 @@ const SkillModifiers = (() => {
       critRate: 0,
       ied: 0,
       flatPdd: 0,
+      /** 角色每等級固定防禦（lv2pdd） */
+      flatPddPerLevel: 0,
       mhpR: 0,
       flatHpPerLevel: 0,
       /** 固定 HP（emhp 等） */
@@ -277,6 +279,7 @@ const SkillModifiers = (() => {
       critRate: (Number(stat.indieCr) || 0) + (Number(stat.cr) || 0),
       ied: Number(stat.ignoreMobpdpR) || 0,
       flatPdd: Number(stat.pddX) || 0,
+      flatPddPerLevel: Number(stat.lv2pdd) || 0,
       flatMad,
       mhpR: Number(stat.mhpR) || 0,
       flatHpPerLevel: Number(stat.lv2mhp) || 0,

@@ -37,6 +37,16 @@ const SkillOverrides = (() => {
       desc: '劍與靈魂合而為一，永久增加攻擊力，並減少被擊傷害、反射所受傷害。',
       commonRemove: ['time', 'mpCon', 'lt', 'rb'],
     },
+    // 英雄「恢復術」：角色每等 +(50×技能等) 防禦、+(100×技能等) HP
+    '1110011': {
+      h: '角色每等級額外增加防禦力 #lv2pdd、最大HP #lv2mhp',
+      desc: '依角色等級與技能等級永久增加防禦力與最大HP。',
+      common: {
+        lv2pdd: '5*x',
+        lv2mhp: '8*x',
+      },
+      commonRemove: ['asrR', 'terR'],
+    },
 
     // 1轉 魔靈彈：攻擊隻數 6、耗血減半（mpCon 減半）
     '2001008': {
@@ -308,6 +318,32 @@ const SkillOverrides = (() => {
     },
 
     // —— 夜使者（Night Lord）——
+    // 1轉「迴避」：本模擬不套迴避率，改被擊減傷（滿等 15%）
+    '4000012': {
+      h: '被擊傷害減少#damAbsorbShieldR%',
+      desc: '依技能等級永久減少受到的傷害。',
+      common: {
+        damAbsorbShieldR: '15*x/10',
+      },
+      commonRemove: ['er'],
+    },
+    // 2轉「精準暗器」：角色每等 +(75×技能等) HP
+    '4100000': {
+      h: '拳套熟練度#mastery%增加，飛鏢數#y增加\\n角色每等級額外增加HP #lv2mhp',
+      desc: '增加拳套熟練度與所持飛鏢上限，並依角色等級與技能等級永久增加最大HP。',
+      common: {
+        lv2mhp: '7.5*x',
+      },
+    },
+    // 4轉「瞬身迴避」：本模擬不套迴避，改被擊減傷（滿等 30%；格擋仍保留）
+    '4120002': {
+      h: '被擊傷害減少#damAbsorbShieldR%，格擋機率增加#stanceProp%',
+      desc: '依技能等級永久減少受到的傷害，並增加格擋機率。',
+      common: {
+        damAbsorbShieldR: '2.5*x',
+      },
+      commonRemove: ['prop'],
+    },
     // 四飛閃不取代三飛閃（可同時裝備）
     // 三飛閃／四飛閃：手裡劍走 ball volley（bulletCount 發）
     '4111010': {
@@ -359,6 +395,14 @@ const SkillOverrides = (() => {
     '4101014': { skipPanel: true, equipable: false },
     '4121020': { skipPanel: true, equipable: false },
     '4121021': { skipPanel: true, equipable: false },
+    // 挑釁契約：本體無 CD；追擊飛劍 CD 2 秒（runtime）；停留再追擊
+    '4121017': {
+      h: '消耗MP#mpCon、#bulletConsume個飛鏢\\n最多對#mobCount名敵人以#damage%傷害攻擊#attackCount次後挑釁\\n被挑釁的敵人#time秒內獲得經驗值及道具掉落率增加#x%。若為BOSS怪物，效果減少一半\\n之後形成手裏劍：以主傷害的#w%攻擊#z次（#u個），追擊冷卻#s2秒\\n一名敵人被多個手裏劍命中時，從第二隻手裏劍開始，最終傷害會減少#u2%，攻擊一般怪物時傷害增加#nbdR%',
+      desc: '攻擊並挑釁敵人；符咒爆炸後黑暗手裏劍以主傷害比例追擊。本體無冷卻；追擊有短冷卻。',
+      common: {
+        s2: '2',
+      },
+    },
     // 影分身：x＝分身傷害%，不可進通用 xVal
     '4111002': {
       type: 'buff',
@@ -371,11 +415,36 @@ const SkillOverrides = (() => {
     '4111007': {
       type: 'buff',
     },
-    // 絕對領域：地面光環，非暴風雪
+    // 絕對領域：地面光環；滿等怪物攻 -15%、受傷 +20%（依技能等浮動）
     '4121015': {
       type: 'buff',
       blizzardCast: false,
       tileRepeatIdx: 21,
+      h: '消耗MP#mpCon，持續#time秒，使所有敵人攻擊力減少#w%、受到的傷害提升#x%\\n[被動效果:攻擊BOSS怪物時傷害增加 #bdR%]',
+      desc: '展開結界：期間所有敵人攻擊力下降、受到的傷害提升，並永久增加對 BOSS 的傷害。',
+      common: {
+        w: '15*x/30',
+        x: '20*x/30',
+      },
+      commonRemove: ['z', 'y'],
+    },
+    // 絕對領域-強化效果：追加承受傷害
+    '4120046': {
+      h: '絕對領域使敵人受到的傷害額外提升#v%',
+      desc: '強化絕對領域：額外提升敵人受到的傷害。',
+      common: {
+        v: '10',
+      },
+      commonRemove: ['x', 'z'],
+    },
+    // 絕對領域-緩慢：追加攻擊力減少（本模擬不做移速）
+    '4120047': {
+      h: '絕對領域使敵人攻擊力額外減少#s%',
+      desc: '強化絕對領域：額外減少敵人攻擊力。',
+      common: {
+        s: '5',
+      },
+      commonRemove: ['y'],
     },
     // 絕對領域-BOSS殺手：WZ common 幾乎空
     '4120048': {

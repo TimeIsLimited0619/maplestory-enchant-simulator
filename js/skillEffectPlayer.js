@@ -933,6 +933,279 @@ const SkillEffectPlayer = (() => {
   }
 
   /**
+   * 挑釁契約 SecondAtom 近似：在玩家周圍圓圈留下飛鏢，稍候再飛向目標。
+   * 圖幀用裝備飛鏢 bullet（不依賴 Atom dataIndex）。
+   * opts.anchorAt: 'player'（預設）| 'mob'
+   */
+  function playStationarySeekVolley(opts = {}) {
+    const {
+      fieldEl,
+      playerEl,
+      mobs = [],
+      frames,
+      atoms = null,
+      anchorMob = null,
+      anchorAt = 'player',
+      facingRight = true,
+      posScale = 1,
+      holdMs = 520,
+      onHit,
+      onDone,
+    } = opts;
+    const list = (frames || []).filter((f) => f && f.src);
+    const targets = (mobs || []).filter((m) => m && Number(m.hp) > 0);
+    // 玩家周圍均勻 6 點；半徑約介於初版與過大版之間
+    const atomList = Array.isArray(atoms) && atoms.length
+      ? atoms
+      : (() => {
+        const r = 160;
+        const out = [];
+        for (let i = 0; i < 6; i += 1) {
+          const ang = (-90 + i * 60) * (Math.PI / 180);
+          out.push({
+            pos: [Math.round(Math.cos(ang) * r), Math.round(Math.sin(ang) * r)],
+            rotate: i * 60,
+            enableDelay: 480,
+          });
+        }
+        return out;
+      })();
+    const starCount = atomList.length;
+
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      if (typeof onDone === 'function') onDone();
+    };
+
+    if (!fieldEl || !list.length || !targets.length || !(starCount > 0)) {
+      finish();
+      return null;
+    }
+
+    if (typeof document !== 'undefined' && document.hidden) {
+      for (let i = 0; i < starCount; i += 1) {
+        const mob = targets[i % targets.length];
+        if (typeof onHit === 'function') onHit(mob, i);
+      }
+      finish();
+      return true;
+    }
+
+    const fxLayer = getSkillFxLayer(fieldEl);
+    if (!fxLayer) {
+      finish();
+      return null;
+    }
+
+    const scale = Math.max(0.15, Number(posScale) || 1);
+    let anchor = null;
+    if (String(anchorAt) === 'mob') {
+      anchor = (anchorMob && fieldPointFromMob(fieldEl, anchorMob))
+        || fieldPointFromMob(fieldEl, targets[0]);
+    }
+    if (!anchor) {
+      anchor = fieldPointFromPlayer(fieldEl, playerEl, [0, -48], facingRight)
+        || { x: 120, y: 140 };
+    }
+
+    const speed = (0.78 + Math.random() * 0.22) * gameSpeedMult();
+    let left = starCount;
+    const kids = [];
+    const group = {
+      cancel(settleHits) {
+        kids.forEach((k) => {
+          try { k.cancel(settleHits); } catch (_) { /* ignore */ }
+        });
+      },
+    };
+
+    const markStarDone = () => {
+      left -= 1;
+      if (left <= 0) {
+        projectiles.delete(group);
+        finish();
+      }
+    };
+
+    const spawnAt = (atom) => {
+      const ox = (Number(atom?.pos?.[0]) || 0) * scale;
+      const oy = (Number(atom?.pos?.[1]) || 0) * scale;
+      // 以錨點為圓心，不依朝向翻轉，維持完整圓
+      return {
+        x: anchor.x + ox,
+        y: anchor.y + oy,
+      };
+    };
+
+    const launchOne = (starIndex) => {
+      const atom = atomList[starIndex] || {};
+      const mob = targets[starIndex % targets.length];
+      const spawn = spawnAt(atom);
+      const hold = scaleRealMs(Math.max(
+        80,
+        Number(holdMs) || Number(atom.enableDelay) || 480,
+      ));
+      const rotateDeg = Number(atom.rotate) || 0;
+
+      const kid = {
+        stage: null,
+        rafId: null,
+        holdTimer: null,
+        done: false,
+        hit: false,
+        cancel(settleHits) {
+          if (kid.done) return;
+          kid.done = true;
+          if (kid.holdTimer != null) {
+            clearTimeout(kid.holdTimer);
+            kid.holdTimer = null;
+          }
+          if (kid.rafId != null) {
+            cancelAnimationFrame(kid.rafId);
+            kid.rafId = null;
+          }
+          if (settleHits && !kid.hit && typeof onHit === 'function' && Number(mob?.hp) > 0) {
+            kid.hit = true;
+            onHit(mob, starIndex);
+          }
+          kid.stage?.remove();
+          kid.stage = null;
+          markStarDone();
+        },
+      };
+
+      const placeStage = () => {
+        const stage = document.createElement('div');
+        stage.className = 'idle-skill-fx-stage idle-skill-fx-stage--shootobj idle-skill-fx-stage--showdown-atom';
+        const img = document.createElement('img');
+        img.className = 'idle-skill-fx-sprite';
+        img.alt = '';
+        img.draggable = false;
+        img.decoding = 'sync';
+        stage.appendChild(img);
+        fxLayer.appendChild(stage);
+        kid.stage = stage;
+        stage.style.left = `${spawn.x}px`;
+        stage.style.top = `${spawn.y}px`;
+        const face = facingRight ? 'scaleX(-1)' : 'none';
+        stage.style.transform = rotateDeg
+          ? `${face === 'none' ? '' : `${face} `}rotate(${rotateDeg}deg)`.trim()
+          : face;
+
+        let frameIdx = 0;
+        let frameAcc = 0;
+        const applyFrame = () => {
+          const frame = list[frameIdx % list.length];
+          if (!frame?.src) return;
+          img.style.setProperty('--ox', `${frame.origin?.[0] ?? 0}px`);
+          img.style.setProperty('--oy', `${frame.origin?.[1] ?? 0}px`);
+          if (img.dataset.src !== frame.src) {
+            img.dataset.src = frame.src;
+            img.src = frame.src;
+          }
+          img.hidden = false;
+        };
+        applyFrame();
+
+        return { img, applyFrame, getFrameIdx: () => frameIdx, setFrameIdx: (n) => { frameIdx = n; }, getFrameAcc: () => frameAcc, setFrameAcc: (n) => { frameAcc = n; }, bumpFrame: (dt) => {
+          frameAcc += dt;
+          const frameDelay = Math.max(1, Number(list[frameIdx % list.length]?.delay) || 60);
+          if (frameAcc >= frameDelay) {
+            frameAcc -= frameDelay;
+            frameIdx += 1;
+            applyFrame();
+          }
+        } };
+      };
+
+      const startFly = (anim) => {
+        if (kid.done || !kid.stage) return;
+        const end0 = fieldPointFromMob(fieldEl, mob) || { x: spawn.x, y: spawn.y };
+        const dist = Math.hypot(end0.x - spawn.x, end0.y - spawn.y) || 40;
+        const duration = Math.max(180, Math.min(520, dist / Math.max(0.35, speed)));
+        let lastTs = 0;
+        let elapsed = 0;
+
+        const liveEnd = () => {
+          if (mob && Number(mob.hp) > 0) {
+            const mp = fieldPointFromMob(fieldEl, mob);
+            if (mp && Number.isFinite(mp.x)) return mp;
+          }
+          return end0;
+        };
+
+        const stepFrame = (ts) => {
+          if (kid.done) return;
+          if (!lastTs) lastTs = ts;
+          const dt = Math.min(50, Math.max(0, ts - lastTs));
+          lastTs = ts;
+          elapsed += dt;
+          anim.bumpFrame(dt);
+          const u = Math.min(1, elapsed / duration);
+          const t = 1 - (1 - u) * (1 - u);
+          const pt = {
+            x: spawn.x + (liveEnd().x - spawn.x) * t,
+            y: spawn.y + (liveEnd().y - spawn.y) * t,
+          };
+          kid.stage.style.left = `${pt.x}px`;
+          kid.stage.style.top = `${pt.y}px`;
+          if (u >= 1) {
+            if (!kid.hit && typeof onHit === 'function' && Number(mob?.hp) > 0) {
+              kid.hit = true;
+              onHit(mob, starIndex);
+            }
+            kid.cancel(false);
+            return;
+          }
+          kid.rafId = requestAnimationFrame(stepFrame);
+        };
+        kid.rafId = requestAnimationFrame(stepFrame);
+      };
+
+      ensurePreloaded(list).then(() => {
+        if (kid.done) return;
+        const anim = placeStage();
+        const beginFly = () => {
+          if (kid.done) return;
+          if (kid.rafId != null) {
+            cancelAnimationFrame(kid.rafId);
+            kid.rafId = null;
+          }
+          startFly(anim);
+        };
+        if (hold > 0) {
+          let lastHold = 0;
+          const holdSpin = (ts) => {
+            if (kid.done) return;
+            if (!lastHold) lastHold = ts;
+            const dt = Math.min(50, Math.max(0, ts - lastHold));
+            lastHold = ts;
+            anim.bumpFrame(dt);
+            kid.rafId = requestAnimationFrame(holdSpin);
+          };
+          kid.rafId = requestAnimationFrame(holdSpin);
+          kid.holdTimer = setTimeout(() => {
+            kid.holdTimer = null;
+            beginFly();
+          }, hold);
+        } else {
+          beginFly();
+        }
+      });
+
+      return kid;
+    };
+
+    for (let i = 0; i < starCount; i += 1) {
+      kids.push(launchOne(i));
+    }
+    projectiles.add(group);
+    return true;
+  }
+
+  /**
    * ball：自玩家飛向目標（可穿透多隻），命中後播 hit。
    * 速度預設約每 30ms 移動 18px；可用 speedPxPerMs 覆寫。
    */
@@ -1358,6 +1631,7 @@ const SkillEffectPlayer = (() => {
     playOnMobHead,
     playShootObj,
     playRandomArcVolley,
+    playStationarySeekVolley,
     playBall,
     playAtField,
     playProjectile,

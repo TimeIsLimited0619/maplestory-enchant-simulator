@@ -3399,6 +3399,13 @@ const IdleBossFight = (() => {
       const mult = Number(banbanKitCfg()?.buffOutMult) || 1.2;
       amount = Math.floor(amount * mult);
     }
+    if (typeof SkillMobStatus !== 'undefined'
+      && typeof SkillMobStatus.applyIncomingMobDamageMods === 'function') {
+      amount = SkillMobStatus.applyIncomingMobDamageMods(
+        { uid: slotKey, isBoss: true },
+        amount,
+      );
+    }
     if (!(amount > 0)) return;
     if (typeof IdleHunt !== 'undefined' && IdleHunt.applyPlayerDamage) {
       IdleHunt.applyPlayerDamage(amount, {

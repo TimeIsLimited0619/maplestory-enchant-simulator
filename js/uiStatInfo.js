@@ -241,7 +241,9 @@ const UiStatInfo = (() => {
       if (key === '爆擊傷害') pushRow(rows, 'desc', '技能爆傷', mods.critDmg, true);
       if (key === '無視防禦率') pushRow(rows, 'desc', '技能無視', mods.ied, true);
       if (key === '防禦力') {
-        pushRow(rows, 'desc', '技能防禦', mods.flatPdd, false);
+        const level = Math.max(1, Number(CharacterProgression?.getState?.()?.level) || 1);
+        const skillDef = (Number(mods.flatPdd) || 0) + (Number(mods.flatPddPerLevel) || 0) * level;
+        pushRow(rows, 'desc', '技能防禦', skillDef, false);
         pushRow(rows, 'desc', '技能傷害減少', mods.damAbsorbPct, true);
       }
       if (key === '最大HP') {

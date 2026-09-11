@@ -20394,34 +20394,12 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossName": "卡洛斯·13",
     "bossIcon": "8881000",
     "monsterHp": 500000,
-    "bossHp": 45286473419,
+    "bossHp": 50000000000000,
     "killExp": 223,
     "killGold": 111,
     "bossKillExp": 4460,
     "bossKillGold": 892,
-    "mobDrops": [
-      {
-        "kind": "etc",
-        "itemId": "Nohimepcs",
-        "name": "濃姬粉塵",
-        "chance": 50,
-        "amount": 100
-      },
-      {
-        "kind": "etc",
-        "itemId": "doom",
-        "name": "去除厄運的符咒",
-        "chance": 50,
-        "amount": 100
-      },
-      {
-        "kind": "etc",
-        "itemId": "nekopow",
-        "name": "喵喵之力",
-        "chance": 50,
-        "amount": 100
-      }
-    ],
+    "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
@@ -20438,7 +20416,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 300,
     "replayBossKills": 10,
     "smallKills": 100,
-    "mobAtk1Dmg": 5,
+    "mobAtk1Dmg": 5000,
     "mobAtk1Cd": 0.6,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,

@@ -2292,18 +2292,67 @@ const SkillCombat = (() => {
     }
 
     if (trigger === '4121017') {
+      const SHOWDOWN_ATOM_CD_KEY = '4121020';
+      const SHOWDOWN_ATOM_CD_MS = 2000;
+      const tNow = nowMs();
+      if ((Number(cooldowns[SHOWDOWN_ATOM_CD_KEY]) || 0) > tNow) {
+        // 追擊冷卻中：本體仍可打，只跳過飛劍追擊
+      } else {
+      const mainSkill = typeof SkillCatalog !== 'undefined' ? SkillCatalog.getSkill('4121017') : null;
       const atom = typeof SkillCatalog !== 'undefined' ? SkillCatalog.getSkill('4121020') : null;
       const lv = Math.max(
         1,
         (typeof CharacterSkills !== 'undefined' ? CharacterSkills.getLevel?.('4121017') : 0) || 1,
       );
-      if (atom) {
-        const common = evalSkill(atom, lv);
-        const atk = common ? combatCommonFor(atom, common) : null;
-        if (atk && Number(atk.damagePct) > 0) {
-          const res = dealNlExtraHits(ctx, atom, atk.damagePct, atk.attackCount, liveHits);
-          res.kills.forEach((m) => pushUniqueMob(kills, m));
+      if (mainSkill && atom) {
+        const mainCommon = evalSkill(mainSkill, lv);
+        const atomCommon = evalSkill(atom, lv);
+        const mainAtk = mainCommon ? combatCommonFor(mainSkill, mainCommon) : null;
+        const atomAtk = atomCommon ? combatCommonFor(atom, atomCommon) : null;
+        const mainPct = Number(mainAtk?.damagePct) || 0;
+        // WZ／atom 的 damage（滿等 24）改為「主傷害 × 該％」：605% × 24% ≈ 145%
+        const ratioPct = Number(atomAtk?.damagePct) || 0;
+        const extraPct = mainPct > 0 && ratioPct > 0 ? (mainPct * ratioPct) / 100 : 0;
+        const swordCount = Math.max(
+          1,
+          Number(atomAtk?.attackCount) || Number(mainAtk?.attackCount) || 6,
+        );
+        if (extraPct > 0 && liveHits.length) {
+          cooldowns[SHOWDOWN_ATOM_CD_KEY] = tNow + scaleGameDelayMs(SHOWDOWN_ATOM_CD_MS);
+          const frames = nlMarkStarFrames();
+          const applySword = (mob) => {
+            if (!mob || !(Number(mob.hp) > 0)) return;
+            const res = dealNlExtraHits(ctx, atom, extraPct, 1, [mob]);
+            res.kills.forEach((m) => pushUniqueMob(kills, m));
+          };
+          if (frames?.length
+            && typeof SkillEffectPlayer !== 'undefined'
+            && typeof SkillEffectPlayer.playStationarySeekVolley === 'function') {
+            SkillEffectPlayer.playStationarySeekVolley({
+              fieldEl: ctx.fieldEl || document.getElementById('idleHuntField'),
+              playerEl: ctx.playerEl,
+              mobs: liveHits,
+              frames,
+              // 預設在玩家周圍均勻圓（半徑約 2 倍）
+              atoms: null,
+              anchorAt: 'player',
+              facingRight: ctxFacingRight(ctx),
+              posScale: 1,
+              holdMs: 520,
+              onHit: (mob) => applySword(mob),
+              onDone: () => {
+                if (kills.length && typeof ctx.onProjectileResolve === 'function') {
+                  ctx.onProjectileResolve(kills);
+                }
+              },
+            });
+          } else {
+            for (let i = 0; i < swordCount; i += 1) {
+              applySword(liveHits[i % liveHits.length]);
+            }
+          }
         }
+      }
       }
     }
 

@@ -153,6 +153,8 @@ const SkillFormula = (() => {
     if (fromCooltime > 0) return fromCooltime;
 
     // 蓄積型技能：WZ 用 w（最大次數）+ w2（準備秒數），本專案不做蓄積，w2 視為 CD
+    // 有 damage 的攻擊技常見 w／w2 當別的％（如挑釁契約手裏劍傷／一般怪增傷），不可當 CD
+    if (c.damage != null && String(c.damage).trim() !== '') return 0;
     if (c.w == null || String(c.w).trim() === '' || c.w2 == null || String(c.w2).trim() === '') {
       return 0;
     }
@@ -227,6 +229,7 @@ const SkillFormula = (() => {
       criticaldamage: num('criticaldamage'),
       ignoreMobpdpR: num('ignoreMobpdpR'),
       pddX: num('pddX'),
+      lv2pdd: num('lv2pdd'),
       mhpR: (() => {
         const hp = num('mhpR');
         if (hp > 0) return hp;
