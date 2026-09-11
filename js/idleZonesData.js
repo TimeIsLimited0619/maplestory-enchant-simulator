@@ -1589,7 +1589,7 @@ const IDLE_ZONE_BAND_DEFS = [
       {
         "kind": "equip",
         "itemId": "01112438",
-        "chance": 1,
+        "chance": 0.1,
         "amount": 1
       }
     ],
@@ -1636,7 +1636,7 @@ const IDLE_ZONE_BAND_DEFS = [
       {
         "kind": "equip",
         "itemId": "01112438",
-        "chance": 5,
+        "chance": 0.5,
         "amount": 1
       }
     ]
