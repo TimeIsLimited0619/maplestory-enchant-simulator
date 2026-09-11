@@ -128,7 +128,8 @@ const SkillEffectPlayer = (() => {
       inst.frameIdx += 1;
       if (inst.frameIdx >= frames.length) {
         if (inst.loop) {
-          inst.frameIdx = 0;
+          const from = Math.max(0, Math.min(inst.loopFrom || 0, frames.length - 1));
+          inst.frameIdx = from;
         } else {
           destroy(inst);
           return;
@@ -202,6 +203,7 @@ const SkillEffectPlayer = (() => {
       fixedY: opts.y,
       mirrorX: !!opts.mirrorX,
       loop: !!opts.loop,
+      loopFrom: Math.max(0, Math.floor(Number(opts.loopFrom) || 0)),
       stopWhenAnchorLost: !!opts.stopWhenAnchorLost,
     };
     instances.add(inst);
@@ -468,6 +470,15 @@ const SkillEffectPlayer = (() => {
     return result;
   }
 
+  function listShootMovePaths(moveList) {
+    if (!moveList || typeof moveList !== 'object') return [];
+    return Object.keys(moveList)
+      .filter((k) => /^p\d+$/i.test(k))
+      .sort((a, b) => (Number(a.slice(1)) || 0) - (Number(b.slice(1)) || 0))
+      .map((k) => (Array.isArray(moveList[k]) ? moveList[k][0] : null))
+      .filter(Boolean);
+  }
+
   /**
    * shootobj：從 start 以等速直線飛出（不對齊怪物 Y，避免往下掉再飛）。
    * 速度取自 moveList.v（視為每 30ms 移動 v px）；方向取水平朝向。
@@ -501,6 +512,37 @@ const SkillEffectPlayer = (() => {
     if (!fieldEl || !list.length || !targets.length) {
       finish();
       return null;
+    }
+
+    // moveList.p1／p2／p3：多條彈道散射（爆破鏢等）
+    if (!opts._singlePath) {
+      const paths = listShootMovePaths(moveList);
+      if (paths.length > 1) {
+        let left = paths.length;
+        let claimed = false;
+        paths.forEach((path, i) => {
+          playShootObj({
+            ...opts,
+            _singlePath: true,
+            moveList: { p1: [path] },
+            startOffset: [
+              Number(startOffset?.[0]) || 0,
+              (Number(startOffset?.[1]) || 0) + (Number(path?.pos?.[1]) || 0),
+            ],
+            startDelayMs: (Number(startDelayMs) || 0) + i * 40,
+            onHit: (mob, idx) => {
+              if (!pierce && claimed) return;
+              claimed = true;
+              if (typeof onHit === 'function') onHit(mob, idx);
+            },
+            onDone: () => {
+              left -= 1;
+              if (left <= 0) finish();
+            },
+          });
+        });
+        return true;
+      }
     }
 
     // 背景分頁：略過飛行動畫，立刻結算命中（否則 rAF／timeout 被節流會卡傷害）
@@ -679,6 +721,214 @@ const SkillEffectPlayer = (() => {
     const delay = scaleRealMs(Math.max(0, Number(startDelayMs) || 0));
     if (delay > 0) proj.launchTimer = setTimeout(launch, delay);
     else launch();
+    return true;
+  }
+
+  function bezier2(p0, p1, p2, t) {
+    const u = 1 - t;
+    return {
+      x: u * u * p0.x + 2 * u * t * p1.x + t * t * p2.x,
+      y: u * u * p0.y + 2 * u * t * p1.y + t * t * p2.y,
+    };
+  }
+
+  /**
+   * 刻印飛鏢：從玩家以隨機角度／弧線飛向目標（非水平 shootobj）。
+   */
+  function playRandomArcVolley(opts = {}) {
+    const {
+      fieldEl,
+      playerEl,
+      mobs = [],
+      frames,
+      count = 1,
+      startOffset = [-48, -36],
+      facingRight = true,
+      onHit,
+      onDone,
+    } = opts;
+    const list = (frames || []).filter((f) => f && f.src);
+    const targets = (mobs || []).filter((m) => m && Number(m.hp) > 0);
+    const starCount = Math.max(1, Math.floor(Number(count) || 1));
+
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      if (typeof onDone === 'function') onDone();
+    };
+
+    if (!fieldEl || !list.length || !targets.length) {
+      finish();
+      return null;
+    }
+
+    if (typeof document !== 'undefined' && document.hidden) {
+      for (let i = 0; i < starCount; i += 1) {
+        const mob = targets[i % targets.length];
+        if (typeof onHit === 'function') onHit(mob, i);
+      }
+      finish();
+      return true;
+    }
+
+    const fxLayer = getSkillFxLayer(fieldEl);
+    if (!fxLayer) {
+      finish();
+      return null;
+    }
+
+    const spawn = (typeof fieldPointFromPlayer === 'function')
+      ? fieldPointFromPlayer(fieldEl, playerEl, startOffset, facingRight)
+      : { x: 80, y: 120 };
+    const speed = (0.72 + Math.random() * 0.28) * gameSpeedMult();
+    let left = starCount;
+    const kids = [];
+    const group = {
+      cancel(settleHits) {
+        kids.forEach((k) => {
+          try { k.cancel(settleHits); } catch (_) { /* ignore */ }
+        });
+      },
+    };
+
+    const markStarDone = () => {
+      left -= 1;
+      if (left <= 0) {
+        projectiles.delete(group);
+        finish();
+      }
+    };
+
+    const launchOne = (starIndex, delayMs) => {
+      const mob = targets[starIndex % targets.length];
+      const end0 = fieldPointFromMob(fieldEl, mob) || { x: spawn.x + 180, y: spawn.y };
+      const dx = end0.x - spawn.x;
+      const dy = end0.y - spawn.y;
+      const base = Math.atan2(dy, dx);
+      const sign = Math.random() < 0.5 ? -1 : 1;
+      const offset = (38 + Math.random() * 78) * (Math.PI / 180);
+      const ang = base + sign * offset;
+      const dist = 64 + Math.random() * 120;
+      const ctrl = {
+        x: spawn.x + Math.cos(ang) * dist,
+        y: spawn.y + Math.sin(ang) * dist - (20 + Math.random() * 70),
+      };
+      const rough = Math.hypot(ctrl.x - spawn.x, ctrl.y - spawn.y)
+        + Math.hypot(end0.x - ctrl.x, end0.y - ctrl.y);
+      const duration = Math.max(260, Math.min(640, rough / Math.max(0.35, speed)));
+
+      const kid = {
+        stage: null,
+        rafId: null,
+        launchTimer: null,
+        done: false,
+        hit: false,
+        cancel(settleHits) {
+          if (kid.done) return;
+          kid.done = true;
+          if (kid.launchTimer != null) {
+            clearTimeout(kid.launchTimer);
+            kid.launchTimer = null;
+          }
+          if (kid.rafId != null) {
+            cancelAnimationFrame(kid.rafId);
+            kid.rafId = null;
+          }
+          if (settleHits && !kid.hit && typeof onHit === 'function' && Number(mob?.hp) > 0) {
+            kid.hit = true;
+            onHit(mob, starIndex);
+          }
+          kid.stage?.remove();
+          kid.stage = null;
+          markStarDone();
+        },
+      };
+
+      const fly = () => {
+        if (kid.done) return;
+        const stage = document.createElement('div');
+        stage.className = 'idle-skill-fx-stage idle-skill-fx-stage--shootobj';
+        const img = document.createElement('img');
+        img.className = 'idle-skill-fx-sprite';
+        img.alt = '';
+        img.draggable = false;
+        img.decoding = 'sync';
+        stage.appendChild(img);
+        fxLayer.appendChild(stage);
+        kid.stage = stage;
+        stage.style.transform = facingRight ? 'scaleX(-1)' : 'none';
+
+        let frameIdx = 0;
+        let frameAcc = 0;
+        let lastTs = 0;
+        let elapsed = 0;
+
+        const applyFrame = () => {
+          const frame = list[frameIdx % list.length];
+          if (!frame?.src) return;
+          img.style.setProperty('--ox', `${frame.origin?.[0] ?? 0}px`);
+          img.style.setProperty('--oy', `${frame.origin?.[1] ?? 0}px`);
+          if (img.dataset.src !== frame.src) {
+            img.dataset.src = frame.src;
+            img.src = frame.src;
+          }
+          img.hidden = false;
+        };
+
+        const liveEnd = () => {
+          if (mob && Number(mob.hp) > 0) {
+            const mp = fieldPointFromMob(fieldEl, mob);
+            if (mp && Number.isFinite(mp.x)) return mp;
+          }
+          return end0;
+        };
+
+        ensurePreloaded(list).then(() => {
+          if (kid.done) return;
+          applyFrame();
+          const stepFrame = (ts) => {
+            if (kid.done) return;
+            if (!lastTs) lastTs = ts;
+            const dt = Math.min(50, Math.max(0, ts - lastTs));
+            lastTs = ts;
+            elapsed += dt;
+            frameAcc += dt;
+            const frameDelay = Math.max(1, Number(list[frameIdx % list.length]?.delay) || 60);
+            if (frameAcc >= frameDelay) {
+              frameAcc -= frameDelay;
+              frameIdx += 1;
+              applyFrame();
+            }
+            const u = Math.min(1, elapsed / duration);
+            const t = 1 - (1 - u) * (1 - u);
+            const pt = bezier2(spawn, ctrl, liveEnd(), t);
+            stage.style.left = `${pt.x}px`;
+            stage.style.top = `${pt.y}px`;
+            if (u >= 1) {
+              if (!kid.hit && typeof onHit === 'function' && Number(mob?.hp) > 0) {
+                kid.hit = true;
+                onHit(mob, starIndex);
+              }
+              kid.cancel(false);
+              return;
+            }
+            kid.rafId = requestAnimationFrame(stepFrame);
+          };
+          kid.rafId = requestAnimationFrame(stepFrame);
+        });
+      };
+
+      const wait = scaleRealMs(Math.max(0, Number(delayMs) || 0));
+      if (wait > 0) kid.launchTimer = setTimeout(fly, wait);
+      else fly();
+      return kid;
+    };
+
+    for (let i = 0; i < starCount; i += 1) {
+      kids.push(launchOne(i, i * (28 + Math.random() * 42)));
+    }
+    projectiles.add(group);
     return true;
   }
 
@@ -889,6 +1139,7 @@ const SkillEffectPlayer = (() => {
       x = 0,
       y = 0,
       loop = false,
+      loopFrom = 0,
       className = 'idle-skill-fx-stage idle-skill-fx-stage--summon',
       mirrorX = false,
       zIndex,
@@ -908,6 +1159,7 @@ const SkillEffectPlayer = (() => {
       x,
       y,
       loop,
+      loopFrom,
       className,
       mirrorX,
       zIndex,
@@ -1105,6 +1357,7 @@ const SkillEffectPlayer = (() => {
     playOnMob,
     playOnMobHead,
     playShootObj,
+    playRandomArcVolley,
     playBall,
     playAtField,
     playProjectile,

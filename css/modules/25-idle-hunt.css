@@ -756,6 +756,20 @@
   z-index: 2;
 }
 
+.paperdoll-stage--hunt.paperdoll-stage--shadow-partner {
+  position: absolute;
+  left: -42px;
+  top: 0;
+  z-index: 1;
+  opacity: 0.55;
+  filter: hue-rotate(210deg) saturate(0.65) brightness(0.88);
+  pointer-events: none;
+}
+
+.paperdoll-stage--hunt.paperdoll-stage--shadow-partner.is-hidden {
+  display: none;
+}
+
 .paperdoll-stage--hunt .paperdoll-layers {
   position: absolute;
   inset: 0;
@@ -912,6 +926,15 @@
 .idle-hunt-skill-fx > .idle-skill-fx-stage--summon-orbit,
 .idle-hunt-skill-fx > .idle-skill-fx-stage--summon-attack.idle-skill-fx-stage--summon-orbit {
   z-index: 52;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--nl-domain {
+  z-index: 26;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--nl-flare,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon-attack.idle-skill-fx-stage--nl-flare {
+  z-index: 36;
 }
 
 .idle-hunt-skill-fx > .idle-skill-fx-stage--channel-side {

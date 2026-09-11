@@ -78,7 +78,7 @@ const Paperdoll = (() => {
     walk1: 'walk2',
   };
 
-  const ATTACK_ACTION_RE = /^(swing|stab|slash|Leap|shoot|alert|heal|jump)/i;
+  const ATTACK_ACTION_RE = /^(swing|stab|slash|Leap|shoot|alert|heal|jump|lucky|throwing|quadruple)/i;
 
   /** 技能 instruction 以 blink 隱藏角色本體（騰空踢擊／憤怒天使等） */
   const HIDE_BODY_ACTIONS = new Set(['blink', 'hide', 'hideBody']);
@@ -87,12 +87,34 @@ const Paperdoll = (() => {
     return ATTACK_ACTION_RE.test(String(action || ''));
   }
 
+  function isHuntAnimHost(host) {
+    const mode = host?.getAttribute?.('data-paperdoll') || '';
+    return mode === 'hunt' || mode === 'hunt-clone';
+  }
+
+  function syncShadowPartnerClone() {
+    const on = typeof SkillModifiers !== 'undefined' && SkillModifiers.hasBuff?.('4111002');
+    document.querySelectorAll('[data-paperdoll="hunt-clone"]').forEach((clone) => {
+      clone.classList.toggle('is-hidden', !on);
+    });
+  }
+
+  /** 腳底／命中錨點：只用傳入角色內的 hunt／分身，避免跨場景抓到隱藏紙娃娃 */
+  function huntAnchorHost(playerEl) {
+    if (!playerEl) return null;
+    const mode = playerEl.getAttribute?.('data-paperdoll') || '';
+    if (mode === 'hunt' || mode === 'hunt-clone') return playerEl;
+    return playerEl.querySelector?.('[data-paperdoll="hunt"]')
+      || playerEl.querySelector?.('[data-paperdoll="hunt-clone"]')
+      || null;
+  }
+
   function isHideBodyAction(action) {
     return HIDE_BODY_ACTIONS.has(String(action || ''));
   }
 
   function setHuntBodyHidden(host, hidden) {
-    if (!host || host.getAttribute('data-paperdoll') !== 'hunt') return;
+    if (!isHuntAnimHost(host)) return;
     host.classList.toggle('is-paperdoll-body-hidden', !!hidden);
   }
 
@@ -156,7 +178,7 @@ const Paperdoll = (() => {
           : (WeaponTypeMap?.DEFAULT_BASIC_ATTACK_ACTIONS || ['swingT1', 'swingO1', 'swingT2', 'stabT1']).slice();
     }
     if (hand === 'one') {
-      const preferred = list.filter((a) => /^(swingO|stabO|shoot|swingP)/i.test(String(a)));
+      const preferred = list.filter((a) => /^(swingO|stabO|shoot|swingP|lucky|throwing)/i.test(String(a)));
       const rest = list.filter((a) => !preferred.includes(a));
       list = preferred.length ? preferred.concat(rest) : list;
     } else if (hand === 'two') {
@@ -586,7 +608,7 @@ const Paperdoll = (() => {
     comboMoveHold = !!on;
     if (!comboMoveHold) {
       hosts.forEach((host) => {
-        if (host.getAttribute('data-paperdoll') !== 'hunt') return;
+        if (!isHuntAnimHost(host)) return;
         if (!instructionPlay) {
           clearInstructionMove(host);
           setHuntBodyHidden(host, false);
@@ -613,7 +635,7 @@ const Paperdoll = (() => {
     instructionPlay = null;
     forceActionName = '';
     hosts.forEach((host) => {
-      if (host.getAttribute('data-paperdoll') !== 'hunt') return;
+      if (!isHuntAnimHost(host)) return;
       const s = animOf(host);
       s.instructionLock = false;
       // 接技連段中保留最後 move，等整段結束再歸位
@@ -685,7 +707,7 @@ const Paperdoll = (() => {
     forceActionName = steps[0].action;
     swingTargetOverrideMs = 0;
     hosts.forEach((host) => {
-      if (host.getAttribute('data-paperdoll') !== 'hunt') return;
+      if (!isHuntAnimHost(host)) return;
       applyInstructionStepToHost(host, steps[0], now);
     });
   }
@@ -715,7 +737,7 @@ const Paperdoll = (() => {
     }
     forceActionName = preferred;
     hosts.forEach((host) => {
-      if (host.getAttribute('data-paperdoll') !== 'hunt') return;
+      if (!isHuntAnimHost(host)) return;
       const d = data();
       if (!d) return;
       const s = animOf(host);
@@ -832,7 +854,7 @@ const Paperdoll = (() => {
     }
 
     // blink 等：隱藏本體，只留技能特效（勿 fallback 成 swing）
-    if (mode === 'hunt' && isHideBodyAction(action)) {
+    if (isHuntAnimHost(host) && isHideBodyAction(action)) {
       setHuntBodyHidden(host, true);
       let layer = host.querySelector(':scope > [data-paperdoll-layers]');
       const prevTransform = layer?.style?.transform || '';
@@ -1000,8 +1022,7 @@ const Paperdoll = (() => {
    * mob info/hit 錨點：stand1 第 0 幀肚臍在玩家座標中的位置（不跟攻擊 swing 晃動）。
    */
   function getHuntHitAnchor(playerEl) {
-    const host = playerEl?.querySelector?.('[data-paperdoll="hunt"]')
-      || document.querySelector('[data-paperdoll="hunt"]');
+    const host = huntAnchorHost(playerEl);
     if (!host || !playerEl) return null;
     if (host.getAttribute('data-paperdoll') === 'hunt') {
       const lookKey = huntStandLookKey();
@@ -1029,8 +1050,7 @@ const Paperdoll = (() => {
    * 紙娃娃腳底錨點（升級特效等）；stage 掛在 player 上，不受 scaleX 鏡像影響。
    */
   function getHuntFeetAnchor(playerEl) {
-    const host = playerEl?.querySelector?.('[data-paperdoll="hunt"]')
-      || document.querySelector('[data-paperdoll="hunt"]');
+    const host = huntAnchorHost(playerEl);
     if (!host || !playerEl) return null;
     const w = host.clientWidth || 120;
     const h = host.clientHeight || 160;
@@ -1069,7 +1089,7 @@ const Paperdoll = (() => {
             const next = instructionPlay.steps[0];
             forceActionName = next.action;
             hosts.forEach((host) => {
-              if (host.getAttribute('data-paperdoll') !== 'hunt') return;
+              if (!isHuntAnimHost(host)) return;
               applyInstructionStepToHost(host, next, now);
             });
           } else {
@@ -1080,7 +1100,7 @@ const Paperdoll = (() => {
           const next = instructionPlay.steps[instructionPlay.index];
           forceActionName = next.action;
           hosts.forEach((host) => {
-            if (host.getAttribute('data-paperdoll') !== 'hunt') return;
+            if (!isHuntAnimHost(host)) return;
             applyInstructionStepToHost(host, next, now);
           });
         }
@@ -1174,14 +1194,25 @@ const Paperdoll = (() => {
       stage.className = 'paperdoll-stage paperdoll-stage--hunt idle-actor-sprite';
       if (img) img.replaceWith(stage);
       else slot.appendChild(stage);
-      mount(stage);
-      syncStandHitAnchor(stage);
-      return;
     }
     if (!hosts.has(stage)) {
       mount(stage);
       syncStandHitAnchor(stage);
     }
+    ensureShadowPartnerClone(slot, stage);
+  }
+
+  function ensureShadowPartnerClone(slot, huntStage) {
+    if (!slot || !huntStage) return;
+    let clone = slot.querySelector('[data-paperdoll="hunt-clone"]');
+    if (!clone) {
+      clone = document.createElement('div');
+      clone.setAttribute('data-paperdoll', 'hunt-clone');
+      clone.className = 'paperdoll-stage paperdoll-stage--hunt paperdoll-stage--shadow-partner is-hidden';
+      huntStage.insertAdjacentElement('afterend', clone);
+    }
+    if (!hosts.has(clone)) mount(clone);
+    syncShadowPartnerClone();
   }
 
   /** NPC 商店右側預覽：固定 stand，腳底對齊 avatarPreview */
@@ -1222,6 +1253,7 @@ const Paperdoll = (() => {
     playHuntSwingLoop,
     stopHuntSwingLoop,
     setComboMoveHold,
+    syncShadowPartnerClone,
     resolveHuntAction,
     resolveBasicAttackAction,
     pickBasicAttackAction,

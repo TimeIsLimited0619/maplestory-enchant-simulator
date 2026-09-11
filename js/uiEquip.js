@@ -119,7 +119,7 @@ const UiEquipModule = (() => {
         ? cloneEnchantState(state)
         : JSON.parse(JSON.stringify(state));
     } catch (_) {
-      return state;
+      return { ...state };
     }
   }
 
@@ -217,8 +217,12 @@ const UiEquipModule = (() => {
 
   function findBagIndexByItemId(itemId, used = null) {
     if (!itemId || typeof playerInventoryEquip === 'undefined') return -1;
+    const want = (typeof resolveEquipItemId === 'function' ? resolveEquipItemId(itemId) : itemId) || itemId;
     for (let i = 0; i < playerInventoryEquip.length; i++) {
-      if (playerInventoryEquip[i] !== itemId) continue;
+      const have = playerInventoryEquip[i];
+      if (!have) continue;
+      const resolved = (typeof resolveEquipItemId === 'function' ? resolveEquipItemId(have) : have) || have;
+      if (resolved !== want) continue;
       if (used && used.has(i)) continue;
       return i;
     }
@@ -240,8 +244,13 @@ const UiEquipModule = (() => {
 
   function ensureEnchantUnloadedForItemId(itemId) {
     if (!itemId || typeof currentEnchantItem === 'undefined' || !currentEnchantItem) return;
-    const curId = currentEnchantItem.itemId || currentEnchantItem.id;
-    if (curId !== itemId) return;
+    const curId = typeof resolveEquipItemId === 'function'
+      ? resolveEquipItemId(currentEnchantItem)
+      : (currentEnchantItem.itemId || currentEnchantItem.id);
+    const wantId = typeof resolveEquipItemId === 'function'
+      ? resolveEquipItemId(itemId)
+      : itemId;
+    if (!curId || curId !== wantId) return;
     if (typeof unloadEquipFromSlot === 'function') unloadEquipFromSlot();
   }
 
@@ -261,10 +270,24 @@ const UiEquipModule = (() => {
   /** 放回背包；成功回傳 bagIndex，失敗回傳 -1 並還原呼叫端需自行處理 */
   function putToBag(entry) {
     if (!entry?.itemId) return -1;
+    const itemId = (typeof resolveEquipItemId === 'function'
+      ? resolveEquipItemId(entry.itemId)
+      : entry.itemId) || entry.itemId;
     const idx = findEmptyBagSlot();
     if (idx < 0) return -1;
-    playerInventoryEquip[idx] = entry.itemId;
-    playerInventoryState[idx] = cloneState(entry.state);
+    let state = cloneState(entry.state);
+    if (state && typeof state === 'object') {
+      if (typeof stampEnchantItemId === 'function') stampEnchantItemId(state, itemId);
+      else {
+        state.itemId = itemId;
+        state.id = itemId;
+        delete state.slotIndex;
+      }
+    } else {
+      state = { itemId, id: itemId };
+    }
+    playerInventoryEquip[idx] = itemId;
+    playerInventoryState[idx] = state;
     syncBagAlias();
     return idx;
   }
@@ -808,8 +831,10 @@ const UiEquipModule = (() => {
   function setEnchantOpen(next) {
     const wantOpen = !!next;
     // 關閉強化頁時自動卸下強化槽裝備（進度寫回背包）
-    if (enchantOpen && !wantOpen && typeof unloadEquipFromSlot === 'function') {
-      unloadEquipFromSlot({ silent: true });
+    if (enchantOpen && !wantOpen && typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
+      if (typeof unloadEquipFromSlot !== 'function' || !unloadEquipFromSlot({ silent: true })) {
+        return false;
+      }
     }
     enchantOpen = wantOpen;
     const wb = $('enchantWorkbench');
@@ -952,10 +977,18 @@ const UiEquipModule = (() => {
     SLOT_IDS.forEach((id) => {
       const entry = map?.[id];
       if (!entry?.itemId) return;
-      out[id] = {
-        itemId: entry.itemId,
-        state: cloneState(entry.state),
-      };
+      const itemId = (typeof resolveEquipItemId === 'function'
+        ? resolveEquipItemId(entry.itemId)
+        : entry.itemId) || entry.itemId;
+      let state = cloneState(entry.state);
+      if (state && typeof state === 'object') {
+        if (typeof stampEnchantItemId === 'function') stampEnchantItemId(state, itemId);
+        else {
+          state.itemId = itemId;
+          state.id = itemId;
+        }
+      }
+      out[id] = { itemId, state };
     });
     return out;
   }
@@ -983,7 +1016,17 @@ const UiEquipModule = (() => {
         itemId = raw.itemId;
         state = cloneState(raw.state);
       }
+      if (typeof resolveEquipItemId === 'function') {
+        itemId = resolveEquipItemId(itemId) || itemId;
+      }
       if (!itemId || !getItemData(itemId)) return;
+      if (state && typeof state === 'object') {
+        if (typeof stampEnchantItemId === 'function') stampEnchantItemId(state, itemId);
+        else {
+          state.itemId = itemId;
+          state.id = itemId;
+        }
+      }
 
       // 僅舊版「只存 itemId」才從背包抽；完整物件直接還原
       if (pullFromBag && legacyIdOnly) {

@@ -125,10 +125,12 @@ function dropEquip(e) {
 }
 
 function createEnchantState(itemData, slotIndex) {
+  const itemId = resolveEquipItemId(itemData) || itemData?.itemId || itemData?.id;
   return {
     ...itemData,
     slotIndex,
-    itemId: itemData.itemId || itemData.id,
+    itemId,
+    id: itemId,
     star: itemData.star || 0,
     starConsecutiveDrops: itemData.starConsecutiveDrops || 0,
     scrollUsed: 0,
@@ -198,7 +200,34 @@ function createEnchantState(itemData, slotIndex) {
 }
 
 function cloneEnchantState(state) {
-  return JSON.parse(JSON.stringify(state));
+  if (state == null) return state ?? null;
+  if (typeof state !== 'object') return state;
+  try {
+    const seen = new WeakSet();
+    return JSON.parse(JSON.stringify(state, (_key, value) => {
+      if (typeof value === 'function' || typeof value === 'symbol') return undefined;
+      if (typeof value === 'bigint') {
+        const num = Number(value);
+        return Number.isFinite(num) ? num : 0;
+      }
+      if (typeof value === 'number' && !Number.isFinite(value)) return 0;
+      if (!value || typeof value !== 'object') return value;
+      if (typeof Node !== 'undefined' && value instanceof Node) return undefined;
+      if (seen.has(value)) return undefined;
+      seen.add(value);
+      return value;
+    }));
+  } catch (_) {
+    const fallback = {};
+    Object.keys(state).forEach((key) => {
+      const value = state[key];
+      const type = typeof value;
+      if (type === 'string' || type === 'boolean' || type === 'number' || value == null) {
+        fallback[key] = type === 'number' && !Number.isFinite(value) ? 0 : value;
+      }
+    });
+    return stampEnchantItemId(fallback, state);
+  }
 }
 
 function syncEnchantStateFromModules(item) {
@@ -310,8 +339,10 @@ function saveInventoryItemState(slotIndex, state) {
     return;
   }
   syncEnchantStateFromModules(state);
-  const snapshot = cloneEnchantState(state);
-  delete snapshot.slotIndex;
+  const snapshot = stampEnchantItemId(
+    cloneEnchantState(state) || {},
+    resolveEquipItemId(state) || playerInventoryEquip[slotIndex]
+  );
   playerInventoryState[slotIndex] = snapshot;
   if (typeof SessionPersistenceModule !== 'undefined') {
     SessionPersistenceModule.scheduleSave();
@@ -319,11 +350,14 @@ function saveInventoryItemState(slotIndex, state) {
 }
 
 function loadEnchantStateForSlot(itemId, slotIndex) {
-  const template = ITEM_DATABASE[itemId];
+  const resolvedId = resolveEquipItemId(itemId) || itemId;
+  const template = ITEM_DATABASE[resolvedId];
   if (!template) return null;
+  itemId = resolvedId;
 
   const saved = playerInventoryState[slotIndex];
-  if (saved && saved.itemId === itemId) {
+  const savedId = saved ? resolveEquipItemId(saved) : null;
+  if (saved && (!savedId || savedId === itemId)) {
     const fresh = createEnchantState(template, slotIndex);
     return {
       ...fresh,
@@ -786,14 +820,15 @@ function afterEnchantEquipLoaded(itemData, { log = true } = {}) {
 
 function mergeEnchantFromSaved(itemData, saved, slotIndex) {
   const fresh = createEnchantState(itemData, slotIndex);
+  const resolvedId = resolveEquipItemId(itemData) || itemData.itemId || itemData.id;
   if (!saved) return fresh;
   const cloned = cloneEnchantState(saved);
   return {
     ...fresh,
     ...cloned,
     slotIndex,
-    itemId: itemData.itemId || itemData.id,
-    id: itemData.id || itemData.itemId,
+    itemId: resolvedId,
+    id: resolvedId,
     name: itemData.name,
     icon: itemData.icon,
     mainType: itemData.mainType,
@@ -832,6 +867,7 @@ function loadEquipToSlot(itemId, slotIndex) {
   }
 
   // 裝備欄穿著為獨立實體（itemId+state），與背包同 ID 的另一件無關，不可卸下
+  itemId = resolveEquipItemId(itemId) || itemId;
   const itemData = ITEM_DATABASE[itemId];
   if (!itemData) return;
   if (!Number.isInteger(slotIndex) || slotIndex < 0 || !playerInventoryEquip[slotIndex]) {
@@ -872,83 +908,21 @@ function loadEquipFromWearEntry(entry) {
   return true;
 }
 
-/** 從存檔還原強化槽（物品已不在背包，或需先從背包取出） */
+/**
+ * 還原／匯入強化槽實體。
+ * 新存檔的 equippedItem 已不在背包；不可再用 itemId 從背包抽，
+ * 否則同 ID 的另一件會在重新整理後消失。
+ */
 function loadEnchantItemHeld(itemId, savedState = null) {
   if (currentEnchantItem) {
-    unloadEquipFromSlot();
+    if (!unloadEquipFromSlot()) return false;
   }
-  const itemData = ITEM_DATABASE[itemId];
+  const resolvedId = resolveEquipItemId(itemId);
+  const itemData = resolvedId ? ITEM_DATABASE[resolvedId] : null;
   if (!itemData) return false;
 
-  // 若仍在背包（舊存檔），先取出
-  const bagIdx = playerInventoryEquip.indexOf(itemId);
-  if (bagIdx >= 0) {
-    loadEquipToSlot(itemId, bagIdx);
-    if (savedState && currentEnchantItem) {
-      const merged = {
-        ...currentEnchantItem,
-        ...cloneEnchantState(savedState),
-        slotIndex: -1,
-        itemId,
-        id: itemId,
-        name: itemData.name,
-        icon: itemData.icon,
-        mainType: itemData.mainType,
-        subType: itemData.subType,
-        islot: itemData.islot,
-        vslot: itemData.vslot,
-        baseStats: itemData.baseStats,
-      };
-      currentEnchantItem = merged;
-      updateActiveModuleEquip();
-      updateStatusPanel();
-    }
-    return true;
-  }
-
-  const fresh = createEnchantState(itemData, -1);
-  currentEnchantItem = savedState
-    ? {
-      ...fresh,
-      ...cloneEnchantState(savedState),
-      slotIndex: -1,
-      itemId,
-      id: itemId,
-      name: itemData.name,
-      icon: itemData.icon,
-      mainType: itemData.mainType,
-      subType: itemData.subType,
-      islot: itemData.islot,
-      vslot: itemData.vslot,
-      baseStats: itemData.baseStats,
-    }
-    : fresh;
-
-  const dropZone = document.getElementById('equipDropZone');
-  if (dropZone) {
-    dropZone.innerHTML = `
-      <img src="${itemData.icon}"
-           alt="${itemData.name}"
-           id="enchantedEquipImg"
-           title="雙擊卸下裝備">
-    `;
-    const equipImg = document.getElementById('enchantedEquipImg');
-    if (equipImg) {
-      equipImg.ondblclick = () => unloadEquipFromSlot();
-    }
-  }
-
-  const sfItemName = document.getElementById('sfItemName');
-  if (sfItemName) sfItemName.innerText = itemData.name;
-
-  updateStatusPanel();
-  updateActiveModuleEquip();
-  updateNoneWaitEquipVisibility();
-  updateCategoryTabStates();
-  syncMainPanelIdleState();
-  initInventory();
-  scheduleEffectTestBarRefresh();
-  syncInspectModules();
+  currentEnchantItem = mergeEnchantFromSaved(itemData, savedState, -1);
+  afterEnchantEquipLoaded(itemData, { log: false });
   return true;
 }
 
@@ -957,11 +931,16 @@ function unloadEquipFromSlot(options = {}) {
   const silent = !!options.silent;
 
   const itemName = currentEnchantItem.name;
-  const itemId = currentEnchantItem.itemId || currentEnchantItem.id;
+  const itemId = resolveEquipItemId(currentEnchantItem);
+  if (!itemId) {
+    if (typeof addLog === 'function') {
+      addLog('[系統] 無法卸下強化中的裝備：物品 ID 無效。', 'log-fail');
+    }
+    return false;
+  }
 
   syncEnchantStateFromModules(currentEnchantItem);
-  const snapshot = cloneEnchantState(currentEnchantItem);
-  delete snapshot.slotIndex;
+  const snapshot = stampEnchantItemId(cloneEnchantState(currentEnchantItem) || {}, itemId);
 
   const bagIndex = findEmptyEquipBagSlot();
   if (bagIndex < 0) {

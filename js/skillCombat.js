@@ -271,6 +271,19 @@ const SkillCombat = (() => {
     return /^231/.test(String(jobId));
   }
 
+  function isNightLordJob() {
+    const jobId = (typeof CharacterSkills !== 'undefined')
+      ? CharacterSkills.currentJobId?.()
+      : null;
+    if (jobId == null) return false;
+    if (typeof SkillCatalog !== 'undefined' && typeof SkillCatalog.getJobLine === 'function') {
+      const lineId = String(SkillCatalog.getJobLine(jobId)?.id || '');
+      if (lineId === 'nightlord') return true;
+    }
+    const id = Number(jobId) || 0;
+    return id === 400 || id === 410 || id === 411 || id === 412;
+  }
+
   /**
    * 精靈技能連鎖 2–4 最低間隔：對齊光速雙擊／進階的施放節奏（攻速＋動作＋特效）。
    * 不改 1 號頭技（如伊修塔爾）本身射速。
@@ -868,7 +881,51 @@ const SkillCombat = (() => {
     }
   }
 
+  const THROW_STAR_SKILL_IDS = new Set(['4111010', '4121013']);
+
+  /** 三／四飛閃：補上消耗品 0207 手裡劍 ball 幀（背包最前格） */
+  function resolveSkillFx(skill, fxOpt) {
+    const base = fxOpt || skill?.fx || {};
+    if (!THROW_STAR_SKILL_IDS.has(String(skill?.id || ''))) return base;
+    if (base.ball?.frames?.length) return base;
+    if (typeof ThrowingStarBullet === 'undefined'
+      || typeof ThrowingStarBullet.attachToFx !== 'function') {
+      return base;
+    }
+    const itemId = (typeof ThrowingStarStore !== 'undefined'
+      && typeof ThrowingStarStore.frontItemId === 'function')
+      ? ThrowingStarStore.frontItemId()
+      : '';
+    return ThrowingStarBullet.attachToFx(base, itemId);
+  }
+
+  function throwStarPartnerRate(skill) {
+    if (!THROW_STAR_SKILL_IDS.has(String(skill?.id || ''))) return 0;
+    if (typeof SkillModifiers === 'undefined'
+      || typeof SkillModifiers.getShadowPartnerRate !== 'function') {
+      return 0;
+    }
+    return Math.max(0, Number(SkillModifiers.getShadowPartnerRate()) || 0);
+  }
+
+  function throwStarClonePlayerEl(ctx) {
+    const playerEl = ctx?.playerEl;
+    const field = ctx?.fieldEl;
+    const clone = playerEl?.querySelector?.('[data-paperdoll="hunt-clone"]:not(.is-hidden)')
+      || field?.querySelector?.('[data-paperdoll="hunt-clone"]:not(.is-hidden)');
+    if (!clone) return playerEl;
+    const r = clone.getBoundingClientRect?.();
+    if (!r || !(r.width > 1 && r.height > 1)) return playerEl;
+    return clone;
+  }
+
+  function throwStarExtraVolleys(skill, atkCommon) {
+    if (!THROW_STAR_SKILL_IDS.has(String(skill?.id || ''))) return 0;
+    return Math.max(0, Math.floor(Number(atkCommon?._hyperEnhance?.attackCount) || 0));
+  }
+
   function tryBallCastAttack(skill, skillForFx, atkCommon, fx, ctx, form, picked, finishAfterDamage, opts = {}) {
+    fx = resolveSkillFx(skillForFx || skill, fx);
     if (typeof SkillBallCast === 'undefined' || !SkillBallCast.isBallCastSkill(skill, fx)) {
       return null;
     }
@@ -876,8 +933,9 @@ const SkillCombat = (() => {
     const plan = skill.ballCast || SkillBallCast.buildPlan(skill, fx);
     if (!plan) return null;
     const level = picked?.level || 1;
+    const extraVolleys = throwStarExtraVolleys(skill, atkCommon);
     const volleys = typeof SkillBallCast.resolveBulletVolleys === 'function'
-      ? SkillBallCast.resolveBulletVolleys(skill, plan, level)
+      ? SkillBallCast.resolveBulletVolleys(skill, plan, level, extraVolleys)
       : null;
     // 多箭 volley：每發只結算 1 段，總段數＝bulletCount（避免 attackCount×volley 翻倍）
     const hitCommon = volleys
@@ -896,9 +954,12 @@ const SkillCombat = (() => {
     const hitMobs = [];
     const asyncId = registerAsyncCast();
     const stackSession = ctx._damageStack || beginDamageStackSession(ctx);
+    const partnerR = throwStarPartnerRate(skill);
+    const volleyCount = volleys ? Math.max(1, Number(volleys.count) || 1) : 0;
+    const partnerSets = (partnerR > 0 && THROW_STAR_SKILL_IDS.has(String(skill.id))) ? 2 : 1;
     const headStackHits = volleys
-      ? Math.max(1, Number(volleys.count) || 1)
-      : Math.max(1, hitCommon.attackCount || 1);
+      ? volleyCount * partnerSets
+      : Math.max(1, hitCommon.attackCount || 1) * partnerSets;
     // 主技能層數先佔位，讓同步的連鎖接在上方（飛彈／多箭稍後命中仍用同層）
     const headStack = damageStackSlotsForSkill(ctx, skill.id, headStackHits, {
       forceReserve: true,
@@ -1035,73 +1096,113 @@ const SkillCombat = (() => {
     }
 
     let chainReservationId = null;
-    SkillBallCast.playBallCast({
-      fieldEl,
-      playerEl: ctx.playerEl,
-      fx,
-      plan,
-      skill,
-      level,
-      mobs: ballMobList(),
-      getMobs: ballMobList,
-      maxTargets,
-      facingRight: ctxFacingRight(ctx),
-      onChainBegin: plan.chain
-        ? (path) => {
-          if (!isAsyncCastLive(asyncId)) return;
-          if (chainReservationId != null) {
-            releaseChainReservation(chainReservationId);
-            chainReservationId = null;
+    const applyBallHit = (mob, meta, common, stackOffset) => {
+      if (!isAsyncCastLive(asyncId)) return;
+      runWithDamageStackSession(ctx, stackSession, () => {
+        if (plan.chain) releaseMobFromChainReservation(chainReservationId, mob);
+        const live = resolveLiveMob(mob, ctx);
+        if (!live) {
+          if (mob && mob.hp <= 0) {
+            pushUniqueMob(kills, mob);
+            syncMobStateAfterDamage([mob], ctx);
           }
-          const segMs = 120;
-          const ttl = path.length * segMs + 600;
-          chainReservationId = reserveChainMobs(path.map((p) => p.mob), ttl);
+          return;
         }
-        : undefined,
-      onHit: (mob, _hitIndex, _pt, meta) => {
-        if (!isAsyncCastLive(asyncId)) return;
-        runWithDamageStackSession(ctx, stackSession, () => {
-          if (plan.chain) releaseMobFromChainReservation(chainReservationId, mob);
-          const live = resolveLiveMob(mob, ctx);
-          if (!live) {
-            if (mob && mob.hp <= 0) {
-              pushUniqueMob(kills, mob);
-              syncMobStateAfterDamage([mob], ctx);
-            }
-            return;
-          }
-          const volleyIndex = meta && Number.isFinite(meta.volleyIndex)
-            ? Math.max(0, Math.floor(meta.volleyIndex))
-            : null;
-          const stackStartIndex = (volleys && volleyIndex != null)
-            ? headStack.startIndex + volleyIndex
-            : headStack.startIndex;
-          const hit = dealHitsOnMob(skillForFx, hitCommon, live, ctx, {
-            segmentGapSec: opts.segmentGapSec,
-            normalMobBonusPct: opts.normalMobBonusPct,
-            forceCritTail: form.forceCritTail || 0,
-            stackGroup: headStack.stackGroup,
-            stackStartIndex,
-            stackSession,
-          });
-          if (hit) pushUniqueMob(hitMobs, live);
-          if (live.hp <= 0) {
-            pushUniqueMob(kills, live);
-            syncMobStateAfterDamage([live], ctx);
-          }
+        const volleyIndex = meta && Number.isFinite(meta.volleyIndex)
+          ? Math.max(0, Math.floor(meta.volleyIndex))
+          : null;
+        const stackStartIndex = (volleys && volleyIndex != null)
+          ? headStack.startIndex + stackOffset + volleyIndex
+          : headStack.startIndex + stackOffset;
+        const hit = dealHitsOnMob(skillForFx, common, live, ctx, {
+          segmentGapSec: opts.segmentGapSec,
+          normalMobBonusPct: opts.normalMobBonusPct,
+          forceCritTail: form.forceCritTail || 0,
+          stackGroup: headStack.stackGroup,
+          stackStartIndex,
+          stackSession,
         });
-      },
-      onDone: () => {
-        if (chainReservationId != null) {
-          releaseChainReservation(chainReservationId);
-          chainReservationId = null;
+        if (hit) pushUniqueMob(hitMobs, live);
+        if (live.hp <= 0) {
+          pushUniqueMob(kills, live);
+          syncMobStateAfterDamage([live], ctx);
         }
-        if (!isAsyncCastLive(asyncId)) return;
-        releaseAsyncCast(asyncId);
-        // 掃殘留；已同步過的擊殺不會重複發獎（不在佇列內）
-        syncMobStateAfterDamage(kills, ctx);
-        finishAfterDamage(kills, hitMobs);
-      },
+      });
+    };
+
+    const finishBall = () => {
+      if (chainReservationId != null) {
+        releaseChainReservation(chainReservationId);
+        chainReservationId = null;
+      }
+      if (!isAsyncCastLive(asyncId)) return;
+      releaseAsyncCast(asyncId);
+      // 掃殘留；已同步過的擊殺不會重複發獎（不在佇列內）
+      syncMobStateAfterDamage(kills, ctx);
+      finishAfterDamage(kills, hitMobs);
+    };
+
+    const playThrowStarSet = (playerEl, common, stackOffset, omitPlayerEffect, onDone) => {
+      const castSkill = omitPlayerEffect
+        ? { ...skill, common: { ...(skill.common || {}), ballDelay: '90' } }
+        : skill;
+      SkillBallCast.playBallCast({
+        fieldEl,
+        playerEl,
+        fx,
+        plan,
+        skill: castSkill,
+        level,
+        extraBulletCount: extraVolleys,
+        mobs: ballMobList(),
+        getMobs: ballMobList,
+        maxTargets,
+        facingRight: ctxFacingRight(ctx),
+        omitPlayerEffect,
+        onChainBegin: plan.chain
+          ? (path) => {
+            if (!isAsyncCastLive(asyncId)) return;
+            if (chainReservationId != null) {
+              releaseChainReservation(chainReservationId);
+              chainReservationId = null;
+            }
+            const segMs = 120;
+            const ttl = path.length * segMs + 600;
+            chainReservationId = reserveChainMobs(path.map((p) => p.mob), ttl);
+          }
+          : undefined,
+        onHit: (mob, _hitIndex, _pt, meta) => applyBallHit(mob, meta, common, stackOffset),
+        onDone,
+      });
+    };
+
+    const runPartnerVolley = () => {
+      if (!isAsyncCastLive(asyncId)) return;
+      const partnerCommon = {
+        ...hitCommon,
+        damagePct: (Number(hitCommon.damagePct) || 0) * (partnerR / 100),
+      };
+      if (!(partnerCommon.damagePct > 0)) {
+        finishBall();
+        return;
+      }
+      playThrowStarSet(
+        throwStarClonePlayerEl(ctx),
+        partnerCommon,
+        volleyCount || 0,
+        true,
+        finishBall,
+      );
+    };
+
+    playThrowStarSet(ctx.playerEl, hitCommon, 0, false, () => {
+      if (partnerSets > 1 && isAsyncCastLive(asyncId)) {
+        const gap = typeof scaleGameDelayMs === 'function' ? scaleGameDelayMs(90) : 90;
+        if (gap > 0) setTimeout(runPartnerVolley, gap);
+        else runPartnerVolley();
+        return;
+      }
+      finishBall();
     });
     if (opts.mergeLink && picked) {
       runWithDamageStackSession(ctx, stackSession, () => {
@@ -1958,8 +2059,255 @@ const SkillCombat = (() => {
       flashDie: ctx.flashDie,
       isolateStack: true,
       skillId: skill?.id,
+      skipNightLordExtras: true,
     });
     return mob.hp <= 0 ? [mob] : [];
+  }
+
+  function nlShootFramesFrom(skill) {
+    const layers = skill?.fx?.shootobj?.layers;
+    if (Array.isArray(layers) && layers[0]?.frames?.length) return layers[0].frames;
+    if (Array.isArray(skill?.fx?.hit) && skill.fx.hit.length) return null;
+    return null;
+  }
+
+  function dealNlExtraHits(ctx, skill, damagePct, attackCount, targets, opts = {}) {
+    const kills = [];
+    const hitMobs = [];
+    const list = (Array.isArray(targets) ? targets : []).filter((m) => m && Number(m.hp) > 0);
+    if (!list.length || !(Number(damagePct) > 0)) return { kills, hitMobs };
+    const n = Math.max(1, Number(attackCount) || 1);
+    const isolateStack = opts.isolateStack !== false;
+    const stackSkillId = opts.stackKey || skill?.id;
+    const fxHit = Object.prototype.hasOwnProperty.call(opts, 'fxHit') ? opts.fxHit : skill?.fx?.hit;
+    list.forEach((mob) => {
+      const hit = applyHitsToMob(mob, {
+        damagePct,
+        attackCount: n,
+        fxHit,
+        multiHit: n > 1,
+        showMobDamage: ctx.showMobDamage,
+        onDamage: ctx.onDamage,
+        flashHit: ctx.flashHit,
+        flashDie: ctx.flashDie,
+        isolateStack,
+        skillId: stackSkillId,
+        ctx,
+        skipNightLordExtras: true,
+      });
+      if (hit) hitMobs.push(mob);
+      if (mob.hp <= 0) kills.push(mob);
+    });
+    return { kills, hitMobs };
+  }
+
+  function nlMarkStarFrames() {
+    if (typeof ThrowingStarBullet !== 'undefined' && typeof ThrowingStarBullet.framesFor === 'function') {
+      const itemId = (typeof ThrowingStarStore !== 'undefined'
+        && typeof ThrowingStarStore.frontItemId === 'function')
+        ? ThrowingStarStore.frontItemId()
+        : '';
+      const frames = ThrowingStarBullet.framesFor(itemId);
+      if (frames?.length) return frames;
+    }
+    return nlShootFramesFrom(typeof SkillCatalog !== 'undefined'
+      ? SkillCatalog.getSkill('4101013')
+      : null);
+  }
+
+  function playNlMarkArcVolley(ctx, frames, targets, starCount, onHit, onDone) {
+    const list = (targets || []).filter((m) => m && Number(m.hp) > 0);
+    if (typeof SkillEffectPlayer === 'undefined'
+      || typeof SkillEffectPlayer.playRandomArcVolley !== 'function'
+      || !frames?.length
+      || !list.length) {
+      const n = Math.max(1, Math.floor(Number(starCount) || 1));
+      for (let i = 0; i < n; i += 1) {
+        const mob = list[i % Math.max(1, list.length)];
+        if (mob && typeof onHit === 'function') onHit(mob);
+      }
+      if (typeof onDone === 'function') onDone();
+      return;
+    }
+    SkillEffectPlayer.playRandomArcVolley({
+      fieldEl: ctx.fieldEl || document.getElementById('idleHuntField'),
+      playerEl: ctx.playerEl,
+      mobs: list,
+      frames,
+      count: starCount,
+      facingRight: ctxFacingRight(ctx),
+      onHit: (mob) => {
+        if (typeof onHit === 'function') onHit(mob);
+      },
+      onDone,
+    });
+  }
+
+  function playNlStarVolley(ctx, frames, targets, onHit, onDone) {
+    if (typeof SkillEffectPlayer === 'undefined'
+      || typeof SkillEffectPlayer.playShootObj !== 'function'
+      || !frames?.length) {
+      (targets || []).forEach((mob) => { if (typeof onHit === 'function') onHit(mob); });
+      if (typeof onDone === 'function') onDone();
+      return;
+    }
+    SkillEffectPlayer.playShootObj({
+      fieldEl: ctx.fieldEl || document.getElementById('idleHuntField'),
+      playerEl: ctx.playerEl,
+      mobs: targets,
+      frames,
+      startOffset: [-80, -60],
+      pierce: true,
+      maxTargets: Math.max(1, (targets || []).length),
+      facingRight: ctxFacingRight(ctx),
+      onHit,
+      onDone,
+    });
+  }
+
+  /** 爆破鏢爆炸、刻印星星、影分身額外段、挑釁追擊 */
+  function tryNightLordFollowups(ctx, triggerSkillId, hitMobs) {
+    const kills = [];
+    if (!isNightLordJob()) return kills;
+    if (ctx?.skipNightLordExtras) return kills;
+    const trigger = String(triggerSkillId || '');
+    if (!trigger) return kills;
+    const triggerSkill = typeof SkillCatalog !== 'undefined'
+      ? SkillCatalog.getSkill(trigger)
+      : null;
+    const liveHits = (Array.isArray(hitMobs) ? hitMobs : [])
+      .filter((m) => m && Number(m.hp) > 0);
+
+    const extraList = Array.isArray(triggerSkill?.extraSkill) ? triggerSkill.extraSkill : [];
+    extraList.forEach((entry) => {
+      const extraId = String(entry?.skill || '');
+      if (!extraId) return;
+      const extra = SkillCatalog.getSkill(extraId);
+      if (!extra) return;
+      const lv = Math.max(
+        1,
+        (typeof CharacterSkills !== 'undefined' ? CharacterSkills.getLevel?.(trigger) : 0) || 1,
+      );
+      const common = evalSkill(extra, lv);
+      if (!common || !(Number(common.damagePct) > 0)) return;
+      const delayMs = scaleGameDelayMs(Number(entry.delay) || 180);
+      const atkCommon = combatCommonFor(extra, common);
+      const run = () => {
+        const splash = resolveSkillTargets(ctx, extraId, Math.max(1, atkCommon.mobCount || 6));
+        const pool = splash.length ? splash : liveHits;
+        const boomMob = pool[0] || liveHits[0];
+        if (extra.fx?.effect?.length
+          && boomMob
+          && typeof SkillEffectPlayer !== 'undefined'
+          && typeof SkillEffectPlayer.playAtField === 'function') {
+          const fieldEl = ctx.fieldEl || document.getElementById('idleHuntField');
+          const pt = typeof SkillEffectPlayer.fieldPointFromMob === 'function'
+            ? SkillEffectPlayer.fieldPointFromMob(fieldEl, boomMob)
+            : null;
+          if (pt && Number.isFinite(pt.x) && Number.isFinite(pt.y)) {
+            SkillEffectPlayer.playAtField({
+              fieldEl,
+              frames: extra.fx.effect,
+              x: pt.x,
+              y: pt.y,
+              zIndex: 56,
+              forcePlay: true,
+            });
+          }
+        }
+        const res = dealNlExtraHits(ctx, extra, atkCommon.damagePct, atkCommon.attackCount, pool);
+        res.kills.forEach((m) => pushUniqueMob(kills, m));
+        if (res.kills.length && typeof ctx.onProjectileResolve === 'function') {
+          ctx.onProjectileResolve(res.kills);
+        }
+      };
+      if (delayMs > 30) setTimeout(run, delayMs);
+      else run();
+    });
+
+    if (typeof SkillMobStatus !== 'undefined') {
+      const burstMobs = [];
+      liveHits.forEach((mob) => {
+        if (!SkillMobStatus.hasNlMark?.(mob)) return;
+        const src = SkillMobStatus.consumeNlMark(mob);
+        if (src) burstMobs.push({ mob, src });
+      });
+      burstMobs.forEach((row) => {
+        const spec = SkillMobStatus.resolveNlMarkBurstSpec?.(row.src);
+        if (!spec || !(spec.damagePct > 0)) return;
+        const nearby = resolveSkillTargets(ctx, spec.burstId, spec.mobCount);
+        const pool = nearby.length ? nearby : [row.mob];
+        const frames = nlMarkStarFrames();
+        const starCount = Math.max(1, Number(spec.bulletCount) || pool.length || 1);
+        const applyBurst = (mob) => {
+          if (!mob || !(Number(mob.hp) > 0)) return;
+          const res = dealNlExtraHits(ctx, spec.burstSkill, spec.damagePct, spec.attackCount, [mob]);
+          res.kills.forEach((m) => pushUniqueMob(kills, m));
+        };
+        if (frames?.length) {
+          playNlMarkArcVolley(ctx, frames, pool, starCount, applyBurst, () => {
+            if (kills.length && typeof ctx.onProjectileResolve === 'function') {
+              ctx.onProjectileResolve(kills);
+            }
+          });
+        } else {
+          for (let i = 0; i < starCount; i += 1) {
+            applyBurst(pool[i % pool.length]);
+          }
+        }
+      });
+      liveHits.forEach((mob) => {
+        SkillMobStatus.tryApplyNlMarkOnHit?.(mob, trigger);
+      });
+    }
+
+    const partnerR = (typeof SkillModifiers !== 'undefined'
+      && typeof SkillModifiers.getShadowPartnerRate === 'function')
+      ? SkillModifiers.getShadowPartnerRate()
+      : 0;
+    // 三／四飛閃改由第二組飛鏢結算影分身，避免數字加倍、沒有飛鏢
+    if (partnerR > 0 && triggerSkill && triggerSkill.type === 'active'
+      && !THROW_STAR_SKILL_IDS.has(trigger)) {
+      const lv = (typeof CharacterSkills !== 'undefined'
+        ? CharacterSkills.getLevel?.(trigger)
+        : 0) || 1;
+      const common = evalSkill(triggerSkill, lv);
+      const atk = common ? combatCommonFor(triggerSkill, common) : null;
+      const pct = (Number(atk?.damagePct) || 0) * (partnerR / 100);
+      if (pct > 0) {
+        const res = dealNlExtraHits(
+          ctx,
+          triggerSkill,
+          pct,
+          Math.max(1, atk?.attackCount || 1),
+          liveHits,
+          {
+            isolateStack: false,
+            stackKey: `${trigger}:sp`,
+            fxHit: null,
+          },
+        );
+        res.kills.forEach((m) => pushUniqueMob(kills, m));
+      }
+    }
+
+    if (trigger === '4121017') {
+      const atom = typeof SkillCatalog !== 'undefined' ? SkillCatalog.getSkill('4121020') : null;
+      const lv = Math.max(
+        1,
+        (typeof CharacterSkills !== 'undefined' ? CharacterSkills.getLevel?.('4121017') : 0) || 1,
+      );
+      if (atom) {
+        const common = evalSkill(atom, lv);
+        const atk = common ? combatCommonFor(atom, common) : null;
+        if (atk && Number(atk.damagePct) > 0) {
+          const res = dealNlExtraHits(ctx, atom, atk.damagePct, atk.attackCount, liveHits);
+          res.kills.forEach((m) => pushUniqueMob(kills, m));
+        }
+      }
+    }
+
+    return kills;
   }
 
   /** FA／暴風雪追加：安靜 tick 仍要跳出傷害數字（特效已 forcePlay） */
@@ -2161,6 +2509,8 @@ const SkillCombat = (() => {
       faKills.forEach((m) => pushUniqueMob(kills, m));
       const bzKills = tryBlizzardFinalAttack(ctx, skillId, hitMobs);
       bzKills.forEach((m) => pushUniqueMob(kills, m));
+      const nlKills = tryNightLordFollowups(ctx, skillId, hitMobs);
+      nlKills.forEach((m) => pushUniqueMob(kills, m));
       // 意念只由主技能／非 silent 路徑觸發，避免連鎖同幀連續 proc
       if (!linkOpts.silentCombo
         && typeof SkillBuffRuntime !== 'undefined'
@@ -2450,6 +2800,8 @@ const SkillCombat = (() => {
       faKills.forEach((m) => pushUniqueMob(kills, m));
       const bzKills = tryBlizzardFinalAttack(ctx, skill.id, hitMobs);
       bzKills.forEach((m) => pushUniqueMob(kills, m));
+      const nlKills = tryNightLordFollowups(ctx, skill.id, hitMobs);
+      nlKills.forEach((m) => pushUniqueMob(kills, m));
       if (typeof SkillBuffRuntime !== 'undefined'
         && typeof SkillBuffRuntime.onSwordSkillCast === 'function') {
         const extra = SkillBuffRuntime.onSwordSkillCast(skill, ctx);

@@ -268,6 +268,8 @@ const SkillFormula = (() => {
       z: num('z'),
       ballDelayMs: Math.max(0, Math.floor(num('ballDelay')) || 0),
       xVal: num('x'),
+      shadowPartnerR: num('shadowPartnerR'),
+      dotSuperpos: Math.max(1, Math.floor(num('dotSuperpos', 1)) || 1),
       actionSpeed: num('actionSpeed'),
       damAbsorbShieldR: num('damAbsorbShieldR'),
       indiePowerGuard: num('indiePowerGuard'),

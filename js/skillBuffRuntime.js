@@ -11,6 +11,7 @@ const SkillBuffRuntime = (() => {
   const SUMMON_PLACEMENT = {
     2221005: { slot: 'feet-behind', classSuffix: 'summon-ice', zIndex: 38, behindExtra: -42 },
     2211011: { slot: 'head', classSuffix: 'summon-orbit', zIndex: 52, headLift: -48 },
+    4111007: { slot: 'target-feet', classSuffix: 'nl-flare', zIndex: 36 },
   };
 
   function nowMs() {
@@ -98,7 +99,7 @@ const SkillBuffRuntime = (() => {
     };
   }
 
-  function summonFieldPoint(fieldEl, playerEl, placement) {
+  function summonFieldPoint(fieldEl, playerEl, placement, ctx) {
     if (!fieldEl || !playerEl) return { x: 160, y: 220 };
     const fr = fieldEl.getBoundingClientRect();
     const pr = playerEl.getBoundingClientRect();
@@ -117,6 +118,36 @@ const SkillBuffRuntime = (() => {
       if (a && Number.isFinite(a.x) && Number.isFinite(a.y)) {
         feet = { x: a.x, y: a.y };
       }
+    }
+
+    if (placement.slot === 'target-feet') {
+      const mobs = resolveSummonTargets(ctx, 1);
+      const mob = mobs[0];
+      if (mob && fieldEl) {
+        const uid = mob.uid != null ? String(mob.uid) : '';
+        const actor = uid ? fieldEl.querySelector(`.idle-actor--mob[data-uid="${uid}"]`) : null;
+        if (actor) {
+          const fr = fieldEl.getBoundingClientRect();
+          const ar = actor.getBoundingClientRect();
+          return {
+            x: Math.round(ar.left - fr.left + ar.width * 0.5),
+            y: Math.round(ar.top - fr.top + ar.height * 0.92),
+          };
+        }
+        if (typeof SkillEffectPlayer !== 'undefined'
+          && typeof SkillEffectPlayer.fieldPointFromMob === 'function') {
+          const mp = SkillEffectPlayer.fieldPointFromMob(fieldEl, mob);
+          if (mp && Number.isFinite(mp.x) && Number.isFinite(mp.y)) {
+            return { x: mp.x, y: mp.y + 28 };
+          }
+        }
+      }
+      const ox = 90;
+      return toField(feet.x + (facingRight ? ox : -ox), feet.y);
+    }
+
+    if (placement.slot === 'player-feet') {
+      return toField(feet.x, feet.y);
     }
 
     if (placement.slot === 'feet-behind') {
@@ -150,9 +181,9 @@ const SkillBuffRuntime = (() => {
     };
   }
 
-  function placeSummonVisual(visual, fieldEl, playerEl, placement) {
+  function placeSummonVisual(visual, fieldEl, playerEl, placement, ctx) {
     if (!visual || !fieldEl || typeof SkillEffectPlayer === 'undefined') return null;
-    const pt = summonFieldPoint(fieldEl, playerEl, placement);
+    const pt = summonFieldPoint(fieldEl, playerEl, placement, ctx);
     const className = summonClassName(placement);
     const stand = visual.stand || visual.move || null;
     const summoned = visual.summoned || null;
@@ -268,6 +299,9 @@ const SkillBuffRuntime = (() => {
       if (typeof CharacterCombatPanel !== 'undefined') {
         CharacterCombatPanel.syncToCombatPower?.();
       }
+      if (typeof Paperdoll !== 'undefined' && typeof Paperdoll.syncShadowPartnerClone === 'function') {
+        Paperdoll.syncShadowPartnerClone();
+      }
       return { toggledOff: true };
     }
 
@@ -297,6 +331,9 @@ const SkillBuffRuntime = (() => {
         durationMs,
         ...mods,
       });
+      if (typeof Paperdoll !== 'undefined' && typeof Paperdoll.syncShadowPartnerClone === 'function') {
+        Paperdoll.syncShadowPartnerClone();
+      }
     }
 
     const summonId = skill.summonSkillId ? String(skill.summonSkillId) : '';
@@ -329,6 +366,7 @@ const SkillBuffRuntime = (() => {
         ctx.fieldEl || null,
         ctx.playerEl || null,
         placement,
+        ctx,
       );
       summons.push({
         mode: 'summon',
@@ -381,7 +419,49 @@ const SkillBuffRuntime = (() => {
         hitFrames: null,
       };
     }
+
+    startBuffGroundTiles(skill, ctx, durationMs);
     return true;
+  }
+
+  function startBuffGroundTiles(skill, ctx, durationMs) {
+    const tiles = skill?.fx?.tiles;
+    if (!Array.isArray(tiles) || !tiles.length) return;
+    if (skill.blizzardCast !== false && skill.blizzardCast) return;
+    const frames = tiles[0]?.frames;
+    if (!Array.isArray(frames) || !frames.length) return;
+    const fieldEl = ctx?.fieldEl || document.getElementById('idleHuntField');
+    const playerEl = ctx?.playerEl;
+    if (!fieldEl || typeof SkillEffectPlayer === 'undefined'
+      || typeof SkillEffectPlayer.playAtField !== 'function') {
+      return;
+    }
+    const pt = summonFieldPoint(fieldEl, playerEl, { slot: 'player-feet' }, ctx);
+    clearSummonBySkillId(skill.id);
+    const loopFromRaw = tiles[0]?.repeatIdx != null
+      ? Number(tiles[0].repeatIdx)
+      : Number(skill?.tileRepeatIdx);
+    const loopFrom = Number.isFinite(loopFromRaw) && loopFromRaw >= 0
+      ? Math.floor(loopFromRaw)
+      : 0;
+    const fxId = SkillEffectPlayer.playAtField({
+      fieldEl,
+      frames,
+      x: pt.x,
+      y: pt.y,
+      loop: true,
+      loopFrom,
+      className: 'idle-skill-fx-stage idle-skill-fx-stage--summon idle-skill-fx-stage--nl-domain',
+      zIndex: 28,
+      forcePlay: true,
+    });
+    summons.push({
+      mode: 'ground-fx',
+      parentSkillId: String(skill.id),
+      expiresAt: nowMs() + Math.max(0, Number(durationMs) || 0),
+      standFxId: fxId,
+      fieldEl,
+    });
   }
 
   function canProcSwordSkill(skillId, t = nowMs()) {

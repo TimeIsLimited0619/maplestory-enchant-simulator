@@ -173,6 +173,13 @@ function idleConsumeFromSoulMaterials() {
   }));
 }
 
+function idleConsumeFromThrowingStars() {
+  if (typeof ThrowingStarStore === 'undefined' || typeof ThrowingStarStore.consumeCatalogRows !== 'function') {
+    return [];
+  }
+  return ThrowingStarStore.consumeCatalogRows();
+}
+
 function buildIdleConsumeDatabase() {
   return [
     ...idleConsumeFromStarforce(),
@@ -183,6 +190,7 @@ function buildIdleConsumeDatabase() {
     ...idleConsumeFromGloryScrolls(),
     ...idleConsumeFromRecoveryCard(),
     ...idleConsumeFromPotions(),
+    ...idleConsumeFromThrowingStars(),
     ...idleConsumeFromBonusStat(),
     ...idleConsumeFromExceptionalHammers(),
     ...idleConsumeFromSoulMaterials(),
@@ -216,6 +224,7 @@ const IdleConsumeStore = {
       || row.id.toLowerCase().includes(q)
       || String(row.scrollId || '').toLowerCase().includes(q)
       || String(row.cubeId || '').toLowerCase().includes(q)
+      || String(row.itemId || '').toLowerCase().includes(q)
     ));
   },
 };

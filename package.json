@@ -13,6 +13,7 @@
     "import:npcshop": "node scripts/import-npcshop-ui.mjs",
     "import:levelup": "node scripts/import-basic-eff-levelup.mjs",
     "import:skill": "node scripts/import-skill-wz.mjs",
+    "import:throwing-star": "node scripts/import-throwing-star.mjs",
     "import:action-instructions": "node scripts/import-action-instructions.mjs",
     "gm-writer": "node scripts/idle-gm-writer.mjs"
   },

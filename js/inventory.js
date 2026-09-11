@@ -258,7 +258,10 @@ const InventoryModule = {
     if (this.tab === 'equip') {
       const itemId = entry;
       let state = playerInventoryState[slotIndex];
-      if (!state || state.itemId !== itemId) {
+      const stateId = typeof resolveEquipItemId === 'function'
+        ? resolveEquipItemId(state)
+        : state?.itemId;
+      if (!state || (stateId && stateId !== itemId)) {
         state = typeof loadEnchantStateForSlot === 'function'
           ? loadEnchantStateForSlot(itemId, slotIndex)
           : { itemId, slotLocked: false };
@@ -302,7 +305,10 @@ const InventoryModule = {
     if (!itemId) return;
 
     let state = playerInventoryState[slotIndex];
-    if (!state || state.itemId !== itemId) {
+    const stateId = typeof resolveEquipItemId === 'function'
+      ? resolveEquipItemId(state)
+      : state?.itemId;
+    if (!state || (stateId && stateId !== itemId)) {
       state = typeof loadEnchantStateForSlot === 'function'
         ? loadEnchantStateForSlot(itemId, slotIndex)
         : { itemId, itemLocked: false };
@@ -772,6 +778,10 @@ const InventoryModule = {
       if (typeof getPlayerPotionCount !== 'function') return null;
       return getPlayerPotionCount(entry.itemId);
     }
+    if (entry.type === (T.THROWING_STAR || 'throwing_star')) {
+      if (typeof getPlayerThrowingStarCount !== 'function') return null;
+      return getPlayerThrowingStarCount(entry.itemId);
+    }
     return null;
   },
 
@@ -871,6 +881,13 @@ const InventoryModule = {
       IdlePotionStore.list().forEach((potion) => {
         if (getPlayerPotionCount(potion.id) > 0 && typeof ensurePotionConsumeInventory === 'function') {
           ensurePotionConsumeInventory(potion.id);
+        }
+      });
+    }
+    if (typeof ThrowingStarStore !== 'undefined' && typeof getPlayerThrowingStarCount === 'function') {
+      ThrowingStarStore.list().forEach((star) => {
+        if (getPlayerThrowingStarCount(star.id) > 0 && typeof ensureThrowingStarConsumeInventory === 'function') {
+          ensureThrowingStarConsumeInventory(star.id);
         }
       });
     }
@@ -975,6 +992,10 @@ const InventoryModule = {
     this.render();
     this.updateSlotCount();
     this.updateScroll();
+
+    if (tab === 'consume' && typeof ThrowingStarStore !== 'undefined') {
+      ThrowingStarStore.notifyCombatPad?.();
+    }
 
     if (typeof addLog === 'function') {
       addLog(`[背包] 已依編號由小到大整理${tabName}。`, 'log-info');
@@ -1190,6 +1211,9 @@ const InventoryModule = {
   },
 
   renderEquipSlot(slot, itemId, slotIndex) {
+    if (typeof resolveEquipItemId === 'function') {
+      itemId = resolveEquipItemId(itemId) || itemId;
+    }
     if (!itemId || typeof ITEM_DATABASE === 'undefined' || !ITEM_DATABASE[itemId]) return;
 
     const itemData = ITEM_DATABASE[itemId];
@@ -1307,6 +1331,10 @@ const InventoryModule = {
     }
     if (entry && entry.type === (typeof CONSUME_ITEM_TYPE !== 'undefined' ? CONSUME_ITEM_TYPE.POTION : 'potion')) {
       this.renderPotionConsumeSlot(slot, entry, slotIndex);
+      return;
+    }
+    if (entry && entry.type === (typeof CONSUME_ITEM_TYPE !== 'undefined' ? CONSUME_ITEM_TYPE.THROWING_STAR : 'throwing_star')) {
+      this.renderThrowingStarConsumeSlot(slot, entry, slotIndex);
     }
   },
 
@@ -1927,6 +1955,29 @@ const InventoryModule = {
     }
   },
 
+  renderThrowingStarConsumeSlot(slot, entry, slotIndex) {
+    const star = typeof ThrowingStarStore !== 'undefined' ? ThrowingStarStore.get(entry.itemId) : null;
+    if (!star) return;
+    const count = typeof getPlayerThrowingStarCount === 'function'
+      ? getPlayerThrowingStarCount(entry.itemId)
+      : 0;
+    if (count <= 0) return;
+    const icon = star.icon || star.iconRaw || '';
+    const boost = typeof ThrowingStarStore.formatBoost === 'function'
+      ? ThrowingStarStore.formatBoost(star)
+      : '';
+    this.renderGenericConsumeIcon(slot, slotIndex, icon, star.name, count, {
+      title: boost ? `${star.name}（${boost}）` : star.name,
+    });
+    const img = slot.querySelector('img');
+    if (img) {
+      img.addEventListener('mouseenter', () => {
+        this.showEtcTooltip?.(img, star.name, boost || '飛鏢', icon);
+      });
+      img.addEventListener('mouseleave', () => this.hideEtcTooltip());
+    }
+  },
+
   handlePotionDblClick(itemId) {
     const id = String(itemId || '').trim();
     if (!id) return;
@@ -2120,6 +2171,10 @@ const InventoryModule = {
 
     this.render();
     this.updateSlotCount();
+
+    if (this.tab === 'consume' && typeof ThrowingStarStore !== 'undefined') {
+      ThrowingStarStore.notifyCombatPad?.();
+    }
   },
 
   findEmptyEquipSlot() {
@@ -2298,6 +2353,10 @@ const InventoryModule = {
       const potion = typeof IdlePotionStore !== 'undefined' ? IdlePotionStore.get(row.itemId) : null;
       name = potion?.name || row.itemId || '藥水';
       ok = grantPotion(row.itemId, row.amount || 1) > 0;
+    } else if (row.consumeType === 'throwing_star' && typeof grantThrowingStar === 'function') {
+      const star = typeof ThrowingStarStore !== 'undefined' ? ThrowingStarStore.get(row.itemId) : null;
+      name = star?.name || row.itemId || '飛鏢';
+      ok = grantThrowingStar(row.itemId, row.amount || 1) > 0;
     }
 
     if (ok) {
@@ -2332,6 +2391,20 @@ const InventoryModule = {
         bag: 'consume',
         consumeType: 'potion',
         itemId: id,
+        amount: Math.max(1, Math.floor(Number(row.amount) || 1)),
+      };
+    }
+    if (id
+      && typeof ThrowingStarStore !== 'undefined'
+      && ThrowingStarStore.isThrowingStarId?.(id)
+      && (row.kind === 'etc' || row.bag === 'etc' || row.kind === 'consume'
+        || row.consumeType === 'throwing_star')) {
+      return {
+        ...row,
+        kind: 'consume',
+        bag: 'consume',
+        consumeType: 'throwing_star',
+        itemId: typeof ThrowingStarStore.padId === 'function' ? ThrowingStarStore.padId(id) : id,
         amount: Math.max(1, Math.floor(Number(row.amount) || 1)),
       };
     }
@@ -2420,6 +2493,15 @@ const InventoryModule = {
     }
     if (row.consumeType === 'potion') {
       return !match((e) => e.type === T.POTION && String(e.itemId) === String(row.itemId));
+    }
+    if (row.consumeType === 'throwing_star') {
+      const sid = typeof ThrowingStarStore !== 'undefined' && typeof ThrowingStarStore.padId === 'function'
+        ? ThrowingStarStore.padId(row.itemId)
+        : String(row.itemId || '');
+      return !match((e) => (e.type === T.THROWING_STAR || e.type === 'throwing_star')
+        && (typeof ThrowingStarStore !== 'undefined' && typeof ThrowingStarStore.padId === 'function'
+          ? ThrowingStarStore.padId(e.itemId) === sid
+          : String(e.itemId) === String(row.itemId)));
     }
     return true;
   },

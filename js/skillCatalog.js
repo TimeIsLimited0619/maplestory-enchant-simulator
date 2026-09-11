@@ -12,6 +12,25 @@ const SkillCatalog = (() => {
     magef: ['1000003'],
   };
 
+  /** 職業線隱藏（仍匯入資料；夜使者不含短劍／位移） */
+  const LINE_HIDDEN_SKILL_IDS = {
+    nightlord: [
+      '4001334', // 劈空斬（短劍）
+      '4001013', // 狂刃刺擊（影武）
+      '4001003', // 隱身術
+      '4101015', // 暗影衝刺
+      '4101016', // 暗影之躍
+      '4101018', // 暗影閃爍
+      '4100012', // 刻印引爆
+      '4120019',
+      '4101014', // 爆破鏢爆炸段
+      '4121020', // 挑釁追擊（與本體同名，勿進 hyper 綁定）
+      '4121021',
+      '4121022',
+      '4121009',
+    ],
+  };
+
   /** 舊存檔／誤記 ID → 正式 ID（目前無需對應） */
   const SKILL_ID_ALIASES = {};
 
@@ -109,13 +128,15 @@ const SkillCatalog = (() => {
     const rank = opts.rank != null ? String(opts.rank) : null;
     const type = opts.type != null ? String(opts.type) : null;
     const includeHidden = !!opts.includeHidden;
+    const hiddenIds = new Set(LINE_HIDDEN_SKILL_IDS[String(getJobLine(jobId)?.id || '')] || []);
     const out = [];
     bookList.forEach((book) => {
       (book.skills || []).forEach((raw) => {
         // 必須先套用 overrides（rank／type／skipPanel 可能被改），再過濾
         const s = withOverrides(raw);
         if (!s) return;
-        if (!includeHidden && s.skipPanel) return;
+        if (!includeHidden && (s.skipPanel || hiddenIds.has(String(s.id)))) return;
+        if (includeHidden && hiddenIds.has(String(s.id))) return;
         if (rank != null && String(s.rank) !== rank) return;
         if (type != null && String(s.type) !== type) return;
         out.push(s);

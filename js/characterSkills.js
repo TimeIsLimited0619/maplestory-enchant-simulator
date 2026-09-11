@@ -5,11 +5,12 @@
 const CharacterSkills = (() => {
   const STORAGE_KEY = 'ui.characterSkills.v4';
   const DEFAULT_JOB_ID = 222;
-  const JOB_LINE_ORDER = ['warrior', 'mage', 'magef', 'mercedes'];
+  const JOB_LINE_ORDER = ['warrior', 'mage', 'magef', 'nightlord', 'mercedes'];
   const COMBAT_JOB_BY_LINE = {
     warrior: '英雄',
     mage: '大魔導士（冰、雷）',
     magef: '大魔導士（火、毒）',
+    nightlord: '夜使者',
     mercedes: '精靈遊俠',
   };
   /** 技能連鎖 1～4 格解鎖等級（對應 10／30／60／100 階） */

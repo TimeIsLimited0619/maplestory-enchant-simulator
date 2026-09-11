@@ -68,6 +68,7 @@ const CONSUME_ITEM_TYPE = {
   SOUL: 'soul',
   RECOVERY_CARD: 'recovery_card',
   POTION: 'potion',
+  THROWING_STAR: 'throwing_star',
 };
 
 function isStarForceScrollConsumeEntry(entry) {

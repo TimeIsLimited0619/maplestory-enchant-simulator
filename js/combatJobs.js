@@ -21,7 +21,7 @@ const CombatJobs = (() => {
     { name: '箭神', category: 'normal' },
     { name: '神射手', category: 'normal' },
     { name: '開拓者', category: 'normal' },
-    { name: '夜使者', category: 'normal' },
+    { name: '夜使者', category: 'normal', jobId: 412, skillBook: 412, skillLine: 'nightlord', skillRank: '100' },
     { name: '暗影神偷', category: 'dual' },
     { name: '影武者', category: 'dual' },
     { name: '槍神', category: 'normal' },

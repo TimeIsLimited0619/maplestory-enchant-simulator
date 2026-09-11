@@ -698,7 +698,8 @@
  * 紙娃娃 WZ 預設朝左；hunt 以 scaleX(-1) 改朝右打怪。
  * 龍王 playerFlipX：取消鏡像恢復朝左（再 scaleX(-1) 會跟預設一樣朝右）。
  */
-.idle-boss-field .idle-actor--player.is-flip-x [data-paperdoll="hunt"] {
+.idle-boss-field .idle-actor--player.is-flip-x [data-paperdoll="hunt"],
+.idle-boss-field .idle-actor--player.is-flip-x [data-paperdoll="hunt-clone"] {
   transform: translateY(25px);
 }
 

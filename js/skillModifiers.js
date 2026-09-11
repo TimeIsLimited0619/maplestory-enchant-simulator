@@ -119,7 +119,7 @@ const SkillModifiers = (() => {
   /** 進階雙弩槍精通：WZ 用 x 表示攻擊力 */
   const WEAPON_MASTERY_PAD_IDS = new Set(['23120009']);
   /** Buff 技上的永久被動列（不吃迴避 prop） */
-  const BUFF_LEARNED_PASSIVE_IDS = new Set(['23121004', '23121054']);
+  const BUFF_LEARNED_PASSIVE_IDS = new Set(['23121004', '23121054', '4121015']);
   /**
    * 技能連結 damPlus（%p）：學了 carrier 後，對 target 施放傷害％加算
    * key = carrier skillId → target skillIds
@@ -130,6 +130,7 @@ const SkillModifiers = (() => {
     '23121002': ['23111001'],
     '23121003': ['23111003'],
     '23121011': ['23101001', '23110006'],
+    '4121052': ['4120018', '4120019'],
   };
   /**
    * 超技名稱綁定在 carrier，但數值應加成到另一招的 damPlus
@@ -302,7 +303,17 @@ const SkillModifiers = (() => {
   }
 
   function pruneBuffs(t = nowMs()) {
+    const hadPartner = buffs.some((b) => String(b.id) === '4111002');
     buffs = buffs.filter((b) => b.expiresAt > t);
+    if (hadPartner && !buffs.some((b) => String(b.id) === '4111002')) {
+      notifyShadowPartnerClone();
+    }
+  }
+
+  function notifyShadowPartnerClone() {
+    if (typeof Paperdoll !== 'undefined' && typeof Paperdoll.syncShadowPartnerClone === 'function') {
+      Paperdoll.syncShadowPartnerClone();
+    }
   }
 
   function getPassiveTotals() {
@@ -334,6 +345,10 @@ const SkillModifiers = (() => {
         // 精靈祝福：永久終傷
         if (String(skill.id) === '23121054') {
           out.finalDamR += Number(st.pdR) || 0;
+        }
+        if (String(skill.id) === '4121015') {
+          const en = getSkillEnhance('4121015');
+          out.bdR += (Number(st.bdR) || 0) + (Number(en?.bdR) || 0);
         }
         if (!isPassiveLike && !hasBasicStatUp) return;
       }
@@ -586,6 +601,11 @@ const SkillModifiers = (() => {
           ? SkillFormula.evalExpr(skill.common.attackCount, { x: level })
           : Number(st.attackCount);
         out.attackCount += Math.max(0, Number(bonusAtk) || 0);
+      } else if (skill.common?.bulletCount != null && String(skill.common.bulletCount) !== '') {
+        const bonusBullet = typeof SkillFormula.evalExpr === 'function'
+          ? SkillFormula.evalExpr(skill.common.bulletCount, { x: level })
+          : Number(st.bulletCount);
+        out.attackCount += Math.max(0, Number(bonusBullet) || 0);
       }
       out.prop += Number(st.prop) || 0;
       out.cr += Number(st.cr) || 0;
@@ -729,6 +749,9 @@ const SkillModifiers = (() => {
     if (out.speedModifiers < 0) {
       out.speedStages = Math.max(Number(out.speedStages) || 0, Math.abs(out.speedModifiers));
     }
+    if (typeof ThrowingStarStore !== 'undefined' && typeof ThrowingStarStore.frontIncPad === 'function') {
+      out.flatPad = (Number(out.flatPad) || 0) + (ThrowingStarStore.frontIncPad() || 0);
+    }
     return applyBasicStatUpBonus(out);
   }
 
@@ -756,14 +779,19 @@ const SkillModifiers = (() => {
 
   function clearBuff(id) {
     if (id == null) {
+      const hadPartner = buffs.some((b) => String(b.id) === '4111002');
       buffs = [];
+      if (hadPartner) notifyShadowPartnerClone();
       return;
     }
     const key = String(id);
+    const hadPartner = key === '4111002' && buffs.some((b) => b.id === key);
     buffs = buffs.filter((b) => b.id !== key);
+    if (hadPartner) notifyShadowPartnerClone();
   }
 
   function reset() {
+    const hadPartner = buffs.some((b) => String(b.id) === '4111002');
     buffs = [];
     arcaneAim = { stacks: 0, expiresAt: 0, perStackDamR: 0, maxStacks: 5, skillId: '' };
     ignisRoar = {
@@ -774,6 +802,7 @@ const SkillModifiers = (() => {
       speedMod: 0,
       skillId: IGNIS_ROAR_ID,
     };
+    if (hadPartner) notifyShadowPartnerClone();
   }
 
   function hasBuff(id, t = nowMs()) {
@@ -785,6 +814,22 @@ const SkillModifiers = (() => {
     pruneIgnisRoar(t);
     if (ignisRoar.stacks > 0 && String(ignisRoar.skillId || IGNIS_ROAR_ID) === key) return true;
     return false;
+  }
+
+  /** 影分身：最終傷害追加段 %（WZ x，override 為 shadowPartnerR） */
+  const SHADOW_PARTNER_ID = '4111002';
+  function getShadowPartnerRate() {
+    if (!hasBuff(SHADOW_PARTNER_ID)) return 0;
+    const level = (typeof CharacterSkills !== 'undefined')
+      ? (CharacterSkills.getLevel?.(SHADOW_PARTNER_ID) || 0)
+      : 0;
+    if (!(level > 0) || typeof SkillCatalog === 'undefined' || typeof SkillFormula === 'undefined') {
+      return 0;
+    }
+    const skill = SkillCatalog.getSkill?.(SHADOW_PARTNER_ID);
+    if (!skill?.common) return 0;
+    const st = SkillFormula.evalStatCommon(skill.common, level);
+    return Math.max(0, Number(st.shadowPartnerR) || Number(st.xVal) || 0);
   }
 
   function pushStackBuff(list, t, row, fallbackId, nameHint) {
@@ -883,6 +928,7 @@ const SkillModifiers = (() => {
     getIgnisRoarFinalDamR,
     getShowStackBuffCounts,
     setShowStackBuffCounts,
+    getShadowPartnerRate,
     IGNIS_ROAR_ID,
     COMBO_SKILL_IDS,
   };

@@ -8,10 +8,22 @@ const SkillMobStatus = (() => {
   const SCAR_BUFF_ID = '1111003';
   const OPPORTUNITY_ID = '1110009';
   /** 烈焰翔斬／VI／獨角獸射擊：命中後掛所受傷害增加 */
-  const INCISING_SKILL_IDS = new Set(['1121015', '1141008', '23111002']);
+  const INCISING_SKILL_IDS = new Set(['1121015', '1141008', '23111002', '4121016']);
   /** 傳說之槍：命中後防禦率下降（以所受傷害增加近似） */
   const DEF_DOWN_SKILL_IDS = new Set(['23121002']);
   const SPEAR_DEF_DOWN_HYPER_ID = '23120050';
+  const NL_MARK_PASSIVE_IDS = ['4120018', '4100011'];
+  const NL_MARK_BURST_IDS = {
+    '4120018': '4120019',
+    '4100011': '4100012',
+  };
+  const NL_MARK_TRIGGER_IDS = new Set([
+    '4001344', '4101010', '4101013', '4111010', '4111015',
+    '4121013', '4121016', '4121017', '4121052',
+  ]);
+  const NL_VENOM_IDS = ['4120011', '4110011'];
+  const NL_BLEED_BUFF_ID = '4121054';
+  const NL_DOMAIN_ID = '4121015';
 
   const FREEZE_SHATTER_ID = '2210013';
   const FREEZE_FX_SKILL_ID = '2200011'; // 結冰特效（mob 層數動畫）
@@ -63,6 +75,11 @@ const SkillMobStatus = (() => {
    * @type {Map<string, { expiresAt: number, damageTakenPct: number, fxId: number|null, timerId: any, skillId: string }>}
    */
   const defDown = new Map();
+  /**
+   * 夜使者刻印
+   * @type {Map<string, { expiresAt: number, sourceSkillId: string, fxId: number|null, timerId: any }>}
+   */
+  const nlMarks = new Map();
   /**
    * @type {Map<string, {
    *   stacks: number,
@@ -223,6 +240,7 @@ const SkillMobStatus = (() => {
     pruneMap(scars, t);
     pruneMap(incising, t);
     pruneMap(defDown, t);
+    pruneMap(nlMarks, t);
     pruneMap(freeze, t);
   }
 
@@ -293,6 +311,16 @@ const SkillMobStatus = (() => {
     defDown.delete(uid);
   }
 
+  function clearNlMark(mobOrUid) {
+    const uid = typeof mobOrUid === 'string' || typeof mobOrUid === 'number'
+      ? String(mobOrUid)
+      : uidOf(mobOrUid);
+    if (!uid) return;
+    const row = nlMarks.get(uid);
+    stopStatusFx(row);
+    nlMarks.delete(uid);
+  }
+
   function clearFreeze(mobOrUid) {
     const uid = typeof mobOrUid === 'string' || typeof mobOrUid === 'number'
       ? String(mobOrUid)
@@ -310,6 +338,8 @@ const SkillMobStatus = (() => {
     incising.clear();
     defDown.forEach((row) => stopStatusFx(row));
     defDown.clear();
+    nlMarks.forEach((row) => stopStatusFx(row));
+    nlMarks.clear();
     freeze.forEach((row) => stopStatusFx(row));
     freeze.clear();
     iceBarrierAcc = 0;
@@ -319,6 +349,7 @@ const SkillMobStatus = (() => {
     clearScar(mobOrUid);
     clearIncising(mobOrUid);
     clearDefDown(mobOrUid);
+    clearNlMark(mobOrUid);
     clearFreeze(mobOrUid);
   }
 
@@ -611,6 +642,183 @@ const SkillMobStatus = (() => {
     });
   }
 
+  function resolveNlMarkPassive() {
+    for (let i = 0; i < NL_MARK_PASSIVE_IDS.length; i += 1) {
+      const id = NL_MARK_PASSIVE_IDS[i];
+      const info = evalSkillStat(id);
+      if (info) return { id, ...info };
+    }
+    return null;
+  }
+
+  function hasNlMark(mob, t = nowMs()) {
+    return !!getMapRow(nlMarks, mob, t);
+  }
+
+  function applyNlMark(mob, opts = {}) {
+    const uid = uidOf(mob);
+    if (!uid) return false;
+    const durationMs = scaleGameMs(Math.max(0, Number(opts.durationMs) || 0));
+    if (!(durationMs > 0)) return false;
+    const sourceSkillId = String(opts.sourceSkillId || '4100011');
+    const existing = nlMarks.get(uid);
+    const row = {
+      expiresAt: nowMs() + durationMs,
+      sourceSkillId,
+      fxId: existing?.fxId ?? null,
+      timerId: existing?.timerId ?? null,
+    };
+    nlMarks.set(uid, row);
+    startMobStatusFx(mob, row, sourceSkillId);
+    scheduleMapExpiry(nlMarks, uid, row);
+    return true;
+  }
+
+  function consumeNlMark(mob) {
+    if (!hasNlMark(mob)) return null;
+    const uid = uidOf(mob);
+    const row = nlMarks.get(uid);
+    const sourceSkillId = String(row?.sourceSkillId || '4100011');
+    clearNlMark(uid);
+    return sourceSkillId;
+  }
+
+  function tryApplyNlMarkOnHit(mob, skillId) {
+    if (!mob || !(Number(mob.hp) > 0)) return false;
+    const sid = String(skillId || '');
+    if (!NL_MARK_TRIGGER_IDS.has(sid)) return false;
+    const info = resolveNlMarkPassive();
+    if (!info?.stat) return false;
+    const prop = Math.max(0, Number(info.stat.prop) || 0);
+    if (!(prop > 0) || Math.random() * 100 >= prop) return false;
+    const durationMs = Math.max(
+      2000,
+      (Number(info.stat.dotTimeSec) || Number(info.stat.timeSec) || 20) * 1000,
+    );
+    return applyNlMark(mob, { durationMs, sourceSkillId: info.id });
+  }
+
+  function resolveNlMarkBurstSpec(sourceSkillId) {
+    const passiveId = String(sourceSkillId || '');
+    const burstId = NL_MARK_BURST_IDS[passiveId] || NL_MARK_BURST_IDS['4100011'];
+    const burstLv = readSkillLevel(burstId) || readSkillLevel(passiveId) || 1;
+    const burstSkill = typeof SkillCatalog !== 'undefined'
+      ? SkillCatalog.getSkill?.(burstId)
+      : null;
+    const passive = typeof SkillCatalog !== 'undefined'
+      ? SkillCatalog.getSkill?.(passiveId)
+      : null;
+    const common = burstSkill?.common || passive?.common || {};
+    const st = (typeof SkillFormula !== 'undefined')
+      ? SkillFormula.evalStatCommon(common, burstLv)
+      : {};
+    const passiveLv = readSkillLevel(passiveId) || burstLv;
+    const passiveSt = (passive?.common && typeof SkillFormula !== 'undefined')
+      ? SkillFormula.evalStatCommon(passive.common, passiveLv)
+      : {};
+    const damPlus = (typeof SkillModifiers !== 'undefined'
+      && typeof SkillModifiers.getSkillDamPlusBonus === 'function')
+      ? SkillModifiers.getSkillDamPlusBonus(passiveId)
+      : 0;
+    const damagePct = (Number(st.damagePct) || Number(passiveSt.damagePct) || 0) + damPlus;
+    const bulletCount = Math.max(
+      1,
+      Math.floor(Number(passiveSt.bulletCount) || Number(st.bulletCount) || 2),
+    );
+    const mobCount = Math.max(
+      1,
+      Math.floor(Number(passiveSt.mobCount) || Number(st.mobCount) || 1),
+    );
+    return {
+      burstId,
+      burstSkill: burstSkill || passive,
+      sourceSkillId: passiveId,
+      damagePct,
+      attackCount: 1,
+      bulletCount,
+      mobCount,
+    };
+  }
+
+  function tryApplyVenomOnHit(mob) {
+    if (!mob) return false;
+    if (typeof SkillModifiers !== 'undefined' && SkillModifiers.hasBuff?.(NL_BLEED_BUFF_ID)) {
+      const bleed = evalSkillStat(NL_BLEED_BUFF_ID);
+      if (bleed?.stat) {
+        const prop = Math.max(0, Number(bleed.stat.prop) || 0);
+        if (prop > 0 && Math.random() * 100 < prop) {
+          return applyIncising(mob, {
+            durationMs: (Number(bleed.stat.dotTimeSec) || 3) * 1000,
+            damageTakenPct: 0,
+            dotPct: Number(bleed.stat.dotPct) || 0,
+            intervalSec: Number(bleed.stat.dotIntervalSec) || 1,
+            skillId: NL_BLEED_BUFF_ID,
+          });
+        }
+      }
+    }
+    let venomId = '';
+    for (let i = 0; i < NL_VENOM_IDS.length; i += 1) {
+      if (readSkillLevel(NL_VENOM_IDS[i]) > 0) {
+        venomId = NL_VENOM_IDS[i];
+        break;
+      }
+    }
+    if (!venomId) return false;
+    const info = evalSkillStat(venomId);
+    if (!info?.stat) return false;
+    const prop = Math.max(0, Number(info.stat.prop) || 0);
+    if (!(prop > 0) || Math.random() * 100 >= prop) return false;
+    const maxStacks = Math.max(1, Number(info.stat.dotSuperpos) || 1);
+    const uid = uidOf(mob);
+    const existing = uid ? incising.get(uid) : null;
+    const same = existing && String(existing.skillId) === venomId;
+    const stacks = Math.min(maxStacks, (same ? (Number(existing.stacks) || 1) : 0) + 1);
+    const applied = applyIncising(mob, {
+      durationMs: (Number(info.stat.dotTimeSec) || 3) * 1000,
+      damageTakenPct: 0,
+      dotPct: (Number(info.stat.dotPct) || 0) * stacks,
+      intervalSec: Number(info.stat.dotIntervalSec) || 1,
+      skillId: venomId,
+    });
+    if (applied && uid) {
+      const row = incising.get(uid);
+      if (row) row.stacks = stacks;
+    }
+    return applied;
+  }
+
+  function tryApplyNlDomainOnHit(mob) {
+    if (!mob) return false;
+    if (typeof SkillModifiers === 'undefined' || !SkillModifiers.hasBuff?.(NL_DOMAIN_ID)) {
+      return false;
+    }
+    const info = evalSkillStat(NL_DOMAIN_ID);
+    if (!info?.stat) return false;
+    const defDownPct = Math.max(0, Number(info.stat.w) || 0);
+    if (!(defDownPct > 0)) return false;
+    const durationMs = Math.max(1000, (Number(info.stat.timeSec) || 2) * 1000);
+    return applyDefDown(mob, {
+      durationMs,
+      damageTakenPct: defDownPct,
+      skillId: NL_DOMAIN_ID,
+    });
+  }
+
+  /** 挑釁契約：WZ y=5000 不可當防禦下降%；用固定近似，時長吃 time */
+  function tryApplyShowdownOnHit(mob, skillId) {
+    if (!mob) return false;
+    if (String(skillId || '') !== '4121017') return false;
+    const info = evalSkillStat('4121017');
+    if (!info?.stat) return false;
+    const durationMs = Math.max(1000, (Number(info.stat.timeSec) || 70) * 1000);
+    return applyDefDown(mob, {
+      durationMs,
+      damageTakenPct: 20,
+      skillId: '4121017',
+    });
+  }
+
   function opportunityFinalDamR() {
     const info = evalSkillStat(OPPORTUNITY_ID);
     if (!info?.stat) return 0;
@@ -813,6 +1021,9 @@ const SkillMobStatus = (() => {
     tryApplyScarOnHit(mob);
     tryApplyIncisingOnHit(mob, opts.skillId);
     tryApplyDefDownOnHit(mob, opts.skillId);
+    tryApplyShowdownOnHit(mob, opts.skillId);
+    tryApplyVenomOnHit(mob);
+    tryApplyNlDomainOnHit(mob);
     applyOrConsumeFreeze(mob, opts.skillId);
     if (typeof SkillModifiers !== 'undefined') {
       if (typeof SkillModifiers.extendIgnisRoarFromHit === 'function') {
@@ -857,6 +1068,14 @@ const SkillMobStatus = (() => {
     tryApplyScarOnHit,
     tryApplyIncisingOnHit,
     tryApplyDefDownOnHit,
+    hasNlMark,
+    applyNlMark,
+    consumeNlMark,
+    tryApplyNlMarkOnHit,
+    resolveNlMarkBurstSpec,
+    tryApplyVenomOnHit,
+    tryApplyNlDomainOnHit,
+    tryApplyShowdownOnHit,
     opportunityFinalDamR,
     ultimateMagicFinalDamR,
     rollFrozenShatterIed,
@@ -866,6 +1085,7 @@ const SkillMobStatus = (() => {
     clearScar,
     clearIncising,
     clearDefDown,
+    clearNlMark,
     clearFreeze,
     clearMob,
     clearAll,

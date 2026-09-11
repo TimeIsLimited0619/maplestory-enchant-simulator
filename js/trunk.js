@@ -520,6 +520,14 @@ const TrunkModule = {
         count,
       };
     }
+    if (type === (T.THROWING_STAR || 'throwing_star')) {
+      const s = typeof ThrowingStarStore !== 'undefined' ? ThrowingStarStore.get(entry.itemId) : null;
+      return {
+        icon: s?.icon || s?.iconRaw || '',
+        name: s?.name || entry.itemId,
+        count,
+      };
+    }
     return { icon: '', name: type || '消耗品', count };
   },
 

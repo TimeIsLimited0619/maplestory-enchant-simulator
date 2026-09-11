@@ -375,6 +375,10 @@ const UiNpcShop = (() => {
       || (row.kind === 'consume' && typeof IdlePotionStore !== 'undefined' && IdlePotionStore.isPotionId?.(row.itemId))) {
       return { type: T.POTION, itemId: row.itemId };
     }
+    if (row.consumeType === 'throwing_star'
+      || (row.kind === 'consume' && typeof ThrowingStarStore !== 'undefined' && ThrowingStarStore.isThrowingStarId?.(row.itemId))) {
+      return { type: T.THROWING_STAR, itemId: row.itemId };
+    }
     return null;
   }
 
@@ -909,6 +913,9 @@ const UiNpcShop = (() => {
     if (entry.type === T.POTION || entry.type === 'potion') {
       return { consumeType: 'potion', itemId: entry.itemId, amount: qty };
     }
+    if (entry.type === T.THROWING_STAR || entry.type === 'throwing_star') {
+      return { consumeType: 'throwing_star', itemId: entry.itemId, amount: qty };
+    }
     return null;
   }
 
@@ -1008,6 +1015,9 @@ const UiNpcShop = (() => {
     if (entry.type === T.POTION || entry.type === 'potion') {
       return typeof getPlayerPotionCount === 'function' ? getPlayerPotionCount(entry.itemId) > 0 : false;
     }
+    if (entry.type === T.THROWING_STAR || entry.type === 'throwing_star') {
+      return typeof getPlayerThrowingStarCount === 'function' ? getPlayerThrowingStarCount(entry.itemId) > 0 : false;
+    }
     return false;
   }
 
@@ -1046,6 +1056,9 @@ const UiNpcShop = (() => {
     }
     if (entry.type === T.POTION || entry.type === 'potion') {
       return typeof getPlayerPotionCount === 'function' ? getPlayerPotionCount(entry.itemId) : 0;
+    }
+    if (entry.type === T.THROWING_STAR || entry.type === 'throwing_star') {
+      return typeof getPlayerThrowingStarCount === 'function' ? getPlayerThrowingStarCount(entry.itemId) : 0;
     }
     return 0;
   }
@@ -1096,6 +1109,9 @@ const UiNpcShop = (() => {
     }
     if (entry.type === T.POTION || entry.type === 'potion') {
       return typeof takePotion === 'function' && takePotion(entry.itemId, amt);
+    }
+    if (entry.type === T.THROWING_STAR || entry.type === 'throwing_star') {
+      return typeof takeThrowingStar === 'function' && takeThrowingStar(entry.itemId, amt);
     }
     return false;
   }

@@ -10,6 +10,7 @@ const JobChangePanel = (() => {
     mage: 'images/skills/222/2221005.png',
     magef: 'images/skills/212/2121005.png',
     mercedes: 'images/skills/2312/23121000.png',
+    nightlord: 'images/skills/412/4121013.png',
   };
 
   const MESO_ICON = 'images/npcshop/PointInfo__Meso__iconShop.png';

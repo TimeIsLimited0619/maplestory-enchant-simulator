@@ -306,6 +306,89 @@ const SkillOverrides = (() => {
     '23101007': {
       addAttackPrefer: ['23121011', '23110006', '23100004'],
     },
+
+    // —— 夜使者（Night Lord）——
+    // 四飛閃不取代三飛閃（可同時裝備）
+    // 三飛閃／四飛閃：手裡劍走 ball volley（bulletCount 發）
+    '4111010': {
+      ballCast: {
+        launchFrame: 1,
+        launchMs: 0,
+        ballMode: 'sprite',
+        travel: 'horizontal',
+        speedPxPerMs: 0.7,
+      },
+      common: {
+        ballDelay: '270',
+        ballDelay1: '90',
+        ballDelay2: '90',
+      },
+    },
+    '4121013': {
+      replacesSkillRemove: true,
+      ballCast: {
+        launchFrame: 1,
+        launchMs: 0,
+        ballMode: 'sprite',
+        travel: 'horizontal',
+        speedPxPerMs: 0.7,
+      },
+      common: {
+        ballDelay: '180',
+        ballDelay1: '90',
+        ballDelay2: '90',
+        ballDelay3: '90',
+      },
+    },
+    // 強力投擲：WZ prop＝爆擊率
+    '4100001': {
+      common: { cr: '20+x' },
+    },
+    // 刻印：被動觸發，不可裝備；引爆段隱藏
+    '4100011': {
+      type: 'passive',
+      equipable: false,
+    },
+    '4120018': {
+      type: 'passive',
+      equipable: false,
+    },
+    '4100012': { skipPanel: true, equipable: false },
+    '4120019': { skipPanel: true, equipable: false },
+    // 爆破鏢爆炸段／挑釁追擊
+    '4101014': { skipPanel: true, equipable: false },
+    '4121020': { skipPanel: true, equipable: false },
+    '4121021': { skipPanel: true, equipable: false },
+    // 影分身：x＝分身傷害%，不可進通用 xVal
+    '4111002': {
+      type: 'buff',
+      common: {
+        shadowPartnerR: '50+x',
+      },
+      commonRemove: ['x'],
+    },
+    // 絕殺領域：時效召喚
+    '4111007': {
+      type: 'buff',
+    },
+    // 絕對領域：地面光環，非暴風雪
+    '4121015': {
+      type: 'buff',
+      blizzardCast: false,
+      tileRepeatIdx: 21,
+    },
+    // 絕對領域-BOSS殺手：WZ common 幾乎空
+    '4120048': {
+      common: {
+        bdR: '20',
+      },
+      h: '絕對領域對BOSS傷害增加#bdR%',
+    },
+    // 夜幕印記：2 秒無敵，放置戰鬥不做
+    '4121022': { skipPanel: true, equipable: false },
+    // 隱身／楓葉淨化：非放置戰鬥
+    '4001003': { skipPanel: true, equipable: false },
+    '4121009': { skipPanel: true, equipable: false },
   };
 
   function apply(skill) {
@@ -316,12 +399,14 @@ const SkillOverrides = (() => {
     const out = { ...skill };
     Object.keys(patch).forEach((key) => {
       if (key === 'common' || key === 'commonRemove'
-        || key === 'addAttackRemove' || key === 'channelCastRemove') return;
+        || key === 'addAttackRemove' || key === 'channelCastRemove'
+        || key === 'replacesSkillRemove') return;
       out[key] = patch[key];
     });
 
     if (patch.addAttackRemove) delete out.addAttack;
     if (patch.channelCastRemove) delete out.channelCast;
+    if (patch.replacesSkillRemove) delete out.replacesSkill;
 
     if (patch.common || patch.commonRemove) {
       out.common = { ...(skill.common || {}) };

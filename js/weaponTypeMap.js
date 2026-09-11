@@ -122,7 +122,7 @@ const WeaponTypeMap = (() => {
     弓: ['shoot1', 'shootF', 'swingT1'],
     弩: ['shoot2', 'shootF', 'swingT1'],
     短劍: ['stabO1', 'stabO2', 'stabOF', 'swingO1'],
-    拳套: ['swingO1', 'swingO2', 'stabO1'],
+    拳套: ['luckySeven', 'throwingWeapon', 'swingO1', 'swingO2', 'stabO1'],
     短杖: ['swingO1', 'swingO2', 'swingO3'],
     長杖: ['swingO1', 'swingO2', 'swingO3'],
     指虎: ['swingP1', 'swingP2', 'swingPF'],
@@ -380,6 +380,9 @@ const WeaponTypeMap = (() => {
    */
   function getEquippedWeaponMultiplier(getWornEntry, jobName) {
     const info = resolveFromEquippedSlots(getWornEntry);
+    if (shouldUseJobDefaultClaw(info, jobName)) {
+      return WEAPON_MULTIPLIER_BY_TYPE['拳套'] ?? DEFAULT_WEAPON_MULTIPLIER;
+    }
     if (info) return Number(info.weaponMultiplier) || DEFAULT_WEAPON_MULTIPLIER;
     return getWeaponMultiplierByJobName(jobName);
   }
@@ -393,11 +396,20 @@ const WeaponTypeMap = (() => {
     return String(jobName);
   }
 
+  /** 夜使者等拳套職：穿新手劍時仍走職業預設拳套（無低等 0147 素材） */
+  function shouldUseJobDefaultClaw(info, jobName) {
+    const resolvedJob = resolveJobNameForWeapon(jobName);
+    const jobType = JOB_DEFAULT_WEAPON_TYPE[resolvedJob];
+    if (jobType !== '拳套') return false;
+    return !info || info.weaponType !== '拳套';
+  }
+
   /** 依穿戴武器（或職業預設武器）回傳普攻動作候選 */
   function getBasicAttackActions(getWornEntry, jobName) {
     const info = resolveFromEquippedSlots(getWornEntry);
     const resolvedJob = resolveJobNameForWeapon(jobName);
-    const weaponType = info?.weaponType
+    const weaponType = (shouldUseJobDefaultClaw(info, jobName) ? '拳套' : null)
+      || info?.weaponType
       || JOB_DEFAULT_WEAPON_TYPE[resolvedJob]
       || '';
     const list = BASIC_ATTACK_ACTIONS_BY_TYPE[weaponType];
@@ -558,6 +570,9 @@ const WeaponTypeMap = (() => {
   function getEquippedWzAttackSpeed(getWornEntry, jobName) {
     if (typeof getWornEntry === 'function') {
       const resolved = resolveFromEquippedSlots(getWornEntry);
+      if (shouldUseJobDefaultClaw(resolved, jobName)) {
+        return getDefaultWzAttackSpeedForType('拳套');
+      }
       const slotId = resolved?.slotId || '11';
       const entry = getWornEntry(slotId) || getWornEntry('11') || getWornEntry('37');
       const itemId = entry?.itemId;

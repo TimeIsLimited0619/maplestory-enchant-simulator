@@ -61,11 +61,10 @@ const SessionPersistenceModule = {
       return;
     }
 
-    const snapshot = typeof cloneEnchantState === 'function'
-      ? cloneEnchantState(currentEnchantItem)
-      : JSON.parse(JSON.stringify(currentEnchantItem));
-    delete snapshot.slotIndex;
-    playerInventoryState[currentEnchantItem.slotIndex] = snapshot;
+    const itemId = this.resolveItemId(currentEnchantItem)
+      || playerInventoryEquip[currentEnchantItem.slotIndex];
+    const snapshot = this.stampState(currentEnchantItem, itemId);
+    if (snapshot) playerInventoryState[currentEnchantItem.slotIndex] = snapshot;
   },
 
   collectSnapshot() {
@@ -73,12 +72,11 @@ const SessionPersistenceModule = {
 
     let equippedItem = null;
     if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
-      const itemId = currentEnchantItem.itemId || currentEnchantItem.id;
-      const state = typeof cloneEnchantState === 'function'
-        ? cloneEnchantState(currentEnchantItem)
-        : JSON.parse(JSON.stringify(currentEnchantItem));
-      delete state.slotIndex;
-      equippedItem = { itemId, state };
+      const itemId = this.resolveItemId(currentEnchantItem);
+      const state = this.stampState(currentEnchantItem, itemId);
+      if (itemId && state) {
+        equippedItem = { itemId, state };
+      }
     }
 
     const snap = {
@@ -137,6 +135,9 @@ const SessionPersistenceModule = {
     }
     if (typeof playerPotionCounts !== 'undefined') {
       payload.playerPotionCounts = { ...playerPotionCounts };
+    }
+    if (typeof playerThrowingStarCounts !== 'undefined') {
+      payload.playerThrowingStarCounts = { ...playerThrowingStarCounts };
     }
     if (typeof playerBonusStatItemCounts !== 'undefined') {
       payload.playerBonusStatItemCounts = { ...playerBonusStatItemCounts };
@@ -220,6 +221,7 @@ const SessionPersistenceModule = {
       playerGloryScrollInventory: {},
       playerRecoveryCardCount: 0,
       playerPotionCounts: {},
+      playerThrowingStarCounts: {},
       playerBonusStatItemCounts: {},
       playerExceptionalHammerCounts: {},
       playerSoulMaterialCounts: {},
@@ -554,6 +556,17 @@ const SessionPersistenceModule = {
         });
       }
     }
+    if (data.playerThrowingStarCounts && typeof playerThrowingStarCounts !== 'undefined') {
+      assignCountMap(playerThrowingStarCounts, data.playerThrowingStarCounts);
+      if (typeof ThrowingStarStore !== 'undefined') {
+        ThrowingStarStore.list().forEach((star) => {
+          if (getPlayerThrowingStarCount(star.id) > 0 && typeof ensureThrowingStarConsumeInventory === 'function') {
+            ensureThrowingStarConsumeInventory(star.id);
+          }
+        });
+        ThrowingStarStore.notifyCombatPad?.();
+      }
+    }
     if (data.playerBonusStatItemCounts && typeof playerBonusStatItemCounts !== 'undefined') {
       assignCountMap(playerBonusStatItemCounts, data.playerBonusStatItemCounts);
     }
@@ -662,8 +675,38 @@ const SessionPersistenceModule = {
     if (typeof updateActiveModuleEquip === 'function') updateActiveModuleEquip();
   },
 
+  resolveItemId(itemId) {
+    if (typeof resolveEquipItemId === 'function') {
+      return resolveEquipItemId(itemId);
+    }
+    return itemId || null;
+  },
+
   isValidItemId(itemId) {
-    return Boolean(itemId && typeof ITEM_DATABASE !== 'undefined' && ITEM_DATABASE[itemId]);
+    const id = this.resolveItemId(itemId);
+    return Boolean(id && typeof ITEM_DATABASE !== 'undefined' && ITEM_DATABASE[id]);
+  },
+
+  stampState(state, itemId) {
+    if (!state || typeof state !== 'object') return null;
+    let snapshot = null;
+    if (typeof cloneEnchantState === 'function') {
+      snapshot = cloneEnchantState(state);
+    } else {
+      try {
+        snapshot = JSON.parse(JSON.stringify(state));
+      } catch (_) {
+        snapshot = { ...state };
+      }
+    }
+    if (!snapshot || typeof snapshot !== 'object') return null;
+    if (typeof stampEnchantItemId === 'function') {
+      return stampEnchantItemId(snapshot, itemId);
+    }
+    snapshot.itemId = itemId;
+    snapshot.id = itemId;
+    delete snapshot.slotIndex;
+    return snapshot;
   },
 
   sanitizeEquipArray(source) {
@@ -672,7 +715,7 @@ const SessionPersistenceModule = {
     if (!Array.isArray(source)) return result;
 
     for (let i = 0; i < count; i++) {
-      const itemId = source[i];
+      const itemId = this.resolveItemId(source[i]);
       result[i] = this.isValidItemId(itemId) ? itemId : null;
     }
     return result;
@@ -684,13 +727,19 @@ const SessionPersistenceModule = {
     if (!Array.isArray(source)) return result;
 
     for (let i = 0; i < count; i++) {
-      const state = source[i];
       const itemId = equipArray[i];
-      if (!state || !itemId || state.itemId !== itemId) {
+      const state = source[i];
+      if (!itemId || !state || typeof state !== 'object') {
         result[i] = null;
         continue;
       }
-      result[i] = state;
+      const stateId = this.resolveItemId(state.itemId || state.id);
+      // 僅在「確認是另一件裝備」時丟棄 state；ID 寫法不同（補零／型別）則修復保留
+      if (stateId && this.isValidItemId(stateId) && stateId !== itemId) {
+        result[i] = null;
+        continue;
+      }
+      result[i] = this.stampState(state, itemId);
     }
     return result;
   },
@@ -725,8 +774,11 @@ const SessionPersistenceModule = {
       for (let i = 0; i < count; i++) {
         if (!equipLocks[i] || !equip[i]) continue;
         let state = playerInventoryState[i];
-        if (!state || state.itemId !== equip[i]) {
-          state = { itemId: equip[i] };
+        const stateId = this.resolveItemId(state?.itemId || state?.id);
+        if (!state || (stateId && stateId !== equip[i])) {
+          state = { itemId: equip[i], id: equip[i] };
+        } else {
+          state = this.stampState(state, equip[i]) || { itemId: equip[i], id: equip[i] };
         }
         state.slotLocked = true;
         playerInventoryState[i] = state;
@@ -796,10 +848,11 @@ const SessionPersistenceModule = {
 
     // 新格式強化槽實體（物品已不在背包）
     this._pendingEquippedItem = null;
-    if (data.equippedItem?.itemId && this.isValidItemId(data.equippedItem.itemId)) {
+    const pendingId = this.resolveItemId(data.equippedItem?.itemId);
+    if (pendingId && this.isValidItemId(pendingId)) {
       this._pendingEquippedItem = {
-        itemId: data.equippedItem.itemId,
-        state: data.equippedItem.state || null,
+        itemId: pendingId,
+        state: this.stampState(data.equippedItem.state || {}, pendingId),
       };
       this.equippedSlotIndex = null;
     }

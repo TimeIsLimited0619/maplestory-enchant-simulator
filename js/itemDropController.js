@@ -143,6 +143,17 @@ const ItemDropController = (() => {
         return raw || icon;
       }
     }
+    const starId = (row.consumeType === 'throwing_star' || row.kind === 'consume' || row.kind === 'etc' || row.bag === 'etc')
+      ? id
+      : '';
+    if (starId && typeof ThrowingStarStore !== 'undefined' && ThrowingStarStore.isThrowingStarId?.(starId)) {
+      const star = ThrowingStarStore.get(starId);
+      icon = star ? (star.iconRaw || star.icon || '') : '';
+      if (icon) {
+        const raw = toIconRawPath(icon);
+        return raw || icon;
+      }
+    }
     if (row.kind === 'etc' || row.bag === 'etc') {
       const catalog = typeof IdleEtcStore !== 'undefined' ? IdleEtcStore.get(id) : null;
       icon = catalog?.icon || row.icon || '';
@@ -191,6 +202,10 @@ const ItemDropController = (() => {
     if (typeof IdlePotionStore !== 'undefined' && IdlePotionStore.isPotionId?.(id)
       && (row.consumeType === 'potion' || row.kind === 'consume' || row.kind === 'etc' || row.bag === 'etc')) {
       return IdlePotionStore.get(id)?.name || row.name || id || '藥水';
+    }
+    if (typeof ThrowingStarStore !== 'undefined' && ThrowingStarStore.isThrowingStarId?.(id)
+      && (row.consumeType === 'throwing_star' || row.kind === 'consume' || row.kind === 'etc' || row.bag === 'etc')) {
+      return ThrowingStarStore.get(id)?.name || row.name || id || '飛鏢';
     }
     if (row.kind === 'etc' || row.bag === 'etc') {
       const catalog = typeof IdleEtcStore !== 'undefined' ? IdleEtcStore.get(id) : null;

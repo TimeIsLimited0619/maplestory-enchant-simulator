@@ -126,16 +126,19 @@ const SkillBallCast = (() => {
   }
 
   /**
-   * 雙弩多箭：bulletCount + ballDelay / ballDelay1..N
+   * 雙弩多箭／飛鏢：bulletCount + ballDelay / ballDelay1..N
+   * extraCount：超技追加發數（四飛閃-額外攻擊）；超出的 delay 沿用最後一發。
    * 僅 sprite 單飛路徑；chain／beam／orb／aoeOnSpecial 維持單發。
    * @returns {{ count: number, delaysMs: number[] }|null}
    */
-  function resolveBulletVolleys(skill, plan, level = 1) {
+  function resolveBulletVolleys(skill, plan, level = 1, extraCount = 0) {
     if (!plan || plan.ballMode !== 'sprite') return null;
     if (plan.chain || plan.instantBeam || plan.aoeOnSpecial) return null;
     const c = skill?.common || {};
     if (c.bulletCount == null || String(c.bulletCount) === '') return null;
-    const count = Math.max(1, Math.floor(evalCommonNum(c.bulletCount, level)) || 1);
+    const baseCount = Math.max(1, Math.floor(evalCommonNum(c.bulletCount, level)) || 1);
+    const extra = Math.max(0, Math.floor(Number(extraCount) || 0));
+    const count = baseCount + extra;
     if (count <= 1) return null;
     const fallback = Math.max(
       60,
@@ -145,7 +148,9 @@ const SkillBallCast = (() => {
     for (let i = 0; i < count; i += 1) {
       const key = i === 0 ? 'ballDelay' : `ballDelay${i}`;
       let d = evalCommonNum(c[key], level);
-      if (!(d > 0)) d = fallback;
+      if (!(d > 0)) {
+        d = (i >= baseCount && delaysMs.length) ? delaysMs[delaysMs.length - 1] : fallback;
+      }
       delaysMs.push(d);
     }
     return { count, delaysMs };
@@ -730,6 +735,7 @@ const SkillBallCast = (() => {
       onChainBegin,
       visualOnly = false,
       omitPlayerEffect = false,
+      extraBulletCount = 0,
     } = opts;
     // 純動畫：仍飛投射物，但不觸發 onHit 結算
     const onHit = visualOnly ? null : onHitOpt;
@@ -745,7 +751,7 @@ const SkillBallCast = (() => {
       return false;
     }
 
-    const volleys = resolveBulletVolleys(skill, plan, level);
+    const volleys = resolveBulletVolleys(skill, plan, level, extraBulletCount);
 
     // 背景：略過飛行／orb 持續，立刻對目前目標結算（避免 setTimeout／rAF 被節流）
     if (typeof document !== 'undefined' && document.hidden && !visualOnly) {

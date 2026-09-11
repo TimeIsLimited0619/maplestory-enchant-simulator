@@ -407,6 +407,15 @@ const IdleNpcShopCatalog = {
           price: this.normalizeSellPrice(meta?.price ?? entry?.price),
         };
       }
+    } else if (entry.type === T.THROWING_STAR || entry.type === 'throwing_star') {
+      meta = typeof ThrowingStarStore !== 'undefined' ? ThrowingStarStore.get(entry.itemId) : null;
+      if (meta) {
+        return {
+          name: meta.name,
+          icon: meta.icon || meta.iconRaw || '',
+          price: this.normalizeSellPrice(meta?.price ?? entry?.price),
+        };
+      }
     }
 
     return {

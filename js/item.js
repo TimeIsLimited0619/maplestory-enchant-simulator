@@ -5566,6 +5566,44 @@ const ORIGINAL_EQUIP_IDS = Object.freeze(Object.keys(ITEM_DATABASE));
 
 const INVENTORY_SLOT_COUNT = 128;
 
+/** 對齊 ITEM_DATABASE 的裝備 ID（字串／補零／去零都視為同一件） */
+function resolveEquipItemId(idOrItem) {
+  let raw = idOrItem;
+  if (raw && typeof raw === 'object') {
+    raw = raw.itemId || raw.id;
+  }
+  if (raw == null || raw === '') return null;
+  const asString = String(raw);
+  const candidates = [];
+  const push = (value) => {
+    if (value != null && value !== '' && !candidates.includes(value)) candidates.push(value);
+  };
+  push(asString);
+  const digits = asString.replace(/\D/g, '');
+  if (digits) {
+    push(digits.padStart(8, '0').slice(-8));
+    push(digits);
+    push(digits.replace(/^0+/, '') || '0');
+  }
+  if (typeof ITEM_DATABASE !== 'undefined' && ITEM_DATABASE) {
+    for (let i = 0; i < candidates.length; i++) {
+      if (ITEM_DATABASE[candidates[i]]) return candidates[i];
+    }
+  }
+  return asString;
+}
+
+function stampEnchantItemId(state, itemId) {
+  if (!state || typeof state !== 'object') return state;
+  const id = resolveEquipItemId(itemId || state) || itemId || state.itemId || state.id || null;
+  if (id) {
+    state.itemId = id;
+    state.id = id;
+  }
+  delete state.slotIndex;
+  return state;
+}
+
 let playerInventoryEquip = new Array(INVENTORY_SLOT_COUNT).fill(null);
 let playerInventoryConsume = new Array(INVENTORY_SLOT_COUNT).fill(null);
 /** 其他欄（放置掉落雜項） */

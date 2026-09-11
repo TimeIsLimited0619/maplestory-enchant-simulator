@@ -791,6 +791,10 @@ const IdleBoss = (() => {
       const p = IdlePotionStore.get(id);
       return p ? IdlePotionStore.resolveIcon(p.icon) : '';
     }
+    if (typeof ThrowingStarStore !== 'undefined' && ThrowingStarStore.isThrowingStarId?.(id)) {
+      const star = ThrowingStarStore.get(id);
+      return star ? (star.iconRaw || star.icon || '') : '';
+    }
     if (typeof IdleEtcStore !== 'undefined') return IdleEtcStore.get(id)?.icon || '';
     return '';
   }
@@ -805,6 +809,9 @@ const IdleBoss = (() => {
     }
     if (typeof IdlePotionStore !== 'undefined' && IdlePotionStore.isPotionId?.(id)) {
       return IdlePotionStore.get(id)?.name || id;
+    }
+    if (typeof ThrowingStarStore !== 'undefined' && ThrowingStarStore.isThrowingStarId?.(id)) {
+      return ThrowingStarStore.get(id)?.name || id;
     }
     if (typeof IdleEtcStore !== 'undefined') return IdleEtcStore.get(id)?.name || row?.name || id;
     return row?.name || id || '掉落物';
@@ -838,10 +845,12 @@ const IdleBoss = (() => {
     if (kind === 'etc') return 'etc';
     if (kind === 'consume' || kind === 'potion') {
       if (typeof IdlePotionStore !== 'undefined' && IdlePotionStore.isPotionId?.(id)) return 'potion';
+      if (typeof ThrowingStarStore !== 'undefined' && ThrowingStarStore.isThrowingStarId?.(id)) return 'throwing_star';
       return 'consume';
     }
     if (typeof ITEM_DATABASE !== 'undefined' && ITEM_DATABASE[id]) return 'equip';
     if (typeof IdlePotionStore !== 'undefined' && IdlePotionStore.isPotionId?.(id)) return 'potion';
+    if (typeof ThrowingStarStore !== 'undefined' && ThrowingStarStore.isThrowingStarId?.(id)) return 'throwing_star';
     if (typeof IdleEtcStore !== 'undefined' && IdleEtcStore.get?.(id)) return 'etc';
     return '';
   }
@@ -869,10 +878,20 @@ const IdleBoss = (() => {
       );
       return;
     }
-    if ((kind === 'potion' || kind === 'consume') && typeof InventoryModule !== 'undefined') {
+    if ((kind === 'potion' || kind === 'consume' || kind === 'throwing_star') && typeof InventoryModule !== 'undefined') {
       const potion = typeof IdlePotionStore !== 'undefined' ? IdlePotionStore.get(id) : null;
       if (potion) {
         InventoryModule.showPotionTooltip?.(anchorEl, potion);
+        return;
+      }
+      const star = typeof ThrowingStarStore !== 'undefined' ? ThrowingStarStore.get(id) : null;
+      if (star) {
+        InventoryModule.showEtcTooltip?.(
+          anchorEl,
+          star.name,
+          (typeof ThrowingStarStore.formatBoost === 'function' ? ThrowingStarStore.formatBoost(star) : '') || '飛鏢',
+          star.icon || star.iconRaw || '',
+        );
         return;
       }
       const catalog = typeof IdleEtcStore !== 'undefined' ? IdleEtcStore.get(id) : null;

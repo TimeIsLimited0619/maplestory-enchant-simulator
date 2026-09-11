@@ -3309,6 +3309,14 @@ const IDLE_ZONE_BAND_DEFS = [
       }
     ],
     "bossDrops": []
+  },
+  {
+    "id": "band-1789059379066",
+    "min": 300,
+    "max": 300,
+    "name": "test",
+    "mobDrops": [],
+    "bossDrops": []
   }
 ];
 
@@ -20369,6 +20377,95 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "icon": "8620011"
       }
     ]
+  },
+  {
+    "regionId": "band-1788876290721",
+    "regionName": "test",
+    "name": "test",
+    "mapId": "c383",
+    "mapIndex": 383,
+    "unlockLevel": 190,
+    "dropMin": 190,
+    "dropMax": 200,
+    "artId": "",
+    "bandKey": "band-1789059379066",
+    "mobName": "銅甲石人·7",
+    "mobIcon": "4130100",
+    "bossName": "卡洛斯·13",
+    "bossIcon": "8881000",
+    "monsterHp": 500000,
+    "bossHp": 45286473419,
+    "killExp": 223,
+    "killGold": 111,
+    "bossKillExp": 4460,
+    "bossKillGold": 892,
+    "mobDrops": [
+      {
+        "kind": "etc",
+        "itemId": "Nohimepcs",
+        "name": "濃姬粉塵",
+        "chance": 50,
+        "amount": 100
+      },
+      {
+        "kind": "etc",
+        "itemId": "doom",
+        "name": "去除厄運的符咒",
+        "chance": 50,
+        "amount": 100
+      },
+      {
+        "kind": "etc",
+        "itemId": "nekopow",
+        "name": "喵喵之力",
+        "chance": 50,
+        "amount": 100
+      }
+    ],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "銅甲石人·7",
+        "icon": "4130100"
+      }
+    ],
+    "bossScaleSprite": false,
+    "bossScaleHud": false,
+    "bandName": "test",
+    "bandMin": 300,
+    "bandMax": 300,
+    "replayBossKills": 10,
+    "smallKills": 100,
+    "mobAtk1Dmg": 5,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 15,
+    "bossAtk1Cd": 2,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10
   }
 ];
 

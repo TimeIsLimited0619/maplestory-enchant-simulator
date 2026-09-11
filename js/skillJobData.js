@@ -33850,6 +33850,7798 @@ const SkillJobData = {
         }
       ]
     },
+    "400": {
+      "jobId": 400,
+      "name": "盜賊",
+      "rank": "10",
+      "skillBook": 400,
+      "skills": [
+        {
+          "id": "4000000",
+          "name": "幻化術",
+          "desc": "修煉盜賊的祕笈，讓幸運永久性的增加。",
+          "h": "永久增加幸運 #lukX ",
+          "rank": "10",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 10,
+          "infoType": 50,
+          "actions": [],
+          "common": {
+            "x": "22*x",
+            "y": "22*x",
+            "maxLevel": "10",
+            "lukX": "2*x"
+          },
+          "icon": "images/skills/400/4000000.png",
+          "skillBook": 400
+        },
+        {
+          "id": "4000005",
+          "name": "速度激發",
+          "desc": "永久增加移動速度、跳躍力和移動速度上限。",
+          "h": "移動速度增加#psdSpeed，跳躍力增加#psdJump，移動速度上限增加#speedMax",
+          "rank": "10",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 10,
+          "infoType": 10,
+          "actions": [],
+          "common": {
+            "maxLevel": "10",
+            "psdSpeed": "4*x",
+            "psdJump": "2*x",
+            "speedMax": "2*x"
+          },
+          "icon": "images/skills/400/4000005.png",
+          "skillBook": 400
+        },
+        {
+          "id": "4000012",
+          "name": "迴避",
+          "desc": "永久提升迴避率。",
+          "h": "迴避率增加#er%",
+          "rank": "10",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 10,
+          "infoType": 50,
+          "actions": [],
+          "common": {
+            "maxLevel": "10",
+            "er": "5+x"
+          },
+          "icon": "images/skills/400/4000012.png",
+          "skillBook": 400
+        },
+        {
+          "id": "4001003",
+          "name": "隱身術",
+          "desc": "移動時間內將身體隱藏於影子裡，迴避敵人的攻擊。迴避的攻擊是造成最大HP的一定比率傷害的攻擊時，待隱身術解除時，會依照迴避次數的比例套用冷卻時間。持續時間內使用技能或再次使用隱身術技能鍵，即可解除隱身術狀態。但使用部分移動技能時，隱身術狀態並不會解除。",
+          "h": "消耗MP#mpCon，#time秒內使身體隱藏於影子中\\n迴避依照最大HP的比率造成傷害的攻擊時，會等隱身術解除後依照迴避的次數套用冷卻時間#cooltime秒，最多可重疊到#y次",
+          "rank": "10",
+          "type": "buff",
+          "equipable": false,
+          "maxLevel": 10,
+          "infoType": 14,
+          "actions": [
+            "darksight"
+          ],
+          "common": {
+            "mpCon": "25-2*x",
+            "time": "20*x",
+            "speed": "0",
+            "x": "1",
+            "maxLevel": "10",
+            "hcCooltime": "15",
+            "cooltime": "3",
+            "y": "5",
+            "w2": "20"
+          },
+          "icon": "images/skills/400/4001003.png",
+          "skillBook": 400,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/400/4001003/effect/0.png",
+                "delay": 60,
+                "origin": [
+                  47,
+                  102
+                ]
+              },
+              {
+                "src": "images/skills/400/4001003/effect/1.png",
+                "delay": 60,
+                "origin": [
+                  47,
+                  105
+                ]
+              },
+              {
+                "src": "images/skills/400/4001003/effect/2.png",
+                "delay": 60,
+                "origin": [
+                  50,
+                  107
+                ]
+              },
+              {
+                "src": "images/skills/400/4001003/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  51,
+                  108
+                ]
+              },
+              {
+                "src": "images/skills/400/4001003/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  52,
+                  109
+                ]
+              },
+              {
+                "src": "images/skills/400/4001003/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  52,
+                  112
+                ]
+              },
+              {
+                "src": "images/skills/400/4001003/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  45,
+                  110
+                ]
+              },
+              {
+                "src": "images/skills/400/4001003/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  42,
+                  110
+                ]
+              }
+            ]
+          },
+          "skipPanel": true
+        },
+        {
+          "id": "4001013",
+          "name": "狂刃刺擊",
+          "desc": "快速的交叉刀刃砍擊前方多數的敵人。",
+          "h": "消耗MP#mpCon，向最多#mobCount名的敵人以#damage%傷害攻擊#attackCount次。",
+          "rank": "10",
+          "type": "active",
+          "equipable": true,
+          "maxLevel": 10,
+          "infoType": 1,
+          "areaAttack": true,
+          "actions": [
+            "SharpSlash"
+          ],
+          "common": {
+            "mpCon": "10+d(x/3)",
+            "damage": "50+4*x",
+            "attackCount": "3",
+            "maxLevel": "10",
+            "mobCount": "3",
+            "lt": "-290, -135",
+            "rb": "-10, 10"
+          },
+          "icon": "images/skills/400/4001013.png",
+          "skillBook": 400,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/400/4001013/effect/0.png",
+                "delay": 270,
+                "origin": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "src": "images/skills/400/4001013/effect/1.png",
+                "delay": 60,
+                "origin": [
+                  339,
+                  157
+                ]
+              },
+              {
+                "src": "images/skills/400/4001013/effect/2.png",
+                "delay": 60,
+                "origin": [
+                  344,
+                  147
+                ]
+              },
+              {
+                "src": "images/skills/400/4001013/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  350,
+                  143
+                ]
+              },
+              {
+                "src": "images/skills/400/4001013/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  348,
+                  145
+                ]
+              },
+              {
+                "src": "images/skills/400/4001013/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  341,
+                  146
+                ]
+              },
+              {
+                "src": "images/skills/400/4001013/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  334,
+                  145
+                ]
+              },
+              {
+                "src": "images/skills/400/4001013/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  308,
+                  141
+                ]
+              }
+            ],
+            "hit": [
+              {
+                "src": "images/skills/400/4001013/hit/0.png",
+                "delay": 90,
+                "origin": [
+                  138,
+                  68
+                ]
+              },
+              {
+                "src": "images/skills/400/4001013/hit/1.png",
+                "delay": 90,
+                "origin": [
+                  138,
+                  68
+                ]
+              },
+              {
+                "src": "images/skills/400/4001013/hit/2.png",
+                "delay": 90,
+                "origin": [
+                  86,
+                  66
+                ]
+              },
+              {
+                "src": "images/skills/400/4001013/hit/3.png",
+                "delay": 90,
+                "origin": [
+                  68,
+                  66
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "4001334",
+          "name": "劈空斬",
+          "desc": "迅速的對周圍的敵人攻擊兩次。只有裝備短劍才可使用。",
+          "h": "消耗MP#mpCon，對#mobCount名的敵人以#damage%傷害攻擊#attackCount次",
+          "rank": "10",
+          "type": "active",
+          "equipable": true,
+          "maxLevel": 15,
+          "infoType": 1,
+          "projectile": true,
+          "actions": [
+            "doubleStab"
+          ],
+          "common": {
+            "maxLevel": "15",
+            "mpCon": "9+d(x/3)",
+            "lt": "-165, -155",
+            "rb": "165, 20",
+            "attackCount": "2",
+            "damage": "90+5*x",
+            "mobCount": "5"
+          },
+          "icon": "images/skills/400/4001334.png",
+          "skillBook": 400,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/400/4001334/effect/0.png",
+                "delay": 60,
+                "origin": [
+                  63,
+                  160
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect/1.png",
+                "delay": 60,
+                "origin": [
+                  184,
+                  143
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect/2.png",
+                "delay": 60,
+                "origin": [
+                  164,
+                  159
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  172,
+                  167
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  177,
+                  169
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  181,
+                  175
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  186,
+                  185
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  188,
+                  186
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  190,
+                  181
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  189,
+                  179
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect/10.png",
+                "delay": 60,
+                "origin": [
+                  186,
+                  176
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect/11.png",
+                "delay": 60,
+                "origin": [
+                  186,
+                  176
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect/12.png",
+                "delay": 60,
+                "origin": [
+                  181,
+                  174
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect/13.png",
+                "delay": 60,
+                "origin": [
+                  179,
+                  174
+                ]
+              }
+            ],
+            "effect0": [
+              {
+                "src": "images/skills/400/4001334/effect0/0.png",
+                "delay": 60,
+                "origin": [
+                  107,
+                  159
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect0/1.png",
+                "delay": 60,
+                "origin": [
+                  160,
+                  163
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect0/2.png",
+                "delay": 60,
+                "origin": [
+                  148,
+                  169
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect0/3.png",
+                "delay": 60,
+                "origin": [
+                  162,
+                  183
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect0/4.png",
+                "delay": 60,
+                "origin": [
+                  172,
+                  186
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect0/5.png",
+                "delay": 60,
+                "origin": [
+                  173,
+                  187
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect0/6.png",
+                "delay": 60,
+                "origin": [
+                  173,
+                  187
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect0/7.png",
+                "delay": 60,
+                "origin": [
+                  172,
+                  186
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect0/8.png",
+                "delay": 60,
+                "origin": [
+                  170,
+                  185
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect0/9.png",
+                "delay": 60,
+                "origin": [
+                  173,
+                  184
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect0/10.png",
+                "delay": 60,
+                "origin": [
+                  171,
+                  181
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect0/11.png",
+                "delay": 60,
+                "origin": [
+                  172,
+                  180
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect0/12.png",
+                "delay": 60,
+                "origin": [
+                  172,
+                  161
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/effect0/13.png",
+                "delay": 60,
+                "origin": [
+                  172,
+                  159
+                ]
+              }
+            ],
+            "hit": [
+              {
+                "src": "images/skills/400/4001334/hit/0.png",
+                "delay": 60,
+                "origin": [
+                  55,
+                  69
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/hit/1.png",
+                "delay": 60,
+                "origin": [
+                  81,
+                  89
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/hit/2.png",
+                "delay": 60,
+                "origin": [
+                  85,
+                  96
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/hit/3.png",
+                "delay": 60,
+                "origin": [
+                  87,
+                  96
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/hit/4.png",
+                "delay": 60,
+                "origin": [
+                  87,
+                  96
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/hit/5.png",
+                "delay": 60,
+                "origin": [
+                  87,
+                  81
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/hit/6.png",
+                "delay": 60,
+                "origin": [
+                  87,
+                  69
+                ]
+              },
+              {
+                "src": "images/skills/400/4001334/hit/7.png",
+                "delay": 60,
+                "origin": [
+                  83,
+                  68
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "4001344",
+          "name": "雙飛斬",
+          "desc": "投擲蘊含幸運的7個飛鏢來攻擊前方的敵人。只有裝備拳套才可使用。",
+          "h": "消耗MP#mpCon，消耗#bulletConsume個飛鏢，對#mobCount名的敵人以#damage%傷害攻擊#attackCount次",
+          "rank": "10",
+          "type": "active",
+          "equipable": true,
+          "maxLevel": 15,
+          "infoType": 2,
+          "actions": [
+            "luckySeven"
+          ],
+          "common": {
+            "maxLevel": "15",
+            "lt": "-300, -145",
+            "rb": "10, 5",
+            "mpCon": "9+d(x/3)",
+            "damage": "65+3*x",
+            "mobCount": "5",
+            "bulletConsume": "2",
+            "attackCount": "3",
+            "cancelableTime": "210"
+          },
+          "icon": "images/skills/400/4001344.png",
+          "skillBook": 400,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/400/4001344/effect/0.png",
+                "delay": 60,
+                "origin": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/effect/1.png",
+                "delay": 60,
+                "origin": [
+                  52,
+                  107
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/effect/2.png",
+                "delay": 60,
+                "origin": [
+                  292,
+                  196
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  366,
+                  194
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  377,
+                  190
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  380,
+                  194
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  382,
+                  185
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  381,
+                  184
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  376,
+                  184
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  320,
+                  188
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/effect/10.png",
+                "delay": 60,
+                "origin": [
+                  317,
+                  73
+                ]
+              }
+            ],
+            "hit": [
+              {
+                "src": "images/skills/400/4001344/hit/0.png",
+                "delay": 60,
+                "origin": [
+                  29,
+                  38
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/hit/1.png",
+                "delay": 60,
+                "origin": [
+                  91,
+                  89
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/hit/2.png",
+                "delay": 60,
+                "origin": [
+                  91,
+                  89
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/hit/3.png",
+                "delay": 60,
+                "origin": [
+                  76,
+                  87
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/hit/4.png",
+                "delay": 60,
+                "origin": [
+                  72,
+                  71
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/hit/5.png",
+                "delay": 60,
+                "origin": [
+                  73,
+                  71
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/hit/6.png",
+                "delay": 60,
+                "origin": [
+                  67,
+                  56
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/hit/7.png",
+                "delay": 60,
+                "origin": [
+                  67,
+                  56
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/hit/8.png",
+                "delay": 60,
+                "origin": [
+                  62,
+                  56
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/hit/9.png",
+                "delay": 60,
+                "origin": [
+                  61,
+                  56
+                ]
+              },
+              {
+                "src": "images/skills/400/4001344/hit/10.png",
+                "delay": 60,
+                "origin": [
+                  12,
+                  35
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "410": {
+      "jobId": 410,
+      "name": "刺客",
+      "rank": "30",
+      "skillBook": 410,
+      "skills": [
+        {
+          "id": "4100000",
+          "name": "精準暗器",
+          "desc": "增加拳套熟練度，並增加所持飛鏢的上限。",
+          "h": "拳套熟練度#mastery%增加，飛鏢數#y增加",
+          "rank": "30",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 10,
+          "infoType": 50,
+          "actions": [],
+          "common": {
+            "mastery": "10+4*x",
+            "x": "12*x",
+            "y": "20*x",
+            "maxLevel": "10"
+          },
+          "icon": "images/skills/410/4100000.png",
+          "skillBook": 410
+        },
+        {
+          "id": "4100001",
+          "name": "強力投擲",
+          "desc": "增加爆擊機率和爆擊傷害。",
+          "h": "增加爆擊機率#prop%、爆擊傷害#criticaldamage%。",
+          "rank": "30",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 30,
+          "infoType": 50,
+          "actions": [],
+          "common": {
+            "prop": "20+x",
+            "criticaldamage": "u(x/6)",
+            "maxLevel": "30",
+            "cr": "20+x"
+          },
+          "icon": "images/skills/410/4100001.png",
+          "skillBook": 410
+        },
+        {
+          "id": "4100007",
+          "name": "體能訓練",
+          "desc": "透過鍛鍊身體永久提升幸運與敏捷。",
+          "h": "永久增加幸運 #lukX，敏捷 #dexX ",
+          "rank": "30",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 5,
+          "infoType": 50,
+          "actions": [],
+          "common": {
+            "lukX": "6*x",
+            "dexX": "6*x",
+            "maxLevel": "5"
+          },
+          "icon": "images/skills/410/4100007.png",
+          "skillBook": 410
+        },
+        {
+          "id": "4100011",
+          "name": "刺客刻印",
+          "desc": "攻擊敵方時，會以一定的機率烙上暗殺者的標記。對有標記的敵方再次發動攻擊時，飛鏢會從敵方身上飛出來，並攻擊周圍的敵方。飛鏢會優先攻擊最大HP最高的敵方，即使攻擊有攻擊反射狀態的敵方也不會受到傷害。",
+          "h": "攻擊時以#prop%的機率留下暗殺者的標記，再次攻擊該敵方時，生成並發射#bulletCount個傷害#damage%的飛鏢",
+          "rank": "30",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 1,
+          "infoType": 1,
+          "areaAttack": true,
+          "actions": [],
+          "common": {
+            "maxLevel": "1",
+            "prop": "40",
+            "damage": "150",
+            "bulletCount": "2",
+            "dot": "1",
+            "dotInterval": "1",
+            "dotTime": "20",
+            "mobCount": "2",
+            "range": "500",
+            "z": "1"
+          },
+          "icon": "images/skills/410/4100011.png",
+          "skillBook": 410,
+          "fx": {
+            "mob": {
+              "frames": [
+                {
+                  "src": "images/skills/410/4100011/mob/0.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    67
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4100011/mob/1.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    67
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4100011/mob/2.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    67
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4100011/mob/3.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    66
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4100011/mob/4.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    65
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4100011/mob/5.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    66
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4100011/mob/6.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    67
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4100011/mob/7.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    67
+                  ]
+                }
+              ],
+              "repeat": 1,
+              "pos": 2
+            }
+          }
+        },
+        {
+          "id": "4100012",
+          "name": "刺客的標記",
+          "desc": "攻擊敵人時，會以一定的機率烙上暗殺者的標記。對有標記的敵人再次發動攻擊時，飛鏢會從敵人身上飛出來，並攻擊周圍的敵人。飛鏢會優先攻擊最大HP最高的敵人，即使攻擊有攻擊反射狀態的敵人也不會受到傷害。",
+          "h": "",
+          "rank": "30",
+          "type": "active",
+          "equipable": false,
+          "maxLevel": 1,
+          "infoType": 51,
+          "actions": [],
+          "common": {
+            "maxLevel": "1",
+            "damage": "150",
+            "prop": "100",
+            "mobCount": "1",
+            "attackCount": "1"
+          },
+          "icon": "images/skills/410/4100012.png",
+          "skillBook": 410,
+          "skipPanel": true
+        },
+        {
+          "id": "4100017",
+          "name": "極速拳套",
+          "desc": "增加拳套的攻擊速度和幸運。",
+          "h": "攻擊速度增加2階段，幸運增加#lukX",
+          "rank": "30",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 9,
+          "infoType": 10,
+          "actions": [],
+          "common": {
+            "maxLevel": "9",
+            "lukX": "11+x",
+            "actionSpeed": "-2"
+          },
+          "icon": "images/skills/410/4100017.png",
+          "skillBook": 410
+        },
+        {
+          "id": "4101010",
+          "name": "護身神風",
+          "desc": "投擲擁有強大影子之力的符咒，將敵人擊退到遠處並造成傷害。部分怪物會抵抗而不被逼退。",
+          "h": "消耗MP#mpCon、#bulletConsume個飛鏢，針對最多#mobCount名的敵人給予#damage%傷害，並擊退#range距離",
+          "rank": "30",
+          "type": "active",
+          "equipable": true,
+          "maxLevel": 9,
+          "infoType": 2,
+          "piercing": true,
+          "actions": [
+            "windTalisman"
+          ],
+          "common": {
+            "mpCon": "14+u(x/3)",
+            "bulletConsume": "2",
+            "damage": "209+4*x",
+            "mobCount": "6",
+            "maxLevel": "9",
+            "prop": "100",
+            "range": "350",
+            "hcProp": "30",
+            "x": "30",
+            "y": "180",
+            "cancelableTime": "210"
+          },
+          "icon": "images/skills/410/4101010.png",
+          "skillBook": 410,
+          "ballCast": {
+            "launchFrame": 8,
+            "launchMs": 720,
+            "ballMode": "sprite",
+            "travel": "horizontal",
+            "specialOnFirstHit": false,
+            "aoeOnSpecial": false,
+            "aoeRadius": 40,
+            "chain": false,
+            "chainRangePx": 0,
+            "chainFirstRangePx": 0,
+            "speedPxPerMs": 0.6
+          },
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/410/4101010/effect/0.png",
+                "delay": 120,
+                "origin": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/effect/1.png",
+                "delay": 180,
+                "origin": [
+                  165,
+                  129
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/effect/2.png",
+                "delay": 120,
+                "origin": [
+                  215,
+                  162
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  283,
+                  143
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  283,
+                  144
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  283,
+                  145
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  284,
+                  145
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  306,
+                  145
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  283,
+                  146
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  277,
+                  145
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/effect/10.png",
+                "delay": 60,
+                "origin": [
+                  278,
+                  145
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/effect/11.png",
+                "delay": 60,
+                "origin": [
+                  278,
+                  145
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/effect/12.png",
+                "delay": 60,
+                "origin": [
+                  279,
+                  135
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/effect/13.png",
+                "delay": 60,
+                "origin": [
+                  276,
+                  129
+                ]
+              }
+            ],
+            "hit": [
+              {
+                "src": "images/skills/410/4101010/hit/0.png",
+                "delay": 60,
+                "origin": [
+                  41,
+                  46
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/hit/1.png",
+                "delay": 60,
+                "origin": [
+                  52,
+                  53
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/hit/2.png",
+                "delay": 60,
+                "origin": [
+                  54,
+                  54
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/hit/3.png",
+                "delay": 60,
+                "origin": [
+                  54,
+                  55
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/hit/4.png",
+                "delay": 60,
+                "origin": [
+                  54,
+                  55
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/hit/5.png",
+                "delay": 60,
+                "origin": [
+                  55,
+                  56
+                ]
+              },
+              {
+                "src": "images/skills/410/4101010/hit/6.png",
+                "delay": 60,
+                "origin": [
+                  54,
+                  54
+                ]
+              }
+            ],
+            "ball": {
+              "frames": [
+                {
+                  "src": "images/skills/410/4101010/ball/0.png",
+                  "delay": 120,
+                  "origin": [
+                    65,
+                    49
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4101010/ball/1.png",
+                  "delay": 120,
+                  "origin": [
+                    65,
+                    45
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4101010/ball/2.png",
+                  "delay": 120,
+                  "origin": [
+                    65,
+                    49
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4101010/ball/3.png",
+                  "delay": 120,
+                  "origin": [
+                    65,
+                    45
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4101010/ball/4.png",
+                  "delay": 120,
+                  "origin": [
+                    65,
+                    49
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4101010/ball/5.png",
+                  "delay": 120,
+                  "origin": [
+                    65,
+                    45
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4101010/ball/6.png",
+                  "delay": 120,
+                  "origin": [
+                    65,
+                    49
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4101010/ball/7.png",
+                  "delay": 120,
+                  "origin": [
+                    65,
+                    45
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "4101013",
+          "name": "爆破鏢",
+          "desc": "投擲三個爆炸手裡劍，並對命中的目標及其周圍敵人造成傷害。手裡劍將在最初命中的敵人位置上引發爆炸。",
+          "h": "消耗MP#mpCon，消耗#bulletConsume個飛鏢，投擲最多可對#mobCount名敵人造成#damage%傷害的手裡劍，並在命中位置上引發將以#y%傷害對最多#x名敵人發動#u次攻擊的爆炸",
+          "rank": "30",
+          "type": "active",
+          "equipable": true,
+          "maxLevel": 20,
+          "infoType": 2,
+          "rectBasedOnTarget": true,
+          "actions": [
+            "shurikenBurst"
+          ],
+          "common": {
+            "maxLevel": "20",
+            "mpCon": "12+d(x/3)",
+            "damage": "400+8*x",
+            "mobCount": "1",
+            "bulletConsume": "3",
+            "lt": "-170, -100",
+            "rb": "80, 40",
+            "attackCount": "1",
+            "x": "6",
+            "y": "45+3*x",
+            "u": "6",
+            "cancelableTime": "210"
+          },
+          "icon": "images/skills/410/4101013.png",
+          "skillBook": 410,
+          "extraSkill": [
+            {
+              "skill": "4101014"
+            }
+          ],
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/410/4101013/effect/0.png",
+                "delay": 90,
+                "origin": [
+                  102,
+                  69
+                ]
+              },
+              {
+                "src": "images/skills/410/4101013/effect/1.png",
+                "delay": 90,
+                "origin": [
+                  125,
+                  61
+                ]
+              },
+              {
+                "src": "images/skills/410/4101013/effect/2.png",
+                "delay": 90,
+                "origin": [
+                  154,
+                  71
+                ]
+              },
+              {
+                "src": "images/skills/410/4101013/effect/3.png",
+                "delay": 90,
+                "origin": [
+                  157,
+                  76
+                ]
+              },
+              {
+                "src": "images/skills/410/4101013/effect/4.png",
+                "delay": 90,
+                "origin": [
+                  158,
+                  77
+                ]
+              },
+              {
+                "src": "images/skills/410/4101013/effect/5.png",
+                "delay": 90,
+                "origin": [
+                  158,
+                  78
+                ]
+              },
+              {
+                "src": "images/skills/410/4101013/effect/6.png",
+                "delay": 90,
+                "origin": [
+                  159,
+                  78
+                ]
+              },
+              {
+                "src": "images/skills/410/4101013/effect/7.png",
+                "delay": 90,
+                "origin": [
+                  159,
+                  77
+                ]
+              },
+              {
+                "src": "images/skills/410/4101013/effect/8.png",
+                "delay": 90,
+                "origin": [
+                  159,
+                  76
+                ]
+              },
+              {
+                "src": "images/skills/410/4101013/effect/9.png",
+                "delay": 90,
+                "origin": [
+                  159,
+                  41
+                ]
+              }
+            ],
+            "hit": [
+              {
+                "src": "images/skills/410/4101013/hit/0.png",
+                "delay": 90,
+                "origin": [
+                  44,
+                  46
+                ]
+              },
+              {
+                "src": "images/skills/410/4101013/hit/1.png",
+                "delay": 90,
+                "origin": [
+                  55,
+                  53
+                ]
+              },
+              {
+                "src": "images/skills/410/4101013/hit/2.png",
+                "delay": 90,
+                "origin": [
+                  57,
+                  54
+                ]
+              },
+              {
+                "src": "images/skills/410/4101013/hit/3.png",
+                "delay": 90,
+                "origin": [
+                  57,
+                  55
+                ]
+              },
+              {
+                "src": "images/skills/410/4101013/hit/4.png",
+                "delay": 90,
+                "origin": [
+                  57,
+                  55
+                ]
+              },
+              {
+                "src": "images/skills/410/4101013/hit/5.png",
+                "delay": 90,
+                "origin": [
+                  58,
+                  56
+                ]
+              },
+              {
+                "src": "images/skills/410/4101013/hit/6.png",
+                "delay": 90,
+                "origin": [
+                  57,
+                  54
+                ]
+              }
+            ],
+            "shootobj": {
+              "layers": [
+                {
+                  "name": "b1",
+                  "frames": [
+                    {
+                      "src": "images/skills/410/4101013/shootobj/b1/0.png",
+                      "delay": 60,
+                      "origin": [
+                        55,
+                        26
+                      ]
+                    },
+                    {
+                      "src": "images/skills/410/4101013/shootobj/b1/1.png",
+                      "delay": 60,
+                      "origin": [
+                        55,
+                        25
+                      ]
+                    },
+                    {
+                      "src": "images/skills/410/4101013/shootobj/b1/2.png",
+                      "delay": 60,
+                      "origin": [
+                        55,
+                        26
+                      ]
+                    },
+                    {
+                      "src": "images/skills/410/4101013/shootobj/b1/3.png",
+                      "delay": 60,
+                      "origin": [
+                        55,
+                        25
+                      ]
+                    },
+                    {
+                      "src": "images/skills/410/4101013/shootobj/b1/4.png",
+                      "delay": 60,
+                      "origin": [
+                        55,
+                        26
+                      ]
+                    },
+                    {
+                      "src": "images/skills/410/4101013/shootobj/b1/5.png",
+                      "delay": 60,
+                      "origin": [
+                        55,
+                        25
+                      ]
+                    },
+                    {
+                      "src": "images/skills/410/4101013/shootobj/b1/6.png",
+                      "delay": 60,
+                      "origin": [
+                        55,
+                        26
+                      ]
+                    },
+                    {
+                      "src": "images/skills/410/4101013/shootobj/b1/7.png",
+                      "delay": 60,
+                      "origin": [
+                        55,
+                        25
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "start": [
+                -180,
+                -75
+              ],
+              "bodyWH": [
+                80,
+                45
+              ],
+              "startDelayMs": 120,
+              "pierce": false,
+              "noHitWhenMaxCount": false,
+              "moveList": {
+                "p1": [
+                  {
+                    "v": 45,
+                    "delay": 0,
+                    "pos": [
+                      -420,
+                      0
+                    ]
+                  }
+                ],
+                "p2": [
+                  {
+                    "v": 45,
+                    "delay": 0,
+                    "pos": [
+                      -420,
+                      -30
+                    ]
+                  }
+                ],
+                "p3": [
+                  {
+                    "v": 45,
+                    "delay": 0,
+                    "pos": [
+                      -420,
+                      -60
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "4101014",
+          "name": "爆破鏢",
+          "desc": "投擲三個爆炸手裡劍，並對命中的目標及其周圍敵人造成傷害。手裡劍將在最初命中的敵人位置上引發爆炸。",
+          "h": "",
+          "rank": "30",
+          "type": "active",
+          "equipable": false,
+          "maxLevel": 20,
+          "infoType": 1,
+          "projectile": true,
+          "actions": [],
+          "common": {
+            "maxLevel": "20",
+            "damage": "45+3*x",
+            "mobCount": "6",
+            "attackCount": "6",
+            "lt": "-180, -110",
+            "rb": "20, 110"
+          },
+          "icon": "images/skills/410/4101014.png",
+          "skillBook": 410,
+          "skipPanel": true,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/410/4101014/effect/0.png",
+                "delay": 90,
+                "origin": [
+                  175,
+                  114
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/effect/1.png",
+                "delay": 90,
+                "origin": [
+                  182,
+                  163
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/effect/2.png",
+                "delay": 90,
+                "origin": [
+                  184,
+                  164
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/effect/3.png",
+                "delay": 90,
+                "origin": [
+                  185,
+                  164
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/effect/4.png",
+                "delay": 90,
+                "origin": [
+                  187,
+                  155
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/effect/5.png",
+                "delay": 90,
+                "origin": [
+                  188,
+                  152
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/effect/6.png",
+                "delay": 90,
+                "origin": [
+                  189,
+                  143
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/effect/7.png",
+                "delay": 90,
+                "origin": [
+                  189,
+                  142
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/effect/8.png",
+                "delay": 90,
+                "origin": [
+                  186,
+                  142
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/effect/9.png",
+                "delay": 90,
+                "origin": [
+                  186,
+                  132
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/effect/10.png",
+                "delay": 90,
+                "origin": [
+                  184,
+                  131
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/effect/11.png",
+                "delay": 90,
+                "origin": [
+                  188,
+                  132
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/effect/12.png",
+                "delay": 90,
+                "origin": [
+                  189,
+                  132
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/effect/13.png",
+                "delay": 90,
+                "origin": [
+                  190,
+                  122
+                ]
+              }
+            ],
+            "hit": [
+              {
+                "src": "images/skills/410/4101014/hit/0.png",
+                "delay": 90,
+                "origin": [
+                  44,
+                  46
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/hit/1.png",
+                "delay": 90,
+                "origin": [
+                  55,
+                  53
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/hit/2.png",
+                "delay": 90,
+                "origin": [
+                  57,
+                  54
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/hit/3.png",
+                "delay": 90,
+                "origin": [
+                  57,
+                  55
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/hit/4.png",
+                "delay": 90,
+                "origin": [
+                  57,
+                  55
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/hit/5.png",
+                "delay": 90,
+                "origin": [
+                  58,
+                  56
+                ]
+              },
+              {
+                "src": "images/skills/410/4101014/hit/6.png",
+                "delay": 90,
+                "origin": [
+                  57,
+                  54
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "4101015",
+          "name": "暗影衝刺",
+          "desc": "與影子合而一體，並朝前方迅速移動。每次攻擊被賦予刺客標誌的敵人時，皆可獲得暗影的力量，並縮減該技能冷卻時間。\\n#c在技能使用中也可以移動#",
+          "h": "消耗MP#mpCon，在移動一定距離或猛衝時施展隱身術\\n冷卻時間：#cooltime秒\\n每次攻擊被賦予刺客印記、夜使者刺客印記的敵人時，冷卻時間減少#x秒",
+          "rank": "30",
+          "type": "buff",
+          "equipable": true,
+          "maxLevel": 5,
+          "infoType": 2,
+          "actions": [
+            "shadowRush"
+          ],
+          "common": {
+            "maxLevel": "5",
+            "mpCon": "40-x",
+            "range": "170",
+            "y": "1000",
+            "cooltime": "5",
+            "subTime": "450",
+            "x": "1"
+          },
+          "icon": "images/skills/410/4101015.png",
+          "skillBook": 410,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/410/4101015/effect/0.png",
+                "delay": 60,
+                "origin": [
+                  59,
+                  101
+                ]
+              },
+              {
+                "src": "images/skills/410/4101015/effect/1.png",
+                "delay": 60,
+                "origin": [
+                  69,
+                  103
+                ]
+              },
+              {
+                "src": "images/skills/410/4101015/effect/2.png",
+                "delay": 60,
+                "origin": [
+                  72,
+                  106
+                ]
+              },
+              {
+                "src": "images/skills/410/4101015/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  74,
+                  108
+                ]
+              },
+              {
+                "src": "images/skills/410/4101015/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  75,
+                  109
+                ]
+              },
+              {
+                "src": "images/skills/410/4101015/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  76,
+                  109
+                ]
+              },
+              {
+                "src": "images/skills/410/4101015/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  77,
+                  107
+                ]
+              },
+              {
+                "src": "images/skills/410/4101015/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  78,
+                  107
+                ]
+              },
+              {
+                "src": "images/skills/410/4101015/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  78,
+                  105
+                ]
+              },
+              {
+                "src": "images/skills/410/4101015/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  2,
+                  102
+                ]
+              }
+            ],
+            "special": {
+              "frames": [
+                {
+                  "src": "images/skills/410/4101015/special/0.png",
+                  "delay": 60,
+                  "origin": [
+                    57,
+                    103
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4101015/special/1.png",
+                  "delay": 60,
+                  "origin": [
+                    55,
+                    118
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4101015/special/2.png",
+                  "delay": 60,
+                  "origin": [
+                    53,
+                    118
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4101015/special/3.png",
+                  "delay": 60,
+                  "origin": [
+                    57,
+                    118
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4101015/special/4.png",
+                  "delay": 60,
+                  "origin": [
+                    58,
+                    118
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4101015/special/5.png",
+                  "delay": 60,
+                  "origin": [
+                    60,
+                    118
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4101015/special/6.png",
+                  "delay": 60,
+                  "origin": [
+                    61,
+                    118
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4101015/special/7.png",
+                  "delay": 60,
+                  "origin": [
+                    62,
+                    120
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4101015/special/8.png",
+                  "delay": 60,
+                  "origin": [
+                    63,
+                    118
+                  ]
+                },
+                {
+                  "src": "images/skills/410/4101015/special/9.png",
+                  "delay": 60,
+                  "origin": [
+                    64,
+                    97
+                  ]
+                }
+              ],
+              "repeat": 0,
+              "relMove": [
+                0,
+                0
+              ]
+            }
+          }
+        },
+        {
+          "id": "4101016",
+          "name": "暗影之躍",
+          "desc": "利用自身的影子躍上空中。",
+          "h": "消耗MP#mpCon，跳躍一定距離",
+          "rank": "30",
+          "type": "buff",
+          "equipable": true,
+          "maxLevel": 5,
+          "infoType": 1,
+          "projectile": true,
+          "actions": [
+            "shadowLeap"
+          ],
+          "common": {
+            "mpCon": "10+3*d(x/2)",
+            "maxLevel": "5",
+            "y": "120*x+400",
+            "v": "128*x+400",
+            "maxUseCountInOneJump": "1"
+          },
+          "icon": "images/skills/410/4101016.png",
+          "skillBook": 410,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/410/4101016/effect/0.png",
+                "delay": 60,
+                "origin": [
+                  51,
+                  109
+                ]
+              },
+              {
+                "src": "images/skills/410/4101016/effect/1.png",
+                "delay": 60,
+                "origin": [
+                  53,
+                  122
+                ]
+              },
+              {
+                "src": "images/skills/410/4101016/effect/2.png",
+                "delay": 60,
+                "origin": [
+                  57,
+                  135
+                ]
+              },
+              {
+                "src": "images/skills/410/4101016/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  60,
+                  142
+                ]
+              },
+              {
+                "src": "images/skills/410/4101016/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  62,
+                  144
+                ]
+              },
+              {
+                "src": "images/skills/410/4101016/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  63,
+                  148
+                ]
+              },
+              {
+                "src": "images/skills/410/4101016/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  64,
+                  149
+                ]
+              },
+              {
+                "src": "images/skills/410/4101016/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  65,
+                  152
+                ]
+              },
+              {
+                "src": "images/skills/410/4101016/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  66,
+                  153
+                ]
+              },
+              {
+                "src": "images/skills/410/4101016/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  66,
+                  156
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "4101018",
+          "name": "暗影閃爍",
+          "desc": "利用自身的影子迅速向前方移動。",
+          "h": "消耗MP#mpCon，移動一定距離",
+          "rank": "30",
+          "type": "buff",
+          "equipable": true,
+          "maxLevel": 1,
+          "infoType": 1,
+          "projectile": true,
+          "actions": [
+            "shadowBlink"
+          ],
+          "common": {
+            "maxLevel": "1",
+            "mpCon": "20"
+          },
+          "icon": "images/skills/410/4101018.png",
+          "skillBook": 410,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/410/4101018/effect/0.png",
+                "delay": 60,
+                "origin": [
+                  98,
+                  116
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect/1.png",
+                "delay": 60,
+                "origin": [
+                  99,
+                  116
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect/2.png",
+                "delay": 60,
+                "origin": [
+                  99,
+                  116
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  98,
+                  116
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  97,
+                  116
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  95,
+                  116
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  96,
+                  116
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  96,
+                  116
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  96,
+                  116
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  93,
+                  116
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect/10.png",
+                "delay": 60,
+                "origin": [
+                  92,
+                  106
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect/11.png",
+                "delay": 60,
+                "origin": [
+                  89,
+                  97
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect/12.png",
+                "delay": 60,
+                "origin": [
+                  22,
+                  92
+                ]
+              }
+            ],
+            "effect0": [
+              {
+                "src": "images/skills/410/4101018/effect0/0.png",
+                "delay": 60,
+                "origin": [
+                  265,
+                  97
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect0/1.png",
+                "delay": 60,
+                "origin": [
+                  265,
+                  102
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect0/2.png",
+                "delay": 60,
+                "origin": [
+                  265,
+                  103
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect0/3.png",
+                "delay": 60,
+                "origin": [
+                  265,
+                  103
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect0/4.png",
+                "delay": 60,
+                "origin": [
+                  265,
+                  103
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect0/5.png",
+                "delay": 60,
+                "origin": [
+                  254,
+                  102
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect0/6.png",
+                "delay": 60,
+                "origin": [
+                  254,
+                  100
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect0/7.png",
+                "delay": 60,
+                "origin": [
+                  253,
+                  96
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect0/8.png",
+                "delay": 60,
+                "origin": [
+                  253,
+                  91
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect0/9.png",
+                "delay": 60,
+                "origin": [
+                  253,
+                  85
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect0/10.png",
+                "delay": 60,
+                "origin": [
+                  253,
+                  80
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect0/11.png",
+                "delay": 60,
+                "origin": [
+                  253,
+                  79
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect0/12.png",
+                "delay": 60,
+                "origin": [
+                  241,
+                  78
+                ]
+              },
+              {
+                "src": "images/skills/410/4101018/effect0/13.png",
+                "delay": 60,
+                "origin": [
+                  229,
+                  75
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "411": {
+      "jobId": 411,
+      "name": "暗殺者",
+      "rank": "60",
+      "skillBook": 411,
+      "skills": [
+        {
+          "id": "4110008",
+          "name": "永恆黑暗",
+          "desc": "透過與黑暗的親和，最大HP、狀態異常耐性、所有屬性耐性永久提升。",
+          "h": "最大HP增加#mhpR%，狀態異常耐性增加#asrR，所有屬性耐性增加#terR%",
+          "rank": "60",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 4,
+          "infoType": 10,
+          "actions": [],
+          "common": {
+            "mhpR": "5*x",
+            "asrR": "6+6*x",
+            "terR": "6+6*x",
+            "maxLevel": "4"
+          },
+          "icon": "images/skills/411/4110008.png",
+          "skillBook": 411
+        },
+        {
+          "id": "4110011",
+          "name": "飛毒殺",
+          "desc": "永久對拳套塗毒。以一定的機率讓對象陷入中毒狀態，並持續的造成傷害。毒無法重複，且無法讓對象的HP掉落到1以下。",
+          "h": "攻擊時以#prop%的機率，在#dotTime秒間，以每#dotInterval秒額外給予#dot%傷害的持續性傷害",
+          "rank": "60",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 10,
+          "infoType": 51,
+          "actions": [],
+          "common": {
+            "prop": "10+2*x",
+            "dot": "50+4*x",
+            "dotInterval": "1",
+            "dotTime": "3+d(x/3)",
+            "maxLevel": "10"
+          },
+          "icon": "images/skills/411/4110011.png",
+          "skillBook": 411,
+          "fx": {
+            "mob": {
+              "frames": [
+                {
+                  "src": "images/skills/411/4110011/mob/0.png",
+                  "delay": 90,
+                  "origin": [
+                    31,
+                    69
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4110011/mob/1.png",
+                  "delay": 90,
+                  "origin": [
+                    31,
+                    69
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4110011/mob/2.png",
+                  "delay": 90,
+                  "origin": [
+                    31,
+                    69
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4110011/mob/3.png",
+                  "delay": 90,
+                  "origin": [
+                    31,
+                    69
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4110011/mob/4.png",
+                  "delay": 90,
+                  "origin": [
+                    31,
+                    69
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4110011/mob/5.png",
+                  "delay": 90,
+                  "origin": [
+                    31,
+                    69
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4110011/mob/6.png",
+                  "delay": 90,
+                  "origin": [
+                    31,
+                    69
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4110011/mob/7.png",
+                  "delay": 90,
+                  "origin": [
+                    31,
+                    69
+                  ]
+                }
+              ],
+              "repeat": 1,
+              "pos": 2
+            }
+          }
+        },
+        {
+          "id": "4110012",
+          "name": "鏢術精通",
+          "desc": "用盜賊的祕技增加最終傷害和爆擊機率。",
+          "h": "最終傷害增加#pdR%、爆擊機率增加#cr%",
+          "rank": "60",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 10,
+          "infoType": 51,
+          "actions": [],
+          "common": {
+            "maxLevel": "10",
+            "pdR": "9+2*x",
+            "cr": "20"
+          },
+          "icon": "images/skills/411/4110012.png",
+          "skillBook": 411
+        },
+        {
+          "id": "4110014",
+          "name": "藥劑精通",
+          "desc": "增加藥水等恢復道具的效果。但不適用於像超級藥水這類可恢復為%的道具。額外的永久增加爆擊傷害，並獲得即使受到敵人的攻擊也不會被逼退的狀態。",
+          "h": "使用恢復道具時，恢復量增加#x%。爆擊傷害增加 #criticaldamage%、格擋機率增加#stanceProp%",
+          "rank": "60",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 10,
+          "infoType": 50,
+          "actions": [],
+          "common": {
+            "x": "110+6*x",
+            "y": "100",
+            "maxLevel": "10",
+            "criticaldamage": "x",
+            "stanceProp": "20+2*x"
+          },
+          "icon": "images/skills/411/4110014.png",
+          "skillBook": 411
+        },
+        {
+          "id": "4110016",
+          "name": "無形鏢",
+          "desc": "攻擊時不消耗飛鏢，並提升攻擊力與對BOSS的傷害。\\n套用背包中最前列飛鏢的攻擊力，未持有任何飛鏢時，無法使用該技能。",
+          "h": "攻擊力#padX，對BOSS怪物傷害增加#bdR%，攻擊不消耗飛鏢。",
+          "rank": "60",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 10,
+          "infoType": 10,
+          "actions": [],
+          "common": {
+            "maxLevel": "10",
+            "padX": "3*x",
+            "bdR": "x"
+          },
+          "icon": "images/skills/411/4110016.png",
+          "skillBook": 411
+        },
+        {
+          "id": "4111002",
+          "name": "影分身",
+          "desc": "在一定時間內召喚影子同伴做和自己相同的動作。不另具HP，而且改變外貌或遭受限制行動的攻擊時將會消失。不適用召喚技能，全職業共用5轉技能及部分技能。",
+          "h": "消耗MP #mpCon，#time秒間召喚在所有攻擊上用最終傷害 #x%來追加影子同伴的攻擊",
+          "rank": "60",
+          "type": "buff",
+          "equipable": true,
+          "maxLevel": 20,
+          "infoType": 10,
+          "actions": [
+            "alert4"
+          ],
+          "common": {
+            "mpCon": "40+4*d(x/3)",
+            "time": "80+40*d(x/6)",
+            "maxLevel": "20",
+            "shadowPartnerR": "50+x"
+          },
+          "icon": "images/skills/411/4111002.png",
+          "skillBook": 411,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/411/4111002/effect/0.png",
+                "delay": 60,
+                "origin": [
+                  108,
+                  176
+                ]
+              },
+              {
+                "src": "images/skills/411/4111002/effect/1.png",
+                "delay": 60,
+                "origin": [
+                  92,
+                  146
+                ]
+              },
+              {
+                "src": "images/skills/411/4111002/effect/2.png",
+                "delay": 60,
+                "origin": [
+                  83,
+                  131
+                ]
+              },
+              {
+                "src": "images/skills/411/4111002/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  81,
+                  97
+                ]
+              },
+              {
+                "src": "images/skills/411/4111002/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  79,
+                  112
+                ]
+              },
+              {
+                "src": "images/skills/411/4111002/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  68,
+                  96
+                ]
+              },
+              {
+                "src": "images/skills/411/4111002/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  59,
+                  97
+                ]
+              },
+              {
+                "src": "images/skills/411/4111002/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  58,
+                  97
+                ]
+              },
+              {
+                "src": "images/skills/411/4111002/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  75,
+                  176
+                ]
+              },
+              {
+                "src": "images/skills/411/4111002/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  75,
+                  178
+                ]
+              },
+              {
+                "src": "images/skills/411/4111002/effect/10.png",
+                "delay": 60,
+                "origin": [
+                  75,
+                  178
+                ]
+              },
+              {
+                "src": "images/skills/411/4111002/effect/11.png",
+                "delay": 60,
+                "origin": [
+                  75,
+                  177
+                ]
+              },
+              {
+                "src": "images/skills/411/4111002/effect/12.png",
+                "delay": 60,
+                "origin": [
+                  74,
+                  177
+                ]
+              },
+              {
+                "src": "images/skills/411/4111002/effect/13.png",
+                "delay": 60,
+                "origin": [
+                  72,
+                  177
+                ]
+              },
+              {
+                "src": "images/skills/411/4111002/effect/14.png",
+                "delay": 60,
+                "origin": [
+                  68,
+                  175
+                ]
+              },
+              {
+                "src": "images/skills/411/4111002/effect/15.png",
+                "delay": 60,
+                "origin": [
+                  63,
+                  172
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "4111007",
+          "name": "絕殺領域",
+          "desc": "一定時間內釋放出黑暗的氣息，並召喚出攻擊周圍敵人的巨大手裏劍。黑暗火焰即使攻擊有攻擊反射狀態的敵人也不會受到傷害。",
+          "h": "消耗MP#mpCon，#time秒內召喚巨大手裏劍\\n每隔一段時間，最多對#mobCount名敵人以#damage%傷害進行攻擊",
+          "rank": "60",
+          "type": "buff",
+          "equipable": true,
+          "maxLevel": 20,
+          "infoType": 33,
+          "actions": [
+            "darkFlare"
+          ],
+          "common": {
+            "maxLevel": "20",
+            "mpCon": "60+8*d(x/4)",
+            "mobCount": "3",
+            "damage": "200+8*x",
+            "time": "40+x",
+            "subTime": "930"
+          },
+          "icon": "images/skills/411/4111007.png",
+          "skillBook": 411,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/411/4111007/effect/0.png",
+                "delay": 60,
+                "origin": [
+                  184,
+                  403
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/effect/1.png",
+                "delay": 60,
+                "origin": [
+                  188,
+                  405
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/effect/2.png",
+                "delay": 60,
+                "origin": [
+                  183,
+                  405
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  188,
+                  405
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  188,
+                  405
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/effect/5.png",
+                "delay": 90,
+                "origin": [
+                  193,
+                  405
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/effect/6.png",
+                "delay": 90,
+                "origin": [
+                  187,
+                  405
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  90,
+                  332
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  232,
+                  382
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  260,
+                  387
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/effect/10.png",
+                "delay": 60,
+                "origin": [
+                  289,
+                  383
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/effect/11.png",
+                "delay": 60,
+                "origin": [
+                  298,
+                  382
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/effect/12.png",
+                "delay": 60,
+                "origin": [
+                  299,
+                  385
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/effect/13.png",
+                "delay": 60,
+                "origin": [
+                  300,
+                  352
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/effect/14.png",
+                "delay": 60,
+                "origin": [
+                  300,
+                  353
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/effect/15.png",
+                "delay": 60,
+                "origin": [
+                  301,
+                  332
+                ]
+              }
+            ],
+            "hit": [
+              {
+                "src": "images/skills/411/4111007/hit/0.png",
+                "delay": 60,
+                "origin": [
+                  61,
+                  73
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/hit/1.png",
+                "delay": 60,
+                "origin": [
+                  92,
+                  93
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/hit/2.png",
+                "delay": 60,
+                "origin": [
+                  90,
+                  91
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/hit/3.png",
+                "delay": 60,
+                "origin": [
+                  91,
+                  88
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/hit/4.png",
+                "delay": 60,
+                "origin": [
+                  97,
+                  84
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/hit/5.png",
+                "delay": 60,
+                "origin": [
+                  97,
+                  79
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/hit/6.png",
+                "delay": 60,
+                "origin": [
+                  97,
+                  79
+                ]
+              },
+              {
+                "src": "images/skills/411/4111007/hit/7.png",
+                "delay": 60,
+                "origin": [
+                  93,
+                  71
+                ]
+              }
+            ],
+            "summonAttacks": [
+              {
+                "name": "attack1",
+                "frames": [
+                  {
+                    "src": "images/skills/411/4111007/summon/attack1/0.png",
+                    "delay": 90,
+                    "origin": [
+                      0,
+                      0
+                    ]
+                  }
+                ],
+                "mobCount": "3"
+              }
+            ],
+            "summonVisual": {
+              "summoned": [
+                {
+                  "src": "images/skills/411/4111007/summon/summoned/0.png",
+                  "delay": 60,
+                  "origin": [
+                    422,
+                    316
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/summoned/1.png",
+                  "delay": 60,
+                  "origin": [
+                    440,
+                    323
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/summoned/2.png",
+                  "delay": 60,
+                  "origin": [
+                    448,
+                    326
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/summoned/3.png",
+                  "delay": 60,
+                  "origin": [
+                    450,
+                    328
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/summoned/4.png",
+                  "delay": 60,
+                  "origin": [
+                    451,
+                    329
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/summoned/5.png",
+                  "delay": 60,
+                  "origin": [
+                    452,
+                    332
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/summoned/6.png",
+                  "delay": 60,
+                  "origin": [
+                    451,
+                    333
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/summoned/7.png",
+                  "delay": 60,
+                  "origin": [
+                    451,
+                    333
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/summoned/8.png",
+                  "delay": 60,
+                  "origin": [
+                    452,
+                    333
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/summoned/9.png",
+                  "delay": 60,
+                  "origin": [
+                    452,
+                    329
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/summoned/10.png",
+                  "delay": 60,
+                  "origin": [
+                    453,
+                    329
+                  ]
+                }
+              ],
+              "stand": [
+                {
+                  "src": "images/skills/411/4111007/summon/stand/0.png",
+                  "delay": 60,
+                  "origin": [
+                    453,
+                    329
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/stand/1.png",
+                  "delay": 60,
+                  "origin": [
+                    452,
+                    329
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/stand/2.png",
+                  "delay": 60,
+                  "origin": [
+                    449,
+                    329
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/stand/3.png",
+                  "delay": 60,
+                  "origin": [
+                    447,
+                    329
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/stand/4.png",
+                  "delay": 60,
+                  "origin": [
+                    442,
+                    326
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/stand/5.png",
+                  "delay": 60,
+                  "origin": [
+                    435,
+                    326
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/stand/6.png",
+                  "delay": 60,
+                  "origin": [
+                    444,
+                    327
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/stand/7.png",
+                  "delay": 60,
+                  "origin": [
+                    449,
+                    326
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/stand/8.png",
+                  "delay": 60,
+                  "origin": [
+                    450,
+                    328
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/stand/9.png",
+                  "delay": 60,
+                  "origin": [
+                    451,
+                    329
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/stand/10.png",
+                  "delay": 60,
+                  "origin": [
+                    452,
+                    332
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/stand/11.png",
+                  "delay": 60,
+                  "origin": [
+                    451,
+                    333
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/stand/12.png",
+                  "delay": 60,
+                  "origin": [
+                    451,
+                    333
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/stand/13.png",
+                  "delay": 60,
+                  "origin": [
+                    452,
+                    333
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/stand/14.png",
+                  "delay": 60,
+                  "origin": [
+                    452,
+                    329
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/stand/15.png",
+                  "delay": 60,
+                  "origin": [
+                    453,
+                    329
+                  ]
+                }
+              ],
+              "die": [
+                {
+                  "src": "images/skills/411/4111007/summon/die/0.png",
+                  "delay": 90,
+                  "origin": [
+                    452,
+                    333
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/die/1.png",
+                  "delay": 90,
+                  "origin": [
+                    452,
+                    332
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/die/2.png",
+                  "delay": 90,
+                  "origin": [
+                    453,
+                    340
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/die/3.png",
+                  "delay": 90,
+                  "origin": [
+                    453,
+                    345
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/die/4.png",
+                  "delay": 90,
+                  "origin": [
+                    452,
+                    342
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/die/5.png",
+                  "delay": 90,
+                  "origin": [
+                    444,
+                    329
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/die/6.png",
+                  "delay": 90,
+                  "origin": [
+                    442,
+                    327
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/die/7.png",
+                  "delay": 60,
+                  "origin": [
+                    448,
+                    320
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/die/8.png",
+                  "delay": 60,
+                  "origin": [
+                    453,
+                    320
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/die/9.png",
+                  "delay": 60,
+                  "origin": [
+                    447,
+                    320
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/die/10.png",
+                  "delay": 60,
+                  "origin": [
+                    366,
+                    319
+                  ]
+                },
+                {
+                  "src": "images/skills/411/4111007/summon/die/11.png",
+                  "delay": 60,
+                  "origin": [
+                    368,
+                    318
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "4111010",
+          "name": "三飛閃",
+          "desc": "同時投置3個飛鏢。飛鏢會優先攻擊最大HP最高的怪物。",
+          "h": "消耗MP#mpCon，消耗#bulletCount個飛鏢，以#damage%傷害攻擊3次",
+          "rank": "60",
+          "type": "active",
+          "equipable": true,
+          "maxLevel": 20,
+          "infoType": 2,
+          "actions": [],
+          "common": {
+            "mpCon": "8+2*d(x/3)",
+            "damage": "210+4*x",
+            "bulletCount": "3",
+            "maxLevel": "20",
+            "x": "90",
+            "y": "90",
+            "cancelableTime": "120"
+          },
+          "icon": "images/skills/411/4111010.png",
+          "skillBook": 411,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/411/4111010/effect/0.png",
+                "delay": 270,
+                "origin": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "src": "images/skills/411/4111010/effect/1.png",
+                "delay": 90,
+                "origin": [
+                  40,
+                  97
+                ]
+              },
+              {
+                "src": "images/skills/411/4111010/effect/2.png",
+                "delay": 60,
+                "origin": [
+                  98,
+                  99
+                ]
+              },
+              {
+                "src": "images/skills/411/4111010/effect/3.png",
+                "delay": 90,
+                "origin": [
+                  101,
+                  89
+                ]
+              },
+              {
+                "src": "images/skills/411/4111010/effect/4.png",
+                "delay": 90,
+                "origin": [
+                  106,
+                  83
+                ]
+              },
+              {
+                "src": "images/skills/411/4111010/effect/5.png",
+                "delay": 90,
+                "origin": [
+                  110,
+                  76
+                ]
+              },
+              {
+                "src": "images/skills/411/4111010/effect/6.png",
+                "delay": 90,
+                "origin": [
+                  113,
+                  73
+                ]
+              },
+              {
+                "src": "images/skills/411/4111010/effect/7.png",
+                "delay": 90,
+                "origin": [
+                  109,
+                  73
+                ]
+              }
+            ],
+            "hit": [
+              {
+                "src": "images/skills/411/4111010/hit/0.png",
+                "delay": 60,
+                "origin": [
+                  36,
+                  26
+                ]
+              },
+              {
+                "src": "images/skills/411/4111010/hit/1.png",
+                "delay": 60,
+                "origin": [
+                  59,
+                  38
+                ]
+              },
+              {
+                "src": "images/skills/411/4111010/hit/2.png",
+                "delay": 60,
+                "origin": [
+                  59,
+                  53
+                ]
+              },
+              {
+                "src": "images/skills/411/4111010/hit/3.png",
+                "delay": 60,
+                "origin": [
+                  59,
+                  61
+                ]
+              },
+              {
+                "src": "images/skills/411/4111010/hit/4.png",
+                "delay": 60,
+                "origin": [
+                  57,
+                  61
+                ]
+              },
+              {
+                "src": "images/skills/411/4111010/hit/5.png",
+                "delay": 60,
+                "origin": [
+                  58,
+                  59
+                ]
+              },
+              {
+                "src": "images/skills/411/4111010/hit/6.png",
+                "delay": 60,
+                "origin": [
+                  50,
+                  53
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "4111015",
+          "name": "手裏劍挑戰",
+          "desc": "召喚出蘊含影子之力的巨大手裏劍，並殲滅敵人。",
+          "h": "消耗MP#mpCon，消耗#bulletConsume個飛鏢，最多對#mobCount名敵人使用#damage%的傷害攻擊#attackCount次",
+          "rank": "60",
+          "type": "active",
+          "equipable": true,
+          "maxLevel": 20,
+          "infoType": 1,
+          "areaAttack": true,
+          "actions": [
+            "shadowChallenge"
+          ],
+          "common": {
+            "mpCon": "25+d(x/4)",
+            "damage": "200+3*x",
+            "attackCount": "4",
+            "mobCount": "8",
+            "lt": "-420, -200",
+            "rb": "-40, 40",
+            "maxLevel": "20",
+            "bulletConsume": "2",
+            "cancelableTime": "120"
+          },
+          "icon": "images/skills/411/4111015.png",
+          "skillBook": 411,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/411/4111015/effect/0.png",
+                "delay": 90,
+                "origin": [
+                  135,
+                  200
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/1.png",
+                "delay": 90,
+                "origin": [
+                  139,
+                  200
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/2.png",
+                "delay": 90,
+                "origin": [
+                  144,
+                  199
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  225,
+                  193
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  453,
+                  185
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  501,
+                  180
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  516,
+                  197
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  521,
+                  224
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  524,
+                  228
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  526,
+                  229
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/10.png",
+                "delay": 60,
+                "origin": [
+                  528,
+                  228
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/11.png",
+                "delay": 60,
+                "origin": [
+                  493,
+                  227
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/12.png",
+                "delay": 60,
+                "origin": [
+                  495,
+                  227
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/13.png",
+                "delay": 60,
+                "origin": [
+                  496,
+                  226
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/14.png",
+                "delay": 60,
+                "origin": [
+                  497,
+                  210
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/15.png",
+                "delay": 60,
+                "origin": [
+                  497,
+                  210
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/16.png",
+                "delay": 60,
+                "origin": [
+                  497,
+                  209
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/effect/17.png",
+                "delay": 60,
+                "origin": [
+                  452,
+                  207
+                ]
+              }
+            ],
+            "hit": [
+              {
+                "src": "images/skills/411/4111015/hit/0.png",
+                "delay": 90,
+                "origin": [
+                  70,
+                  60
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/hit/1.png",
+                "delay": 90,
+                "origin": [
+                  67,
+                  65
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/hit/2.png",
+                "delay": 90,
+                "origin": [
+                  67,
+                  66
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/hit/3.png",
+                "delay": 90,
+                "origin": [
+                  67,
+                  66
+                ]
+              },
+              {
+                "src": "images/skills/411/4111015/hit/4.png",
+                "delay": 90,
+                "origin": [
+                  67,
+                  63
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "412": {
+      "jobId": 412,
+      "name": "夜使者",
+      "rank": "100",
+      "skillBook": 412,
+      "skills": [
+        {
+          "id": "4120002",
+          "name": "瞬身迴避",
+          "desc": "有一定機率可變身成木偶迴避敵人的攻擊。額外獲得能永久不被敵人攻擊而逼退的狀態。",
+          "h": "以#prop% 的機率追加迴避、格擋機率增加#stanceProp%",
+          "rank": "100",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 10,
+          "infoType": 50,
+          "actions": [],
+          "common": {
+            "prop": "35+x",
+            "maxLevel": "10",
+            "stanceProp": "40+2*x"
+          },
+          "icon": "images/skills/412/4120002.png",
+          "skillBook": 412,
+          "fx": {
+            "special": {
+              "frames": [
+                {
+                  "src": "images/skills/412/4120002/special/0.png",
+                  "delay": 60,
+                  "origin": [
+                    182,
+                    180
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/1.png",
+                  "delay": 60,
+                  "origin": [
+                    181,
+                    177
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/2.png",
+                  "delay": 60,
+                  "origin": [
+                    180,
+                    175
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/3.png",
+                  "delay": 60,
+                  "origin": [
+                    179,
+                    175
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/4.png",
+                  "delay": 60,
+                  "origin": [
+                    179,
+                    174
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/5.png",
+                  "delay": 60,
+                  "origin": [
+                    179,
+                    171
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/6.png",
+                  "delay": 60,
+                  "origin": [
+                    178,
+                    171
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/7.png",
+                  "delay": 60,
+                  "origin": [
+                    177,
+                    171
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/8.png",
+                  "delay": 60,
+                  "origin": [
+                    176,
+                    171
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/9.png",
+                  "delay": 60,
+                  "origin": [
+                    159,
+                    163
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/10.png",
+                  "delay": 60,
+                  "origin": [
+                    147,
+                    160
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/11.png",
+                  "delay": 60,
+                  "origin": [
+                    129,
+                    140
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/12.png",
+                  "delay": 60,
+                  "origin": [
+                    142,
+                    53
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/13.png",
+                  "delay": 60,
+                  "origin": [
+                    146,
+                    54
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/14.png",
+                  "delay": 60,
+                  "origin": [
+                    148,
+                    56
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/15.png",
+                  "delay": 60,
+                  "origin": [
+                    150,
+                    56
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/16.png",
+                  "delay": 60,
+                  "origin": [
+                    151,
+                    54
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120002/special/17.png",
+                  "delay": 60,
+                  "origin": [
+                    152,
+                    46
+                  ]
+                }
+              ],
+              "repeat": 0,
+              "relMove": [
+                0,
+                0
+              ]
+            }
+          }
+        },
+        {
+          "id": "4120011",
+          "name": "致命飛毒殺",
+          "desc": "永久提升毒液中毒素的中毒機率及中毒傷害。中毒的最大疊加數增加。",
+          "h": "攻擊時以#prop%的機率，#dotTime秒內以每#dotInterval秒#dot%的傷害追加持續傷害，可重疊#dotSuperpos次",
+          "rank": "100",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 10,
+          "infoType": 51,
+          "actions": [],
+          "common": {
+            "prop": "30+2*x",
+            "dot": "110+5*x",
+            "dotInterval": "1",
+            "dotTime": "8",
+            "maxLevel": "10",
+            "dotSuperpos": "2+d(x/6)"
+          },
+          "icon": "images/skills/412/4120011.png",
+          "skillBook": 412,
+          "fx": {
+            "mob": {
+              "frames": [
+                {
+                  "src": "images/skills/412/4120011/mob/0.png",
+                  "delay": 90,
+                  "origin": [
+                    31,
+                    69
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120011/mob/1.png",
+                  "delay": 90,
+                  "origin": [
+                    31,
+                    69
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120011/mob/2.png",
+                  "delay": 90,
+                  "origin": [
+                    31,
+                    69
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120011/mob/3.png",
+                  "delay": 90,
+                  "origin": [
+                    31,
+                    69
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120011/mob/4.png",
+                  "delay": 90,
+                  "origin": [
+                    31,
+                    69
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120011/mob/5.png",
+                  "delay": 90,
+                  "origin": [
+                    31,
+                    69
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120011/mob/6.png",
+                  "delay": 90,
+                  "origin": [
+                    31,
+                    69
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120011/mob/7.png",
+                  "delay": 90,
+                  "origin": [
+                    31,
+                    69
+                  ]
+                }
+              ],
+              "repeat": 1,
+              "pos": 2
+            }
+          }
+        },
+        {
+          "id": "4120012",
+          "name": "暗器精通",
+          "desc": "增加拳套熟練度、攻擊力、爆擊傷害。",
+          "h": "拳套熟練度增加量提升至#mastery%、攻擊力增加#x，爆擊傷害增加#criticaldamage%",
+          "rank": "100",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 30,
+          "infoType": 50,
+          "actions": [],
+          "common": {
+            "maxLevel": "30",
+            "mastery": "55+u(x/2)",
+            "x": "x",
+            "criticaldamage": "d(x/3)"
+          },
+          "icon": "images/skills/412/4120012.png",
+          "skillBook": 412
+        },
+        {
+          "id": "4120014",
+          "name": "黑暗平穩",
+          "desc": "吸取黑暗向敵人施加致命的攻擊。",
+          "h": "增加攻擊力#padX、無視怪物防禦率 #ignoreMobpdpR%、最終傷害 #pdR%",
+          "rank": "100",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 30,
+          "infoType": 10,
+          "actions": [],
+          "common": {
+            "maxLevel": "30",
+            "padX": "5+d(x/2)",
+            "ignoreMobpdpR": "x",
+            "pdR": "5+d(x/3)"
+          },
+          "icon": "images/skills/412/4120014.png",
+          "skillBook": 412
+        },
+        {
+          "id": "4120018",
+          "name": "夜使者刻印",
+          "desc": "進一步強化暗殺者的標記，使留下標記的機率、傷害和射出去的飛鏢數量增加。飛鏢會優先攻擊最大HP最高的敵人，即使攻擊有攻擊反射狀態的敵人也不會受到傷害。",
+          "h": "攻擊時，以#prop%的機率留下致命暗殺者的標記，再次攻擊該敵人的時候，形成並發射#damage%傷害的飛鏢 #bulletCount個。",
+          "rank": "100",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 10,
+          "infoType": 1,
+          "areaAttack": true,
+          "actions": [],
+          "common": {
+            "maxLevel": "10",
+            "prop": "40+2*x",
+            "damage": "205+5*x",
+            "dot": "1",
+            "dotInterval": "1",
+            "dotTime": "20",
+            "bulletCount": "3",
+            "mobCount": "3",
+            "z": "3",
+            "range": "500"
+          },
+          "icon": "images/skills/412/4120018.png",
+          "skillBook": 412,
+          "fx": {
+            "mob": {
+              "frames": [
+                {
+                  "src": "images/skills/412/4120018/mob/0.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    68
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120018/mob/1.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    68
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120018/mob/2.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    68
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120018/mob/3.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    67
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120018/mob/4.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    66
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120018/mob/5.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    67
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120018/mob/6.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    68
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4120018/mob/7.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    68
+                  ]
+                }
+              ],
+              "repeat": 1,
+              "pos": 2
+            }
+          }
+        },
+        {
+          "id": "4120019",
+          "name": "夜使者的標記",
+          "desc": "進一步強化暗殺者的標記，使留下標記的機率、傷害和射出去的飛鏢數量增加。飛鏢會優先攻擊最大HP最高的敵人，即使攻擊有攻擊反射狀態的敵人也不會受到傷害。",
+          "h": "",
+          "rank": "100",
+          "type": "active",
+          "equipable": false,
+          "maxLevel": 10,
+          "infoType": 51,
+          "actions": [],
+          "common": {
+            "maxLevel": "10",
+            "prop": "100",
+            "damage": "205+5*x",
+            "mobCount": "1",
+            "attackCount": "1",
+            "range": "450"
+          },
+          "icon": "images/skills/412/4120019.png",
+          "skillBook": 412,
+          "skipPanel": true
+        },
+        {
+          "id": "4120043",
+          "name": "挑釁契約-強化傷害",
+          "desc": "增加挑釁契約的傷害。因挑釁契約而生成的影子手裏劍不會套用效果。",
+          "h": "提高傷害 #damR% ",
+          "rank": "hyper",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 1,
+          "infoType": 50,
+          "reqLevel": 140,
+          "actions": [],
+          "common": {
+            "maxLevel": "1",
+            "damR": "20"
+          },
+          "icon": "images/skills/412/4120043.png",
+          "skillBook": 412,
+          "hyper": 1
+        },
+        {
+          "id": "4120044",
+          "name": "挑釁契約-臨時目標",
+          "desc": "增加挑釁契約的最大可攻擊的怪物數量。因挑釁契約而生成的影子手裏劍不會套用效果。",
+          "h": "可攻擊的怪物最大數量增加#targetPlus",
+          "rank": "hyper",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 1,
+          "infoType": 50,
+          "reqLevel": 150,
+          "actions": [],
+          "common": {
+            "maxLevel": "1",
+            "targetPlus": "2"
+          },
+          "icon": "images/skills/412/4120044.png",
+          "skillBook": 412,
+          "hyper": 1
+        },
+        {
+          "id": "4120045",
+          "name": "挑釁契約-強化效果",
+          "desc": "增加用挑釁契約向敵人挑戰獲得的經驗值與掉寶率。",
+          "h": "經驗值獲得量與道具掉落率增加#x%",
+          "rank": "hyper",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 1,
+          "infoType": 50,
+          "reqLevel": 180,
+          "actions": [],
+          "common": {
+            "maxLevel": "1",
+            "x": "5"
+          },
+          "icon": "images/skills/412/4120045.png",
+          "skillBook": 412,
+          "hyper": 1
+        },
+        {
+          "id": "4120046",
+          "name": "絕對領域-強化效果",
+          "desc": "增加透過絕對領域減少的敵人攻擊力和防禦率的數值。",
+          "h": "攻擊力及防禦率追加減少 #v%",
+          "rank": "hyper",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 1,
+          "infoType": 50,
+          "reqLevel": 140,
+          "actions": [],
+          "common": {
+            "maxLevel": "1",
+            "x": "-10",
+            "z": "-10",
+            "v": "10"
+          },
+          "icon": "images/skills/412/4120046.png",
+          "skillBook": 412,
+          "hyper": 1
+        },
+        {
+          "id": "4120047",
+          "name": "絕對領域-緩慢",
+          "desc": "增加用絕對領域減少的敵人移動速度數值。",
+          "h": "移動速度額外減少#s ",
+          "rank": "hyper",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 1,
+          "infoType": 50,
+          "reqLevel": 165,
+          "actions": [],
+          "common": {
+            "maxLevel": "1",
+            "y": "-10",
+            "s": "10"
+          },
+          "icon": "images/skills/412/4120047.png",
+          "skillBook": 412,
+          "hyper": 1
+        },
+        {
+          "id": "4120048",
+          "name": "絕對領域-BOSS殺手",
+          "desc": "在絕對領域中也會讓BOSS卡住。",
+          "h": "絕對領域對BOSS傷害增加#bdR%",
+          "rank": "hyper",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 1,
+          "infoType": 50,
+          "reqLevel": 180,
+          "actions": [],
+          "common": {
+            "maxLevel": "1",
+            "bdR": "20"
+          },
+          "icon": "images/skills/412/4120048.png",
+          "skillBook": 412,
+          "hyper": 1
+        },
+        {
+          "id": "4120049",
+          "name": "四飛閃-強化傷害",
+          "desc": "四飛閃的傷害增加。",
+          "h": "提高傷害 #damR% ",
+          "rank": "hyper",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 1,
+          "infoType": 50,
+          "reqLevel": 150,
+          "actions": [],
+          "common": {
+            "maxLevel": "1",
+            "damR": "20"
+          },
+          "icon": "images/skills/412/4120049.png",
+          "skillBook": 412,
+          "hyper": 1
+        },
+        {
+          "id": "4120050",
+          "name": "四飛閃-BOSS殺手",
+          "desc": "四飛閃來攻擊Boss怪物時，增加傷害。",
+          "h": "攻擊Boss怪物時，傷害增加 #bdR%",
+          "rank": "hyper",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 1,
+          "infoType": 50,
+          "reqLevel": 165,
+          "actions": [],
+          "common": {
+            "maxLevel": "1",
+            "bdR": "20"
+          },
+          "icon": "images/skills/412/4120050.png",
+          "skillBook": 412,
+          "hyper": 1
+        },
+        {
+          "id": "4120051",
+          "name": "四飛閃-額外攻擊",
+          "desc": "四飛閃的攻擊次數增加。",
+          "h": "攻擊次數增加#bulletCount ",
+          "rank": "hyper",
+          "type": "passive",
+          "equipable": false,
+          "maxLevel": 1,
+          "infoType": 50,
+          "reqLevel": 190,
+          "actions": [],
+          "common": {
+            "maxLevel": "1",
+            "bulletCount": "1",
+            "ballDelay": "90",
+            "attackCount": "1"
+          },
+          "icon": "images/skills/412/4120051.png",
+          "skillBook": 412,
+          "hyper": 1
+        },
+        {
+          "id": "4121000",
+          "name": "楓葉祝福",
+          "desc": "受到楓之谷世界的女神的庇護，自己的所有能力值增加一定比例。使用技能時，楓之谷世界的女神將暫時現身。",
+          "h": "消耗#mpConMP，使楓之谷世界的女神現身\\n[被動效果：直接投入AP的所有能力值增加#basicStatUp%]",
+          "rank": "100",
+          "type": "buff",
+          "equipable": true,
+          "maxLevel": 30,
+          "infoType": 10,
+          "actions": [],
+          "common": {
+            "mpCon": "10+10*d(x/5)",
+            "maxLevel": "30",
+            "basicStatUp": "u(x/2)"
+          },
+          "icon": "images/skills/412/4121000.png",
+          "skillBook": 412,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/412/4121000/effect/0.png",
+                "delay": 720,
+                "origin": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect/1.png",
+                "delay": 60,
+                "origin": [
+                  142,
+                  309
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect/2.png",
+                "delay": 60,
+                "origin": [
+                  144,
+                  302
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  144,
+                  294
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  144,
+                  294
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  144,
+                  292
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  144,
+                  289
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  144,
+                  287
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  143,
+                  294
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  149,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect/10.png",
+                "delay": 60,
+                "origin": [
+                  147,
+                  301
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect/11.png",
+                "delay": 60,
+                "origin": [
+                  145,
+                  303
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect/12.png",
+                "delay": 60,
+                "origin": [
+                  135,
+                  302
+                ]
+              }
+            ],
+            "effect0": [
+              {
+                "src": "images/skills/412/4121000/effect0/0.png",
+                "delay": 60,
+                "origin": [
+                  63,
+                  227
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/1.png",
+                "delay": 60,
+                "origin": [
+                  130,
+                  434
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/2.png",
+                "delay": 60,
+                "origin": [
+                  132,
+                  434
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/3.png",
+                "delay": 60,
+                "origin": [
+                  132,
+                  433
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/4.png",
+                "delay": 60,
+                "origin": [
+                  131,
+                  432
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/5.png",
+                "delay": 60,
+                "origin": [
+                  131,
+                  431
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/6.png",
+                "delay": 60,
+                "origin": [
+                  136,
+                  429
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/7.png",
+                "delay": 60,
+                "origin": [
+                  169,
+                  427
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/8.png",
+                "delay": 60,
+                "origin": [
+                  169,
+                  424
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/9.png",
+                "delay": 60,
+                "origin": [
+                  177,
+                  421
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/10.png",
+                "delay": 60,
+                "origin": [
+                  185,
+                  418
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/11.png",
+                "delay": 60,
+                "origin": [
+                  191,
+                  414
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/12.png",
+                "delay": 60,
+                "origin": [
+                  143,
+                  366
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/13.png",
+                "delay": 60,
+                "origin": [
+                  143,
+                  354
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/14.png",
+                "delay": 60,
+                "origin": [
+                  139,
+                  342
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/15.png",
+                "delay": 60,
+                "origin": [
+                  134,
+                  306
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/16.png",
+                "delay": 60,
+                "origin": [
+                  138,
+                  307
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/17.png",
+                "delay": 60,
+                "origin": [
+                  141,
+                  309
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/18.png",
+                "delay": 60,
+                "origin": [
+                  143,
+                  310
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/19.png",
+                "delay": 60,
+                "origin": [
+                  145,
+                  311
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/20.png",
+                "delay": 60,
+                "origin": [
+                  147,
+                  312
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/21.png",
+                "delay": 60,
+                "origin": [
+                  147,
+                  313
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/22.png",
+                "delay": 60,
+                "origin": [
+                  149,
+                  313
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/23.png",
+                "delay": 60,
+                "origin": [
+                  150,
+                  312
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/24.png",
+                "delay": 60,
+                "origin": [
+                  151,
+                  296
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/25.png",
+                "delay": 60,
+                "origin": [
+                  152,
+                  296
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/26.png",
+                "delay": 60,
+                "origin": [
+                  149,
+                  297
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/27.png",
+                "delay": 60,
+                "origin": [
+                  101,
+                  295
+                ]
+              },
+              {
+                "src": "images/skills/412/4121000/effect0/28.png",
+                "delay": 60,
+                "origin": [
+                  99,
+                  292
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "4121009",
+          "name": "楓葉淨化　",
+          "desc": "集中精神，以解除狀態異常。使用後，在3秒內對狀態異常免疫。但不適用於部分狀態異常效果，且不適用於戰鬥命令。\\n即使在使用其他技能時，也可使用勇士的意志。",
+          "h": "消耗MP #mpCon，再次使用冷卻時間 #cooltime秒",
+          "rank": "100",
+          "type": "buff",
+          "equipable": false,
+          "maxLevel": 5,
+          "infoType": 35,
+          "actions": [],
+          "common": {
+            "mpCon": "30",
+            "cooltime": "600-60*x",
+            "time": "1",
+            "maxLevel": "5"
+          },
+          "icon": "images/skills/412/4121009.png",
+          "skillBook": 412,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/412/4121009/effect/0.png",
+                "delay": 60,
+                "origin": [
+                  95,
+                  241
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect/1.png",
+                "delay": 60,
+                "origin": [
+                  97,
+                  237
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect/2.png",
+                "delay": 60,
+                "origin": [
+                  101,
+                  242
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  103,
+                  249
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  103,
+                  248
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  104,
+                  244
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  137,
+                  238
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  194,
+                  246
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  131,
+                  247
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  133,
+                  248
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect/10.png",
+                "delay": 60,
+                "origin": [
+                  132,
+                  248
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect/11.png",
+                "delay": 60,
+                "origin": [
+                  133,
+                  248
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect/12.png",
+                "delay": 60,
+                "origin": [
+                  133,
+                  249
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect/13.png",
+                "delay": 60,
+                "origin": [
+                  133,
+                  248
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect/14.png",
+                "delay": 60,
+                "origin": [
+                  133,
+                  248
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect/15.png",
+                "delay": 60,
+                "origin": [
+                  57,
+                  246
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect/16.png",
+                "delay": 60,
+                "origin": [
+                  55,
+                  200
+                ]
+              }
+            ],
+            "effect0": [
+              {
+                "src": "images/skills/412/4121009/effect0/0.png",
+                "delay": 360,
+                "origin": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect0/1.png",
+                "delay": 60,
+                "origin": [
+                  145,
+                  267
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect0/2.png",
+                "delay": 60,
+                "origin": [
+                  145,
+                  264
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect0/3.png",
+                "delay": 60,
+                "origin": [
+                  145,
+                  256
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect0/4.png",
+                "delay": 60,
+                "origin": [
+                  145,
+                  262
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect0/5.png",
+                "delay": 60,
+                "origin": [
+                  129,
+                  265
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect0/6.png",
+                "delay": 60,
+                "origin": [
+                  140,
+                  265
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect0/7.png",
+                "delay": 60,
+                "origin": [
+                  141,
+                  265
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect0/8.png",
+                "delay": 60,
+                "origin": [
+                  129,
+                  262
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect0/9.png",
+                "delay": 60,
+                "origin": [
+                  127,
+                  258
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect0/10.png",
+                "delay": 60,
+                "origin": [
+                  114,
+                  250
+                ]
+              },
+              {
+                "src": "images/skills/412/4121009/effect0/11.png",
+                "delay": 60,
+                "origin": [
+                  101,
+                  246
+                ]
+              }
+            ]
+          },
+          "skipPanel": true
+        },
+        {
+          "id": "4121013",
+          "name": "四飛閃",
+          "desc": "連續投擲4個飛鏢。飛鏢會優先攻擊最大HP最高的怪物。",
+          "h": "消耗MP#mpCon，消耗#bulletCount個飛鏢，以#damage%傷害攻擊4次",
+          "rank": "100",
+          "type": "active",
+          "equipable": true,
+          "maxLevel": 30,
+          "infoType": 2,
+          "actions": [
+            "quadrupleThrow"
+          ],
+          "common": {
+            "mpCon": "11+d(x/2)",
+            "damage": "323+4*x",
+            "bulletCount": "4",
+            "maxLevel": "30",
+            "x": "90",
+            "y": "30",
+            "cancelableTime": "210"
+          },
+          "icon": "images/skills/412/4121013.png",
+          "skillBook": 412,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/412/4121013/effect/0.png",
+                "delay": 180,
+                "origin": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "src": "images/skills/412/4121013/effect/1.png",
+                "delay": 90,
+                "origin": [
+                  181,
+                  132
+                ]
+              },
+              {
+                "src": "images/skills/412/4121013/effect/2.png",
+                "delay": 90,
+                "origin": [
+                  179,
+                  132
+                ]
+              },
+              {
+                "src": "images/skills/412/4121013/effect/3.png",
+                "delay": 90,
+                "origin": [
+                  171,
+                  129
+                ]
+              },
+              {
+                "src": "images/skills/412/4121013/effect/4.png",
+                "delay": 90,
+                "origin": [
+                  164,
+                  132
+                ]
+              },
+              {
+                "src": "images/skills/412/4121013/effect/5.png",
+                "delay": 90,
+                "origin": [
+                  160,
+                  126
+                ]
+              },
+              {
+                "src": "images/skills/412/4121013/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  159,
+                  126
+                ]
+              },
+              {
+                "src": "images/skills/412/4121013/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  158,
+                  123
+                ]
+              },
+              {
+                "src": "images/skills/412/4121013/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  135,
+                  117
+                ]
+              }
+            ],
+            "hit": [
+              {
+                "src": "images/skills/412/4121013/hit/0.png",
+                "delay": 60,
+                "origin": [
+                  30,
+                  34
+                ]
+              },
+              {
+                "src": "images/skills/412/4121013/hit/1.png",
+                "delay": 60,
+                "origin": [
+                  75,
+                  77
+                ]
+              },
+              {
+                "src": "images/skills/412/4121013/hit/2.png",
+                "delay": 60,
+                "origin": [
+                  65,
+                  70
+                ]
+              },
+              {
+                "src": "images/skills/412/4121013/hit/3.png",
+                "delay": 60,
+                "origin": [
+                  65,
+                  69
+                ]
+              },
+              {
+                "src": "images/skills/412/4121013/hit/4.png",
+                "delay": 60,
+                "origin": [
+                  65,
+                  67
+                ]
+              },
+              {
+                "src": "images/skills/412/4121013/hit/5.png",
+                "delay": 60,
+                "origin": [
+                  64,
+                  67
+                ]
+              },
+              {
+                "src": "images/skills/412/4121013/hit/6.png",
+                "delay": 60,
+                "origin": [
+                  62,
+                  66
+                ]
+              },
+              {
+                "src": "images/skills/412/4121013/hit/7.png",
+                "delay": 60,
+                "origin": [
+                  62,
+                  64
+                ]
+              },
+              {
+                "src": "images/skills/412/4121013/hit/8.png",
+                "delay": 60,
+                "origin": [
+                  55,
+                  63
+                ]
+              }
+            ]
+          },
+          "replacesSkill": "4111010"
+        },
+        {
+          "id": "4121015",
+          "name": "絕對領域",
+          "desc": "周圍展開結界後，減少進到結界裡的敵人的攻擊力和移動速度、防禦率。另外，也永久性的狩獵 Boss時，造成追加傷害。",
+          "h": "消耗MP#mpCon，持續#time秒，使結界內除了BOSS怪物之外的敵人的攻擊力和防禦率減少#w%，移動速度 #y\\n[被動效果:攻擊BOSS怪物時傷害增加 #bdR%]",
+          "rank": "100",
+          "type": "buff",
+          "equipable": true,
+          "maxLevel": 30,
+          "infoType": 4,
+          "areaAttack": true,
+          "actions": [],
+          "common": {
+            "maxLevel": "30",
+            "mpCon": "11+2*d(x/2)",
+            "time": "10+x",
+            "lt": "-250, -200",
+            "rb": "250, 100",
+            "mobCount": "8",
+            "w": "x",
+            "x": "-x",
+            "z": "-x",
+            "y": "-30-x",
+            "hcTime": "5+x",
+            "bdR": "5+u(x/2)",
+            "v": "400",
+            "lt2": "-300, -50",
+            "rb2": "300, 300"
+          },
+          "icon": "images/skills/412/4121015.png",
+          "skillBook": 412,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/412/4121015/effect/0.png",
+                "delay": 180,
+                "origin": [
+                  0,
+                  0
+                ]
+              }
+            ],
+            "hit": [
+              {
+                "src": "images/skills/412/4121015/hit/0.png",
+                "delay": 90,
+                "origin": [
+                  0,
+                  0
+                ]
+              }
+            ],
+            "mob": {
+              "frames": [
+                {
+                  "src": "images/skills/412/4121015/mob/0.png",
+                  "delay": 90,
+                  "origin": [
+                    33,
+                    68
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121015/mob/1.png",
+                  "delay": 90,
+                  "origin": [
+                    33,
+                    67
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121015/mob/2.png",
+                  "delay": 90,
+                  "origin": [
+                    33,
+                    66
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121015/mob/3.png",
+                  "delay": 90,
+                  "origin": [
+                    33,
+                    67
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121015/mob/4.png",
+                  "delay": 90,
+                  "origin": [
+                    33,
+                    68
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121015/mob/5.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    69
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121015/mob/6.png",
+                  "delay": 90,
+                  "origin": [
+                    33,
+                    70
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121015/mob/7.png",
+                  "delay": 90,
+                  "origin": [
+                    33,
+                    69
+                  ]
+                }
+              ],
+              "repeat": 1,
+              "pos": 2
+            },
+            "tiles": [
+              {
+                "id": 0,
+                "frames": [
+                  {
+                    "src": "images/skills/412/4121015/tile/0/0.png",
+                    "delay": 90,
+                    "origin": [
+                      78,
+                      226
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/1.png",
+                    "delay": 90,
+                    "origin": [
+                      82,
+                      234
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/2.png",
+                    "delay": 90,
+                    "origin": [
+                      95,
+                      242
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/3.png",
+                    "delay": 90,
+                    "origin": [
+                      83,
+                      220
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/4.png",
+                    "delay": 90,
+                    "origin": [
+                      83,
+                      228
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/5.png",
+                    "delay": 90,
+                    "origin": [
+                      83,
+                      221
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/6.png",
+                    "delay": 90,
+                    "origin": [
+                      83,
+                      223
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/7.png",
+                    "delay": 90,
+                    "origin": [
+                      88,
+                      224
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/8.png",
+                    "delay": 90,
+                    "origin": [
+                      201,
+                      332
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/9.png",
+                    "delay": 60,
+                    "origin": [
+                      260,
+                      358
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/10.png",
+                    "delay": 60,
+                    "origin": [
+                      267,
+                      372
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/11.png",
+                    "delay": 60,
+                    "origin": [
+                      267,
+                      379
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/12.png",
+                    "delay": 60,
+                    "origin": [
+                      279,
+                      374
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/13.png",
+                    "delay": 60,
+                    "origin": [
+                      283,
+                      379
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/14.png",
+                    "delay": 60,
+                    "origin": [
+                      285,
+                      382
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/15.png",
+                    "delay": 60,
+                    "origin": [
+                      287,
+                      385
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/16.png",
+                    "delay": 60,
+                    "origin": [
+                      287,
+                      386
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/17.png",
+                    "delay": 60,
+                    "origin": [
+                      287,
+                      387
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/18.png",
+                    "delay": 60,
+                    "origin": [
+                      287,
+                      386
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/19.png",
+                    "delay": 60,
+                    "origin": [
+                      287,
+                      385
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/20.png",
+                    "delay": 60,
+                    "origin": [
+                      287,
+                      384
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/21.png",
+                    "delay": 90,
+                    "origin": [
+                      287,
+                      383
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/22.png",
+                    "delay": 90,
+                    "origin": [
+                      287,
+                      382
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/23.png",
+                    "delay": 90,
+                    "origin": [
+                      287,
+                      381
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/24.png",
+                    "delay": 90,
+                    "origin": [
+                      287,
+                      380
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/25.png",
+                    "delay": 90,
+                    "origin": [
+                      287,
+                      379
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/26.png",
+                    "delay": 90,
+                    "origin": [
+                      287,
+                      380
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/27.png",
+                    "delay": 90,
+                    "origin": [
+                      287,
+                      381
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/28.png",
+                    "delay": 90,
+                    "origin": [
+                      287,
+                      382
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/29.png",
+                    "delay": 90,
+                    "origin": [
+                      287,
+                      383
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/30.png",
+                    "delay": 90,
+                    "origin": [
+                      287,
+                      384
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/31.png",
+                    "delay": 90,
+                    "origin": [
+                      287,
+                      385
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/32.png",
+                    "delay": 90,
+                    "origin": [
+                      287,
+                      386
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/33.png",
+                    "delay": 90,
+                    "origin": [
+                      287,
+                      387
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/34.png",
+                    "delay": 90,
+                    "origin": [
+                      287,
+                      386
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/35.png",
+                    "delay": 90,
+                    "origin": [
+                      287,
+                      385
+                    ]
+                  },
+                  {
+                    "src": "images/skills/412/4121015/tile/0/36.png",
+                    "delay": 90,
+                    "origin": [
+                      287,
+                      384
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "blizzardCast": false
+        },
+        {
+          "id": "4121016",
+          "name": "穢土轉生",
+          "desc": "讓藏身的同伴總動員攻擊敵人。穢土轉生即使攻擊有攻擊反射狀態的敵人也不會受到傷害。",
+          "h": "消耗MP#mpCon，消耗1個飛鏢，最多以#damage%的傷害攻擊#mobCount名敵人#attackCount次。\\n#dotTime秒內每#dotInterval造成#dot%持續傷害\\n冷卻時間#cooltime秒",
+          "rank": "100",
+          "type": "active",
+          "equipable": true,
+          "maxLevel": 30,
+          "infoType": 1,
+          "projectile": true,
+          "actions": [
+            "suddenRaid"
+          ],
+          "common": {
+            "maxLevel": "30",
+            "mpCon": "290",
+            "mobCount": "15",
+            "damage": "344+5*x",
+            "attackCount": "7",
+            "prop": "100",
+            "dot": "90+4*x",
+            "dotTime": "5+d(x/6)",
+            "dotInterval": "1",
+            "cooltime": "60-2*d(x/2)",
+            "attackDelay": "540",
+            "cancelableTime": "210",
+            "lt": "-400, -350",
+            "rb": "400, 250"
+          },
+          "icon": "images/skills/412/4121016.png",
+          "skillBook": 412,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/412/4121016/effect/0.png",
+                "delay": 30,
+                "origin": [
+                  132,
+                  260
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/1.png",
+                "delay": 30,
+                "origin": [
+                  186,
+                  266
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/2.png",
+                "delay": 30,
+                "origin": [
+                  199,
+                  269
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/3.png",
+                "delay": 30,
+                "origin": [
+                  208,
+                  268
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  212,
+                  269
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  214,
+                  266
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  213,
+                  270
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  211,
+                  272
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  200,
+                  269
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  188,
+                  259
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/10.png",
+                "delay": 60,
+                "origin": [
+                  187,
+                  253
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/11.png",
+                "delay": 60,
+                "origin": [
+                  266,
+                  275
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/12.png",
+                "delay": 60,
+                "origin": [
+                  417,
+                  323
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/13.png",
+                "delay": 60,
+                "origin": [
+                  450,
+                  338
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/14.png",
+                "delay": 60,
+                "origin": [
+                  465,
+                  343
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/15.png",
+                "delay": 60,
+                "origin": [
+                  461,
+                  337
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/16.png",
+                "delay": 60,
+                "origin": [
+                  461,
+                  329
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/17.png",
+                "delay": 60,
+                "origin": [
+                  273,
+                  328
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/18.png",
+                "delay": 60,
+                "origin": [
+                  260,
+                  318
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/19.png",
+                "delay": 60,
+                "origin": [
+                  236,
+                  302
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/20.png",
+                "delay": 60,
+                "origin": [
+                  236,
+                  298
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/21.png",
+                "delay": 60,
+                "origin": [
+                  226,
+                  298
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/22.png",
+                "delay": 30,
+                "origin": [
+                  225,
+                  271
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/23.png",
+                "delay": 30,
+                "origin": [
+                  227,
+                  269
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/24.png",
+                "delay": 30,
+                "origin": [
+                  227,
+                  267
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/25.png",
+                "delay": 30,
+                "origin": [
+                  226,
+                  262
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/26.png",
+                "delay": 30,
+                "origin": [
+                  230,
+                  259
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/27.png",
+                "delay": 30,
+                "origin": [
+                  224,
+                  251
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect/28.png",
+                "delay": 30,
+                "origin": [
+                  222,
+                  245
+                ]
+              }
+            ],
+            "effect0": [
+              {
+                "src": "images/skills/412/4121016/effect0/0.png",
+                "delay": 30,
+                "origin": [
+                  172,
+                  208
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/1.png",
+                "delay": 30,
+                "origin": [
+                  179,
+                  208
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/2.png",
+                "delay": 30,
+                "origin": [
+                  181,
+                  208
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/3.png",
+                "delay": 30,
+                "origin": [
+                  184,
+                  208
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/4.png",
+                "delay": 60,
+                "origin": [
+                  184,
+                  208
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/5.png",
+                "delay": 60,
+                "origin": [
+                  185,
+                  208
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/6.png",
+                "delay": 60,
+                "origin": [
+                  184,
+                  209
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/7.png",
+                "delay": 60,
+                "origin": [
+                  179,
+                  209
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/8.png",
+                "delay": 60,
+                "origin": [
+                  180,
+                  208
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/9.png",
+                "delay": 60,
+                "origin": [
+                  179,
+                  207
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/10.png",
+                "delay": 60,
+                "origin": [
+                  177,
+                  207
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/11.png",
+                "delay": 60,
+                "origin": [
+                  465,
+                  401
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/12.png",
+                "delay": 60,
+                "origin": [
+                  466,
+                  426
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/13.png",
+                "delay": 60,
+                "origin": [
+                  465,
+                  426
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/14.png",
+                "delay": 60,
+                "origin": [
+                  523,
+                  433
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/15.png",
+                "delay": 60,
+                "origin": [
+                  523,
+                  428
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/16.png",
+                "delay": 60,
+                "origin": [
+                  492,
+                  428
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/17.png",
+                "delay": 60,
+                "origin": [
+                  447,
+                  375
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/18.png",
+                "delay": 60,
+                "origin": [
+                  408,
+                  348
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/19.png",
+                "delay": 60,
+                "origin": [
+                  394,
+                  331
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/20.png",
+                "delay": 60,
+                "origin": [
+                  362,
+                  320
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/21.png",
+                "delay": 60,
+                "origin": [
+                  362,
+                  328
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/22.png",
+                "delay": 30,
+                "origin": [
+                  288,
+                  310
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/23.png",
+                "delay": 30,
+                "origin": [
+                  282,
+                  309
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/24.png",
+                "delay": 30,
+                "origin": [
+                  282,
+                  308
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/25.png",
+                "delay": 30,
+                "origin": [
+                  282,
+                  308
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/26.png",
+                "delay": 30,
+                "origin": [
+                  279,
+                  310
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/27.png",
+                "delay": 30,
+                "origin": [
+                  282,
+                  309
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/28.png",
+                "delay": 30,
+                "origin": [
+                  222,
+                  233
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/29.png",
+                "delay": 30,
+                "origin": [
+                  220,
+                  232
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/effect0/30.png",
+                "delay": 30,
+                "origin": [
+                  218,
+                  218
+                ]
+              }
+            ],
+            "hit": [
+              {
+                "src": "images/skills/412/4121016/hit/0.png",
+                "delay": 60,
+                "origin": [
+                  145,
+                  130
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/hit/1.png",
+                "delay": 60,
+                "origin": [
+                  122,
+                  114
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/hit/2.png",
+                "delay": 60,
+                "origin": [
+                  109,
+                  99
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/hit/3.png",
+                "delay": 60,
+                "origin": [
+                  80,
+                  68
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/hit/4.png",
+                "delay": 60,
+                "origin": [
+                  65,
+                  55
+                ]
+              },
+              {
+                "src": "images/skills/412/4121016/hit/5.png",
+                "delay": 60,
+                "origin": [
+                  25,
+                  16
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "4121017",
+          "name": "挑釁契約",
+          "desc": "攻擊最多6名的敵人，進行挑釁，#c使其變成不衝撞的狀態#。\\n被挑釁的敵人，其經驗值獲得量和道具掉落率會一起增加，也會對BOSS套用一半的效果。\\n符咒爆炸時會出現黑暗手裏劍，並追擊周圍的敵人。黑暗手裏劍即使攻擊有攻擊反射狀態的敵人也不會受到傷害。",
+          "h": "MP #mpCon，消耗#bulletConsume個飛鏢\\n最多對#mobCount名敵人以#damage%傷害攻擊#attackCount次後挑釁\\n被挑釁的敵人#time秒內#c維持不受碰撞的狀態#，獲得經驗值及道具掉落率增加#x%。若為BOSS怪物，效果減少一半\\n之後形成以#w%傷害攻擊#z次的手裏劍#u個\\n一名敵人被多個手裏劍命中時，從第二隻手裏劍開始，最終傷害會減少#u2%，攻擊一般怪物時傷害增加#w2%\\n手裏劍冷卻時間#s2秒",
+          "rank": "100",
+          "type": "active",
+          "equipable": true,
+          "maxLevel": 30,
+          "infoType": 32,
+          "actions": [
+            "showDownChallenge"
+          ],
+          "common": {
+            "maxLevel": "30",
+            "mpCon": "20+2*d(x/2)",
+            "mobCount": "6",
+            "damage": "365+8*x",
+            "attackCount": "2",
+            "bulletConsume": "3",
+            "cancelableTime": "210",
+            "time": "70+10*d(x/4)",
+            "x": "u(x/6)",
+            "y": "5000",
+            "nbdR": "200",
+            "lt": "-480, -220",
+            "rb": "5, 40",
+            "u": "6",
+            "w": "9+3*d(x/6)",
+            "z": "6",
+            "s2": "5",
+            "u2": "50",
+            "w2": "200"
+          },
+          "icon": "images/skills/412/4121017.png",
+          "skillBook": 412,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/412/4121017/effect/0.png",
+                "delay": 60,
+                "origin": [
+                  316,
+                  176
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/1.png",
+                "delay": 60,
+                "origin": [
+                  421,
+                  229
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/2.png",
+                "delay": 60,
+                "origin": [
+                  421,
+                  229
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  421,
+                  229
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  485,
+                  229
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  485,
+                  229
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  485,
+                  229
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  485,
+                  229
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  605,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  616,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/10.png",
+                "delay": 60,
+                "origin": [
+                  623,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/11.png",
+                "delay": 60,
+                "origin": [
+                  628,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/12.png",
+                "delay": 60,
+                "origin": [
+                  630,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/13.png",
+                "delay": 60,
+                "origin": [
+                  632,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/14.png",
+                "delay": 60,
+                "origin": [
+                  636,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/15.png",
+                "delay": 60,
+                "origin": [
+                  638,
+                  302
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/16.png",
+                "delay": 60,
+                "origin": [
+                  639,
+                  303
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/17.png",
+                "delay": 60,
+                "origin": [
+                  639,
+                  302
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/18.png",
+                "delay": 60,
+                "origin": [
+                  637,
+                  301
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/19.png",
+                "delay": 60,
+                "origin": [
+                  616,
+                  301
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/20.png",
+                "delay": 60,
+                "origin": [
+                  613,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/21.png",
+                "delay": 60,
+                "origin": [
+                  597,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/22.png",
+                "delay": 60,
+                "origin": [
+                  579,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/23.png",
+                "delay": 60,
+                "origin": [
+                  496,
+                  294
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/effect/24.png",
+                "delay": 60,
+                "origin": [
+                  54,
+                  216
+                ]
+              }
+            ],
+            "hit": [
+              {
+                "src": "images/skills/412/4121017/hit/0.png",
+                "delay": 90,
+                "origin": [
+                  53,
+                  53
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/hit/1.png",
+                "delay": 90,
+                "origin": [
+                  113,
+                  105
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/hit/2.png",
+                "delay": 90,
+                "origin": [
+                  116,
+                  115
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/hit/3.png",
+                "delay": 90,
+                "origin": [
+                  116,
+                  114
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/hit/4.png",
+                "delay": 90,
+                "origin": [
+                  113,
+                  107
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/hit/5.png",
+                "delay": 90,
+                "origin": [
+                  114,
+                  107
+                ]
+              },
+              {
+                "src": "images/skills/412/4121017/hit/6.png",
+                "delay": 90,
+                "origin": [
+                  100,
+                  107
+                ]
+              }
+            ],
+            "mob": {
+              "frames": [
+                {
+                  "src": "images/skills/412/4121017/mob/0.png",
+                  "delay": 120,
+                  "origin": [
+                    37,
+                    62
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121017/mob/1.png",
+                  "delay": 120,
+                  "origin": [
+                    38,
+                    61
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121017/mob/2.png",
+                  "delay": 120,
+                  "origin": [
+                    40,
+                    60
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121017/mob/3.png",
+                  "delay": 120,
+                  "origin": [
+                    40,
+                    61
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121017/mob/4.png",
+                  "delay": 120,
+                  "origin": [
+                    40,
+                    62
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121017/mob/5.png",
+                  "delay": 120,
+                  "origin": [
+                    39,
+                    63
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121017/mob/6.png",
+                  "delay": 120,
+                  "origin": [
+                    38,
+                    64
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121017/mob/7.png",
+                  "delay": 120,
+                  "origin": [
+                    30,
+                    63
+                  ]
+                }
+              ],
+              "repeat": 1,
+              "pos": 2
+            }
+          }
+        },
+        {
+          "id": "4121020",
+          "name": "挑釁契約",
+          "desc": "以蘊藏暗影力量的手裡劍攻擊敵人。",
+          "h": "",
+          "rank": "100",
+          "type": "active",
+          "equipable": false,
+          "maxLevel": 30,
+          "infoType": 51,
+          "actions": [],
+          "common": {
+            "maxLevel": "30",
+            "mobCount": "1",
+            "damage": "9+3*d(x/6)",
+            "attackCount": "6",
+            "x": "6",
+            "w": "60",
+            "u": "50",
+            "u2": "800",
+            "q": "600",
+            "lt": "-400, -350",
+            "rb": "400, 350"
+          },
+          "icon": "images/skills/412/4121020.png",
+          "skillBook": 412,
+          "skipPanel": true,
+          "fx": {
+            "hit": [
+              {
+                "src": "images/skills/412/4121020/hit/0.png",
+                "delay": 90,
+                "origin": [
+                  85,
+                  72
+                ]
+              },
+              {
+                "src": "images/skills/412/4121020/hit/1.png",
+                "delay": 90,
+                "origin": [
+                  127,
+                  109
+                ]
+              },
+              {
+                "src": "images/skills/412/4121020/hit/2.png",
+                "delay": 90,
+                "origin": [
+                  138,
+                  118
+                ]
+              },
+              {
+                "src": "images/skills/412/4121020/hit/3.png",
+                "delay": 90,
+                "origin": [
+                  138,
+                  118
+                ]
+              },
+              {
+                "src": "images/skills/412/4121020/hit/4.png",
+                "delay": 90,
+                "origin": [
+                  133,
+                  114
+                ]
+              },
+              {
+                "src": "images/skills/412/4121020/hit/5.png",
+                "delay": 90,
+                "origin": [
+                  125,
+                  107
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "4121021",
+          "name": "挑釁契約",
+          "desc": "攻擊最多6名敵人，挑釁後變成#c不會被碰撞的狀態#。被挑釁的敵人可讓經驗值獲得量和道具掉落率增加，對BOSS也會有一半的效果。\\n符咒爆炸時會出現黑暗手裏劍，並追擊周圍的敵人。黑暗手裏劍即使攻擊有攻擊反射狀態的敵人也不會受到傷害。",
+          "h": "消耗MP#mpCon、#bulletConsume個飛鏢\\n對最多#mobCount名敵人以#damage%的傷害攻擊#attackCount次，並生成#u個手裏劍後挑釁\\n被挑釁的敵人會持續變成#c不碰撞的狀態#。#time秒內使獲得經驗值、道具掉落率增加#x% ，如果對象是BOSS，效果則會減半\\n手裏劍會以#w%的傷害攻擊#z次，一名敵人被多個手裏劍命中時，從第二隻手裏劍開始，最終傷害會減少#u2%，攻擊一般怪物時，傷害增加#w2% \\n生成手裏劍後，離下次生成的冷卻時間為#s2秒",
+          "rank": "100",
+          "type": "active",
+          "equipable": false,
+          "maxLevel": 30,
+          "infoType": 32,
+          "actions": [
+            "showDownChallenge"
+          ],
+          "common": {
+            "mpCon": "20+2*d(x/2)",
+            "x": "u(x/6)",
+            "time": "70+10*d(x/4)",
+            "mobCount": "6",
+            "bulletConsume": "3",
+            "maxLevel": "30",
+            "damage": "438+9*x",
+            "attackCount": "2",
+            "lt": "-480, -220",
+            "rb": "5, 40",
+            "y": "10000",
+            "u": "6",
+            "w": "9+3*d(x/6)",
+            "z": "6",
+            "s2": "10",
+            "u2": "50",
+            "w2": "200",
+            "nbdR": "200"
+          },
+          "icon": "images/skills/412/4121021.png",
+          "skillBook": 412,
+          "skipPanel": true,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/412/4121021/effect/0.png",
+                "delay": 60,
+                "origin": [
+                  316,
+                  176
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/1.png",
+                "delay": 60,
+                "origin": [
+                  421,
+                  229
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/2.png",
+                "delay": 60,
+                "origin": [
+                  421,
+                  229
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  421,
+                  229
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  485,
+                  229
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  485,
+                  229
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  485,
+                  229
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  485,
+                  229
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  605,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  616,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/10.png",
+                "delay": 60,
+                "origin": [
+                  623,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/11.png",
+                "delay": 60,
+                "origin": [
+                  628,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/12.png",
+                "delay": 60,
+                "origin": [
+                  630,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/13.png",
+                "delay": 60,
+                "origin": [
+                  632,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/14.png",
+                "delay": 60,
+                "origin": [
+                  636,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/15.png",
+                "delay": 60,
+                "origin": [
+                  638,
+                  302
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/16.png",
+                "delay": 60,
+                "origin": [
+                  639,
+                  303
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/17.png",
+                "delay": 60,
+                "origin": [
+                  639,
+                  302
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/18.png",
+                "delay": 60,
+                "origin": [
+                  637,
+                  301
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/19.png",
+                "delay": 60,
+                "origin": [
+                  616,
+                  301
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/20.png",
+                "delay": 60,
+                "origin": [
+                  613,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/21.png",
+                "delay": 60,
+                "origin": [
+                  597,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/22.png",
+                "delay": 60,
+                "origin": [
+                  579,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/23.png",
+                "delay": 60,
+                "origin": [
+                  496,
+                  294
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/effect/24.png",
+                "delay": 60,
+                "origin": [
+                  54,
+                  216
+                ]
+              }
+            ],
+            "hit": [
+              {
+                "src": "images/skills/412/4121021/hit/0.png",
+                "delay": 90,
+                "origin": [
+                  53,
+                  53
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/hit/1.png",
+                "delay": 90,
+                "origin": [
+                  113,
+                  105
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/hit/2.png",
+                "delay": 90,
+                "origin": [
+                  116,
+                  115
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/hit/3.png",
+                "delay": 90,
+                "origin": [
+                  116,
+                  114
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/hit/4.png",
+                "delay": 90,
+                "origin": [
+                  113,
+                  107
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/hit/5.png",
+                "delay": 90,
+                "origin": [
+                  114,
+                  107
+                ]
+              },
+              {
+                "src": "images/skills/412/4121021/hit/6.png",
+                "delay": 90,
+                "origin": [
+                  100,
+                  107
+                ]
+              }
+            ],
+            "mob": {
+              "frames": [
+                {
+                  "src": "images/skills/412/4121021/mob/0.png",
+                  "delay": 120,
+                  "origin": [
+                    37,
+                    62
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121021/mob/1.png",
+                  "delay": 120,
+                  "origin": [
+                    38,
+                    61
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121021/mob/2.png",
+                  "delay": 120,
+                  "origin": [
+                    40,
+                    60
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121021/mob/3.png",
+                  "delay": 120,
+                  "origin": [
+                    40,
+                    61
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121021/mob/4.png",
+                  "delay": 120,
+                  "origin": [
+                    40,
+                    62
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121021/mob/5.png",
+                  "delay": 120,
+                  "origin": [
+                    39,
+                    63
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121021/mob/6.png",
+                  "delay": 120,
+                  "origin": [
+                    38,
+                    64
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121021/mob/7.png",
+                  "delay": 120,
+                  "origin": [
+                    30,
+                    63
+                  ]
+                }
+              ],
+              "repeat": 1,
+              "pos": 2
+            }
+          }
+        },
+        {
+          "id": "4121022",
+          "name": "夜幕印記",
+          "desc": "以漆黑的黑暗包覆自身，在一定時間內進入無敵狀態。可再次使用技能以解除效果。\\n不受冷卻時間初始化影響。",
+          "h": "消耗MP#mpCon，在#time間進入無敵\\n冷卻時間為#cooltime秒",
+          "rank": "100",
+          "type": "buff",
+          "equipable": false,
+          "maxLevel": 10,
+          "infoType": 10,
+          "actions": [
+            "nightfallSignet"
+          ],
+          "common": {
+            "maxLevel": "10",
+            "mpCon": "120-2*x",
+            "cooltime": "80-5*u(x/3)",
+            "time": "2"
+          },
+          "icon": "images/skills/412/4121022.png",
+          "skillBook": 412,
+          "skipPanel": true
+        },
+        {
+          "id": "4121052",
+          "name": "四星鏢雨",
+          "desc": "從四方召喚四個的飛鏢變成一個大型飛鏢。",
+          "h": "消耗MP#mpCon，消耗1個飛鏢，最多以#damage%的傷害攻擊#mobCount名敵人#attackCount次。\\n冷卻時間#cooltime秒\\n[被動效果：夜使者刻印傷害增加#damPlus%p]",
+          "rank": "hyper",
+          "type": "active",
+          "equipable": true,
+          "maxLevel": 1,
+          "infoType": 1,
+          "reqLevel": 160,
+          "projectile": true,
+          "actions": [
+            "HY412fourSeasons"
+          ],
+          "common": {
+            "maxLevel": "1",
+            "mpCon": "300",
+            "mobCount": "8",
+            "damage": "358",
+            "attackCount": "7",
+            "cooltime": "14",
+            "cancelableTime": "210",
+            "damPlus": "100",
+            "lt": "-300, -330",
+            "rb": "300, 80"
+          },
+          "icon": "images/skills/412/4121052.png",
+          "skillBook": 412,
+          "hyper": 2,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/412/4121052/effect/0.png",
+                "delay": 60,
+                "origin": [
+                  102,
+                  347
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/1.png",
+                "delay": 60,
+                "origin": [
+                  105,
+                  345
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/2.png",
+                "delay": 60,
+                "origin": [
+                  128,
+                  304
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  257,
+                  283
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  253,
+                  284
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  206,
+                  286
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  173,
+                  286
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  150,
+                  286
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/8.png",
+                "delay": 90,
+                "origin": [
+                  135,
+                  286
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  132,
+                  284
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/10.png",
+                "delay": 60,
+                "origin": [
+                  136,
+                  287
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/11.png",
+                "delay": 60,
+                "origin": [
+                  138,
+                  289
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/12.png",
+                "delay": 60,
+                "origin": [
+                  135,
+                  285
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/13.png",
+                "delay": 60,
+                "origin": [
+                  148,
+                  300
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/14.png",
+                "delay": 60,
+                "origin": [
+                  343,
+                  363
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/15.png",
+                "delay": 60,
+                "origin": [
+                  354,
+                  369
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/16.png",
+                "delay": 60,
+                "origin": [
+                  366,
+                  360
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/17.png",
+                "delay": 60,
+                "origin": [
+                  369,
+                  369
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/18.png",
+                "delay": 60,
+                "origin": [
+                  347,
+                  363
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/19.png",
+                "delay": 60,
+                "origin": [
+                  347,
+                  370
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/20.png",
+                "delay": 60,
+                "origin": [
+                  345,
+                  367
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/21.png",
+                "delay": 60,
+                "origin": [
+                  350,
+                  367
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/22.png",
+                "delay": 60,
+                "origin": [
+                  344,
+                  368
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/23.png",
+                "delay": 60,
+                "origin": [
+                  349,
+                  370
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/24.png",
+                "delay": 60,
+                "origin": [
+                  347,
+                  370
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/effect/25.png",
+                "delay": 60,
+                "origin": [
+                  345,
+                  368
+                ]
+              }
+            ],
+            "hit": [
+              {
+                "src": "images/skills/412/4121052/hit/0.png",
+                "delay": 60,
+                "origin": [
+                  141,
+                  138
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/hit/1.png",
+                "delay": 60,
+                "origin": [
+                  118,
+                  122
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/hit/2.png",
+                "delay": 60,
+                "origin": [
+                  105,
+                  107
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/hit/3.png",
+                "delay": 60,
+                "origin": [
+                  98,
+                  92
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/hit/4.png",
+                "delay": 60,
+                "origin": [
+                  97,
+                  94
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/hit/5.png",
+                "delay": 60,
+                "origin": [
+                  100,
+                  95
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/hit/6.png",
+                "delay": 60,
+                "origin": [
+                  86,
+                  74
+                ]
+              },
+              {
+                "src": "images/skills/412/4121052/hit/7.png",
+                "delay": 60,
+                "origin": [
+                  84,
+                  74
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "4121053",
+          "name": "傳說冒險",
+          "desc": "只有遊歷楓之谷世界每個角落的傳說中的冒險家才可使用的加持，可增加傷害。",
+          "h": "消耗MP#mpCon，#time秒內傷害增加#indieDamR%。\\n只對隊員中的冒險家職業群產生效果\\n冷卻時間#cooltime秒",
+          "rank": "hyper",
+          "type": "buff",
+          "equipable": true,
+          "maxLevel": 1,
+          "infoType": 50,
+          "reqLevel": 190,
+          "actions": [],
+          "common": {
+            "maxLevel": "1",
+            "mpCon": "100",
+            "time": "60",
+            "cooltime": "120",
+            "indieDamR": "10",
+            "lt": "-400, -300",
+            "rb": "400, 300"
+          },
+          "icon": "images/skills/412/4121053.png",
+          "skillBook": 412,
+          "hyper": 2,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/412/4121053/effect/0.png",
+                "delay": 360,
+                "origin": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect/1.png",
+                "delay": 60,
+                "origin": [
+                  198,
+                  141
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect/2.png",
+                "delay": 60,
+                "origin": [
+                  168,
+                  143
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect/3.png",
+                "delay": 60,
+                "origin": [
+                  140,
+                  204
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect/4.png",
+                "delay": 60,
+                "origin": [
+                  168,
+                  270
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  164,
+                  282
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  166,
+                  302
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  170,
+                  308
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  174,
+                  315
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  182,
+                  315
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect/10.png",
+                "delay": 60,
+                "origin": [
+                  179,
+                  369
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect/11.png",
+                "delay": 60,
+                "origin": [
+                  160,
+                  312
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect/12.png",
+                "delay": 60,
+                "origin": [
+                  180,
+                  312
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect/13.png",
+                "delay": 60,
+                "origin": [
+                  207,
+                  364
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect/14.png",
+                "delay": 60,
+                "origin": [
+                  215,
+                  130
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect/15.png",
+                "delay": 60,
+                "origin": [
+                  226,
+                  119
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect/16.png",
+                "delay": 60,
+                "origin": [
+                  172,
+                  111
+                ]
+              }
+            ],
+            "effect0": [
+              {
+                "src": "images/skills/412/4121053/effect0/0.png",
+                "delay": 60,
+                "origin": [
+                  182,
+                  286
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/1.png",
+                "delay": 60,
+                "origin": [
+                  158,
+                  265
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/2.png",
+                "delay": 60,
+                "origin": [
+                  133,
+                  247
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/3.png",
+                "delay": 60,
+                "origin": [
+                  111,
+                  234
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/4.png",
+                "delay": 60,
+                "origin": [
+                  113,
+                  239
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/5.png",
+                "delay": 60,
+                "origin": [
+                  112,
+                  258
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/6.png",
+                "delay": 60,
+                "origin": [
+                  122,
+                  275
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/7.png",
+                "delay": 60,
+                "origin": [
+                  128,
+                  294
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/8.png",
+                "delay": 60,
+                "origin": [
+                  173,
+                  368
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/9.png",
+                "delay": 60,
+                "origin": [
+                  332,
+                  446
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/10.png",
+                "delay": 60,
+                "origin": [
+                  333,
+                  444
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/11.png",
+                "delay": 60,
+                "origin": [
+                  333,
+                  437
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/12.png",
+                "delay": 60,
+                "origin": [
+                  329,
+                  429
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/13.png",
+                "delay": 60,
+                "origin": [
+                  326,
+                  426
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/14.png",
+                "delay": 60,
+                "origin": [
+                  325,
+                  415
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/15.png",
+                "delay": 60,
+                "origin": [
+                  322,
+                  415
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/16.png",
+                "delay": 60,
+                "origin": [
+                  321,
+                  419
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/17.png",
+                "delay": 60,
+                "origin": [
+                  320,
+                  419
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/18.png",
+                "delay": 60,
+                "origin": [
+                  319,
+                  419
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/19.png",
+                "delay": 60,
+                "origin": [
+                  316,
+                  411
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/20.png",
+                "delay": 60,
+                "origin": [
+                  313,
+                  420
+                ]
+              },
+              {
+                "src": "images/skills/412/4121053/effect0/21.png",
+                "delay": 60,
+                "origin": [
+                  309,
+                  365
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "4121054",
+          "name": "出血毒素",
+          "desc": "在飛標上塗上可導致出血的致命劇毒，以在一段時間內提升攻擊力，並使被飛標命中的敵人遭受持續傷害。\\n#c發動特效鎖定：右擊滑鼠#",
+          "h": "消耗MP#mpCon，#time秒內攻擊力增加#indiePad\\n攻擊時會觸發可維持#dotTime秒並以#prop%的機率每秒造成#dot%傷害的出血效果",
+          "rank": "hyper",
+          "type": "buff",
+          "equipable": true,
+          "maxLevel": 1,
+          "infoType": 50,
+          "reqLevel": 140,
+          "actions": [
+            "HY412bleedingToxin"
+          ],
+          "common": {
+            "maxLevel": "1",
+            "mpCon": "200",
+            "dot": "2000",
+            "dotInterval": "1",
+            "dotTime": "3",
+            "prop": "100",
+            "time": "90",
+            "indiePad": "50"
+          },
+          "icon": "images/skills/412/4121054.png",
+          "skillBook": 412,
+          "hyper": 2,
+          "fx": {
+            "effect": [
+              {
+                "src": "images/skills/412/4121054/effect/0.png",
+                "delay": 90,
+                "origin": [
+                  70,
+                  187
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/1.png",
+                "delay": 90,
+                "origin": [
+                  72,
+                  196
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/2.png",
+                "delay": 90,
+                "origin": [
+                  73,
+                  203
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/3.png",
+                "delay": 90,
+                "origin": [
+                  73,
+                  205
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/4.png",
+                "delay": 90,
+                "origin": [
+                  70,
+                  203
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/5.png",
+                "delay": 60,
+                "origin": [
+                  139,
+                  311
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/6.png",
+                "delay": 60,
+                "origin": [
+                  146,
+                  321
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/7.png",
+                "delay": 60,
+                "origin": [
+                  152,
+                  326
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/8.png",
+                "delay": 60,
+                "origin": [
+                  149,
+                  324
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/9.png",
+                "delay": 60,
+                "origin": [
+                  149,
+                  324
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/10.png",
+                "delay": 60,
+                "origin": [
+                  149,
+                  324
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/11.png",
+                "delay": 60,
+                "origin": [
+                  149,
+                  324
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/12.png",
+                "delay": 60,
+                "origin": [
+                  149,
+                  324
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/13.png",
+                "delay": 60,
+                "origin": [
+                  144,
+                  319
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/14.png",
+                "delay": 60,
+                "origin": [
+                  138,
+                  315
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/15.png",
+                "delay": 60,
+                "origin": [
+                  141,
+                  317
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/16.png",
+                "delay": 60,
+                "origin": [
+                  143,
+                  319
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/17.png",
+                "delay": 60,
+                "origin": [
+                  144,
+                  320
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/18.png",
+                "delay": 60,
+                "origin": [
+                  146,
+                  322
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/19.png",
+                "delay": 60,
+                "origin": [
+                  147,
+                  323
+                ]
+              },
+              {
+                "src": "images/skills/412/4121054/effect/20.png",
+                "delay": 60,
+                "origin": [
+                  146,
+                  322
+                ]
+              }
+            ],
+            "mob": {
+              "frames": [
+                {
+                  "src": "images/skills/412/4121054/mob/0.png",
+                  "delay": 90,
+                  "origin": [
+                    37,
+                    67
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121054/mob/1.png",
+                  "delay": 90,
+                  "origin": [
+                    34,
+                    66
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121054/mob/2.png",
+                  "delay": 90,
+                  "origin": [
+                    35,
+                    64
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121054/mob/3.png",
+                  "delay": 90,
+                  "origin": [
+                    35,
+                    65
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121054/mob/4.png",
+                  "delay": 90,
+                  "origin": [
+                    36,
+                    66
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121054/mob/5.png",
+                  "delay": 90,
+                  "origin": [
+                    37,
+                    67
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121054/mob/6.png",
+                  "delay": 60,
+                  "origin": [
+                    38,
+                    67
+                  ]
+                },
+                {
+                  "src": "images/skills/412/4121054/mob/7.png",
+                  "delay": 60,
+                  "origin": [
+                    37,
+                    68
+                  ]
+                }
+              ],
+              "repeat": 1,
+              "pos": 2
+            }
+          }
+        }
+      ]
+    },
     "2300": {
       "jobId": 2300,
       "name": "精靈遊俠",
@@ -41883,7 +49675,7 @@ const SkillJobData = {
   "lines": {
     "warrior": {
       "id": "warrior",
-      "name": "英雄",
+      "name": "英雄線",
       "primaryJobId": 112,
       "books": [
         100,
@@ -41894,7 +49686,7 @@ const SkillJobData = {
     },
     "mage": {
       "id": "mage",
-      "name": "大魔導士（冰、雷）",
+      "name": "大魔導士（冰、雷）線",
       "primaryJobId": 222,
       "books": [
         200,
@@ -41905,7 +49697,7 @@ const SkillJobData = {
     },
     "magef": {
       "id": "magef",
-      "name": "大魔導士（火、毒）完全沒修 建議別選",
+      "name": "大魔導士（火、毒）線",
       "primaryJobId": 212,
       "books": [
         200,
@@ -41916,13 +49708,24 @@ const SkillJobData = {
     },
     "mercedes": {
       "id": "mercedes",
-      "name": "精靈遊俠",
+      "name": "精靈遊俠線",
       "primaryJobId": 2312,
       "books": [
         2300,
         2310,
         2311,
         2312
+      ]
+    },
+    "nightlord": {
+      "id": "nightlord",
+      "name": "夜使者",
+      "primaryJobId": 412,
+      "books": [
+        400,
+        410,
+        411,
+        412
       ]
     }
   }

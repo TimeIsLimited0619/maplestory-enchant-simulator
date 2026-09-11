@@ -50,6 +50,7 @@ function trunkConsumeIdentity(entry) {
   if (type === (T.SOUL || 'soul')) return `soul:${entry.soulId}`;
   if (type === (T.RECOVERY_CARD || 'recovery_card')) return 'recovery_card';
   if (type === (T.POTION || 'potion')) return `pot:${entry.itemId}`;
+  if (type === (T.THROWING_STAR || 'throwing_star')) return `star:${entry.itemId}`;
   return `misc:${type}:${entry.scrollId || entry.cubeId || entry.hammerId || entry.itemId || entry.soulId || ''}`;
 }
 
@@ -128,6 +129,9 @@ function trunkAdjustConsumeCount(entry, delta) {
   if (type === (T.POTION || 'potion')) {
     return applyMap(typeof playerPotionCounts !== 'undefined' ? playerPotionCounts : null, entry.itemId);
   }
+  if (type === (T.THROWING_STAR || 'throwing_star')) {
+    return applyMap(typeof playerThrowingStarCounts !== 'undefined' ? playerThrowingStarCounts : null, entry.itemId);
+  }
   return false;
 }
 
@@ -191,6 +195,9 @@ function trunkRefreshInventories() {
   if (typeof TrunkModule !== 'undefined') {
     TrunkModule.render?.();
     TrunkModule.updateMesoDisplay?.();
+  }
+  if (typeof ThrowingStarStore !== 'undefined') {
+    ThrowingStarStore.notifyCombatPad?.();
   }
 }
 
