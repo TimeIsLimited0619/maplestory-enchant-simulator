@@ -176,6 +176,7 @@ const IDLE_DUNGEON_LIST = [
         ]
       }
     ],
+    "goldPerDamage": 0,
     "damageTiers": []
   },
   {
@@ -375,6 +376,68 @@ const IDLE_DUNGEON_LIST = [
         "rewards": []
       }
     ],
+    "goldPerDamage": 0,
+    "damageTiers": []
+  },
+  {
+    "id": "gold-damage-trial",
+    "name": "楓幣拳擊機",
+    "type": "damage",
+    "category": "gold",
+    "enabled": true,
+    "ticketId": "idle-ticket-timed",
+    "ticketName": "計時副本入場券",
+    "durationSec": 90,
+    "mobLevel": 100,
+    "reqLevel": 0,
+    "useFieldDrops": false,
+    "useFieldGold": false,
+    "dmgRampRef": 1000000,
+    "dmgRampPower": 0.5,
+    "map": {
+      "name": "楓幣拳擊場",
+      "artId": "Boxingring",
+      "mobs": [
+        {
+          "name": "副本怪物1",
+          "icon": ""
+        }
+      ],
+      "mobName": "副本怪物1",
+      "mobIcon": "",
+      "bossName": "楓幣拳擊機",
+      "bossIcon": "9833910",
+      "baseMobHp": 100,
+      "baseBossHp": 1000000000000000000,
+      "mobAtk1Dmg": 5,
+      "mobAtk1Cd": 0.6,
+      "mobAtk2Dmg": 0,
+      "mobAtk2Cd": 0,
+      "mobAtk3Dmg": 0,
+      "mobAtk3Cd": 0,
+      "mobSkill1Dmg": 0,
+      "mobSkill1Cd": 8,
+      "mobSkill2Dmg": 0,
+      "mobSkill2Cd": 0,
+      "mobSkill3Dmg": 0,
+      "mobSkill3Cd": 0,
+      "bossAtk1Dmg": 400,
+      "bossAtk1Cd": 1,
+      "bossAtk2Dmg": 0,
+      "bossAtk2Cd": 0,
+      "bossAtk3Dmg": 0,
+      "bossAtk3Cd": 0,
+      "bossSkill1Dmg": 0,
+      "bossSkill1Cd": 10,
+      "bossSkill2Dmg": 0,
+      "bossSkill2Cd": 0,
+      "bossSkill3Dmg": 0,
+      "bossSkill3Cd": 0
+    },
+    "mobDrops": [],
+    "rewards": [],
+    "diffs": [],
+    "goldPerDamage": 0.01,
     "damageTiers": []
   },
   {
@@ -435,6 +498,7 @@ const IDLE_DUNGEON_LIST = [
     "mobDrops": [],
     "rewards": [],
     "diffs": [],
+    "goldPerDamage": 0,
     "damageTiers": [
       {
         "minDamage": 10000000,
@@ -1010,6 +1074,7 @@ const IDLE_DUNGEON_LIST = [
         "rewards": []
       }
     ],
+    "goldPerDamage": 0,
     "damageTiers": []
   },
   {
@@ -1109,6 +1174,7 @@ const IDLE_DUNGEON_LIST = [
         "rewards": []
       }
     ],
+    "goldPerDamage": 0,
     "damageTiers": []
   },
   {
@@ -1169,6 +1235,7 @@ const IDLE_DUNGEON_LIST = [
     "mobDrops": [],
     "rewards": [],
     "diffs": [],
+    "goldPerDamage": 0,
     "damageTiers": [
       {
         "minDamage": 10000000,
@@ -1418,6 +1485,7 @@ const IDLE_DUNGEON_LIST = [
       }
     ],
     "diffs": [],
+    "goldPerDamage": 0,
     "damageTiers": [
       {
         "minDamage": 1000000000,

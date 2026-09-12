@@ -1886,7 +1886,18 @@ const SkillCombat = (() => {
     // 接技略過選招鎖但仍保持短鎖，讓連段特效銜接且不被其他招插入
     castLockUntil = 0;
     if (typeof Paperdoll !== 'undefined') Paperdoll.setComboMoveHold?.(true);
-    cast(picked, { ...ctx, addAttackDepth: depth, skipAddAttack: false });
+    const liveCtx = {
+      ...ctx,
+      addAttackDepth: depth,
+      skipAddAttack: false,
+    };
+    const result = cast(picked, liveCtx);
+    // 接技由 setTimeout 觸發，回傳值不會回到 IdleHunt.tick；
+    // 同步路徑必須在此結算擊殺，否則副本殺怪數不累加。
+    // area／projectile 等 deferred 路徑已在 onDone → onProjectileResolve 處理。
+    if (result?.cast && !result.deferredKills) {
+      syncMobStateAfterDamage(result.kills || [], liveCtx);
+    }
   }
 
   const FINAL_ATTACK_BASIC_ID = '1100002';

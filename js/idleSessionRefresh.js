@@ -312,11 +312,11 @@ const IdleSessionRefresh = (() => {
         <p class="game-settings-hint">開啟透明字形，可略為提升效能。</p>
       </section>
       <section class="game-settings-section" aria-label="自動重整">
-        <h3 class="game-settings-section-title">記憶體整理</h3>
+        <h3 class="game-settings-section-title">記憶體釋放</h3>
         <p class="game-settings-hint">長時間放置戰鬥後可能變卡。開啟後會依間隔重新整理頁面，並自動接回推圖／掛機／自動 BOSS／自動副本。</p>
         <label class="game-settings-check">
           <input type="checkbox" id="gameSettingsAutoRefresh"${checked}>
-          <span>啟用自動重整並接續掛機</span>
+          <span>啟用自動重整</span>
         </label>
         <label class="game-settings-field">
           <span>每隔幾分鐘重整</span>

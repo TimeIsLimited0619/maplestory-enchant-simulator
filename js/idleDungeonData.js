@@ -274,6 +274,8 @@ const IdleDungeonStore = {
       mobDrops: this.normalizeRewards(row.mobDrops),
       rewards: this.normalizeRewards(row.rewards),
       diffs,
+      /** >0 時：結算楓幣 = floor(總傷害 × goldPerDamage)；不走傷害門檻 */
+      goldPerDamage: Math.max(0, Number(row.goldPerDamage) || 0),
       damageTiers: Array.isArray(row.damageTiers)
         ? row.damageTiers.map((t, i) => this.normalizeTier(t, i))
         : [],

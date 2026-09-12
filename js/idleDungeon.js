@@ -290,10 +290,38 @@ const IdleDungeon = (() => {
     }
   }
 
-  function formatDamageSettleText(damage, tierCount, gold, itemTotals, reason) {
-    const lines = [
-      `傷害${formatN(damage)}  獎勵階段${tierCount}`,
-    ];
+  function goldPerDamageRate(dungeonOrRun) {
+    const n = Number(dungeonOrRun?.goldPerDamage);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }
+
+  function isDirectGoldDamage(dungeonOrRun) {
+    return goldPerDamageRate(dungeonOrRun) > 0;
+  }
+
+  function goldFromTotalDamage(dungeonOrRun, damage) {
+    const rate = goldPerDamageRate(dungeonOrRun);
+    if (rate <= 0) return 0;
+    const dmg = Math.max(0, Math.floor(Number(damage) || 0));
+    return Math.max(0, Math.floor(dmg * rate));
+  }
+
+  /** 顯示用：0.005 →「200:1」；1 →「1:1」 */
+  function formatGoldPerDamageRatio(rate) {
+    const r = Number(rate);
+    if (!Number.isFinite(r) || r <= 0) return '';
+    if (r === 1) return '1:1';
+    const inv = 1 / r;
+    if (Number.isFinite(inv) && Math.abs(inv - Math.round(inv)) < 1e-9) {
+      return `${Math.round(inv)}:1`;
+    }
+    return `×${r}`;
+  }
+
+  function formatDamageSettleText(damage, tierCount, gold, itemTotals, reason, opts = {}) {
+    const lines = opts.directGold
+      ? [`總傷害 ${formatN(damage)} → 楓幣 ${formatN(gold)}`]
+      : [`傷害${formatN(damage)}  獎勵階段${tierCount}`];
     if (reason === 'max') lines.unshift('已達最高階獎勵，提早離場。');
     else if (reason === 'death') lines.unshift('角色倒下。');
     const gained = [];
@@ -538,12 +566,29 @@ const IdleDungeon = (() => {
     const n = ticketCount(d.ticketId);
     const isDamage = d.type === 'damage';
     const isNormal = d.type === 'normal';
-    const tierLines = formatDamageTierPreview(d.damageTiers);
-    const leadHint = isDamage
-      ? '在時間內造成的傷害越高，獎勵越高；達最高階會自動提早離場。'
-      : (isNormal
-        ? '達成擊殺數後召喚頭目，擊敗頭目才可獲得通關獎勵。'
-        : '限定時間內擊殺的怪物越多，獲得的楓幣越多。');
+    const directGold = isDirectGoldDamage(d);
+    const isGoldDamage = isDamage && (d.category === 'gold' || directGold);
+    const rate = goldPerDamageRate(d);
+    const ratioLabel = formatGoldPerDamageRatio(rate);
+    const exampleDmg = 10000000000000; // 10 兆
+    const exampleGold = goldFromTotalDamage({ goldPerDamage: rate }, exampleDmg);
+    const tierLines = directGold
+      ? `<div class="idle-dungeon-tier-block">
+          <div class="idle-dungeon-tier-title">楓幣結算</div>
+          <div class="idle-dungeon-reward-list">
+            <div class="idle-dungeon-reward-item">
+              <span class="idle-dungeon-reward-name">總傷害換算楓幣（${escapeHtml(ratioLabel)}，例：打 ${formatN(exampleDmg)} → ${formatN(exampleGold)} 楓幣）</span>
+            </div>
+          </div>
+        </div>`
+      : formatDamageTierPreview(d.damageTiers);
+    const leadHint = directGold || isGoldDamage
+      ? `持續輸出，${d.durationSec || 90} 秒後依總傷害直接換算楓幣（${ratioLabel}）。`
+      : (isDamage
+        ? '在時間內造成的傷害越高，獎勵越高；達最高階會自動提早離場。'
+        : (isNormal
+          ? '達成擊殺數後召喚頭目，擊敗頭目才可獲得通關獎勵。'
+          : '限定時間內擊殺的怪物越多，獲得的楓幣越多。'));
     const repeatVal = n < 1 ? 0 : clampRepeatCount(repeatWanted, n);
     const repeatField = `<div class="idle-dungeon-repeat-bar">
       <label class="idle-dungeon-repeat">挑戰次數
@@ -688,14 +733,20 @@ const IdleDungeon = (() => {
       const ramp = typeof IdleDungeonStore !== 'undefined' && IdleDungeonStore.damageRampMult
         ? IdleDungeonStore.damageRampMult(cur, cur.damage)
         : 1;
-      const reached = reachedDamageTiers(d, cur.damage).length;
-      text = [
+      const parts = [
         cur.name || d?.name || '副本',
         autoTag,
         `累積傷害 ${formatN(cur.damage)}`,
-        `已達到 ${reached} 階傷害獎勵`,
-        `boss傷害 x${ramp.toFixed(2)}`,
-      ].filter(Boolean).join(' | ');
+      ];
+      if (isDirectGoldDamage(cur) || isDirectGoldDamage(d)) {
+        const rate = goldPerDamageRate(cur) || goldPerDamageRate(d);
+        parts.push(`預估楓幣 ${formatN(goldFromTotalDamage({ goldPerDamage: rate }, cur.damage))}`);
+      } else {
+        const reached = reachedDamageTiers(d, cur.damage).length;
+        parts.push(`已達到 ${reached} 階傷害獎勵`);
+      }
+      parts.push(`boss傷害 x${ramp.toFixed(2)}`);
+      text = parts.filter(Boolean).join(' | ');
     } else {
       const parts = [`${cur.name || d?.name || '副本'}${cur.diffName ? ` · ${cur.diffName}` : ''}`];
       if (autoTag) parts.push(autoTag);
@@ -813,6 +864,7 @@ const IdleDungeon = (() => {
         dropRateMult: isDamage ? 1 : (Number(diff.dropRateMult) > 0 ? Number(diff.dropRateMult) : 1),
         dmgRampRef: d.dmgRampRef,
         dmgRampPower: d.dmgRampPower,
+        goldPerDamage: goldPerDamageRate(d),
         mobLevel: d.mobLevel,
         useFieldDrops: !!d.useFieldDrops,
         useFieldGold: !!d.useFieldGold,
@@ -900,11 +952,11 @@ const IdleDungeon = (() => {
       const modeLabel = afterAfkModeLabel(mode);
       clearRepeatState();
       resultText = `${resultText}\n已切換為${modeLabel}。`;
-      setOpen(false);
       IdleHunt.setAfkMode?.(mode, { resume: true });
       if (typeof addLog === 'function') {
         addLog(`副本自動挑戰完成（${doneCount} 場），已切換${modeLabel}。`, 'log-info');
       }
+      setOpen(true, { keepView: true });
       return;
     }
 
@@ -936,11 +988,20 @@ const IdleDungeon = (() => {
         ? `通關。擊敗頭目，獲得 ${formatN(gold)} 楓幣。`
         : `未擊敗頭目（擊殺 ${cur.kills}／${cur.killNeed}），沒有通關獎勵。`;
     } else if (cur.type === 'damage') {
-      const tiers = reachedDamageTiers(d, cur.damage);
-      gold = tiers.reduce((sum, t) => sum + (t.gold || 0), 0);
-      IdleHunt.addGold?.(gold);
-      const itemTotals = grantItemRewards(d, cur, reason);
-      line = formatDamageSettleText(cur.damage, tiers.length, gold, itemTotals, reason);
+      const direct = isDirectGoldDamage(cur) || isDirectGoldDamage(d);
+      if (direct) {
+        const rate = goldPerDamageRate(cur) || goldPerDamageRate(d);
+        gold = goldFromTotalDamage({ goldPerDamage: rate }, cur.damage);
+        IdleHunt.addGold?.(gold);
+        const itemTotals = grantItemRewards(d, cur, reason);
+        line = formatDamageSettleText(cur.damage, 0, gold, itemTotals, reason, { directGold: true });
+      } else {
+        const tiers = reachedDamageTiers(d, cur.damage);
+        gold = tiers.reduce((sum, t) => sum + (t.gold || 0), 0);
+        IdleHunt.addGold?.(gold);
+        const itemTotals = grantItemRewards(d, cur, reason);
+        line = formatDamageSettleText(cur.damage, tiers.length, gold, itemTotals, reason);
+      }
       await finishSettleUi(cur, d, line);
       return;
     } else {
@@ -989,6 +1050,7 @@ const IdleDungeon = (() => {
     cur.damage = (cur.damage || 0) + Math.max(0, Math.floor(Number(amount) || 0));
     if (cur.type !== 'damage') return;
     renderHud();
+    if (isDirectGoldDamage(cur)) return;
     const d = typeof IdleDungeonStore !== 'undefined' ? IdleDungeonStore.get(cur.id) : null;
     if (reachedMaxDamageTier(d, cur.damage)) settle('max');
   }
@@ -1110,6 +1172,9 @@ const IdleDungeon = (() => {
           <label>成長次方
             <input id="idleDgRampPower" type="number" min="0.1" max="2" step="0.05" title="0.5＝平方根；越大後期越兇">
           </label>
+          <label>傷害換楓幣倍率（0＝用門檻）
+            <input id="idleDgGoldPerDamage" type="number" min="0" step="0.01" title="&gt;0 時結算楓幣＝總傷害×此值（1＝1:1）；設 0 則走傷害門檻">
+          </label>
         </div>
       </div>
       <div id="idleDgDiffSection">
@@ -1121,7 +1186,7 @@ const IdleDungeon = (() => {
       </div>
       <div class="idle-gm-section-title">傷害門檻 JSON（僅傷害類）</div>
       <textarea id="idleDgTiers" rows="5" spellcheck="false"></textarea>
-      <p class="idle-gm-hint">計時／地下城：各難度可設入場等級、掉落物倍數、掉落率倍率（後兩項不顯示在玩家難度選單）。傷害副本：用上方「入場等級」。計時結算＝擊殺數 × 每殺金。地下城＝達擊殺數召喚 BOSS，擊敗才通關。傷害＝達成的門檻 gold／道具皆累積（達 2 也領 1）。</p>
+      <p class="idle-gm-hint">計時／地下城：各難度可設入場等級、掉落物倍數、掉落率倍率（後兩項不顯示在玩家難度選單）。傷害副本：用上方「入場等級」。計時結算＝擊殺數 × 每殺金。地下城＝達擊殺數召喚 BOSS，擊敗才通關。傷害門檻＝達成的門檻 gold／道具皆累積（達 2 也領 1）。若「傷害換楓幣倍率」&gt;0，則改為總傷害×倍率直接給楓幣、不走門檻。</p>
       <div class="idle-gm-actions">
         <button type="button" id="idleDgSave" class="idle-gm-btn">儲存此副本</button>
         <button type="button" id="idleDgWriteJs" class="idle-gm-btn">寫入 JS 檔</button>
@@ -1362,6 +1427,7 @@ const IdleDungeon = (() => {
     if ($('idleDgFieldGold')) $('idleDgFieldGold').checked = !!d.useFieldGold;
     if ($('idleDgRampRef')) $('idleDgRampRef').value = String(d.dmgRampRef || 100000);
     if ($('idleDgRampPower')) $('idleDgRampPower').value = String(d.dmgRampPower ?? 0.5);
+    if ($('idleDgGoldPerDamage')) $('idleDgGoldPerDamage').value = String(d.goldPerDamage || 0);
     const map = d.map || {};
     if ($('idleDgMapName')) $('idleDgMapName').value = map.name || '';
     if ($('idleDgMapArt')) $('idleDgMapArt').value = map.artId || '';
@@ -1399,6 +1465,9 @@ const IdleDungeon = (() => {
     if (cur.type === 'normal') return reason === 'win';
     if (cur.type === 'damage') {
       const d = typeof IdleDungeonStore !== 'undefined' ? IdleDungeonStore.get(cur.id) : null;
+      if (isDirectGoldDamage(cur) || isDirectGoldDamage(d)) {
+        return Math.max(0, Math.floor(Number(cur.damage) || 0)) > 0;
+      }
       return !!bestDamageTier(d, cur.damage);
     }
     return reason === 'win';
@@ -1608,6 +1677,7 @@ const IdleDungeon = (() => {
       useFieldGold: $('idleDgFieldGold').checked,
       dmgRampRef: $('idleDgRampRef')?.value,
       dmgRampPower: $('idleDgRampPower')?.value,
+      goldPerDamage: $('idleDgGoldPerDamage')?.value,
       map: {
         name: $('idleDgMapName')?.value,
         artId: $('idleDgMapArt')?.value,

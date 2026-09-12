@@ -2874,7 +2874,7 @@ const IDLE_ZONE_BAND_DEFS = [
   },
   {
     "id": "band-1789059379066",
-    "min": 1,
+    "min": 300,
     "max": 300,
     "name": "test",
     "mobDrops": [],

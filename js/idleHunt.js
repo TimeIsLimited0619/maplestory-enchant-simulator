@@ -328,6 +328,7 @@ const IdleHunt = (() => {
   /**
    * 統一：先算出 finalDmg，再顯示、再扣血（顯示＝實扣）。
    * 回傳 finalDmg。
+   * 副本累積傷害一律在此記入（技能／接技／最終攻擊等只要走這條就不會漏）。
    */
   function applyPlayerHitToMob(mob, rawDmg, opts = {}) {
     if (!mob) return 0;
@@ -338,6 +339,12 @@ const IdleHunt = (() => {
       opts.showMobDamage(mob, finalDmg, !!opts.isCritical, opts.dmgOpts || {});
     }
     if (typeof opts.onDamage === 'function') opts.onDamage(finalDmg);
+    if (opts.reportDungeonDamage !== false
+      && finalDmg > 0
+      && state.dungeon
+      && typeof IdleDungeon !== 'undefined') {
+      IdleDungeon.onHuntDamage?.(finalDmg);
+    }
     mob.hp = (Number(mob.hp) || 0) - finalDmg;
     if (typeof IdleBossFight !== 'undefined'
       && typeof IdleBossFight.afterAppliedDamage === 'function') {
@@ -2348,11 +2355,8 @@ const IdleHunt = (() => {
       playerEl: $('idleHuntField')?.querySelector('.idle-actor--player'),
       fieldEl: $('idleHuntField'),
       showMobDamage: quiet ? noop : showMobDamage,
-      onDamage: (dmg) => {
-        if (state.dungeon && typeof IdleDungeon !== 'undefined') {
-          IdleDungeon.onHuntDamage?.(dmg);
-        }
-      },
+      // 副本傷害改由 applyPlayerHitToMob 統一記入，避免接技／非同步路徑漏算或重複
+      onDamage: noop,
       flashHit: quiet ? noop : flashHit,
       flashDie: quiet ? noop : flashDie,
       onProjectileResolve: applySkillMobStateSync,
