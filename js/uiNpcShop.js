@@ -610,7 +610,7 @@ const UiNpcShop = (() => {
   }
 
   function setBuyQty(n) {
-    buyQty = Math.max(1, Math.min(9999, Math.floor(Number(n) || 1)));
+    buyQty = Math.max(1, Math.min(99999, Math.floor(Number(n) || 1)));
     const input = $('npcShopBuyQty');
     if (input) input.value = String(buyQty);
     syncBuyPopupTotals();
@@ -622,8 +622,8 @@ const UiNpcShop = (() => {
     const unit = Math.max(0, Math.floor(Number(
       IdleNpcShopCatalog.resolveBuyRowDisplay(row)?.price,
     ) || 0));
-    if (!(unit > 0)) return 9999;
-    return Math.max(1, Math.min(9999, Math.floor(gold() / unit)));
+    if (!(unit > 0)) return 99999;
+    return Math.max(1, Math.min(99999, Math.floor(gold() / unit)));
   }
 
   function syncBuyPopupTotals() {
@@ -709,7 +709,7 @@ const UiNpcShop = (() => {
 
   function setSellQty(n) {
     const max = getSellTargetMaxQty();
-    sellQty = Math.max(1, Math.min(max, Math.min(999, Math.floor(Number(n) || 1))));
+    sellQty = Math.max(1, Math.min(max, Math.min(99999, Math.floor(Number(n) || 1))));
     const input = $('npcShopSellQty');
     if (input) input.value = String(sellQty);
     syncSellPopupTotals();

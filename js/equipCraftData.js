@@ -390,7 +390,59 @@ const EQUIP_CRAFT_ADVANCE_LINES = [
       },
     ],
   },
-
+  //心臟進階
+  {
+    id: 'heart_advance',
+    name: '心臟進階',
+    iconItemId: '01672101',
+    recipes: [
+      {
+        id: 'heart_advance_1',
+        label: '液體金屬愛心',
+        output: '01672077',
+        baseEquip: '01672073',
+        baseCount: 1,
+        materials: { '04001324': 1 },
+        meso: 50000000000,
+      },
+      {
+        id: 'heart_advance_2',
+        label: '電漿之心',
+        output: '01672099',
+        baseEquip: '01672077',
+        baseCount: 1,
+        materials: { '04001322': 3 },
+        meso: 100000000000,
+      },
+      {
+        id: 'heart_advance_3',
+        label: '女武神之心',
+        output: '01672069',
+        baseEquip: '01672099',
+        baseCount: 1,
+        materials: { '04001325': 5 },
+        meso: 200000000000,
+      },
+      {
+        id: 'heart_advance_4',
+        label: 'M-DAY機器心臟',
+        output: '01672075',
+        baseEquip: '01672069',
+        baseCount: 1,
+        materials: { '04001323': 7 },
+        meso: 500000000000,
+      },
+      {
+        id: 'heart_advance_5',
+        label: '全面控制核心',
+        output: '01672101',
+        baseEquip: '01672075',
+        baseCount: 1,
+        materials: { '01102832': 1 },
+        meso: 10000000000000,
+      },
+    ],
+  },
 ];
 
 const EQUIP_CRAFT_MAKE_LIST = [

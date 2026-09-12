@@ -437,7 +437,7 @@ const IDLE_DUNGEON_LIST = [
     "mobDrops": [],
     "rewards": [],
     "diffs": [],
-    "goldPerDamage": 0.01,
+    "goldPerDamage": 0.007,
     "damageTiers": []
   },
   {

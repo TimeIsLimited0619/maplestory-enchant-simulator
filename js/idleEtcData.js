@@ -71,6 +71,11 @@ const IDLE_ETC_DATABASE = [
   { id: '02434585', name: '嘲弄的碎片', icon: 'images/ETCicon/02434585.png', desc: '嘲弄的碎片，可通過擊敗比艾樂和班班以及分解深淵衣褲獲取。' },
   { id: '02434586', name: '吶喊的碎片', icon: 'images/ETCicon/02434586.png', desc: '懷疑的碎片，可通過擊敗比血腥女皇以及分解深淵帽子獲取。' },
   { id: '02434587', name: '破滅的碎片', icon: 'images/ETCicon/02434587.png', desc: '懷疑的碎片，可通過擊敗貝倫以及分解深淵武器獲取。' },
+  { id: '04001324', name: '心臟升級材料Lv.1', icon: 'images/ETCicon/04001324.png', desc: '心臟升級材料，可通過地下城副本獲取。' },
+  { id: '04001322', name: '心臟升級材料Lv.2', icon: 'images/ETCicon/04001322.png', desc: '心臟升級材料，可通過地下城副本獲取。' },
+  { id: '04001325', name: '心臟升級材料Lv.3', icon: 'images/ETCicon/04001325.png', desc: '心臟升級材料，可通過地下城副本獲取。' },
+  { id: '04001323', name: '心臟升級材料Lv.4', icon: 'images/ETCicon/04001323.png', desc: '心臟升級材料，可通過地下城副本獲取。' },
+  { id: '01102832', name: '心臟升級材料Lv.5', icon: 'images/ETCicon/01102832.png', desc: '心臟升級材料，可通過擊敗極限史烏獲取。' },
 ];
 
 const IdleEtcStore = {
