@@ -644,6 +644,11 @@ function handleGlobalEscapeKey() {
       close: () => SaveBackupPanel.setOpen(false),
     },
     {
+      id: 'gameSettingsPanel',
+      isOpen: () => typeof IdleSessionRefresh !== 'undefined' && IdleSessionRefresh.isOpen?.(),
+      close: () => IdleSessionRefresh.setOpen?.(false),
+    },
+    {
       id: 'idleDungeonRoot',
       isOpen: () => typeof IdleDungeon !== 'undefined' && IdleDungeon.isOpen?.(),
       close: () => IdleDungeon.setOpen(false),

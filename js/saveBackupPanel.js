@@ -227,6 +227,7 @@ const SaveBackupPanel = (() => {
       if (typeof JobChangePanel !== 'undefined') JobChangePanel.setOpen?.(false);
       if (typeof EquipCraftPanel !== 'undefined') EquipCraftPanel.setOpen?.(false);
       if (typeof DisassemblePanel !== 'undefined') DisassemblePanel.setOpen?.(false);
+      if (typeof IdleSessionRefresh !== 'undefined') IdleSessionRefresh.setPanelOpen?.(false);
       if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.setPickerOpen === 'function') {
         IdleHunt.setPickerOpen(false);
       }

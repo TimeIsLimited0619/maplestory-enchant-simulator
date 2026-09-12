@@ -1,0 +1,147 @@
+/* 設定側欄（自導覽欄右緣滑出） */
+.game-settings-panel {
+  position: fixed;
+  top: 0;
+  left: var(--app-nav-current-width, var(--app-nav-width));
+  z-index: 13998;
+  width: min(360px, calc(100vw - var(--app-nav-current-width, var(--app-nav-width)) - 12px));
+  height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: #161A23;
+  border-right: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.80);
+  font-family: 'Microsoft JhengHei', 'PingFang TC', 'Segoe UI', sans-serif;
+  transform: translateX(-100%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.24s ease, opacity 0.24s ease, visibility 0.24s ease, left 0.2s ease;
+}
+
+.game-settings-panel.is-open {
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.game-settings-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 16px 14px 12px;
+  border-bottom: 2px solid #2D2F39;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.game-settings-head span {
+  flex: 1;
+  min-width: 0;
+}
+
+.game-settings-nav {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.game-settings-nav:hover {
+  background: #2D2F39;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.game-settings-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #3a3d48 transparent;
+}
+
+.game-settings-section {
+  margin-bottom: 18px;
+}
+
+.game-settings-section-title {
+  margin: 0 0 8px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.50);
+}
+
+.game-settings-hint {
+  margin: 0 0 10px;
+  padding: 0 4px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.game-settings-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  user-select: none;
+}
+
+.game-settings-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: #6b8cff;
+  cursor: pointer;
+}
+
+.game-settings-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.game-settings-field input[type="number"] {
+  width: 72px;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  background: #0f131a;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  font-family: inherit;
+  padding: 6px 8px;
+  text-align: center;
+}
+
+.game-settings-field input[type="number"]:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

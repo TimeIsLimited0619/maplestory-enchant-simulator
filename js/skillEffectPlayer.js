@@ -503,6 +503,19 @@ const SkillEffectPlayer = (() => {
   }
 
   /**
+   * 同時散射（爆破鏢）：每條都有明顯水平分量、Y 只是小幅錯位。
+   * 八方位選向（靈氣之刃等）的 p1/p3 幾乎純垂直，不可當成散射一起打。
+   */
+  function isHorizontalScatterPaths(paths) {
+    if (!Array.isArray(paths) || paths.length < 2) return false;
+    return paths.every((p) => {
+      const x = Math.abs(Number(p?.pos?.[0]) || 0);
+      const y = Math.abs(Number(p?.pos?.[1]) || 0);
+      return x > 100 && y < 150;
+    });
+  }
+
+  /**
    * shootobj：從 start 以等速直線飛出（不對齊怪物 Y，避免往下掉再飛）。
    * 速度取自 moveList.v（視為每 30ms 移動 v px）；方向取水平朝向。
    */
@@ -537,10 +550,10 @@ const SkillEffectPlayer = (() => {
       return null;
     }
 
-    // moveList.p1／p2／p3：多條彈道散射（爆破鏢等）
+    // moveList.p1／p2／p3：僅水平散射（爆破鏢）同時多彈；八方位選向只走單一路徑
     if (!opts._singlePath) {
       const paths = listShootMovePaths(moveList);
-      if (paths.length > 1) {
+      if (isHorizontalScatterPaths(paths)) {
         let left = paths.length;
         let claimed = false;
         paths.forEach((path, i) => {

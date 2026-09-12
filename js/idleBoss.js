@@ -2055,23 +2055,26 @@ const IdleBoss = (() => {
         renderReqLevel();
         return false;
       }
-      if (!hasTicket()) {
-        syncChallengeBtn();
-        renderReqLevel();
-        if (typeof addLog === 'function') {
-          addLog(`需要【${bossTicketMeta().name}】才能挑戰。`, 'log-fail');
+      const skipTicket = !!opts.skipTicket;
+      if (!skipTicket) {
+        if (!hasTicket()) {
+          syncChallengeBtn();
+          renderReqLevel();
+          if (typeof addLog === 'function') {
+            addLog(`需要【${bossTicketMeta().name}】才能挑戰。`, 'log-fail');
+          }
+          if (fromAuto) clearRepeatState();
+          return false;
         }
-        if (fromAuto) clearRepeatState();
-        return false;
-      }
-      if (!takeTicket()) {
-        syncChallengeBtn();
-        renderReqLevel();
-        if (typeof addLog === 'function') {
-          addLog('扣除入場券失敗。', 'log-fail');
+        if (!takeTicket()) {
+          syncChallengeBtn();
+          renderReqLevel();
+          if (typeof addLog === 'function') {
+            addLog('扣除入場券失敗。', 'log-fail');
+          }
+          if (fromAuto) clearRepeatState();
+          return false;
         }
-        if (fromAuto) clearRepeatState();
-        return false;
       }
       repeatLeft = Math.max(0, repeatLeft - 1);
       const bossName = getBoss(arenaBossId)?.name || 'BOSS';
@@ -2185,7 +2188,7 @@ const IdleBoss = (() => {
     if (typeof IdleHunt !== 'undefined') {
       if (IdleHunt.isPlayerDead?.()) IdleHunt.healToFull?.();
       // 自動下一場時先不 resume，避免狩獵短暫醒來
-      if (!wantRetry) IdleHunt.resumeAfterExternal?.();
+      if (!wantRetry && !opts.skipResume) IdleHunt.resumeAfterExternal?.();
     }
     if (wantRetry && hasTicket() && selectedId && meetsEntryLevel(selectedId)) {
       scheduleAutoReenter();
@@ -2325,12 +2328,56 @@ const IdleBoss = (() => {
     bindArenaEvents();
   }
 
+  /** 定時重整用：含進行中的一場（已扣券） */
+  function getAutoResumeState() {
+    if (repeatCancel) return null;
+    const id = String(arenaBossId || selectedId || '');
+    if (!id) return null;
+    const left = arenaOpen ? (repeatLeft + 1) : repeatLeft;
+    if (left <= 0 || repeatTotal <= 0) return null;
+    return {
+      kind: 'boss',
+      bossId: id,
+      diffId: selectedDiffId || 'easy',
+      repeatLeft: left,
+      repeatTotal,
+      afterAfkMode: afterAfkMode === 'farm' ? 'farm' : 'push',
+    };
+  }
+
+  function applyAutoResumeState(snap) {
+    if (!snap || snap.kind !== 'boss') return false;
+    init();
+    const id = String(snap.bossId || '');
+    if (!id) return false;
+    selectedId = id;
+    selectedDiffId = String(snap.diffId || selectedDiffId || 'easy');
+    ensureDiffForBoss(selectedId);
+    repeatTotal = Math.max(0, Math.floor(Number(snap.repeatTotal) || 0));
+    repeatLeft = Math.max(0, Math.floor(Number(snap.repeatLeft) || 0));
+    repeatCancel = false;
+    afterAfkMode = snap.afterAfkMode === 'farm' ? 'farm' : 'push';
+    if (repeatLeft <= 0 || repeatTotal <= 0) return false;
+    if (typeof IdleDungeon !== 'undefined') IdleDungeon.setOpen?.(false);
+    setOpen(false);
+    return !!setArenaOpen(true, id, { fromAuto: true, skipTicket: true });
+  }
+
+  function exitForSessionRefresh() {
+    if (!arenaOpen && repeatLeft <= 0) return;
+    setArenaOpen(false, null, { cancelRepeat: true, skipResume: true });
+    setOpen(false);
+  }
+
   return {
     init,
     setOpen,
     setArenaOpen,
     collectListPreloadUrls,
     warmListAssets,
+    getAutoResumeState,
+    applyAutoResumeState,
+    exitForSessionRefresh,
     toggle() {
       init();
       if (arenaOpen) {

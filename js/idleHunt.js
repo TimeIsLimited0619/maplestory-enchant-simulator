@@ -48,6 +48,8 @@ const IdleHunt = (() => {
   const QUEUE_LEN = 30;
   /** 畫面上同時顯示的怪物數 */
   const VISIBLE_QUEUE_LEN = 10;
+  /** 同時死亡動畫上限；超過仍發獎，只省略屍體動畫（高速秒殺減尖峰） */
+  const MAX_DYING_VISUAL = 8;
   /** 活怪堆疊：同批前高後低；新批整體高於舊批（均在 stage z=1，低於 skill-fx 層 z=100） */
   const MOB_Z_LIVE_FLOOR = 10;
   const MOB_Z_DYING = 5;
@@ -79,9 +81,9 @@ const IdleHunt = (() => {
   /** 背景／補算每波最多跑幾步 */
   const CATCH_UP_BURST = 40;
   /** 掛機自動釋放戰鬥視覺／圖片快取間隔 */
-  const MEM_RELEASE_MS = 45000;
+  const MEM_RELEASE_MS = 30000;
   /** 解碼圖快取軟上限（張） */
-  const IMAGE_CACHE_SOFT_MAX = 420;
+  const IMAGE_CACHE_SOFT_MAX = 360;
   let lastMemReleaseAt = 0;
   /** @type {ReturnType<typeof setInterval>|null} */
   let memReleaseTimer = null;
@@ -2213,8 +2215,23 @@ const IdleHunt = (() => {
    * 傷害後同步佇列（與 IdleBossFight.afterExternalHits 同一語意）：
    * 傳入的是「本次碰過／需檢查的 mob」，不是必殺名單；是否擊殺只看實際 hp。
    * （伊修塔爾等持續引導會每 tick 帶入未死目標做同步，不可因在清單內就秒殺。）
+   *
+   * 同一次呼叫堆疊／同一影格內多次 sync 會合併成一次結算，
+   * 避免高速秒殺時 fillQueue／死亡動畫／存檔重複尖峰（獎勵不變）。
    */
+  let mobStateSyncQueued = false;
   function applySkillMobStateSync(_touched) {
+    if (mobStateSyncQueued) return;
+    mobStateSyncQueued = true;
+    const run = () => {
+      mobStateSyncQueued = false;
+      flushSkillMobStateSync();
+    };
+    if (typeof queueMicrotask === 'function') queueMicrotask(run);
+    else Promise.resolve().then(run);
+  }
+
+  function flushSkillMobStateSync() {
     const remain = [];
     const toKill = [];
     state.queue.forEach((m) => {
@@ -2228,17 +2245,25 @@ const IdleHunt = (() => {
     });
     // 先移出佇列再 applyKill，避免 applyKill→fillQueue 補怪後又被 remain 蓋掉
     state.queue = remain;
-    toKill.forEach((m) => applyKill(m));
+    toKill.forEach((m) => applyKill(m, { skipFillQueue: true, skipSave: true }));
     const front = state.queue[0];
     if (front && state.mobFrontUid !== front.uid) {
       state.mobFrontUid = front.uid;
       resetMobAtkAccums();
     }
     fillQueue();
+    if (toKill.length) save();
     syncComboOrbsUi();
-    // 連鎖同幀可能多次 sync：合併到下一 animation frame 再 render
     // 掉落另延 ~28ms，與死亡／場刷錯開
     scheduleHuntRender();
+    // 大波秒殺後立刻修剪傷害字／狀態，避免越刷越卡
+    if (toKill.length >= 6) {
+      try {
+        DamageNumber.trimTo?.(120);
+        DamageNumber.pruneStaleStacks?.(3000);
+        SkillMobStatus.prune?.();
+      } catch (_) { /* ignore */ }
+    }
   }
 
   let huntRenderRaf = 0;
@@ -2301,9 +2326,14 @@ const IdleHunt = (() => {
     const list = (state.deferredKills || []).slice();
     state.deferredKills = [];
     list.forEach(({ mob, origin }) => {
-      if (mob) applyKill(mob, { origin });
+      if (mob) applyKill(mob, { origin, skipFillQueue: true, skipSave: true });
     });
-    if (list.length) syncComboOrbsUi();
+    if (list.length) {
+      fillQueue();
+      save();
+      syncComboOrbsUi();
+      scheduleHuntRender();
+    }
   }
 
   function huntCombatCtx(extra = {}) {
@@ -2639,6 +2669,21 @@ const IdleHunt = (() => {
       spawnDropRowsVisual(point, rows);
       return;
     }
+    // 高速連殺：純楓幣併入上一包，減少場上掉落實體
+    const onlyMeso = rows.length === 1 && rows[0]?.kind === 'meso';
+    if (onlyMeso && pendingDropSpawns.length) {
+      const last = pendingDropSpawns[pendingDropSpawns.length - 1];
+      const meso = (last.rows || []).find((r) => r && r.kind === 'meso');
+      const add = Math.max(0, Math.floor(Number(rows[0].amount) || 0));
+      if (meso && add > 0) {
+        meso.amount = Math.max(0, Math.floor(Number(meso.amount) || 0)) + add;
+        return;
+      }
+      if (add > 0) {
+        last.rows = [{ kind: 'meso', amount: add }, ...(last.rows || [])];
+        return;
+      }
+    }
     pendingDropSpawns.push({ origin: point, rows });
     if (dropSpawnTimer != null) return;
     dropSpawnTimer = window.setTimeout(pumpPendingDropSpawns, DROP_SPAWN_DELAY_MS);
@@ -2785,18 +2830,30 @@ const IdleHunt = (() => {
       ? performance.now()
       : Date.now();
     if (!force && lastMemReleaseAt > 0 && (now - lastMemReleaseAt) < MEM_RELEASE_MS) return;
-    // 前景且特效／傷害數字不多時略過，避免無謂閃爍
+
+    // 輕量例行：修剪圖快取／狀態鍵，不整清傷害數字（避免畫面閃一下）
+    try {
+      const pin = typeof DamageSkinCatalog !== 'undefined'
+        ? DamageSkinCatalog.pinnedUrls?.()
+        : null;
+      EnchantImagePreload.softTrim?.(IMAGE_CACHE_SOFT_MAX, pin);
+      SkillEffectPlayer.clearLocalPreloadCache?.();
+      SkillMobStatus.prune?.();
+      DamageNumber.pruneStaleStacks?.(8000);
+    } catch (_) { /* ignore */ }
+
+    const fxN = typeof SkillEffectPlayer !== 'undefined'
+      ? (Number(SkillEffectPlayer.activeInstanceCount?.()) || 0)
+      : 0;
+    const dmgN = typeof DamageNumber !== 'undefined'
+      ? (Number(DamageNumber.activeCount?.()) || 0)
+      : 0;
+    // 特效／數字明顯堆積才做 soft release
     if (!force && typeof document !== 'undefined' && !document.hidden) {
-      const fxN = typeof SkillEffectPlayer !== 'undefined'
-        ? (Number(SkillEffectPlayer.activeInstanceCount?.()) || 0)
-        : 0;
-      const dmgN = typeof DamageNumber !== 'undefined'
-        ? (Number(DamageNumber.activeCount?.()) || 0)
-        : 0;
-      const imgN = typeof EnchantImagePreload !== 'undefined'
-        ? (Number(EnchantImagePreload.size?.()) || 0)
-        : 0;
-      if (fxN < 24 && dmgN < 80 && imgN < IMAGE_CACHE_SOFT_MAX) return;
+      if (fxN < 36 && dmgN < 120) {
+        lastMemReleaseAt = now;
+        return;
+      }
     }
     releaseCombatVisuals({ soft: true });
   }
@@ -3452,20 +3509,26 @@ const IdleHunt = (() => {
       y: fallY != null ? fallY : at.y,
     };
     if (showDeath) {
-      if (!(state.dying || []).some((d) => String(d.uid) === String(dead.uid))) {
-        state.dying.push({
-          uid: dead.uid,
-          name: dead.name,
-          iconId: dead.iconId,
-          isBoss: !!dead.isBoss,
-          bossScaleSprite: !!dead.bossScaleSprite,
-          bossScaleHud: !!dead.bossScaleHud,
-          x: origin.x,
-          y: origin.y,
-          elapsed: 0,
-        });
+      const dyingCount = (state.dying || []).length;
+      if (dyingCount >= MAX_DYING_VISUAL) {
+        // 高速擊殺尖峰：獎勵照發，直接移除 actor，不追加死亡動畫
+        deadEl?.remove();
+      } else {
+        if (!(state.dying || []).some((d) => String(d.uid) === String(dead.uid))) {
+          state.dying.push({
+            uid: dead.uid,
+            name: dead.name,
+            iconId: dead.iconId,
+            isBoss: !!dead.isBoss,
+            bossScaleSprite: !!dead.bossScaleSprite,
+            bossScaleHud: !!dead.bossScaleHud,
+            x: origin.x,
+            y: origin.y,
+            elapsed: 0,
+          });
+        }
+        beginMobDeathVisual(dead, origin);
       }
-      beginMobDeathVisual(dead, origin);
     }
     state.kills += 1;
     const zone = typeof IdleZones !== 'undefined' ? IdleZones.get(state.zoneId) : null;
@@ -3505,8 +3568,8 @@ const IdleHunt = (() => {
     }
     if (state.dungeon) {
       if (typeof IdleDungeon !== 'undefined') IdleDungeon.onHuntKill?.(dead);
-      if (state.dungeon?.status === 'running') fillQueue();
-      save();
+      if (!opts.skipFillQueue && state.dungeon?.status === 'running') fillQueue();
+      if (!opts.skipSave) save();
       return;
     }
     if (dead?.isBoss) {
@@ -3539,8 +3602,8 @@ const IdleHunt = (() => {
         state.lastDrop = `小怪已達 ${need} 隻，可挑戰 BOSS`;
       }
     }
-    fillQueue();
-    save();
+    if (!opts.skipFillQueue) fillQueue();
+    if (!opts.skipSave) save();
   }
 
   /** 被動週期回 HP（強化恢復／魔力無限等）；只實作 HP，不回 MP */

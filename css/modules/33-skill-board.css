@@ -319,38 +319,6 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
-.skb-dmg-toggle {
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  transform: translateY(100%);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  padding: 4px 2px 0;
-  color: #000000;
-  font-size: 16px;
-  line-height: 1.2;
-  cursor: pointer;
-  user-select: none;
-  white-space: nowrap;
-  pointer-events: auto;
-  z-index: 4;
-}
-
-.skb-dmg-toggle input {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  accent-color: #c9a227;
-  cursor: pointer;
-}
-
-.skb-dmg-toggle span {
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.75);
-}
-
 .skb-link-slot .skb-equip-icon,
 .skb-link-slot .skb-equip-icon-fallback {
   position: absolute;

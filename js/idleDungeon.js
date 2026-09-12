@@ -736,9 +736,12 @@ const IdleDungeon = (() => {
       return false;
     }
     const isDamage = d.type === 'damage';
+    const diffPick = fromAuto
+      ? (selectedDiffId || $('idleDungeonDiff')?.value)
+      : ($('idleDungeonDiff')?.value || selectedDiffId);
     const diff = isDamage
       ? { id: 'trial', name: '試煉', hpMult: 1, dmgMult: 1, rewards: [] }
-      : IdleDungeonStore.getDiff(d, $('idleDungeonDiff')?.value || selectedDiffId);
+      : IdleDungeonStore.getDiff(d, diffPick);
     if (!isDamage && !diff) {
       resultText = '請先選擇副本與難度。';
       if (!fromAuto) render();
@@ -755,7 +758,8 @@ const IdleDungeon = (() => {
       return false;
     }
     const tickets = ticketCount(d.ticketId);
-    if (tickets < 1) {
+    const skipTicket = !!opts.skipTicket;
+    if (!skipTicket && tickets < 1) {
       resultText = `需要【${d.ticketName}】，請先在野外地圖刷。`;
       if (!fromAuto) render();
       return false;
@@ -830,13 +834,15 @@ const IdleDungeon = (() => {
         render();
         return false;
       }
-      if (!takeTicket(d.ticketId)) {
-        await IdleHunt.endDungeon?.({ skipFade: true });
-        resultText = '扣除入場券失敗。';
-        clearRepeatState();
-        setOpen(true, { keepView: true });
-        render();
-        return false;
+      if (!skipTicket) {
+        if (!takeTicket(d.ticketId)) {
+          await IdleHunt.endDungeon?.({ skipFade: true });
+          resultText = '扣除入場券失敗。';
+          clearRepeatState();
+          setOpen(true, { keepView: true });
+          render();
+          return false;
+        }
       }
       repeatLeft = Math.max(0, repeatLeft - 1);
       const autoHint = repeatTotal > 1
@@ -1918,6 +1924,56 @@ const IdleDungeon = (() => {
     });
   }
 
+  /** 定時重整用：含進行中的一場（已扣券） */
+  function getAutoResumeState() {
+    if (repeatCancel) return null;
+    const cur = run();
+    const id = String((cur && cur.id) || selectedId || '');
+    if (!id) return null;
+    const inRun = !!(cur && cur.status === 'running');
+    const left = inRun ? (repeatLeft + 1) : repeatLeft;
+    if (left <= 0 || repeatTotal <= 0) return null;
+    return {
+      kind: 'dungeon',
+      dungeonId: id,
+      diffId: String((cur && cur.diffId) || selectedDiffId || ''),
+      pickerCat: pickerCat || 'gold',
+      repeatLeft: left,
+      repeatTotal,
+      afterAfkMode: afterAfkMode === 'farm' ? 'farm' : 'push',
+    };
+  }
+
+  async function applyAutoResumeState(snap) {
+    if (!snap || snap.kind !== 'dungeon') return false;
+    init();
+    const id = String(snap.dungeonId || '');
+    if (!id) return false;
+    selectedId = id;
+    selectedDiffId = String(snap.diffId || selectedDiffId || '');
+    if (snap.pickerCat) pickerCat = String(snap.pickerCat);
+    pickerView = 'enter';
+    repeatTotal = Math.max(0, Math.floor(Number(snap.repeatTotal) || 0));
+    repeatLeft = Math.max(0, Math.floor(Number(snap.repeatLeft) || 0));
+    repeatCancel = false;
+    afterAfkMode = snap.afterAfkMode === 'farm' ? 'farm' : 'push';
+    if (repeatLeft <= 0 || repeatTotal <= 0) return false;
+    if (typeof IdleBoss !== 'undefined') IdleBoss.closeAll?.();
+    return !!(await enter({ fromAuto: true, skipTicket: true }));
+  }
+
+  async function exitForSessionRefresh() {
+    const cur = run();
+    if (cur && cur.status === 'running') {
+      repeatCancel = true;
+      try {
+        await IdleHunt.endDungeon?.({ skipFade: true });
+      } catch (_) { /* ignore */ }
+    }
+    clearRepeatState();
+    setOpen(false);
+  }
+
   return {
     init,
     setOpen,
@@ -1934,6 +1990,9 @@ const IdleDungeon = (() => {
     onHuntTick,
     onHuntDeath,
     recordLoot,
+    getAutoResumeState,
+    applyAutoResumeState,
+    exitForSessionRefresh,
     closeAll() {
       setOpen(false);
     },

@@ -1,0 +1,23 @@
+---
+description: 禁止用會弄壞 UTF-8／中文編碼的方式改檔
+alwaysApply: true
+---
+
+# 禁止會改壞檔案編碼的寫入方式
+
+改文字檔（尤其含中文的 `index.html`、`.js`、`.css`、`.md`）時：
+
+## 禁止
+
+- PowerShell `Set-Content`、`Out-File`、`>`／`>>` 重寫整檔（預設編碼會弄壞 UTF-8）
+- `Get-Content … -Raw` 再整檔寫回只為改一行 `?v=`
+- 任何會重編碼、加錯 BOM、或用系統預設 code page 的 shell 改檔
+
+## 必須用
+
+- **StrReplace / Write / ApplyPatch** 等編輯工具
+- bump cache、加 script 標籤也用編輯工具，不要經 PowerShell 整檔覆寫
+
+## 例外
+
+僅在編輯工具不可用時，才可用明確 UTF-8 無 BOM 寫入（例如 Python `encoding='utf-8'`），且改完必須確認檔案內中文仍正常。

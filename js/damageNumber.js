@@ -23,9 +23,11 @@ const DamageNumber = (() => {
    * 場上同時存在的數字上限。
    * 需能覆蓋「隊列 mob × 多段」一次打出；超過才回收最舊。
    */
-  const MAX_ON_FIELD = 640;
+  const MAX_ON_FIELD = 200;
   /** 連鎖等同幀大量數字：每幀最多掛載幾個，避免主執行緒卡頓 */
-  const SPAWN_PER_FRAME = 28;
+  const SPAWN_PER_FRAME = 16;
+  /** 待生成佇列上限；超過丟最舊，避免連鎖秒殺堆積 */
+  const MAX_SPAWN_QUEUE = 96;
   const STACK_PRUNE_EVERY_TICKS = 45;
   const PLAYER_STACK_KEY = 'player';
   const HIDE_DAMAGE_KEY = 'idle.damage.hideNumbers.v1';
@@ -381,6 +383,7 @@ const DamageNumber = (() => {
   }
 
   function enqueueSpawn(damageValue, targetX, targetY, isCritical, opts) {
+    while (spawnQueue.length >= MAX_SPAWN_QUEUE) spawnQueue.shift();
     while (instances.size + spawnQueue.length >= MAX_ON_FIELD) {
       if (spawnQueue.length) {
         spawnQueue.shift();
@@ -616,9 +619,20 @@ const DamageNumber = (() => {
 
   function spawnOnMob(mob, damageValue, isCritical = false, opts = {}) {
     if (!mob) return null;
+    // 狩獵後排（無場上 actor）：不噴場外數字，避免 30 佇列秒殺尖峰
+    const field = activeCombatField();
+    if (field?.id === 'idleHuntField'
+      && typeof IdleHunt !== 'undefined'
+      && typeof IdleHunt.isMobVisibleInField === 'function'
+      && !IdleHunt.isMobVisibleInField(mob)
+      && opts.forceVisible !== true) {
+      return null;
+    }
     const uid = mob.uid != null ? String(mob.uid) : '';
     let view = getMobView(uid);
     if (!view) {
+      // 狩獵無 actor：略過虛擬座標數字
+      if (field?.id === 'idleHuntField' && opts.allowOrphan !== true) return null;
       // actor 已被清掉時：退回場上座標，避免有傷無字
       let pt = null;
       if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.mobFieldPoint === 'function') {
@@ -630,7 +644,7 @@ const DamageNumber = (() => {
       }
       if (!pt || !Number.isFinite(pt.x) || !Number.isFinite(pt.y)) return null;
       const jitter = (Math.random() - 0.5) * 8;
-      const { stackIndex, delay } = resolveStackOpts(opts, uid ? `mob:${uid}` : 'mob:orphan');
+      const { stackIndex, delay } = resolveStackOpts(opts, uid ? ('mob:' + uid) : 'mob:orphan');
       return spawn(
         damageValue,
         pt.x + jitter,
@@ -640,7 +654,7 @@ const DamageNumber = (() => {
       );
     }
     const jitter = (Math.random() - 0.5) * 8;
-    const { stackIndex, delay } = resolveStackOpts(opts, `mob:${uid}`);
+    const { stackIndex, delay } = resolveStackOpts(opts, 'mob:' + uid);
     return spawn(
       damageValue,
       view.point.x + jitter,
@@ -767,6 +781,16 @@ const DamageNumber = (() => {
   }
 
   /** 清掉過久未用的堆疊鍵（掛機擊殺 uid 會無限增長） */
+  function trimTo(maxCount) {
+    const max = Math.max(16, Math.floor(Number(maxCount) || 120));
+    while (spawnQueue.length > max) spawnQueue.shift();
+    while (instances.size > max) {
+      const victim = instances.values().next().value;
+      if (!victim) break;
+      destroy(victim);
+    }
+  }
+
   function pruneStaleStacks(maxAgeMs = 8000) {
     const maxAge = Math.max(1000, Number(maxAgeMs) || 8000);
     const now = performance.now();
@@ -794,6 +818,7 @@ const DamageNumber = (() => {
     getHideDamageNumbers,
     setHideDamageNumbers,
     activeCount: () => instances.size,
+    trimTo,
   };
 })();
 
