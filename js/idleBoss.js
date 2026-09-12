@@ -1701,6 +1701,8 @@ const IdleBoss = (() => {
         // 挑戰時已 suspend；此處再呼叫為冪等保險
         IdleHunt.suspendForExternal?.();
       }
+      // BOSS 進場固定刷新技能 CD（保留 buff／連擊）
+      try { SkillCombat.reset?.({ keepBuffs: true, keepCombo: true }); } catch (_) { /* ignore */ }
       const hint = $('idleBossExitHint');
       if (hint) {
         hint.hidden = true;

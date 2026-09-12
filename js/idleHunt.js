@@ -4968,6 +4968,8 @@ const IdleHunt = (() => {
     state.dying = [];
     state.queue = [];
     clearFieldDrops(true);
+    // 副本進場固定刷新技能 CD（保留 buff／連擊）
+    try { SkillCombat.reset?.({ keepBuffs: true, keepCombo: true }); } catch (_) { /* ignore */ }
     const stage = $('idleHuntField')?.querySelector('.idle-hunt-stage');
     stage?.querySelectorAll('.idle-actor--mob').forEach((el) => el.remove());
     fillQueue();
