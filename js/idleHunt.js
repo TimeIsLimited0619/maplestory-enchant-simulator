@@ -935,6 +935,61 @@ const IdleHunt = (() => {
     } catch (_) { /* ignore */ }
   }
 
+  function getSavePayload() {
+    save({ flush: true });
+    return {
+      kills: state.kills,
+      gold: state.gold,
+      nextLetter: state.nextLetter,
+      zoneId: state.zoneId,
+      huntMode: state.huntMode,
+      mapKills: state.mapKills && typeof state.mapKills === 'object' ? { ...state.mapKills } : {},
+      bossCleared: state.bossCleared && typeof state.bossCleared === 'object' ? { ...state.bossCleared } : {},
+      replayKills: state.replayKills && typeof state.replayKills === 'object' ? { ...state.replayKills } : {},
+      hp: state.hp,
+      maxHp: state.maxHp,
+      afk: state.afk,
+      afkMode: state.afkMode,
+      afkHoldAdvance: state.afkHoldAdvance,
+    };
+  }
+
+  function applySavePayload(saved) {
+    if (!saved || typeof saved !== 'object') return false;
+    try {
+      if (Number.isFinite(saved.kills) && saved.kills >= 0) state.kills = Math.floor(saved.kills);
+      if (Number.isFinite(saved.gold) && saved.gold >= 0) state.gold = Math.floor(saved.gold);
+      if (Number.isInteger(saved.nextLetter) && saved.nextLetter >= 0) {
+        state.nextLetter = saved.nextLetter;
+      }
+      if (saved.zoneId) state.zoneId = String(saved.zoneId);
+      if (saved.huntMode === 'boss' || saved.huntMode === 'mob') state.huntMode = saved.huntMode;
+      if (saved.mapKills && typeof saved.mapKills === 'object') state.mapKills = { ...saved.mapKills };
+      if (saved.bossCleared && typeof saved.bossCleared === 'object') state.bossCleared = { ...saved.bossCleared };
+      if (saved.replayKills && typeof saved.replayKills === 'object') state.replayKills = { ...saved.replayKills };
+      if (Number.isFinite(saved.hp) && saved.hp >= 0) state.hp = Math.floor(saved.hp);
+      if (Number.isFinite(saved.maxHp) && saved.maxHp > 0) state.maxHp = Math.floor(saved.maxHp);
+      if (saved.afkMode === 'off' || saved.afkMode === 'push' || saved.afkMode === 'farm') {
+        state.afkMode = saved.afkMode;
+      } else if (saved.afk != null) {
+        state.afkMode = saved.afk === false ? 'off' : 'push';
+      }
+      state.afk = state.afkMode !== 'off';
+      state.afkHoldAdvance = !!saved.afkHoldAdvance;
+    } catch (_) { /* ignore */ }
+    if (state.zoneId === 'mapleisland-10000') state.zoneId = 'mapleisland-1';
+    if (typeof IdleZones !== 'undefined') {
+      state.zoneId = IdleZones.clampId(state.zoneId);
+    }
+    writeSave();
+    syncInventoryMesoDisplay();
+    try { fillQueue(); } catch (_) { /* ignore */ }
+    if (open) {
+      try { render(); } catch (_) { /* ignore */ }
+    }
+    return true;
+  }
+
   function smallKillNeed(zoneId) {
     if (typeof IdleZones === 'undefined') return 100;
     const z = IdleZones.get(zoneId || state.zoneId);
@@ -5008,6 +5063,8 @@ const IdleHunt = (() => {
     getState() {
       return { ...state, queue: state.queue.slice() };
     },
+    getSavePayload,
+    applySavePayload,
     getQueueLen: () => QUEUE_LEN,
     getVisibleQueueLen: () => VISIBLE_QUEUE_LEN,
     mobQueueIndex,

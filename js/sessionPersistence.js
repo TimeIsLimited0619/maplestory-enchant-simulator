@@ -7,6 +7,16 @@ const MSS_LOCAL_SAVE_KEY = 'mss-save-local-v1';
 const SESSION_PERSISTENCE_VERSION = 1;
 const MSS_SAVE_FORMAT = 'mss-save';
 const MSS_SAVE_FILE_VERSION = 1;
+const MSS_BACKUP_DB_NAME = 'mss-file-backup-v1';
+const MSS_BACKUP_STORE = 'handles';
+const MSS_BACKUP_META_KEY = 'mss-file-backup-meta-v1';
+const MSS_BACKUP_REMIND_KEY = 'mss-file-backup-remind-v1';
+const MSS_BACKUP_WRITE_MIN_MS = 30000;
+/** 匯出／本機備份檔加密包裝（localStorage 仍為明文） */
+const MSS_FILE_ENC_FORMAT = 'mss-save-enc';
+const MSS_FILE_ENC_VERSION = 1;
+/** 前端混淆用；無法真正防破解，只擋隨手改檔 */
+const MSS_FILE_ENC_SECRET = 'mss-file-obf-v1|maplestory-enchant-simulator|tw-zh';
 
 const SessionPersistenceModule = {
   loadedFromStorage: false,
@@ -152,6 +162,19 @@ const SessionPersistenceModule = {
       payload.npcShopRepurchase = UiNpcShop.exportRepurchase();
     }
 
+    if (typeof CharacterProgression !== 'undefined'
+      && typeof CharacterProgression.getSavePayload === 'function') {
+      payload.characterProgression = CharacterProgression.getSavePayload();
+    }
+    if (typeof CharacterSkills !== 'undefined'
+      && typeof CharacterSkills.getSavePayload === 'function') {
+      payload.characterSkills = CharacterSkills.getSavePayload();
+    }
+    if (typeof IdleHunt !== 'undefined'
+      && typeof IdleHunt.getSavePayload === 'function') {
+      payload.idleHunt = IdleHunt.getSavePayload();
+    }
+
     return payload;
   },
 
@@ -164,8 +187,494 @@ const SessionPersistenceModule = {
       const keys = this.keysFor(this.activeProfile);
       localStorage.setItem(keys.full, JSON.stringify(payload));
       localStorage.setItem(keys.session, JSON.stringify(payload.session));
+      this.scheduleFileBackupWrite();
     } catch (err) {
       console.warn('[SessionPersistence] 儲存失敗:', err);
+    }
+  },
+
+  // —— 本機檔案備份（File System Access API）——
+
+  supportsFileSystemBackup() {
+    return typeof window !== 'undefined'
+      && typeof window.showSaveFilePicker === 'function'
+      && typeof window.showOpenFilePicker === 'function'
+      && typeof indexedDB !== 'undefined';
+  },
+
+  openBackupDb() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(MSS_BACKUP_DB_NAME, 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(MSS_BACKUP_STORE)) {
+          db.createObjectStore(MSS_BACKUP_STORE, { keyPath: 'profile' });
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error || new Error('IndexedDB open failed'));
+    });
+  },
+
+  async idbGetBackupRecord(profile) {
+    const key = profile === 'idle' ? 'idle' : 'sim';
+    const db = await this.openBackupDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(MSS_BACKUP_STORE, 'readonly');
+      const req = tx.objectStore(MSS_BACKUP_STORE).get(key);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  },
+
+  async idbPutBackupRecord(record) {
+    const db = await this.openBackupDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(MSS_BACKUP_STORE, 'readwrite');
+      tx.objectStore(MSS_BACKUP_STORE).put(record);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  },
+
+  async idbDeleteBackupRecord(profile) {
+    const key = profile === 'idle' ? 'idle' : 'sim';
+    const db = await this.openBackupDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(MSS_BACKUP_STORE, 'readwrite');
+      tx.objectStore(MSS_BACKUP_STORE).delete(key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  },
+
+  backupMetaKey(profile) {
+    const suffix = profile === 'idle' ? '.idle' : '';
+    return `${MSS_BACKUP_META_KEY}${suffix}`;
+  },
+
+  readBackupMeta(profile = this.activeProfile) {
+    try {
+      const raw = localStorage.getItem(this.backupMetaKey(profile));
+      if (!raw) return { fileName: '', lastWriteAt: 0, bound: false };
+      const data = JSON.parse(raw);
+      return {
+        fileName: String(data?.fileName || ''),
+        lastWriteAt: Number(data?.lastWriteAt) || 0,
+        bound: Boolean(data?.bound),
+      };
+    } catch (_) {
+      return { fileName: '', lastWriteAt: 0, bound: false };
+    }
+  },
+
+  writeBackupMeta(profile, patch) {
+    const prev = this.readBackupMeta(profile);
+    const next = { ...prev, ...patch };
+    try {
+      localStorage.setItem(this.backupMetaKey(profile), JSON.stringify(next));
+    } catch (_) { /* ignore quota */ }
+    return next;
+  },
+
+  defaultBackupFileName(profile = this.activeProfile) {
+    return profile === 'idle' ? 'mss-save-idle.mss' : 'mss-save-sim.mss';
+  },
+
+  fileSavePickerTypes() {
+    return [{
+      description: 'MapleStory Simulator Save',
+      accept: {
+        'application/json': ['.mss', '.json'],
+        'application/octet-stream': ['.mss'],
+      },
+    }];
+  },
+
+  bytesToBase64(bytes) {
+    const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    let binary = '';
+    const chunk = 0x8000;
+    for (let i = 0; i < arr.length; i += chunk) {
+      binary += String.fromCharCode.apply(null, arr.subarray(i, i + chunk));
+    }
+    return btoa(binary);
+  },
+
+  base64ToBytes(b64) {
+    const binary = atob(String(b64 || ''));
+    const out = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i);
+    return out;
+  },
+
+  async getFileEncryptionKey() {
+    if (!globalThis.crypto?.subtle) {
+      throw new Error('此環境不支援 Web Crypto');
+    }
+    const material = await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode(MSS_FILE_ENC_SECRET),
+    );
+    return crypto.subtle.importKey('raw', material, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+  },
+
+  async encryptPayloadForFile(payload) {
+    const key = await this.getFileEncryptionKey();
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const plain = new TextEncoder().encode(JSON.stringify(payload));
+    const cipherBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, plain);
+    return {
+      format: MSS_FILE_ENC_FORMAT,
+      version: MSS_FILE_ENC_VERSION,
+      alg: 'AES-GCM',
+      iv: this.bytesToBase64(iv),
+      data: this.bytesToBase64(cipherBuf),
+    };
+  },
+
+  async decryptPayloadFromFile(wrapped) {
+    if (!wrapped || wrapped.format !== MSS_FILE_ENC_FORMAT) {
+      throw new Error('不是加密存檔格式');
+    }
+    if (Number(wrapped.version) !== MSS_FILE_ENC_VERSION) {
+      throw new Error('加密存檔版本不相容');
+    }
+    if (wrapped.alg && wrapped.alg !== 'AES-GCM') {
+      throw new Error('不支援的加密演算法');
+    }
+    const key = await this.getFileEncryptionKey();
+    const iv = this.base64ToBytes(wrapped.iv);
+    const data = this.base64ToBytes(wrapped.data);
+    let plainBuf;
+    try {
+      plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+    } catch (_) {
+      throw new Error('存檔解密失敗（檔案可能被竄改）');
+    }
+    const text = new TextDecoder().decode(plainBuf);
+    const payload = JSON.parse(text);
+    if (!payload || payload.format !== MSS_SAVE_FORMAT) {
+      throw new Error('解密後不是有效存檔');
+    }
+    return payload;
+  },
+
+  async serializePayloadForFile(payload) {
+    const forFile = this.stripFileExportRestricted(payload);
+    if (globalThis.crypto?.subtle) {
+      const wrapped = await this.encryptPayloadForFile(forFile);
+      return `${JSON.stringify(wrapped)}\n`;
+    }
+    // 非安全內容（如 http）無法用 SubtleCrypto → 退回明文
+    console.warn('[SessionPersistence] Web Crypto 不可用，檔案改存明文');
+    return `${JSON.stringify(forFile, null, 2)}\n`;
+  },
+
+  isPotionConsumeEntry(entry) {
+    if (!entry || typeof entry !== 'object') return false;
+    const T = typeof CONSUME_ITEM_TYPE !== 'undefined' ? CONSUME_ITEM_TYPE : {};
+    const potionType = T.POTION || 'potion';
+    if (entry.type === potionType || entry.type === 'potion') return true;
+    if (entry.kind === 'consume' && (entry.type === potionType || entry.type === 'potion')) return true;
+    return false;
+  },
+
+  /**
+   * 匯出／本機備份檔專用：不含楓幣、不含消耗欄藥水以外物品。
+   * localStorage 主存仍用完整 buildExportPayload。
+   */
+  stripFileExportRestricted(payload) {
+    if (!payload || typeof payload !== 'object') return payload;
+    let clone;
+    try {
+      clone = JSON.parse(JSON.stringify(payload));
+    } catch (_) {
+      return payload;
+    }
+
+    // 楓幣：放置持有、倉庫
+    if (clone.idleHunt && typeof clone.idleHunt === 'object') {
+      delete clone.idleHunt.gold;
+    }
+    if (clone.session && typeof clone.session === 'object') {
+      delete clone.session.trunkMeso;
+      if (Array.isArray(clone.session.inventoryConsume)) {
+        clone.session.inventoryConsume = clone.session.inventoryConsume.map((entry) => (
+          this.isPotionConsumeEntry(entry) ? entry : null
+        ));
+      }
+      // 倉庫內非藥水消耗也不帶走
+      if (Array.isArray(clone.session.trunkSlots)) {
+        clone.session.trunkSlots = clone.session.trunkSlots.map((entry) => {
+          if (!entry || entry.kind !== 'consume') return entry;
+          return this.isPotionConsumeEntry(entry) ? entry : null;
+        });
+      }
+    }
+
+    // 消耗數量表：只留藥水
+    clone.playerCubeCounts = {};
+    clone.playerAddPotCubeCounts = {};
+    clone.playerStarForceScrollInventory = {};
+    clone.playerPotentialScrollInventory = {};
+    clone.playerHammerInventory = {};
+    clone.playerGloryScrollInventory = {};
+    clone.playerRecoveryCardCount = 0;
+    clone.playerThrowingStarCounts = {};
+    clone.playerBonusStatItemCounts = {};
+    clone.playerExceptionalHammerCounts = {};
+    clone.playerSoulMaterialCounts = {};
+    // playerPotionCounts 保留
+
+    if (Array.isArray(clone.npcShopRepurchase)) {
+      clone.npcShopRepurchase = clone.npcShopRepurchase.filter((entry) => {
+        if (!entry) return false;
+        if (entry.kind === 'equip' || entry.kind === 'etc') return true;
+        if (entry.kind === 'potion' || this.isPotionConsumeEntry(entry)) return true;
+        if (entry.kind === 'consume'
+          || entry.kind === 'throwing_star'
+          || entry.kind === 'glory_scroll') {
+          return false;
+        }
+        if (entry.type) {
+          const T = typeof CONSUME_ITEM_TYPE !== 'undefined' ? CONSUME_ITEM_TYPE : {};
+          if (entry.type === (T.POTION || 'potion')) return true;
+          if (Object.values(T).includes(entry.type)) return false;
+        }
+        return true;
+      });
+    }
+
+    clone.fileExportStripped = {
+      meso: true,
+      nonPotionConsume: true,
+    };
+    return clone;
+  },
+
+  async parseSaveFileText(text) {
+    let parsed;
+    try {
+      parsed = JSON.parse(String(text || ''));
+    } catch (_) {
+      throw new Error('無法解析存檔檔案');
+    }
+    if (parsed?.format === MSS_SAVE_FORMAT) {
+      return parsed;
+    }
+    if (parsed?.format === MSS_FILE_ENC_FORMAT) {
+      return this.decryptPayloadFromFile(parsed);
+    }
+    throw new Error('無效的存檔格式');
+  },
+
+  async ensureBackupPermission(handle, mode = 'readwrite') {
+    if (!handle || typeof handle.queryPermission !== 'function') return false;
+    let state = await handle.queryPermission({ mode });
+    if (state === 'granted') return true;
+    if (typeof handle.requestPermission === 'function') {
+      state = await handle.requestPermission({ mode });
+    }
+    return state === 'granted';
+  },
+
+  async getBackupStatus(profile = this.activeProfile) {
+    const meta = this.readBackupMeta(profile);
+    const supports = this.supportsFileSystemBackup();
+    let hasHandle = false;
+    if (supports) {
+      try {
+        const rec = await this.idbGetBackupRecord(profile);
+        hasHandle = Boolean(rec?.handle);
+      } catch (_) {
+        hasHandle = false;
+      }
+    }
+    return {
+      supports,
+      bound: Boolean(meta.bound || hasHandle),
+      hasHandle,
+      fileName: meta.fileName || (hasHandle ? this.defaultBackupFileName(profile) : ''),
+      lastWriteAt: meta.lastWriteAt || 0,
+      profile: profile === 'idle' ? 'idle' : 'sim',
+    };
+  },
+
+  async bindBackupFile(profile = this.activeProfile) {
+    if (!this.supportsFileSystemBackup()) {
+      throw new Error('此瀏覽器不支援本機檔案自動備份，請改用「匯出存檔」');
+    }
+    const key = profile === 'idle' ? 'idle' : 'sim';
+    const suggested = this.defaultBackupFileName(key);
+    const handle = await window.showSaveFilePicker({
+      suggestedName: suggested,
+      types: this.fileSavePickerTypes(),
+    });
+    await this.idbPutBackupRecord({
+      profile: key,
+      handle,
+      fileName: handle.name || suggested,
+      lastWriteAt: 0,
+    });
+    this.writeBackupMeta(key, {
+      bound: true,
+      fileName: handle.name || suggested,
+    });
+    await this.writeBackupFileNow({ force: true, profile: key });
+    return this.getBackupStatus(key);
+  },
+
+  async unbindBackupFile(profile = this.activeProfile) {
+    const key = profile === 'idle' ? 'idle' : 'sim';
+    try {
+      await this.idbDeleteBackupRecord(key);
+    } catch (_) { /* ignore */ }
+    this.writeBackupMeta(key, { bound: false, fileName: '', lastWriteAt: 0 });
+    return this.getBackupStatus(key);
+  },
+
+  scheduleFileBackupWrite() {
+    if (!this.supportsFileSystemBackup()) return;
+    const meta = this.readBackupMeta(this.activeProfile);
+    if (!meta.bound) return;
+    if (this._backupWriteTimer) clearTimeout(this._backupWriteTimer);
+    this._backupWriteTimer = setTimeout(() => {
+      this._backupWriteTimer = null;
+      this.writeBackupFileNow({ force: false }).catch(() => {});
+    }, MSS_BACKUP_WRITE_MIN_MS);
+  },
+
+  async flushFileBackup() {
+    if (this._backupWriteTimer) {
+      clearTimeout(this._backupWriteTimer);
+      this._backupWriteTimer = null;
+    }
+    try {
+      await this.writeBackupFileNow({ force: true });
+    } catch (_) { /* ignore */ }
+  },
+
+  async writeBackupFileNow({ force = false, profile = this.activeProfile } = {}) {
+    if (!this.supportsFileSystemBackup()) return false;
+    const key = profile === 'idle' ? 'idle' : 'sim';
+    const meta = this.readBackupMeta(key);
+    if (!meta.bound && !force) return false;
+
+    let rec = null;
+    try {
+      rec = await this.idbGetBackupRecord(key);
+    } catch (err) {
+      console.warn('[SessionPersistence] 讀取備份 handle 失敗:', err);
+      return false;
+    }
+    if (!rec?.handle) {
+      if (meta.bound) {
+        this.writeBackupMeta(key, { bound: false });
+      }
+      return false;
+    }
+
+    const now = Date.now();
+    if (!force && this._lastBackupWriteAt?.[key]
+      && (now - this._lastBackupWriteAt[key]) < MSS_BACKUP_WRITE_MIN_MS) {
+      return false;
+    }
+    if (this._backupWriting) return false;
+    this._backupWriting = true;
+
+    try {
+      const ok = await this.ensureBackupPermission(rec.handle, 'readwrite');
+      if (!ok) {
+        if (typeof addLog === 'function') {
+          addLog('[存檔] 本機備份檔權限失效，請至「存檔」重新綁定。', 'log-fail');
+        }
+        return false;
+      }
+
+      // 寫入時若指定非 active profile，仍以目前記憶體為準（僅 active 有完整狀態）
+      if (key !== this.activeProfile) {
+        return false;
+      }
+
+      const payload = this.buildExportPayload();
+      if (key === 'idle') delete payload.costTracker;
+      const json = await this.serializePayloadForFile(payload);
+      const writable = await rec.handle.createWritable();
+      await writable.write(json);
+      await writable.close();
+
+      if (!this._lastBackupWriteAt) this._lastBackupWriteAt = {};
+      this._lastBackupWriteAt[key] = now;
+      const fileName = rec.handle.name || rec.fileName || this.defaultBackupFileName(key);
+      await this.idbPutBackupRecord({
+        profile: key,
+        handle: rec.handle,
+        fileName,
+        lastWriteAt: now,
+      });
+      this.writeBackupMeta(key, { bound: true, fileName, lastWriteAt: now });
+      if (typeof SaveBackupPanel !== 'undefined') SaveBackupPanel.refresh?.();
+      return true;
+    } catch (err) {
+      console.warn('[SessionPersistence] 本機備份寫入失敗:', err);
+      return false;
+    } finally {
+      this._backupWriting = false;
+    }
+  },
+
+  async importSaveFromFile(file) {
+    if (!file) throw new Error('未選擇檔案');
+    const text = await file.text();
+    const data = await this.parseSaveFileText(text);
+    this.importSaveFromObject(data);
+    return data;
+  },
+
+  async pickAndImportBackupFile() {
+    if (typeof window.showOpenFilePicker === 'function') {
+      const [handle] = await window.showOpenFilePicker({
+        multiple: false,
+        types: this.fileSavePickerTypes(),
+      });
+      const file = await handle.getFile();
+      return this.importSaveFromFile(file);
+    }
+    throw new Error('此瀏覽器請改用「匯入存檔」選擇檔案');
+  },
+
+  async loadFromBoundBackupFile(profile = this.activeProfile) {
+    if (!this.supportsFileSystemBackup()) {
+      throw new Error('此瀏覽器不支援讀取綁定備份檔');
+    }
+    const key = profile === 'idle' ? 'idle' : 'sim';
+    const rec = await this.idbGetBackupRecord(key);
+    if (!rec?.handle) throw new Error('尚未綁定本機備份檔');
+    const ok = await this.ensureBackupPermission(rec.handle, 'read');
+    if (!ok) throw new Error('無法取得備份檔讀取權限');
+    const file = await rec.handle.getFile();
+    return this.importSaveFromFile(file);
+  },
+
+  maybeRemindBindBackup() {
+    if (!this.loadedFromStorage) return;
+    const key = this.activeProfile === 'idle' ? 'idle' : 'sim';
+    const meta = this.readBackupMeta(key);
+    if (meta.bound) return;
+    const day = new Date().toISOString().slice(0, 10);
+    const stampKey = `${MSS_BACKUP_REMIND_KEY}.${key}`;
+    try {
+      if (localStorage.getItem(stampKey) === day) return;
+      localStorage.setItem(stampKey, day);
+    } catch (_) {
+      return;
+    }
+    if (typeof addLog === 'function') {
+      addLog(
+        '[存檔] 建議綁定本機備份檔：點左側「存檔」。清瀏覽器資料時 localStorage 會遺失，本機檔可還原。',
+        'log-info'
+      );
     }
   },
 
@@ -226,6 +735,9 @@ const SessionPersistenceModule = {
       playerExceptionalHammerCounts: {},
       playerSoulMaterialCounts: {},
       npcShopRepurchase: [],
+      characterProgression: null,
+      characterSkills: null,
+      idleHunt: null,
     };
   },
 
@@ -581,27 +1093,46 @@ const SessionPersistenceModule = {
     if (typeof UiNpcShop !== 'undefined' && typeof UiNpcShop.importRepurchase === 'function') {
       UiNpcShop.importRepurchase(data.npcShopRepurchase || []);
     }
+
+    if (data.characterProgression
+      && typeof CharacterProgression !== 'undefined'
+      && typeof CharacterProgression.applySavePayload === 'function') {
+      CharacterProgression.applySavePayload(data.characterProgression);
+    }
+    if (data.characterSkills
+      && typeof CharacterSkills !== 'undefined'
+      && typeof CharacterSkills.applySavePayload === 'function') {
+      CharacterSkills.applySavePayload(data.characterSkills);
+    }
+    if (data.idleHunt
+      && typeof IdleHunt !== 'undefined'
+      && typeof IdleHunt.applySavePayload === 'function') {
+      IdleHunt.applySavePayload(data.idleHunt);
+    }
+
     if (typeof InventoryModule !== 'undefined' && typeof InventoryModule.markConsumeCountsReady === 'function') {
       InventoryModule.markConsumeCountsReady();
     }
   },
 
-  exportSaveToFile() {
+  async exportSaveToFile() {
     try {
       const payload = this.buildExportPayload();
-      const json = JSON.stringify(payload, null, 2);
-      const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+      const text = await this.serializePayloadForFile(payload);
+      const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const encrypted = text.includes(`"format":"${MSS_FILE_ENC_FORMAT}"`)
+        || text.includes(`"format": "${MSS_FILE_ENC_FORMAT}"`);
       anchor.href = url;
-      anchor.download = `mss-save-${stamp}.json`;
+      anchor.download = encrypted ? `mss-save-${stamp}.mss` : `mss-save-${stamp}.json`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
       URL.revokeObjectURL(url);
       if (typeof addLog === 'function') {
-        addLog('💾 已匯出存檔。', 'log-success');
+        addLog(encrypted ? '💾 已匯出加密存檔。' : '💾 已匯出存檔。', 'log-success');
       }
       return true;
     } catch (err) {
@@ -624,6 +1155,9 @@ const SessionPersistenceModule = {
     }
 
     this.clearEquipSlotSilent();
+    try {
+      if (typeof UiEquipModule !== 'undefined') UiEquipModule.clearAllPresets?.();
+    } catch (_) { /* ignore */ }
     this.applySessionSnapshot(session);
     this.applyExtraPayload(data);
 
@@ -936,10 +1470,21 @@ const SessionPersistenceModule = {
   },
 
   bindAutoSave() {
-    window.addEventListener('beforeunload', () => this.saveToStorage());
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') this.saveToStorage();
+    window.addEventListener('beforeunload', () => {
+      this.saveToStorage();
+      // beforeunload 無法可靠 await；仍觸發非同步 flush
+      this.flushFileBackup();
     });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        this.saveToStorage();
+        this.flushFileBackup();
+      }
+    });
+    // 開頁輕量提醒（延後，等 log／UI 就緒）
+    setTimeout(() => {
+      try { this.maybeRemindBindBackup(); } catch (_) { /* ignore */ }
+    }, 1200);
   }
 };
 

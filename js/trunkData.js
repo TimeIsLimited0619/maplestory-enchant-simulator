@@ -604,6 +604,9 @@ const TrunkData = {
       }
     }
     playerTrunkSlots.splice(0, playerTrunkSlots.length, ...next);
-    playerTrunkMeso = Math.max(0, Math.floor(Number(data?.trunkMeso) || 0));
+    // 檔案匯出可能省略 trunkMeso：勿覆寫成 0
+    if (data && Object.prototype.hasOwnProperty.call(data, 'trunkMeso')) {
+      playerTrunkMeso = Math.max(0, Math.floor(Number(data.trunkMeso) || 0));
+    }
   },
 };

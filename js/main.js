@@ -639,6 +639,11 @@ function handleGlobalEscapeKey() {
       close: () => JobChangePanel.setOpen(false),
     },
     {
+      id: 'saveBackupPanel',
+      isOpen: () => typeof SaveBackupPanel !== 'undefined' && SaveBackupPanel.isOpen?.(),
+      close: () => SaveBackupPanel.setOpen(false),
+    },
+    {
       id: 'idleDungeonRoot',
       isOpen: () => typeof IdleDungeon !== 'undefined' && IdleDungeon.isOpen?.(),
       close: () => IdleDungeon.setOpen(false),

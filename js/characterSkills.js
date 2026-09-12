@@ -140,6 +140,48 @@ const CharacterSkills = (() => {
     } catch (_) { /* ignore */ }
   }
 
+  function getSavePayload() {
+    ensureHydrated();
+    return {
+      currentJobId: state.currentJobId,
+      levels: { ...state.levels },
+      equipped: JSON.parse(JSON.stringify(state.equipped)),
+      skillLinks: JSON.parse(JSON.stringify(state.skillLinks)),
+      activePreset: state.activePreset,
+      jobLineChosen,
+      idleStarterGranted,
+    };
+  }
+
+  function applySavePayload(data) {
+    if (!data || typeof data !== 'object') return false;
+    hydrated = true;
+    if (data.currentJobId != null) state.currentJobId = resolveJobId(data.currentJobId);
+    else state.currentJobId = DEFAULT_JOB_ID;
+    state.levels = (data.levels && typeof data.levels === 'object') ? { ...data.levels } : {};
+    state.equipped = (data.equipped && typeof data.equipped === 'object')
+      ? JSON.parse(JSON.stringify(data.equipped))
+      : { 1: emptyLoadout(), 2: emptyLoadout(), 3: emptyLoadout() };
+    state.skillLinks = (data.skillLinks && typeof data.skillLinks === 'object')
+      ? JSON.parse(JSON.stringify(data.skillLinks))
+      : { 1: emptySkillLink(), 2: emptySkillLink(), 3: emptySkillLink() };
+    state.activePreset = data.activePreset != null ? (Number(data.activePreset) || 1) : 1;
+    jobLineChosen = data.jobLineChosen !== false;
+    if (data.idleStarterGranted != null) idleStarterGranted = !!data.idleStarterGranted;
+    else idleStarterGranted = jobLineChosen;
+    ensureDefaults();
+    save();
+    if (typeof SkillBoardPanel !== 'undefined') SkillBoardPanel.refresh?.();
+    if (typeof SkillCombat !== 'undefined') SkillCombat.reset?.();
+    if (typeof CharacterCombatPanel !== 'undefined') {
+      CharacterCombatPanel.syncFromEquippedWeapon?.();
+      CharacterCombatPanel.syncToCombatPower?.();
+    }
+    if (typeof UiCharacterInfo !== 'undefined') UiCharacterInfo.refresh?.();
+    if (typeof AppNavSidebar !== 'undefined') AppNavSidebar.refreshProfile?.();
+    return true;
+  }
+
   function isSkillUnlocked(skillId) {
     const skill = typeof SkillCatalog !== 'undefined' ? SkillCatalog.getSkill(skillId) : null;
     if (!skill || typeof SkillPoints === 'undefined') return false;
@@ -821,6 +863,8 @@ const CharacterSkills = (() => {
     onCharacterLevelUp,
     getJobLabel,
     ensureHydrated,
+    getSavePayload,
+    applySavePayload,
     listJobLines,
     needsJobLinePick,
     needsIdleStarterGrant,

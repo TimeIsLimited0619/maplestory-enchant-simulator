@@ -25,6 +25,7 @@ const AppNavSidebar = (() => {
 
   const MAIN_ITEMS_AFTER_SKILL = [
     { id: 'btnViewJobChange', label: '自由轉職', icon: 'job', title: '自由轉職' },
+    { id: 'btnViewSaveBackup', label: '存檔', icon: 'save', title: '存檔備份' },
   ];
 
   const SIM_ITEMS = [

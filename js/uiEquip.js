@@ -1075,8 +1075,12 @@ const UiEquipModule = (() => {
   function importState(data) {
     if (!data) return;
 
+    // 完整存檔的 bodyWear 已是獨立實體；不可先把目前穿著卸回背包，
+    // 否則會與存檔穿著重複（匯入後背包多一套、身上又一套）。
     [1, 2, 3].forEach((n) => {
-      dumpWearMapToBag(presetWear[n]);
+      SLOT_IDS.forEach((id) => {
+        presetWear[n][id] = null;
+      });
     });
 
     const presetNo = PRESET_POS[data.activeEquipPreset] ? data.activeEquipPreset : 1;

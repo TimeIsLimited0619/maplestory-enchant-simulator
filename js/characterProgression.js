@@ -578,6 +578,54 @@ const CharacterProgression = (() => {
     if (typeof GrowingEquip !== 'undefined') GrowingEquip.sync?.({ log: false, refresh: true });
   }
 
+  function getSavePayload() {
+    flushSave();
+    return {
+      level: state.level,
+      exp: state.exp,
+      ap: { ...state.ap },
+      apInstant: state.apInstant,
+      apInstantDefaultOn: state.apInstantDefaultOn,
+      hyperPreset: state.hyperPreset,
+      hyperPresets: state.hyperPresets.map((preset) => ({ ...preset })),
+      hyperExtraPoints: state.hyperExtraPoints,
+    };
+  }
+
+  function applySavePayload(raw) {
+    if (!raw || typeof raw !== 'object') return false;
+    applyDefaults();
+    try {
+      if (Number.isFinite(raw.level)) state.level = clampInt(raw.level, 1, 300);
+      if (Number.isFinite(raw.exp) && raw.exp >= 0) state.exp = Number(raw.exp);
+      if (raw.ap && typeof raw.ap === 'object') {
+        ['hp', 'mp', 'str', 'dex', 'int', 'luk'].forEach((key) => {
+          state.ap[key] = clampInt(raw.ap[key], 0, 99999);
+        });
+      }
+      state.apInstant = raw.apInstantDefaultOn ? !!raw.apInstant : true;
+      state.apInstantDefaultOn = true;
+      if (Number.isInteger(raw.hyperPreset)) state.hyperPreset = clampInt(raw.hyperPreset, 0, 2);
+      if (Array.isArray(raw.hyperPresets)) {
+        raw.hyperPresets.slice(0, 3).forEach((preset, i) => {
+          HYPER_KEYS.forEach((key) => {
+            const row = HYPER_ROWS.find((item) => item.key === key);
+            state.hyperPresets[i][key] = clampInt(preset?.[key], 0, row?.max || HYPER_MAX_LEVEL);
+          });
+        });
+      }
+      if (Number.isFinite(raw.hyperExtraPoints)) {
+        state.hyperExtraPoints = Math.max(0, Math.floor(Number(raw.hyperExtraPoints) || 0));
+      }
+    } catch (_) { /* ignore */ }
+    const need = typeof MapleExpTable !== 'undefined' ? MapleExpTable.expToNext(state.level) : 0;
+    if (state.level >= 300 || !(need > 0)) state.exp = 0;
+    else if (state.exp >= need) state.exp = need * 0.999;
+    notify();
+    if (typeof GrowingEquip !== 'undefined') GrowingEquip.sync?.({ log: false, refresh: true });
+    return true;
+  }
+
   function resetDefault() {
     applyDefaults();
     notify();
@@ -640,6 +688,8 @@ const CharacterProgression = (() => {
     save,
     flushSave,
     reloadFromStorage,
+    getSavePayload,
+    applySavePayload,
     resetDefault,
     getCombatBonus,
   };

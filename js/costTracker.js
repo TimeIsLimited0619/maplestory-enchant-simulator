@@ -784,18 +784,23 @@ const CostTrackerModule = {
     input.value = '';
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
+    const run = async () => {
       try {
-        const data = JSON.parse(String(reader.result || ''));
-        if (!window.confirm('匯入存檔會覆蓋目前的背包、強化進度與成本統計，確定要繼續嗎？')) {
-          return;
-        }
+        const confirmFn = typeof showAppConfirm === 'function'
+          ? showAppConfirm
+          : ({ message }) => Promise.resolve(window.confirm(message));
+        const ok = await confirmFn({
+          title: '匯入存檔',
+          message: '匯入存檔會覆蓋目前的背包、強化進度與成本統計，確定要繼續嗎？',
+          confirmText: '確定匯入',
+          cancelText: '取消',
+        });
+        if (!ok) return;
         if (typeof SessionPersistenceModule === 'undefined'
-          || typeof SessionPersistenceModule.importSaveFromObject !== 'function') {
+          || typeof SessionPersistenceModule.importSaveFromFile !== 'function') {
           throw new Error('存檔模組未載入');
         }
-        SessionPersistenceModule.importSaveFromObject(data);
+        await SessionPersistenceModule.importSaveFromFile(file);
         addLog('📂 已匯入存檔。', 'log-success');
         this.render();
       } catch (err) {
@@ -803,10 +808,7 @@ const CostTrackerModule = {
         addLog(`⚠️ 匯入失敗：${err.message || '無法讀取檔案'}`, 'log-fail');
       }
     };
-    reader.onerror = () => {
-      addLog('⚠️ 無法讀取存檔檔案。', 'log-fail');
-    };
-    reader.readAsText(file, 'UTF-8');
+    run();
   },
 
   savePricesFromForm() {

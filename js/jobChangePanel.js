@@ -244,6 +244,7 @@ const JobChangePanel = (() => {
   function setOpen(next) {
     open = !!next;
     if (open) {
+      if (typeof SaveBackupPanel !== 'undefined') SaveBackupPanel.setOpen?.(false);
       if (typeof EquipCraftPanel !== 'undefined') EquipCraftPanel.setOpen?.(false);
       if (typeof DisassemblePanel !== 'undefined') DisassemblePanel.setOpen?.(false);
       if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.setPickerOpen === 'function') {
