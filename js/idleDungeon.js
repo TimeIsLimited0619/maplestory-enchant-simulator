@@ -58,9 +58,18 @@ const IdleDungeon = (() => {
     return typeof IdleHunt !== 'undefined' ? IdleHunt.getDungeon?.() : null;
   }
 
+  function dungeonFieldHost() {
+    const field = $('idleHuntField');
+    if (!field) return null;
+    return field.closest('.idle-hunt-field-wrap') || field.parentElement || null;
+  }
+
   function ensureDungeonTimerHost() {
     const field = $('idleHuntField');
-    if (!field || field.querySelector('#idleDungeonTimerHost')) return;
+    if (!field) return;
+    let host = $('idleDungeonTimerHost');
+    if (host && host.parentElement === field) return;
+    host?.remove();
     field.insertAdjacentHTML('beforeend', `
       <div class="idle-dungeon-timer-host" id="idleDungeonTimerHost" aria-hidden="true"></div>
     `);
@@ -712,16 +721,18 @@ const IdleDungeon = (() => {
   function renderHud(force) {
     const cur = run();
     const field = $('idleHuntField');
+    const hostWrap = dungeonFieldHost();
     let bar = $('idleDungeonHud');
-    if (!field) return;
+    if (!field || !hostWrap) return;
     if (!cur) {
       bar?.remove();
       lastHudKey = '';
       stopDungeonTimer();
       return;
     }
-    if (!bar) {
-      field.insertAdjacentHTML('afterbegin', '<div id="idleDungeonHud" class="idle-dungeon-hud"></div>');
+    if (!bar || bar.parentElement !== hostWrap) {
+      bar?.remove();
+      field.insertAdjacentHTML('beforebegin', '<div id="idleDungeonHud" class="idle-dungeon-hud"></div>');
       bar = $('idleDungeonHud');
     }
     const hasTimer = (cur.durationSec || 0) > 0;

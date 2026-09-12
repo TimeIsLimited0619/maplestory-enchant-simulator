@@ -319,13 +319,17 @@ const SkillEffectPlayer = (() => {
     const player = opts.playerEl
       || fieldEl?.querySelector('.idle-actor--player');
     if (!player || !fieldEl) return null;
-    const layer = getSkillFxLayer(fieldEl);
+    const layer = opts.behind
+      ? getSkillFxBehindLayer(fieldEl)
+      : getSkillFxLayer(fieldEl);
     if (!layer) return null;
     const facingRight = opts.mirrorX != null ? !!opts.mirrorX : playerFacingRight(player);
     return playFrames(layer, frames, {
       className: opts.className || 'idle-skill-fx-stage idle-skill-fx-stage--cast',
       mirrorX: facingRight,
       loop: !!opts.loop,
+      zIndex: opts.zIndex,
+      forcePlay: !!opts.forcePlay,
       resolveAnchor: () => {
         if (typeof opts.resolveAnchor === 'function') {
           const local = opts.resolveAnchor();
@@ -446,6 +450,32 @@ const SkillEffectPlayer = (() => {
     const x = facingRight ? (feetX - ox) : (feetX + ox);
     const y = feetY + oy;
     return { x, y, feetX, feetY };
+  }
+
+  /**
+   * 與 playOnPlayer 同一腳底錨，再對到指定 effect 幀圖心
+   *（朝右時與施法特效一樣 scaleX(-1)）。
+   */
+  function fieldPointFromPlayerEffect(fieldEl, playerEl, frame, facingRight = true) {
+    let feet = null;
+    if (typeof Paperdoll !== 'undefined' && playerEl
+      && typeof Paperdoll.getHuntFeetAnchor === 'function') {
+      feet = localAnchorToField(fieldEl, playerEl, Paperdoll.getHuntFeetAnchor(playerEl));
+    }
+    if (!feet) feet = fieldPointFromPlayer(fieldEl, playerEl, [0, 0], facingRight);
+    const ox = Number(frame?.origin?.[0]) || 0;
+    const oy = Number(frame?.origin?.[1]) || 0;
+    const loaded = decodedImage(frame?.src);
+    const w = loaded?.naturalWidth || 0;
+    const h = loaded?.naturalHeight || 0;
+    const cx = w > 0 ? w / 2 : ox;
+    const cy = h > 0 ? h / 2 : Math.max(0, oy * 0.4);
+    const lx = cx - ox;
+    const ly = cy - oy;
+    return {
+      x: facingRight ? (feet.x - lx) : (feet.x + lx),
+      y: feet.y + ly,
+    };
   }
 
   function fieldPointFromMob(fieldEl, mob, actorHint) {
@@ -768,6 +798,23 @@ const SkillEffectPlayer = (() => {
     };
   }
 
+  /** 圓弧控制點：中點旁側凸出，讓追蹤球走弧線而不是直線 */
+  function seekerArcCtrl(from, to, sign) {
+    const dx = (to?.x || 0) - (from?.x || 0);
+    const dy = (to?.y || 0) - (from?.y || 0);
+    const len = Math.hypot(dx, dy) || 1;
+    const mx = (from?.x || 0) + dx * 0.42;
+    const my = (from?.y || 0) + dy * 0.42;
+    const nx = -dy / len;
+    const ny = dx / len;
+    const bulge = Math.min(120, Math.max(36, len * 0.32));
+    const s = sign < 0 ? -1 : 1;
+    return {
+      x: mx + nx * s * bulge,
+      y: my + ny * s * bulge - bulge * 0.18,
+    };
+  }
+
   /**
    * 刻印飛鏢：從玩家以隨機角度／弧線飛向目標（非水平 shootobj）。
    */
@@ -985,6 +1032,8 @@ const SkillEffectPlayer = (() => {
       facingRight = true,
       posScale = 1,
       holdMs = 520,
+      inPlace = false,
+      spriteScale = 1,
       onHit,
       onDone,
     } = opts;
@@ -1125,10 +1174,12 @@ const SkillEffectPlayer = (() => {
         kid.stage = stage;
         stage.style.left = `${spawn.x}px`;
         stage.style.top = `${spawn.y}px`;
-        const face = facingRight ? 'scaleX(-1)' : 'none';
-        stage.style.transform = rotateDeg
-          ? `${face === 'none' ? '' : `${face} `}rotate(${rotateDeg}deg)`.trim()
-          : face;
+        const scaleAbs = Math.max(0.12, Number(spriteScale) || 1);
+        const parts = [
+          `scale(${facingRight ? -scaleAbs : scaleAbs}, ${scaleAbs})`,
+        ];
+        if (rotateDeg) parts.push(`rotate(${rotateDeg}deg)`);
+        stage.style.transform = parts.join(' ');
 
         let frameIdx = 0;
         let frameAcc = 0;
@@ -1209,6 +1260,14 @@ const SkillEffectPlayer = (() => {
             cancelAnimationFrame(kid.rafId);
             kid.rafId = null;
           }
+          if (inPlace) {
+            if (!kid.hit && typeof onHit === 'function' && Number(mob?.hp) > 0) {
+              kid.hit = true;
+              onHit(mob, starIndex);
+            }
+            kid.cancel(false);
+            return;
+          }
           startFly(anim);
         };
         if (hold > 0) {
@@ -1235,6 +1294,328 @@ const SkillEffectPlayer = (() => {
     };
 
     for (let i = 0; i < starCount; i += 1) {
+      kids.push(launchOne(i));
+    }
+    projectiles.add(group);
+    return true;
+  }
+
+  /**
+   * 探求者追蹤彈：圓弧飛向目標。
+   * kickOutPx＞0 時先從錨點往外甩一小段，再弧線追活怪（重生用，避免原地立刻再命中）。
+   * centerOrigin：true 時用圖心當錨（裁切後 PNG 對不上 WZ origin 才開）。
+   */
+  function playHomingVolley(opts = {}) {
+    const {
+      fieldEl,
+      playerEl,
+      mobs = [],
+      frames,
+      anchorAt = 'player',
+      anchorMob = null,
+      startOffset = [-40, -48],
+      facingRight = true,
+      inPlace = false,
+      staggerMs = 36,
+      speedPxPerMs = 0.72,
+      spriteScale = 0.85,
+      hitRadius = 32,
+      holdMs = 70,
+      centerOrigin = false,
+      kickOutPx = 0,
+      spawnFrame = null,
+      spawnDelayMs = 0,
+      onHit,
+      onDone,
+    } = opts;
+    const list = (frames || []).filter((f) => f && f.src);
+    const targets = (mobs || []).filter((m) => m && Number(m.hp) > 0);
+
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      if (typeof onDone === 'function') onDone();
+    };
+
+    if (!fieldEl || !list.length || !targets.length) {
+      finish();
+      return null;
+    }
+
+    if (typeof document !== 'undefined' && document.hidden) {
+      targets.forEach((mob, i) => {
+        if (typeof onHit === 'function') onHit(mob, i);
+      });
+      finish();
+      return true;
+    }
+
+    const fxLayer = getSkillFxLayer(fieldEl);
+    if (!fxLayer) {
+      finish();
+      return null;
+    }
+
+    const speed = Math.max(0.2, Number(speedPxPerMs) || 0.72) * gameSpeedMult();
+    const scaleAbs = Math.max(0.12, Number(spriteScale) || 1);
+    const radius = Math.max(12, Number(hitRadius) || 32);
+    let left = targets.length;
+    const kids = [];
+    const group = {
+      cancel(settleHits) {
+        kids.forEach((k) => {
+          try { k.cancel(settleHits); } catch (_) { /* ignore */ }
+        });
+      },
+    };
+
+    const markDone = () => {
+      left -= 1;
+      if (left <= 0) {
+        projectiles.delete(group);
+        finish();
+      }
+    };
+
+    const applyCenteredFrame = (img, frame) => {
+      if (!frame?.src) return;
+      const setOrigin = () => {
+        if (centerOrigin) {
+          const w = img.naturalWidth || 0;
+          const h = img.naturalHeight || 0;
+          if (w > 0 && h > 0) {
+            img.style.setProperty('--ox', `${Math.round(w / 2)}px`);
+            img.style.setProperty('--oy', `${Math.round(h / 2)}px`);
+            return;
+          }
+        }
+        img.style.setProperty('--ox', `${frame.origin?.[0] ?? 0}px`);
+        img.style.setProperty('--oy', `${frame.origin?.[1] ?? 0}px`);
+      };
+      if (img.dataset.src !== frame.src) {
+        img.dataset.src = frame.src;
+        img.onload = setOrigin;
+        img.src = frame.src;
+      }
+      setOrigin();
+      img.hidden = false;
+    };
+
+    const spawnPointFor = (starIndex, mob) => {
+      if (String(anchorAt) === 'mob') {
+        const pt = (anchorMob && fieldPointFromMob(fieldEl, anchorMob))
+          || fieldPointFromMob(fieldEl, mob);
+        if (pt) return { x: pt.x, y: pt.y };
+      }
+      if (spawnFrame?.src) {
+        const pt = fieldPointFromPlayerEffect(fieldEl, playerEl, spawnFrame, facingRight);
+        if (pt && Number.isFinite(pt.x)) return { x: pt.x, y: pt.y };
+      }
+      const spread = (starIndex - (targets.length - 1) / 2) * 14;
+      return fieldPointFromPlayer(
+        fieldEl,
+        playerEl,
+        [(Number(startOffset?.[0]) || 0) + spread, Number(startOffset?.[1]) || 0],
+        facingRight,
+      ) || { x: 80, y: 120 };
+    };
+
+    const launchOne = (starIndex) => {
+      const mob = targets[starIndex];
+      const kid = {
+        stage: null,
+        rafId: null,
+        holdTimer: null,
+        launchTimer: null,
+        done: false,
+        hit: false,
+        cancel(settleHits) {
+          if (kid.done) return;
+          kid.done = true;
+          if (kid.holdTimer != null) {
+            clearTimeout(kid.holdTimer);
+            kid.holdTimer = null;
+          }
+          if (kid.launchTimer != null) {
+            clearTimeout(kid.launchTimer);
+            kid.launchTimer = null;
+          }
+          if (kid.rafId != null) {
+            cancelAnimationFrame(kid.rafId);
+            kid.rafId = null;
+          }
+          if (settleHits && !kid.hit && typeof onHit === 'function' && Number(mob?.hp) > 0) {
+            kid.hit = true;
+            onHit(mob, starIndex);
+          }
+          kid.stage?.remove();
+          kid.stage = null;
+          markDone();
+        },
+      };
+
+      const start = () => {
+        if (kid.done) return;
+        let spawn = spawnPointFor(starIndex, mob);
+        const stage = document.createElement('div');
+        stage.className = 'idle-skill-fx-stage idle-skill-fx-stage--shootobj';
+        const img = document.createElement('img');
+        img.className = 'idle-skill-fx-sprite';
+        img.alt = '';
+        img.draggable = false;
+        img.decoding = 'sync';
+        stage.appendChild(img);
+        fxLayer.appendChild(stage);
+        kid.stage = stage;
+        let x = spawn.x;
+        let y = spawn.y;
+        stage.style.left = `${x}px`;
+        stage.style.top = `${y}px`;
+        stage.style.transform = `scale(${scaleAbs})`;
+        stage.style.transformOrigin = '0 0';
+
+        let frameIdx = 0;
+        let frameAcc = 0;
+        const applyFrame = () => applyCenteredFrame(img, list[frameIdx % list.length]);
+        const liveEnd = () => {
+          if (mob && Number(mob.hp) > 0) {
+            const mp = fieldPointFromMob(fieldEl, mob);
+            if (mp && Number.isFinite(mp.x)) return mp;
+          }
+          return spawn;
+        };
+        const strike = () => {
+          if (kid.hit || kid.done) return;
+          if (typeof onHit === 'function') {
+            kid.hit = true;
+            onHit(mob, starIndex);
+          }
+          kid.cancel(false);
+        };
+        const kickDist = Math.max(0, Number(kickOutPx) || 0);
+        const flyArc = () => {
+          if (kid.done) return;
+          const sign = starIndex % 2 === 0 ? -1 : 1;
+          const ang = kickDist > 0
+            ? (Math.PI * 2 * ((starIndex * 0.37 + Math.random()) % 1))
+            : (facingRight ? -0.55 : 0.55) + sign * 0.35;
+          const kickPt = {
+            x: spawn.x + Math.cos(ang) * kickDist,
+            y: spawn.y + Math.sin(ang) * (kickDist * 0.85) - 8,
+          };
+          const kickCtrl = {
+            x: spawn.x + Math.cos(ang + sign * 0.55) * kickDist * 0.58,
+            y: spawn.y + Math.sin(ang + sign * 0.55) * kickDist * 0.58 - 10,
+          };
+          const outDur = Math.max(100, Math.min(200, kickDist / Math.max(0.28, speed)));
+          let phase = kickDist > 0 ? 'out' : 'home';
+          let elapsed = 0;
+          let lastTs = 0;
+          let homeP0 = spawn;
+          let homeCtrl = spawn;
+          let homeDur = 400;
+          const armHome = (from) => {
+            homeP0 = { x: from.x, y: from.y };
+            const end = liveEnd();
+            homeCtrl = seekerArcCtrl(homeP0, end, sign);
+            const rough = Math.hypot(homeCtrl.x - homeP0.x, homeCtrl.y - homeP0.y)
+              + Math.hypot(end.x - homeCtrl.x, end.y - homeCtrl.y);
+            homeDur = Math.max(240, Math.min(760, rough / Math.max(0.32, speed)));
+          };
+          if (phase === 'home') armHome(spawn);
+
+          const stepFrame = (ts) => {
+            if (kid.done) return;
+            if (!lastTs) lastTs = ts;
+            const dt = Math.min(50, Math.max(0, ts - lastTs));
+            lastTs = ts;
+            frameAcc += dt;
+            const frameDelay = Math.max(1, Number(list[frameIdx % list.length]?.delay) || 60);
+            if (frameAcc >= frameDelay) {
+              frameAcc -= frameDelay;
+              frameIdx += 1;
+              applyFrame();
+            }
+            elapsed += dt;
+            let pt;
+            if (phase === 'out') {
+              const u = Math.min(1, elapsed / Math.max(1, outDur));
+              pt = bezier2(spawn, kickCtrl, kickPt, u);
+              if (u >= 1) {
+                phase = 'home';
+                elapsed = 0;
+                armHome(kickPt);
+              }
+            } else {
+              const u = Math.min(1, elapsed / Math.max(1, homeDur));
+              const t = 1 - (1 - u) * (1 - u);
+              pt = bezier2(homeP0, homeCtrl, liveEnd(), t);
+              const end = liveEnd();
+              const dist = Math.hypot(end.x - pt.x, end.y - pt.y);
+              if (u >= 1 || (u > 0.78 && dist <= radius)) {
+                x = pt.x;
+                y = pt.y;
+                stage.style.left = `${x}px`;
+                stage.style.top = `${y}px`;
+                strike();
+                return;
+              }
+            }
+            x = pt.x;
+            y = pt.y;
+            stage.style.left = `${x}px`;
+            stage.style.top = `${y}px`;
+            kid.rafId = requestAnimationFrame(stepFrame);
+          };
+          kid.rafId = requestAnimationFrame(stepFrame);
+        };
+
+        ensurePreloaded(spawnFrame?.src ? list.concat(spawnFrame) : list).then(() => {
+          if (kid.done) return;
+          spawn = spawnPointFor(starIndex, mob);
+          x = spawn.x;
+          y = spawn.y;
+          stage.style.left = `${x}px`;
+          stage.style.top = `${y}px`;
+          applyFrame();
+          if (inPlace && !(kickDist > 0)) {
+            const wait = scaleRealMs(Math.max(40, Number(holdMs) || 70));
+            let lastHold = 0;
+            const holdSpin = (ts) => {
+              if (kid.done) return;
+              if (!lastHold) lastHold = ts;
+              const dt = Math.min(50, Math.max(0, ts - lastHold));
+              lastHold = ts;
+              frameAcc += dt;
+              const frameDelay = Math.max(1, Number(list[frameIdx % list.length]?.delay) || 60);
+              if (frameAcc >= frameDelay) {
+                frameAcc -= frameDelay;
+                frameIdx += 1;
+                applyFrame();
+              }
+              kid.rafId = requestAnimationFrame(holdSpin);
+            };
+            kid.rafId = requestAnimationFrame(holdSpin);
+            kid.holdTimer = setTimeout(() => {
+              kid.holdTimer = null;
+              strike();
+            }, wait);
+            return;
+          }
+          flyArc();
+        });
+      };
+
+      const wait = scaleRealMs(
+        Math.max(0, starIndex * (Number(staggerMs) || 0)) + Math.max(0, Number(spawnDelayMs) || 0),
+      );
+      if (wait > 0) kid.launchTimer = setTimeout(start, wait);
+      else start();
+      return kid;
+    };
+
+    for (let i = 0; i < targets.length; i += 1) {
       kids.push(launchOne(i));
     }
     projectiles.add(group);
@@ -1671,6 +2052,7 @@ const SkillEffectPlayer = (() => {
     playShootObj,
     playRandomArcVolley,
     playStationarySeekVolley,
+    playHomingVolley,
     playBall,
     playAtField,
     playProjectile,

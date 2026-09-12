@@ -12,6 +12,15 @@ const SkillBuffRuntime = (() => {
     2221005: { slot: 'feet-behind', classSuffix: 'summon-ice', zIndex: 38, behindExtra: -42 },
     2211011: { slot: 'head', classSuffix: 'summon-orbit', zIndex: 52, headLift: -48 },
     4111007: { slot: 'target-feet', classSuffix: 'nl-flare', zIndex: 36, behind: true },
+    65121052: {
+      slot: 'player-feet',
+      classSuffix: 'ab-supernova',
+      zIndex: 28,
+      behind: true,
+      loopFrom: 6,
+      endFx: 'special',
+      skipAttackAnim: true,
+    },
   };
 
   function nowMs() {
@@ -97,6 +106,9 @@ const SkillBuffRuntime = (() => {
       headLift: cfg?.headLift ?? 0,
       offsetX: Number(stat?.s) || 0,
       offsetY: Number(stat?.v) || 0,
+      loopFrom: Number.isFinite(Number(cfg?.loopFrom)) ? Math.floor(Number(cfg.loopFrom)) : 0,
+      endFx: cfg?.endFx || '',
+      skipAttackAnim: !!cfg?.skipAttackAnim,
     };
   }
 
@@ -202,6 +214,9 @@ const SkillBuffRuntime = (() => {
         x: pt.x,
         y: pt.y,
         loop: true,
+        loopFrom: Number.isFinite(Number(placement.loopFrom))
+          ? Math.max(0, Math.floor(Number(placement.loopFrom)))
+          : 0,
         className,
         mirrorX: facingRight,
         zIndex: placement.zIndex,
@@ -235,10 +250,40 @@ const SkillBuffRuntime = (() => {
     return { x: pt.x, y: pt.y, standFxId, facingRight };
   }
 
+  function skillFxFrames(skill, key) {
+    if (!skill?.fx || !key) return null;
+    if (key === 'effect') return skill.fx.effect || null;
+    if (key === 'special') return skill.fx.special?.frames || skill.fx.special || null;
+    if (key === 'hit') return skill.fx.hit || null;
+    return null;
+  }
+
+  function playSummonEndFx(state) {
+    const frames = state?.endFrames;
+    if (!frames?.length || !state?.fieldEl || typeof SkillEffectPlayer === 'undefined') return;
+    if (typeof SkillEffectPlayer.playAtField !== 'function') return;
+    const suffix = state.placement?.classSuffix;
+    const className = suffix
+      ? `idle-skill-fx-stage idle-skill-fx-stage--summon idle-skill-fx-stage--${suffix}`
+      : 'idle-skill-fx-stage idle-skill-fx-stage--summon';
+    SkillEffectPlayer.playAtField({
+      fieldEl: state.fieldEl,
+      frames,
+      x: state.anchorX,
+      y: state.anchorY,
+      loop: false,
+      className,
+      mirrorX: state.facingRight != null ? !!state.facingRight : true,
+      zIndex: state.placement?.zIndex,
+      behind: !!state.placement?.behind,
+    });
+  }
+
   function expireSummons(t = nowMs()) {
     summons = summons.filter((s) => {
       if (t >= s.expiresAt) {
         clearSummonVisualState(s);
+        playSummonEndFx(s);
         return false;
       }
       return true;
@@ -285,6 +330,8 @@ const SkillBuffRuntime = (() => {
       const st = SkillFormula.evalStatCommon(skill.common, 1);
       if (st.indiePad > 0 || st.indieCr > 0 || st.indieMad > 0 || st.madX > 0) return true;
       if ((Number(st.indiePadR) || 0) > 0 || (Number(st.indieDamR) || 0) > 0) return true;
+      if ((Number(st.indiePMdR) || 0) > 0 || (Number(st.indieBDR) || 0) > 0) return true;
+      if ((Number(st.indieIgnoreMobpdpR) || 0) > 0 || (Number(st.criticaldamage) || 0) > 0) return true;
       if ((Number(st.emhp) || 0) > 0) return true;
       if ((Number(st.damAbsorbShieldR) || 0) > 0) return true;
     }
@@ -354,15 +401,44 @@ const SkillBuffRuntime = (() => {
       Math.floor(summonStat?.subTimeMs || stat?.subTimeMs || 0),
     ) || 480);
     const attacks = resolveSummonAttacks(skill, summon);
-    const visual = resolveSummonVisual(skill, summon);
+    let visual = resolveSummonVisual(skill, summon);
     const hasIndie = ((stat?.indiePad || 0) + (stat?.padX || 0)) > 0;
-    const wantsAutotick = attacks.length > 0
+    const fieldDmg = Number(stat?.damagePct) || Number(common.damagePct) || 0;
+    const fieldInterval = Number(stat?.subTimeMs) || 0;
+    const placementPreview = resolveSummonPlacement(skill, stat);
+    if (!(attacks.length) && fieldDmg > 0 && fieldInterval > 0) {
+      if (!placementPreview.skipAttackAnim && skill.fx?.effect?.length) {
+        attacks.push(skill.fx.effect);
+      }
+    }
+    if (!visual && fieldDmg > 0 && fieldInterval > 0) {
+      if (placementPreview.skipAttackAnim) {
+        const tile = skill.fx?.tiles?.[0];
+        if (tile?.frames?.length) {
+          visual = { stand: tile.frames };
+          const fromIdx = Number.isFinite(Number(tile.repeatIdx)) && Number(tile.repeatIdx) >= 0
+            ? Math.floor(Number(tile.repeatIdx))
+            : (Number(tile.repeat) > 1 ? Math.floor(Number(tile.repeat)) : NaN);
+          if (Number.isFinite(fromIdx)) {
+            placementPreview.loopFrom = fromIdx;
+          }
+        } else if (skill.fx?.effect?.length) {
+          visual = { stand: skill.fx.effect };
+        }
+      } else if (skill.fx?.special?.frames?.length) {
+        visual = { stand: skill.fx.special.frames };
+      }
+    }
+    const wantsAutotick = (attacks.length > 0 || !!visual)
       && (stat?.subTimeMs > 0 || summonStat?.subTimeMs > 0 || !!visual)
       && !hasIndie;
 
     if (wantsAutotick) {
       clearSummonBySkillId(skill.id);
       const placement = resolveSummonPlacement(skill, stat);
+      if (Number.isFinite(Number(placementPreview.loopFrom))) {
+        placement.loopFrom = Math.floor(Number(placementPreview.loopFrom));
+      }
       placement.parentSkillId = String(skill.id);
       const placed = placeSummonVisual(
         visual,
@@ -393,6 +469,7 @@ const SkillBuffRuntime = (() => {
         standFxId: placed?.standFxId ?? null,
         hitFrames: summon?.fx?.hit || skill.fx?.hit || null,
         placement,
+        endFrames: skillFxFrames(skill, placement.endFx),
       });
       return true;
     }

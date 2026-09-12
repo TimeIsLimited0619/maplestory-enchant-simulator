@@ -218,7 +218,7 @@ const SkillFormula = (() => {
       damR: num('damR'),
       indieDamR: num('indieDamR'),
       indiePadR: num('indiePadR'),
-      emhp: num('emhp'),
+      emhp: num('emhp') + num('mhpX') + num('mmpX'),
       damPlus: num('damPlus'),
       bdR: num('bdR'),
       pdR: num('pdR'),
@@ -276,6 +276,9 @@ const SkillFormula = (() => {
       actionSpeed: num('actionSpeed'),
       damAbsorbShieldR: num('damAbsorbShieldR'),
       indiePowerGuard: num('indiePowerGuard'),
+      indiePMdR: num('indiePMdR'),
+      indieBDR: num('indieBDR'),
+      indieIgnoreMobpdpR: num('indieIgnoreMobpdpR'),
       asrR: num('asrR'),
       terR: num('terR'),
       damagePct: num('damage'),
@@ -294,6 +297,8 @@ const SkillFormula = (() => {
       targetPlus: Math.max(0, Math.floor(num('targetPlus')) || 0),
       /** 楓葉祝福等：直接投入 AP 的能力值 +X% */
       basicStatUp: Math.max(0, num('basicStatUp')),
+      /** 超技冷卻減免％（地獄爆發／魔力彩帶等） */
+      coolTimeR: Math.max(0, num('coolTimeR')),
       attackDelayBaseMs: (() => {
         const n = num('attackDelay');
         return n > 0 ? n : null;
@@ -324,6 +329,15 @@ const SkillFormula = (() => {
     return String(t);
   }
 
+  /** WZ 說明常漏寫 %：這些 key 顯示時自動補上 */
+  const PCT_PLACEHOLDER_KEYS = new Set([
+    'pdR', 'mdR', 'damR', 'indieDamR', 'indiePMdR', 'indiePadR', 'indieBDR',
+    'cr', 'indieCr', 'criticaldamage', 'ignoreMobpdpR', 'indieIgnoreMobpdpR',
+    'bdR', 'prop', 'subProp', 'asrR', 'terR', 'stanceProp', 'damAbsorbShieldR',
+    'indiePowerGuard', 'coolTimeR', 'mastery', 'basicStatUp', 'mhpR', 'mmpR',
+    'costmpR', 'nbdR', 'bufftimeR', 'dot', 'shadowPartnerR',
+  ]);
+
   function formatSkillText(template, common, level) {
     let raw = String(template || '');
     if (!raw) return '';
@@ -331,7 +345,9 @@ const SkillFormula = (() => {
     raw = raw.replace(/\\r\\n|\\n|\\r/g, '\n');
     // 本專案無 MP：說明統一改為消耗 HP
     raw = raw.replace(/消耗\s*MP/gi, '消耗HP');
+    raw = raw.replace(/消耗#mpConMP/gi, '消耗HP #mpCon');
     raw = raw.replace(/MP\s*#mpCon/gi, 'HP #mpCon');
+    raw = raw.replace(/#mpCon\s*MP/gi, 'HP #mpCon');
     raw = raw.replace(/每秒消耗\s*#mpCon\s*MP/gi, '每秒消耗HP #mpCon');
     raw = raw.replace(/增加消耗MP/gi, '額外提高耗血');
     raw = raw.replace(/消耗更多的MP/gi, '消耗更多的HP');
@@ -348,7 +364,9 @@ const SkillFormula = (() => {
       if (key.toLowerCase() === 'c') return match;
       const val = evalPlaceholder(common, key, level);
       if (val == null) return match;
-      return formatPlaceholderNumber(val) + (suffix || '');
+      let suf = suffix || '';
+      if (!suf && PCT_PLACEHOLDER_KEYS.has(key)) suf = '%';
+      return formatPlaceholderNumber(val) + suf;
     });
 
     const marks = [];

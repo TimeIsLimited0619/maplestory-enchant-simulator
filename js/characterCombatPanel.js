@@ -220,7 +220,7 @@ const CharacterCombatPanel = (() => {
     }
     if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
       const mods = SkillModifiers.getTotals();
-      // 鬥氣終傷改由 UiCharacterInfo 終傷來源「鬥氣」獨立乘算，不寫入 skillFinal
+      // 技能終傷改由 UiCharacterInfo 各來源相乘；skillFinal 僅供戰鬥力面板顯示加總參考
       const comboFd = Number(SkillModifiers.getComboTotals?.()?.finalDamR) || 0;
       const lb = labels();
       const mainKey = SkillModifiers.flatStatKey?.(lb.main);
@@ -251,7 +251,7 @@ const CharacterCombatPanel = (() => {
       mirrorSkillBase('dmg', 'skillDmg', mods.damR);
       mirrorSkillBase('bossDmg', 'skillBossDmg', mods.bdR);
       mirrorSkillBase('critDmg', 'skillCritDmg', mods.critDmg);
-      // 技能終傷：面板用，戰鬥力公式本就不計 skillFinal（創世除外）
+      // 技能終傷（pdR／mdR 相加）：面板用，戰鬥力公式本就不計 skillFinal（創世除外）
       addField('skillFinal', Math.max(0, (mods.finalDamR || 0) - comboFd));
     }
     CombatPower.setCharacterInputs(fields, {

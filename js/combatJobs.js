@@ -49,7 +49,7 @@ const CombatJobs = (() => {
     { name: '凱撒', category: 'normal' },
     { name: '凱殷', category: 'normal' },
     { name: '卡蒂娜', category: 'dual' },
-    { name: '天使破壞者', category: 'normal' },
+    { name: '天使破壞者', category: 'normal', jobId: 6512, skillBook: 6512, skillLine: 'angelicbuster', skillRank: '100' },
     { name: '阿戴爾', category: 'normal' },
     { name: '伊利恩', category: 'normal' },
     { name: '卡莉', category: 'normal' },

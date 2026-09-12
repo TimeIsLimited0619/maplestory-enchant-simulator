@@ -191,20 +191,47 @@ const SkillChannelCast = (() => {
 
       const sideList = sideFrames(fx, plan);
       if (sideList?.length) {
+        const atPlayer = plan.sideAt === 'player'
+          || (Number(plan.sideOffset?.[0]) === 0 && Number(plan.sideOffset?.[1]) === 0);
         const facingRight = (typeof SkillEffectPlayer !== 'undefined'
           && SkillEffectPlayer.playerFacingRight)
           ? SkillEffectPlayer.playerFacingRight(playerEl)
           : !playerEl?.classList?.contains('is-flip-x');
-        const pt = sidePointFromPlayer(fieldEl, playerEl, plan.sideOffset);
-        sideId = SkillEffectPlayer.playAtField({
-          fieldEl,
-          frames: sideList,
-          x: pt.x,
-          y: pt.y,
-          loop: true,
-          className: 'idle-skill-fx-stage idle-skill-fx-stage--channel-side',
-          mirrorX: facingRight,
-        });
+        const sideBehind = !!plan.sideBehind;
+        const sideZ = Number(plan.sideZIndex);
+        const sideClass = [
+          'idle-skill-fx-stage',
+          'idle-skill-fx-stage--channel-side',
+          plan.sideClassSuffix
+            ? `idle-skill-fx-stage--${plan.sideClassSuffix}`
+            : '',
+        ].filter(Boolean).join(' ');
+        if (atPlayer) {
+          // 黏腳邊；sideBehind 時進後層（同絕殺領域／超新星）
+          sideId = SkillEffectPlayer.playOnPlayer(sideList, {
+            playerEl,
+            fieldEl,
+            className: sideClass,
+            loop: true,
+            behind: sideBehind,
+            zIndex: Number.isFinite(sideZ) ? sideZ : undefined,
+            forcePlay: true,
+          });
+        } else {
+          const pt = sidePointFromPlayer(fieldEl, playerEl, plan.sideOffset);
+          sideId = SkillEffectPlayer.playAtField({
+            fieldEl,
+            frames: sideList,
+            x: pt.x,
+            y: pt.y,
+            loop: true,
+            className: sideClass,
+            mirrorX: facingRight,
+            behind: sideBehind,
+            zIndex: Number.isFinite(sideZ) ? sideZ : undefined,
+            forcePlay: true,
+          });
+        }
       }
 
       const channelEnd = Number.isFinite(channelMs)

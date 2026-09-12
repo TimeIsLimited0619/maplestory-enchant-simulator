@@ -47,6 +47,14 @@ const SkillOverrides = (() => {
       },
       commonRemove: ['asrR', 'terR'],
     },
+    // 平衡：究極突刺 攻擊隻數／3、攻擊次數×3
+    '1111012': {
+      common: {
+        mobCount: 'd((7+d(x/2))/3)',
+        attackCount: '3',
+      },
+      h: '消耗HP#mpCon，以#damage%傷害對最多#mobCount名敵人進行攻擊#attackCount次',
+    },
 
     // 1轉 魔靈彈：攻擊隻數 6、耗血減半（mpCon 減半）
     '2001008': {
@@ -238,7 +246,7 @@ const SkillOverrides = (() => {
       skillBook: 2310,
       type: 'passive',
       equipable: false,
-      h: '永久：被擊傷害減少#damAbsorbShieldR%（減半），狀態異常耐性增加#asrR，所有屬性耐性增加#terR%，格擋增加#stanceProp%',
+      h: '永久：被擊傷害減少#damAbsorbShieldR%（減半），狀態異常耐性增加#asrR%，所有屬性耐性增加#terR%，格擋增加#stanceProp%',
       desc: '借助精靈之力，永久減少被擊傷害，並增加狀態異常耐性、所有屬性耐性及格擋。',
       commonRemove: ['time', 'cooltime', 'mpRCon'],
     },
@@ -376,9 +384,10 @@ const SkillOverrides = (() => {
         ballDelay3: '90',
       },
     },
-    // 強力投擲：WZ prop＝爆擊率
+    // 強力投擲：WZ prop＝爆擊率 → 戰鬥／說明改 cr
     '4100001': {
       common: { cr: '20+x' },
+      h: '增加爆擊機率#cr%、爆擊傷害#criticaldamage%。',
     },
     // 刻印：被動觸發，不可裝備；引爆段隱藏
     '4100011': {
@@ -403,13 +412,14 @@ const SkillOverrides = (() => {
         s2: '2',
       },
     },
-    // 影分身：x＝分身傷害%，不可進通用 xVal
+    // 影分身：x 改 shadowPartnerR，說明同步
     '4111002': {
       type: 'buff',
       common: {
         shadowPartnerR: '50+x',
       },
       commonRemove: ['x'],
+      h: '消耗HP #mpCon，#time秒間召喚在所有攻擊上用最終傷害 #shadowPartnerR%來追加影子同伴的攻擊',
     },
     // 絕殺領域：時效召喚
     '4111007': {
@@ -458,6 +468,92 @@ const SkillOverrides = (() => {
     // 隱身／楓葉淨化：非放置戰鬥
     '4001003': { skipPanel: true, equipable: false },
     '4121009': { skipPanel: true, equipable: false },
+
+    // —— 天使破壞者（Angelic Buster）——
+    // 輕盈體能：位移，已在匯入略過；隱藏 companion 不進面板
+    '65111007': { skipPanel: true, equipable: false },
+    '65121012': { skipPanel: true, equipable: false },
+    // 靈魂射手：WZ 殘留 x=20*x 不是攻擊力（攻擊走 padX）；滿等時每角色等級 +65 HP（同夜使者精準暗器 lv2mhp）
+    '65100003': {
+      commonRemove: ['x'],
+      common: { lv2mhp: '6.5*x' },
+      h: '增加靈魂射手的熟練度#mastery%、攻擊力#padX\\n角色每等級額外增加HP #lv2mhp',
+    },
+    // 超新星勇士的意志：解異常，放置戰鬥不做（同楓葉淨化）
+    '65121010': { skipPanel: true, equipable: false },
+    // 終極契約：x＝爆擊機率
+    '65121053': {
+      common: { indieCr: '30' },
+      h: '消耗HP #mpCon，持續#time秒\\n攻擊力增加#indiePad，傷害增加#indieDamR%，無視防禦率增加#indieIgnoreMobpdpR%，攻擊BOSS怪物時傷害增加#indieBDR%，爆擊機率增加#indieCr%\\n狀態異常耐性增加#asrR%，所有屬性耐性增加#terR%\\n冷卻時間#cooltime秒',
+    },
+    // 粉色裙擺：WZ 衝刺 AoE → 放置當範圍攻擊、不位移
+    '65101001': {
+      name: '粉色裙擺',
+      blizzardCast: false,
+    },
+    // 靈魂探求者：主動可裝備；施放改走追蹤球鏈（非範圍即時段）
+    '65111100': {
+      ballVisualDamage: false,
+    },
+    // 魔力彩帶：DoT 走 skillMobStatus；隊伍傷害略
+    '65121002': {
+      common: { prop: '100' },
+      commonRemove: ['u', 'y'],
+      h: '消耗HP #mpCon，最多對#mobCount名敵方以#damage%的傷害攻擊#attackCount次\\n命中的敵方在#dotTime秒之間每#dotInterval秒套用#dot%的持續傷害\\n冷卻時間#cooltime秒',
+    },
+    // 靈魂震動：8 秒有限引導（WZ updatableTime），特效黏腳邊；有 CD，可穿插其他技能（同法師冰龍／雷霆）
+    // 場地圖層：玩家／怪物後方、高於超級超新星（z28），參考夜使者絕殺領域 behind
+    '65121003': {
+      channelCast: {
+        prepareMs: 300,
+        keydownLoopMs: 360,
+        sustain: false,
+        channelSec: 8,
+        tickMs: 240,
+        sideFx: 'keydown0',
+        sideAt: 'player',
+        sideOffset: [0, 0],
+        sideBehind: true,
+        sideZIndex: 32,
+        sideClassSuffix: 'ab-resonance',
+      },
+    },
+    // 凝視靈魂：WZ h 的 #x% 實際是 criticaldamage
+    '65121004': {
+      common: {
+        criticaldamage: '5+u(x/2)',
+      },
+      commonRemove: ['x', 'lt', 'rb'],
+      h: '消耗HP #mpCon，在#time秒間爆擊傷害增加#criticaldamage%',
+    },
+    // 親和力 IV：用本職攻擊觸發技能傷害 buff（runtime）
+    '65120006': {
+      type: 'passive',
+      equipable: false,
+      h: '以天使破壞者技能(索魂精通、完美落幕加油氣球除外)攻擊時，#time秒間傷害增加#y%',
+    },
+    // 三位一體：可裝備頭技；疊層由 runtime 處理
+    '65121101': {
+      equipable: true,
+    },
+    // 超級超新星：12 秒場地 autotick；effect 從第 6 幀循環，結束播 special
+    '65121052': {
+      type: 'buff',
+      blizzardCast: false,
+    },
+    // 靈魂深造：角色終傷 +indiePMdR；探求者球數 +y、重生 +z、精通機率 +x；球終傷 −u%
+    '65121054': {
+      common: { u: '45' },
+      commonRemove: ['w', 'v'],
+    },
+    // 親和力 II：asrR 補 %
+    '65100005': {
+      h: '狀態異常耐性增加#asrR%，所有屬性耐性增加#terR%，傷害增加#damR%，爆擊機率增加#cr%',
+    },
+    // 超新星之勇士：#mpConMP 寫法修正
+    '65121009': {
+      h: '消耗HP #mpCon，使格蘭蒂斯的女神現身\\n[被動效果：直接投入AP的所有能力值增加#basicStatUp%]',
+    },
   };
 
   function apply(skill) {

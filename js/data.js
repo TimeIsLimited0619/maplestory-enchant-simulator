@@ -27,7 +27,8 @@ function resolveArmorStarLevelRange(reqLevel) {
   if (level <= 137) return '128-137';
   if (level <= 149) return '138-149';
   if (level <= 159) return '150-159';
-  if (level <= 200) return '160-200';
+  // 與武器／Wiki 一致：200 起走更高一檔（表鍵名仍為 160-200／201-249）
+  if (level <= 199) return '160-200';
   if (level <= 249) return '201-249';
   return '250';
 }
@@ -55,6 +56,10 @@ const REQ_JOB_STAR_CLASS_STATS = {
 };
 
 function getStarClassStatKeysForItem(item) {
+  // 機器心臟：星力給四圍（All Stats），不依 reqJob 篩職業屬性
+  if (typeof isHeartItem === 'function' && isHeartItem(item)) {
+    return STAR_CLASS_STAT_KEYS.slice();
+  }
   const reqJob = Number(item?.reqJob) || 0;
   if (!reqJob) return STAR_CLASS_STAT_KEYS.slice();
   const keys = new Set();
@@ -210,11 +215,6 @@ function getArmorStarForceBonusAtStar(starCount, item) {
   const attTable = ARMOR_STAR_ATT_CUMULATIVE[range] || ARMOR_STAR_ATT_CUMULATIVE['201-249'];
   const stat = statTable[star] ?? statTable[30] ?? 0;
 
-  const baseAtk = item?.baseStats?.atk || 0;
-  const baseMatk = item?.baseStats?.matk || 0;
-  const hasBaseAtk = baseAtk > 0;
-  const hasBaseMatk = baseMatk > 0;
-
   let atk = 0;
   let matk = 0;
 
@@ -223,9 +223,10 @@ function getArmorStarForceBonusAtStar(starCount, item) {
     atk = gloveAtt;
     matk = gloveAtt;
   } else {
+    // 16 星起防具／飾品一律加攻／魔攻（與 Wiki 一致，不依基礎攻擊是否 > 0）
     const att = attTable[star] ?? attTable[30] ?? 0;
-    if (hasBaseAtk) atk = att;
-    if (hasBaseMatk) matk = att;
+    atk = att;
+    matk = att;
   }
 
   return { stat, atk, matk };

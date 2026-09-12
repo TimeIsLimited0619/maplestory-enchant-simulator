@@ -1,39 +1,52 @@
 ---
-description: 新職業實作交接（技能／紙娃娃／傷害／常見坑；以精靈遊俠為範本）
+description: 新職業實作交接（技能／紙娃娃／傷害／常見坑；英雄→法師→精靈→夜使者→天使破壞者）
 globs: js/skill*.js,js/paperdoll*.js,js/weaponTypeMap.js,js/jobChangePanel.js,js/characterCombatPanel.js,js/characterProgression.js,js/idleHunt.js,js/idleBossFight.js,js/uiCharacterInfo.js,index.html
 alwaysApply: false
 ---
 
 # 新職業實作交接
 
-給下一個 agent：做新職業前先讀本規則，對照已完成的 **英雄／法師／精靈遊俠（Mercedes）**，複雜機制先提案再動手。  
-驗證習慣見 `no-auto-verify.mdc`：改完 bump `index.html` `?v=` 後交手，**不**代開瀏覽器／代測。
+給下一個 agent：做新職業前先讀本規則，對照已完成職。複雜機制先提案再動手。  
+驗證習慣見 `no-auto-verify.mdc`：改完 bump `index.html` `?v=` 後交手，**不**代開瀏覽器／代測。  
+改文字檔見 `safe-file-encoding.mdc`：禁止 PowerShell 整檔覆寫。
 
-## 推薦流程
+## 標準階段（依序，可跨 chat 交接）
 
-1. **盤資料**：技能書 jobId、專屬武器種類碼、紙娃娃是否有對應 action 幀  
-2. **給方案**（繁中）：技能分類表、要 override 的玩法差異、紙娃娃／普攻缺口、v1 範圍  
+| 階段 | 做什麼 | 完成標準 |
+|------|--------|----------|
+| 0 盤點提案 | 技能書、武器、紙娃娃、v1 範圍／不做清單 | 使用者拍板 |
+| 1 骨架接入 | Catalog 職業線、武器係數、轉職／主屬、普攻可播 | 能進場普攻 |
+| 2 主動技 | 頭技／AoE／引導／投射／DoT／召喚 | 使用者確認主動「差不多了」 |
+| 3 被動／Buff 稽核 | 對照其他職管線，逐招核 `pdR`／`damR`／超技／時限 buff | 面板數值與說明對得上 |
+| 4 終傷／公式 | 確認終傷相乘、技能專屬 BD／IED／coolTimeR | 分項可點開核對 |
+| 5 說明字串 | override 改名的 key 必須同步改 `h`；漏 `%` 靠公式補或覆寫 | tooltip 無殘留 `#x%` |
+| 6 交手 | bump `?v=`、更新本規則「已完成職業摘要」 | 短繁中交手 |
+
+**不要**在主動技未穩時大改被動；**不要**主動技做完就當整職完成——天使破壞者證明被動／終傷／tooltip 常是第二波大坑。
+
+## 推薦流程（細節）
+
+1. **盤資料**：技能書 jobId、專屬武器種類碼、紙娃娃 action、WZ 特效路徑（含 `CharacterEff/forceAtom`）  
+2. **給方案**（繁中）：技能分類表、override、紙娃娃缺口、v1 範圍  
 3. **使用者拍板**後再改 code  
 4. **實作順序**固定如下 → bump cache → 短交手說明
 
-### 實作順序
+### 實作順序（檔案）
 
 | 順序 | 檔案／動作 | 職責 |
 |------|------------|------|
-| 1 | `js/skillJobData.js`（或 `npm run import:skill` 類腳本） | WZ 技能本體 |
-| 2 | `js/skillOverrides.js` | 玩法覆寫（被動化、引導、不可裝備、數值） |
-| 3 | `js/skillCatalog.js` | 職業線、`FORCE_ADD_ATTACK_FOLLOWUP_IDS`、面板分頁 |
-| 4 | `js/skillModifiers.js` | damPlus 連結、超技 enhance、職業特效減傷等 |
-| 5 | `js/skillCombat.js` | 施放路徑：引導／投射／接技／連鎖節奏 |
-| 6 | `js/skillChannelCast.js`／`skillBallCast.js`／`skillBuffRuntime.js`／`skillMobStatus.js` | 僅在該職需要時動 |
-| 7 | `js/weaponTypeMap.js` | 武器種類→職名／係數／**普攻動作池** |
-| 8 | `js/paperdoll.js`＋紙娃娃資料 | 普攻／技能 action；缺幀要有後備 |
-| 9 | `js/jobChangePanel.js`／`characterCombatPanel.js`／`characterProgression.js` | 轉職 UI、主屬、AP |
+| 1 | `js/skillJobData.js`（或 import 腳本） | WZ 技能本體 |
+| 2 | `js/skillOverrides.js` | 玩法覆寫＋**說明 `h`／`desc` 必須對齊覆寫後的 common key** |
+| 3 | `js/skillCatalog.js` | 職業線、接技、面板分頁 |
+| 4 | `js/skillModifiers.js` | damPlus、超技 enhance、疊層、永久超技例外 |
+| 5 | `js/skillCombat.js` | 施放／引導／投射／命中後續（精通生球等） |
+| 6 | channel／ball／buffRuntime／mobStatus／effectPlayer | 僅該職需要時動 |
+| 7 | `js/weaponTypeMap.js` | 武器→職名／係數／普攻池／預設攻速 |
+| 8 | `js/paperdoll.js`＋資料 | 普攻／技能 action；缺幀要後備 |
+| 9 | 轉職／戰鬥面板／progression | UI、主屬、AP |
 | 10 | `index.html` | 所有改過的 JS `?v=` |
 
 ## 傷害管線（新職勿另開捷徑）
-
-所有玩家→怪傷害應匯入同一套：
 
 ```
 UiCharacterInfo.rollHuntHit / calcAttributeAttack
@@ -44,102 +57,132 @@ UiCharacterInfo.rollHuntHit / calcAttributeAttack
   → IdleBossFight.afterAppliedDamage（粉豆殼等）
 ```
 
-- **顯示＝實扣**：優先 `IdleHunt.applyPlayerHitToMob`；勿先 `showMobDamage(未 cap)` 再扣血。  
-- **技能專屬 BD**：加算進 `(1+dmg+BD+skillBd)`（`rollHuntHit`／`getHuntHitDamage` 的 `skillBdR`），勿事後乘算。  
-- **怪物防禦 IED×PDRate：目前關閉**（`resolveMobHitDamage` 不呼叫 `applyMobDefense`）。面板無視不完善前**不要重開**；helper 留在 `uiCharacterInfo.js` 供日後用。  
-- **結凍粉碎等狀態 IED**：仍是乘算近似，註解已標明。  
-- Hunt／BOSS 的 `onMobStateSync` 契約：傳入＝碰過的 mob，**擊殺只看 `hp<=0`**，不可把清單當必殺（伊修塔爾曾因此秒殺章節怪）。
+- **顯示＝實扣**：優先 `IdleHunt.applyPlayerHitToMob`。  
+- **最終傷害**：裝備／萌獸／創世／**每招**技能 `pdR|mdR|indiePMdR`／鬥氣／依古尼斯層數各自 `∏(1+x/100)`。  
+  - `pdR`／`mdR` 與 `indiePMdR` **不可**加進同一桶。  
+  - 鬥氣／依古尼斯：層**間**加總，再與其他來源相乘。  
+  - 列表來源：`SkillModifiers.getSkillFinalDamageSources` → `UiCharacterInfo.collectFinalDamageSources`。  
+- **技能專屬 BD／IED／段數／機率／coolTimeR**：走 `getSkillEnhance` → `applySkillEnhance`；技能 BD 進 `skillBdR` 加算，勿事後乘。  
+- **怪物防禦 IED×PDRate：目前關閉**；面板無視不完善前不要重開。  
+- Hunt／BOSS `onMobStateSync`：傳入＝碰過的 mob，擊殺只看 `hp<=0`。
 
-### Sustain／引導（伊修塔爾類）
+### Sustain／引導
 
-- `channelCast.sustain`：每 tick 結算；**有死者**才 `syncMobStateAfterDamage`；BOSS 無死者改 `IdleBossFight.tryPhaseCheck`。  
-- 死亡／`IdleBossFight.isBusy`／無法再造成傷害 → 中斷引導。  
-- BOSS `afterExternalHits`：優先 touched，勿無故 `getCombatMobs()` 全掃。
+- `channelCast.sustain`：每 tick 結算；有死者才 sync；BOSS 無死者改 phase check。  
+- **有限引導**（有 CD、可穿插）：同法師冰龍／雷霆／AB 靈魂震動。  
+- **命中後續**（精通生球、FA 等）：引導要在 **每 tick** 判定，不要只在 channel `onDone`；`onDone` 記得 `skip*Extras` 防雙觸發。  
+- OHKO／目標已死：後續若仍應「從該位置長出」，不要要求目標仍存活。
 
 ## 技能系統注意
 
-### Overrides（`skillOverrides.js`）
+### Overrides
 
-- 匯入與 `SkillCatalog` 讀取都會 merge；改完**兩個路徑都吃得到**。  
-- 語法：物件屬性間**不可缺逗號**（曾整份 PATCHES 掛掉 → 昇龍 CD 等全部失效）。  
-- 常見覆寫：`type: 'passive'`、`equipable: false`、`channelCast`、`cooltime`、`lv2mhp`／`mhpR`、說明 `h`／`desc`。
+- 匯入與 Catalog 讀取都會 merge。  
+- PATCHES 屬性間**不可缺逗號**。  
+- 覆寫 `common`／`commonRemove` 後：**同步改 `h`**。典型雷：`x` 改名成 `shadowPartnerR`／`criticaldamage`／`indieCr`，說明仍寫 `#x%` → 畫面上殘留字面 `#x%`（影分身、凝視靈魂）。  
+- `%`：`formatSkillText` 會對已知百分比 key 自動補 `%`；仍應用 override 把說明寫清楚。  
+- `mhpX`／`mmpX`：無 MP 專案併入固定 HP（`evalStatCommon.emhp`）。
 
-### 接技／連鎖
+### 超技（hyper=1）
 
-- **addAttack 接技**：不可裝備；用 `FORCE_ADD_ATTACK_FOLLOWUP_IDS` + override `equipable: false`；面板顯示「接技」。  
-- **damPlus 連結**：寫在 `skillModifiers.js` 的 `DAM_PLUS_LINKS`；實戰走 `applySkillEnhance`。  
-- **技能連鎖 2–4**：Mercedes 有最低間隔（對齊光速雙擊）；新職若高頻頭技+連鎖，考慮節流避免每 tick 狂放。
+- 名稱綁定目標技 → `getSkillEnhance`（damR／prop／ied／attackCount／coolTimeR…）。  
+- **「習得後永久」**卻掛在技能名上的（如魔力彩帶-減輕盔甲）：進全域 IED／被動，**不要**只當該招 `skillIed`（見 `HYPER_GLOBAL_IED_IDS`）。  
+- 超技 `damR` 不進角色全域 `damR`（`isHyperPas`）。
+
+### 疊層／觸發被動
+
+- 文案寫「僅該技／該系列」→ 數值只加在對應 skillId（三位一體疊層 ≠ 全域 damR）。  
+- 文案寫除外清單（精通、繼承人…）→ runtime 白／黑名單要對齊。  
+- 觸發類（親和力 IV、神祕狙擊、精通生球）：接在統一 followup 點；引導每 tick。
+
+### ForceAtom／飛行體（AB 教訓，適用其他職）
+
+- 飛行球／原子圖可能在 `Effect/CharacterEff.img/forceAtom`，**不一定**在 skill XML。  
+- **不要**把施法 `effect` 前幾幀當飛行體（常是出手光）。  
+- 對照其他職（如夜使者挑釁 `dataIndex`）或客戶端／開源 enum；必要時從 WZ canvas 抽圖。  
+- 命中 FX 可能是 atom `endEff`，不是 skill `hit`。
 
 ### Buff
 
-- 時效 buff：**瞬開**（`lockMs = 0`，不播 huntSwing 延長施放鎖）— 見 `skillCombat` buff 路徑。
+- 時效 buff：瞬開（`lockMs = 0`）。  
+- `isTimedBuffSkill` 要認得到 `indiePMdR`／`indieBDR`／`criticaldamage` 等，否則終傷 buff 不會上。  
+- 施放後 `syncToCombatPower`＋`UiCharacterInfo.refresh`，面板終傷才會更新。
 
-## 紙娃娃／普攻（精靈遊俠踩過的坑）
+### 接技／連鎖
 
-- 普攻池在 `weaponTypeMap.BASIC_ATTACK_ACTIONS_BY_TYPE`。  
-- **雙弩槍**正服是 `shoot1`／`shootF`，但目前 `paperdollData` **常缺 shoot 幀** → 必須有 `swingT1`／`swingO1` 後備，否則 `pickBasicAttackAction` → `stand1`（看起來沒普攻）。  
-- `paperdoll.pickBasicAttackAction` 在池空時會再退 swing；新遠程職仍應在 weaponTypeMap **主動加後備**。  
-- 引導技用 `playHuntSwingLoop`（如 `dualVulcanLoop`）；結束務必 `stopHuntSwingLoop`。  
-- 技能 WZ `actions` 要對得上紙娃娃 action 名；缺幀不要 silently stand。
+- addAttack：不可裝備；`FORCE_ADD_ATTACK_FOLLOWUP_IDS`。  
+- damPlus：`DAM_PLUS_LINKS`。  
+- 高頻頭技＋連鎖考慮節流。
+
+## 紙娃娃／普攻
+
+- 池在 `weaponTypeMap.BASIC_ATTACK_ACTIONS_BY_TYPE`。  
+- 缺專屬武器：新手可暫發劍，**係數／普攻池／攻速**走職業預設武器。  
+- 遠程缺 shoot 幀 → 必須 swing 後備。  
+- 引導：`playHuntSwingLoop`／結束 `stopHuntSwingLoop`。
 
 ## 職業接入檢查清單
 
-1. 技能書進 `skillJobData`／Catalog 職業線（1–4 轉 jobId）  
-2. 專屬武器種類碼 → `weaponTypeMap`（exclusive jobName、係數、普攻池、預設攻速）  
-3. 轉職面板圖示 `jobChangePanel.js`  
-4. 主屬／AP／戰鬥面板職業鎖定  
-5. 主動／被動／buff／超技分類正確；CD、mobCount、damage% 抽樣對過說明  
-6. 接技／最終攻擊／召喚／DoT／狀態若有，接到既有 runtime，勿複製一套傷害  
-7. 紙娃娃：stand + 至少一種可播的普攻 action  
-8. 狩獵＋BOSS 各打一段（使用者測）；agent 只 bump cache  
-9. 新職特有機制寫進本規則「已完成職業摘要」
+1. 技能書／Catalog 1–4 轉  
+2. 武器種類 → 係數／普攻池／攻速  
+3. 轉職圖示、主屬／AP  
+4. 主動路徑接既有 runtime（勿複製傷害）  
+5. **被動／buff／超技**對過其他職；抽樣面板 STR／終傷／IED／攻速  
+6. **終傷分項**含 indie／疊層／超技例外  
+7. **tooltip**：無 `#x%` 殘留；override 改 key 必改 `h`  
+8. 紙娃娃 stand＋可播普攻  
+9. 使用者測狩獵＋BOSS；agent 只 bump cache  
+10. 寫進「已完成職業摘要」＋本規則若有新雷
 
 ## 已完成職業摘要（簡）
 
 ### 英雄（Warrior）
 
 - 鬥氣、最終攻擊、部分超技；激勵改常駐被動 `1101006`。  
-- 滿鬥氣強化形態（狂暴等）見 `resolveComboEnhancedForm`。
+- 滿鬥氣強化形態見 `resolveComboEnhancedForm`。
 
 ### 法師（火毒／冰雷）
 
-- 無 MP → 多數改 HP；魔力增幅類用 `mhpR`／`lv2mhp`。  
-- 瞬間移動熟練：面板可顯示但 `equipable: false`，擋位靠 stance。  
-- 冰雷結凍／粉碎等走 `skillMobStatus`。
+- 無 MP → HP；魔力增幅類 `mhpR`／`lv2mhp`。  
+- 瞬間移動熟練：`equipable: false`，擋位靠 stance。  
+- 結凍／粉碎等走 `skillMobStatus`。
 
 ### 精靈遊俠（Mercedes，`231x`）
 
-- 頭技伊修塔爾 `23121000`：`channelCast.sustain`；傷害即時、ball 可純動畫。  
-- 接技：騰空踢擊／旋風突進／傳說之槍／旋風月光／憤怒天使等 → addAttack，不可裝備。  
-- damPlus：伊修塔爾→獨角獸、傳說→落葉、月光→昇龍+騰空等（見 `DAM_PLUS_LINKS`）。  
-- 昇龍 `23101001` CD 10s；可打斷 sustain。  
-- 雙弩槍精通：`lv2mhp` flat HP。  
-- 減傷類曾做 Mercedes 專用 scale（`skillModifiers`）。  
-- 普攻：缺 shoot 幀 → swing 後備（見上）。
+- 伊修塔爾 sustain；接技 addAttack；damPlus 見 `DAM_PLUS_LINKS`。  
+- 依古尼斯：層間加總終傷＋攻速；永久 `pdR`／`padX`。  
+- 減傷 Mercedes scale；雙弩缺 shoot → swing 後備。
 
 ### 夜使者（Night Lord，`400`／`410`／`411`／`412`）
 
-- 主屬 LUK／副 DEX；武器拳套（係數 1.75）。無低等 0147：新手仍發劍，戰鬥係數／普攻池／攻速改走職業預設拳套。
-- 頭技四飛閃 `4121013`（`replacesSkill` 三飛閃）；刻印 `4100011`／`4120018` 被動，命中上標後下一發打星星彈。
-- 影分身 `4111002`：`shadowPartnerR` 額外段 + 紙娃娃 `hunt-clone` 半透明層。
-- 爆破鏢 extraSkill 爆炸、挑釁 `4121020` 追擊、絕殺領域召喚 autotick、飛毒殺／出血 DoT、絕對領域 bdR＋防下降。
-- v1 不做：5／6 轉、隱身／二段跳／暗影衝刺、短劍線、夜幕印記（2 秒無敵）。
+- 主屬 LUK／副 DEX；拳套 1.75。無低等 0147 → 係數／普攻走職業預設拳套。  
+- 四飛閃、刻印、影分身（`shadowPartnerR`，說明勿寫 `#x%`）、爆破鏢、挑釁、絕殺領域、DoT、絕對領域。  
+- v1 不做：5／6 轉、隱身／二段跳、短劍線、夜幕印記。
+
+### 天使破壞者（Angelic Buster，`6500`／`6510`／`6511`／`6512`）
+
+- 主屬 DEX／副 STR；靈魂射手 1.30、WZ 攻速 5。無低等 1222 → 職業預設靈魂射手（shoot＋swing 後備）。  
+- 三位一體：6 段；疊層只加本技。探求者：ForceAtom 圓弧鏈＋精通 tick 生球。  
+- 靈魂深造 `indiePMdR` 獨立相乘；震動有限引導；超新星場地 autotick；彩帶 DoT。  
+- 超技：探求者／三位一體 enhance；彩帶-減輕盔甲＝永久 IED；-冷卻＝`coolTimeR`。  
+- 不做：5／6 轉、6001 Dress-Up／鉤索、輕盈體能／二段跳。
 
 ## 效能備註
 
-- `UiCharacterInfo` hunt 戰鬥快取 TTL 約 **64ms**（高頻引導）。  
-- Sustain 勿每 tick 全狩獵佇列 sync。  
-- 傷害數字堆疊用 `_damageStack` session，避免連鎖搶 index。
+- hunt 戰鬥快取 TTL ~64ms。  
+- Sustain 勿每 tick 全佇列 sync。  
+- 傷害數字用 `_damageStack` session。
 
 ## 交手回覆格式（短）
 
 - 職業／武器／主屬一句  
-- v1 技能範圍與刻意不做的  
-- 改了哪些檔（不必貼大段 code）  
-- 提醒使用者硬重整後自測：普攻動畫、頭技、BOSS 轉階、章節清怪
+- v1 範圍與刻意不做的  
+- 改了哪些檔  
+- 提醒硬重整自測：普攻、頭技、BOSS、終傷分項、關鍵 tooltip
 
 ## 溝通習慣
 
-- 先盤 WZ／現有相近職再提案；缺圖／缺幀誠實說。  
-- 玩法與正服不同處寫進 `skillOverrides` 並改說明字串。  
-- 聚焦相關檔；保持繁中簡短回覆。
+- 先盤 WZ／相近職再提案；缺圖／缺幀誠實說。  
+- 與正服不同處寫進 override 並改說明。  
+- 主動穩了再稽核被動；終傷與 tooltip 當必做關卡。  
+- 聚焦相關檔；繁中簡短回覆。

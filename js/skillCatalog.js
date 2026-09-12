@@ -29,6 +29,10 @@ const SkillCatalog = (() => {
       '4121022',
       '4121009',
     ],
+    angelicbuster: [
+      '65111007', // 探求者 companion
+      '65121012', // 共鳴 companion
+    ],
   };
 
   /** 舊存檔／誤記 ID → 正式 ID（目前無需對應） */

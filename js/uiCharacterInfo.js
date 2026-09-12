@@ -343,19 +343,23 @@ const UiCharacterInfo = (() => {
     };
     push('裝備', sumAdditiveStat(snapshot || {}, '最終傷害'));
     push('萌獸', combat?.fields?.famFinal);
-    const skillFinal = Number(combat?.fields?.skillFinal) || 0;
-    if (combat?.ctx?.genesisFinalChecked) {
-      // 輸入的技能終傷已包含創世 10%；拆成兩個獨立倍率，避免面板重複計算。
-      const skillWithoutGenesis = ((1 + skillFinal / 100) / 1.1 - 1) * 100;
-      push('技能', skillWithoutGenesis);
-      push('創世武器', 10);
-    } else {
-      push('技能', skillFinal);
-    }
+    if (combat?.ctx?.genesisFinalChecked) push('創世武器', 10);
     push('毀滅盾牌', combat?.fields?.ruinFinal);
-    // 鬥氣層數終傷：獨立倍率（不進 skillFinal，避免與被動終傷混算）
+    // 技能終傷：每招 pdR／mdR／indiePMdR 各自相乘（不再加總成 skillFinal）
+    if (typeof SkillModifiers !== 'undefined'
+      && typeof SkillModifiers.getSkillFinalDamageSources === 'function') {
+      (SkillModifiers.getSkillFinalDamageSources() || []).forEach((src) => {
+        push(src.name || '技能', src.value);
+      });
+    }
+    // 鬥氣層數：層間加總後獨立相乘
     if (typeof SkillComboOrbs !== 'undefined' && typeof SkillComboOrbs.getModifierBonus === 'function') {
       push('鬥氣', SkillComboOrbs.getModifierBonus().finalDamR);
+    }
+    // 依古尼斯咆嘯：層間加總後獨立相乘（WZ「加總式」）
+    if (typeof SkillModifiers !== 'undefined'
+      && typeof SkillModifiers.getIgnisRoarFinalDamR === 'function') {
+      push('依古尼斯咆嘯', SkillModifiers.getIgnisRoarFinalDamR());
     }
     return sources;
   }

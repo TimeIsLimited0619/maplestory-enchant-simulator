@@ -955,6 +955,27 @@
   z-index: 36;
 }
 
+/* AB 超級超新星：後層、低於靈魂震動 */
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--ab-supernova,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--summon.idle-skill-fx-stage--ab-supernova,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--summon-attack.idle-skill-fx-stage--ab-supernova {
+  z-index: 28;
+}
+
+/* AB 靈魂震動場地：後層、高於超新星、低於絕殺 flare */
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--channel-side,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--ab-resonance {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+  transform: none;
+  z-index: 32;
+}
+
 .idle-hunt-skill-fx > .idle-skill-fx-stage--channel-side {
   z-index: 48;
 }

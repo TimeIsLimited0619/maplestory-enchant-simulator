@@ -8,7 +8,7 @@ const SkillMobStatus = (() => {
   const SCAR_BUFF_ID = '1111003';
   const OPPORTUNITY_ID = '1110009';
   /** 烈焰翔斬／VI／獨角獸射擊：命中後掛所受傷害增加 */
-  const INCISING_SKILL_IDS = new Set(['1121015', '1141008', '23111002', '4121016']);
+  const INCISING_SKILL_IDS = new Set(['1121015', '1141008', '23111002', '4121016', '65121002']);
   /** 傳說之槍：命中後防禦率下降（以所受傷害增加近似） */
   const DEF_DOWN_SKILL_IDS = new Set(['23121002']);
   const SPEAR_DEF_DOWN_HYPER_ID = '23120050';

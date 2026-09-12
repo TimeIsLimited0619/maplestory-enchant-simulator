@@ -284,6 +284,19 @@ const SkillCombat = (() => {
     return id === 400 || id === 410 || id === 411 || id === 412;
   }
 
+  function isAngelicBusterJob() {
+    const jobId = (typeof CharacterSkills !== 'undefined')
+      ? CharacterSkills.currentJobId?.()
+      : null;
+    if (jobId == null) return false;
+    if (typeof SkillCatalog !== 'undefined' && typeof SkillCatalog.getJobLine === 'function') {
+      const lineId = String(SkillCatalog.getJobLine(jobId)?.id || '');
+      if (lineId === 'angelicbuster') return true;
+    }
+    const id = Number(jobId) || 0;
+    return id === 6500 || id === 6510 || id === 6511 || id === 6512;
+  }
+
   /**
    * 精靈技能連鎖 2–4 最低間隔：對齊光速雙擊／進階的施放節奏（攻速＋動作＋特效）。
    * 不改 1 號頭技（如伊修塔爾）本身射速。
@@ -697,6 +710,9 @@ const SkillCombat = (() => {
             targets.forEach((mob) => applyChannelHit(mob));
           });
         }
+        if (tickDamagedMobs.length) {
+          tryAngelicBusterFollowups(ctx, skill.id, tickDamagedMobs);
+        }
         // 連鎖 2–4：每個 tick 都追加，避免整段引導只放一次
         if (opts.mergeLink && picked?.isSkillLink) {
           runWithDamageStackSession(ctx, tickSession, () => {
@@ -747,7 +763,13 @@ const SkillCombat = (() => {
             syncMobStateAfterDamage(hitMobs, ctx);
           }
         }
-        finishAfterDamage(kills, hitMobs);
+        const prevSkipAb = ctx.skipAbExtras;
+        ctx.skipAbExtras = true;
+        try {
+          finishAfterDamage(kills, hitMobs);
+        } finally {
+          ctx.skipAbExtras = prevSkipAb;
+        }
       },
     });
 
@@ -1635,6 +1657,7 @@ const SkillCombat = (() => {
       stackStartIndex: stackStartOpt,
       isolateStack = false,
       ctx = null,
+      outgoingMult = 1,
     } = opts;
     if (!mob) return false;
     const pct = (Number(damagePct) || 0) + (Number(damagePctBonus) || 0);
@@ -1649,7 +1672,18 @@ const SkillCombat = (() => {
       && typeof SkillModifiers.getSkillEnhance === 'function')
       ? SkillModifiers.getSkillEnhance(skillId)
       : null;
-    const skillBdR = (mob.isBoss && skillEn) ? (Number(skillEn.bdR) || 0) : 0;
+    let skillBdR = (mob.isBoss && skillEn) ? (Number(skillEn.bdR) || 0) : 0;
+    if (mob.isBoss && skillId && typeof SkillCatalog !== 'undefined'
+      && typeof SkillFormula !== 'undefined') {
+      const sk = SkillCatalog.getSkill(skillId);
+      if (sk?.common?.bdR != null && String(sk.common.bdR) !== '') {
+        const lv = (typeof CharacterSkills !== 'undefined'
+          ? CharacterSkills.getLevel?.(skillId)
+          : 0) || 1;
+        const st = SkillFormula.evalStatCommon(sk.common, lv);
+        skillBdR += Number(st.bdR) || 0;
+      }
+    }
     const skillIed = skillEn ? (Number(skillEn.ied) || 0) : 0;
 
     let stackGroup = stackGroupOpt;
@@ -1676,6 +1710,10 @@ const SkillCombat = (() => {
           isCritical: !!hit.isCritical,
           skillId,
         });
+      }
+      const fdMult = Number(outgoingMult);
+      if (Number.isFinite(fdMult) && fdMult !== 1) {
+        dmg = Math.max(0, Math.round(dmg * fdMult));
       }
       if (!(dmg > 0)) continue;
       any = true;
@@ -2370,6 +2408,341 @@ const SkillCombat = (() => {
     return kills;
   }
 
+  const AB_SEEKER_ID = '65111100';
+  const AB_SEEKER_EXTRA_ID = '65111007';
+  const AB_SEEKER_EXPERT_ID = '65120011';
+  const AB_EXALT_ID = '65121054';
+  const AB_SUPERNOVA_ID = '65121052';
+  const AB_EXPERT_BONUS_IDS = new Set(['65121101', '65121100']);
+
+  /** 探求者飛行球：CharacterEff forceAtom/3/atom/1（勿用 skill effect 0–3） */
+  const AB_SEEKER_ORB_DIR = 'images/skills/6511/65111100/forceAtom';
+  const AB_SEEKER_ORB_FRAMES = [
+    { src: `${AB_SEEKER_ORB_DIR}/parentAtom/0.png`, delay: 60, origin: [41, 39] },
+    { src: `${AB_SEEKER_ORB_DIR}/parentAtom/1.png`, delay: 60, origin: [42, 40] },
+    { src: `${AB_SEEKER_ORB_DIR}/parentAtom/2.png`, delay: 60, origin: [42, 40] },
+    { src: `${AB_SEEKER_ORB_DIR}/parentAtom/3.png`, delay: 60, origin: [41, 39] },
+  ];
+  const AB_SEEKER_HIT_FRAMES = [
+    { src: `${AB_SEEKER_ORB_DIR}/endEff/0.png`, delay: 60, origin: [45, 57] },
+    { src: `${AB_SEEKER_ORB_DIR}/endEff/1.png`, delay: 60, origin: [57, 74] },
+    { src: `${AB_SEEKER_ORB_DIR}/endEff/2.png`, delay: 60, origin: [72, 76] },
+    { src: `${AB_SEEKER_ORB_DIR}/endEff/3.png`, delay: 60, origin: [69, 73] },
+    { src: `${AB_SEEKER_ORB_DIR}/endEff/4.png`, delay: 60, origin: [72, 74] },
+    { src: `${AB_SEEKER_ORB_DIR}/endEff/5.png`, delay: 60, origin: [73, 75] },
+    { src: `${AB_SEEKER_ORB_DIR}/endEff/6.png`, delay: 60, origin: [73, 76] },
+    { src: `${AB_SEEKER_ORB_DIR}/endEff/7.png`, delay: 60, origin: [75, 76] },
+  ];
+
+  function abSeekerOrbFrames() {
+    return AB_SEEKER_ORB_FRAMES;
+  }
+
+  function abSeekerCastSpawnDelay(skill) {
+    const list = Array.isArray(skill?.fx?.effect) ? skill.fx.effect : [];
+    if (list.length < 4) return 180;
+    return (Number(list[0]?.delay) || 60)
+      + (Number(list[1]?.delay) || 60)
+      + (Number(list[2]?.delay) || 60);
+  }
+
+  function abSeekerAlivePool(ctx) {
+    return filterChainAvailableMobs(resolveCastMobs(ctx))
+      .filter((m) => m && Number(m.hp) > 0);
+  }
+
+  function rankAbSeekerPool(alive) {
+    const bosses = alive.filter((m) => m.isBoss)
+      .sort((a, b) => (Number(b.maxHp) || 0) - (Number(a.maxHp) || 0));
+    const rest = alive.filter((m) => !m.isBoss);
+    return bosses.length ? bosses.concat(rest) : rest;
+  }
+
+  function pickAbSeekerTargets(ctx, count) {
+    const n = Math.max(1, Math.floor(Number(count) || 1));
+    const pool = rankAbSeekerPool(abSeekerAlivePool(ctx));
+    if (!pool.length) return [];
+    const out = [];
+    for (let i = 0; i < n; i += 1) out.push(pool[i % pool.length]);
+    return out;
+  }
+
+  /** 重生球：有其他活怪就鎖定下一隻（BOSS 優先）；只剩當前這隻才再打它 */
+  function pickAbSeekerNextTarget(ctx, excludeMob) {
+    const alive = abSeekerAlivePool(ctx);
+    if (!alive.length) return null;
+    const excludeUid = excludeMob && excludeMob.uid != null ? String(excludeMob.uid) : '';
+    const others = excludeUid
+      ? alive.filter((m) => String(m.uid) !== excludeUid)
+      : alive;
+    const pool = rankAbSeekerPool(others.length ? others : alive);
+    return pool[0] || null;
+  }
+
+  /** 探求者本體傷害、重生機率、灌注球數／終傷乘算 */
+  function getAbSeekerRuntime() {
+    if (typeof SkillCatalog === 'undefined' || typeof SkillFormula === 'undefined') return null;
+    const skill = SkillCatalog.getSkill(AB_SEEKER_ID);
+    if (!skill) return null;
+    const seekerLv = Math.max(
+      1,
+      (typeof CharacterSkills !== 'undefined'
+        ? CharacterSkills.getLevel?.(AB_SEEKER_ID)
+        : 0) || 1,
+    );
+    const common = evalSkill(skill, seekerLv);
+    const atk = common ? combatCommonFor(skill, common) : null;
+    const damagePct = Number(atk?.damagePct) || 0;
+    if (!(damagePct > 0)) return null;
+    const st = skill.common ? SkillFormula.evalStatCommon(skill.common, seekerLv) : null;
+    let respawnProp = Math.max(0, Number(st?.s) || 0);
+    if (typeof SkillModifiers !== 'undefined'
+      && typeof SkillModifiers.getSkillEnhance === 'function') {
+      respawnProp += Number(SkillModifiers.getSkillEnhance(AB_SEEKER_ID)?.prop) || 0;
+    }
+    const maxZ = Math.max(0, Math.floor(Number(st?.z) || 7));
+    let bulletCount = Math.max(1, Number(st?.bulletCount) || Number(atk?.bulletCount) || 2);
+    let extraBullets = 0;
+    let expertPropPlus = 0;
+    let seekerFdMult = 1;
+    if (typeof SkillModifiers !== 'undefined' && SkillModifiers.hasBuff?.(AB_EXALT_ID)) {
+      const exalt = SkillCatalog.getSkill(AB_EXALT_ID);
+      const exaltLv = (typeof CharacterSkills !== 'undefined'
+        ? CharacterSkills.getLevel?.(AB_EXALT_ID)
+        : 0) || 1;
+      const est = exalt?.common ? SkillFormula.evalStatCommon(exalt.common, exaltLv) : null;
+      if (est) {
+        extraBullets = Math.max(0, Math.floor(Number(est.y) || 0));
+        expertPropPlus = Math.max(0, Number(est.xVal) || 0);
+        respawnProp += Math.max(0, Number(est.z) || 0);
+        const cut = Math.max(0, Number(est.u) || 0);
+        if (cut > 0) seekerFdMult *= Math.max(0, 1 - (cut / 100));
+      }
+    }
+    let expertProp = 0;
+    let expertBullets = 2;
+    let expertDmgRatio = 1;
+    let expertBonusW = 0;
+    const expertLv = (typeof CharacterSkills !== 'undefined'
+      ? CharacterSkills.getLevel?.(AB_SEEKER_EXPERT_ID)
+      : 0) || 0;
+    if (expertLv > 0) {
+      const expert = SkillCatalog.getSkill(AB_SEEKER_EXPERT_ID);
+      const est = expert?.common ? SkillFormula.evalStatCommon(expert.common, expertLv) : null;
+      if (est) {
+        expertProp = Math.max(0, Number(est.prop) || 0);
+        expertBullets = Math.max(1, Number(est.bulletCount) || 2);
+        expertDmgRatio = Math.max(0, Number(est.xVal) || 75) / 100;
+        expertBonusW = Math.max(0, Number(est.w) || 0);
+      }
+    }
+    expertProp += expertPropPlus;
+    return {
+      skill,
+      damagePct,
+      bulletCount: bulletCount + extraBullets,
+      respawnProp,
+      maxZ,
+      seekerFdMult,
+      expertProp,
+      expertBullets: expertBullets + extraBullets,
+      expertDmgRatio,
+      expertBonusW,
+    };
+  }
+
+  /**
+   * 發射探求者追蹤球：圓弧飛向目標。命中後依 s% 從怪身上先甩出再弧線追下一隻活怪
+   *（沒有下一隻才繞回當前）。每顆最多 z 次。精通生球同一條鏈。
+   */
+  function fireAbSeekerChain(ctx, opts = {}) {
+    const rt = getAbSeekerRuntime();
+    const kills = [];
+    const hitMobs = [];
+    const finish = () => {
+      if (typeof opts.onDone === 'function') opts.onDone(kills, hitMobs);
+    };
+    if (!rt) {
+      finish();
+      return kills;
+    }
+    const isExpert = !!opts.isExpert;
+    const count = Math.max(1, Math.floor(Number(
+      isExpert ? rt.expertBullets : (opts.count || rt.bulletCount),
+    ) || 1));
+    let outgoingMult = Number(rt.seekerFdMult);
+    if (!Number.isFinite(outgoingMult) || outgoingMult <= 0) outgoingMult = 1;
+    if (isExpert) outgoingMult *= rt.expertDmgRatio;
+    if (!(outgoingMult > 0) || !(rt.damagePct > 0)) {
+      finish();
+      return kills;
+    }
+    const maxSpawns = Math.min(40, count * (1 + rt.maxZ));
+    const asyncId = opts.asyncId || registerAsyncCast();
+    const ownsAsync = !opts.asyncId;
+    let spawned = 0;
+    let pending = 0;
+    let settled = false;
+    const settle = () => {
+      if (settled) return;
+      settled = true;
+      if (ownsAsync) releaseAsyncCast(asyncId);
+      finish();
+    };
+    const beginWave = () => { pending += 1; };
+    const endWave = () => {
+      pending -= 1;
+      if (pending <= 0) settle();
+    };
+
+    const dealOne = (mob) => {
+      if (!isAsyncCastLive(asyncId)) return null;
+      const live = resolveLiveMob(mob, ctx) || (mob && Number(mob.hp) > 0 ? mob : null);
+      if (!live || !(Number(live.hp) > 0)) return null;
+      const hit = applyHitsToMob(live, {
+        damagePct: rt.damagePct,
+        attackCount: 1,
+        fxHit: AB_SEEKER_HIT_FRAMES,
+        outgoingMult,
+        isolateStack: true,
+        skillId: AB_SEEKER_ID,
+        showMobDamage: ctx.showMobDamage,
+        onDamage: ctx.onDamage,
+        flashHit: ctx.flashHit,
+        flashDie: ctx.flashDie,
+        ctx,
+      });
+      if (hit) pushUniqueMob(hitMobs, live);
+      if (live.hp <= 0) pushUniqueMob(kills, live);
+      if (typeof opts.onHitMob === 'function') opts.onHitMob(live);
+      return live;
+    };
+
+    const launch = (n, bounceLeft, fromMob, lockTarget) => {
+      if (settled || !isAsyncCastLive(asyncId)) return;
+      const remain = maxSpawns - spawned;
+      if (!(remain > 0) || !(n > 0)) return;
+      const actual = Math.min(Math.floor(n), remain);
+      let targets;
+      if (lockTarget) {
+        const locked = resolveLiveMob(lockTarget, ctx)
+          || (lockTarget && Number(lockTarget.hp) > 0 ? lockTarget : null);
+        targets = locked ? [locked] : [];
+      } else {
+        targets = pickAbSeekerTargets(ctx, actual);
+      }
+      if (!targets.length) return;
+      spawned += targets.length;
+      beginWave();
+      const frames = abSeekerOrbFrames();
+      const onHit = (mob) => {
+        const live = dealOne(mob);
+        if (bounceLeft > 0 && rt.respawnProp > 0 && Math.random() * 100 < rt.respawnProp) {
+          const next = pickAbSeekerNextTarget(ctx, live || mob);
+          if (next) launch(1, bounceLeft - 1, live || mob, next);
+        }
+      };
+      const onDone = () => endWave();
+      if (frames.length
+        && typeof SkillEffectPlayer !== 'undefined'
+        && typeof SkillEffectPlayer.playHomingVolley === 'function') {
+        SkillEffectPlayer.playHomingVolley({
+          fieldEl: ctx.fieldEl || document.getElementById('idleHuntField'),
+          playerEl: ctx.playerEl,
+          mobs: targets,
+          frames,
+          anchorAt: fromMob ? 'mob' : 'player',
+          anchorMob: fromMob || null,
+          facingRight: ctxFacingRight(ctx),
+          startOffset: [-40, -48],
+          inPlace: false,
+          staggerMs: fromMob ? 0 : 36,
+          holdMs: 70,
+          speedPxPerMs: 0.72,
+          spriteScale: 1,
+          centerOrigin: false,
+          kickOutPx: fromMob ? 62 : 0,
+          spawnFrame: fromMob ? null : (rt.skill?.fx?.effect?.[3] || null),
+          spawnDelayMs: fromMob ? 0 : abSeekerCastSpawnDelay(rt.skill),
+          onHit,
+          onDone,
+        });
+        return;
+      }
+      targets.forEach((mob) => onHit(mob));
+      onDone();
+    };
+
+    launch(count, rt.maxZ, opts.fromMob || null, null);
+    if (pending <= 0) settle();
+    return kills;
+  }
+
+  function tryAbSeekerCastAttack(skill, skillForFx, formCommon, fx, ctx, form, picked, finishAfterDamage, opts = {}) {
+    if (String(skill?.id) !== AB_SEEKER_ID) return null;
+    if (!isAngelicBusterJob()) return null;
+    playSkillCastFx(skillForFx || skill, fx, ctx, {
+      targets: resolveSkillTargets(ctx, skill.id, Math.max(1, formCommon?.mobCount || 1)),
+    });
+    const kills = [];
+    const hitMobs = [];
+    const asyncId = registerAsyncCast();
+    fireAbSeekerChain(ctx, {
+      asyncId,
+      isExpert: false,
+      onDone: (chainKills, chainHits) => {
+        if (!isAsyncCastLive(asyncId)) return;
+        releaseAsyncCast(asyncId);
+        (chainKills || []).forEach((m) => pushUniqueMob(kills, m));
+        (chainHits || []).forEach((m) => pushUniqueMob(hitMobs, m));
+        finishAfterDamage(kills, hitMobs);
+        if (typeof ctx.onProjectileResolve === 'function') {
+          ctx.onProjectileResolve(kills);
+        }
+      },
+    });
+    if (opts.mergeLink && picked) {
+      mergeLinkFollowers(picked, ctx, []);
+    }
+    return { kills: [], deferredKills: true };
+  }
+
+  /** 精通自動生球（追蹤重生鏈）＋三位一體／親和力 IV */
+  function tryAngelicBusterFollowups(ctx, triggerSkillId, hitMobs) {
+    const kills = [];
+    if (!isAngelicBusterJob()) return kills;
+    if (ctx?.skipAbExtras) return kills;
+    const trigger = String(triggerSkillId || '');
+    if (!trigger || trigger === AB_SEEKER_EXTRA_ID) return kills;
+    const hitList = (Array.isArray(hitMobs) ? hitMobs : []).filter(Boolean);
+    if (typeof SkillModifiers !== 'undefined') {
+      SkillModifiers.tryProcTrinity?.(trigger);
+      SkillModifiers.tryProcAffinityHeart?.(trigger);
+    }
+    if (!hitList.length) return kills;
+    if (trigger === AB_SEEKER_ID || trigger === AB_SUPERNOVA_ID) return kills;
+
+    const rt = getAbSeekerRuntime();
+    if (!rt || !(rt.expertProp > 0)) return kills;
+    let prop = rt.expertProp;
+    if (AB_EXPERT_BONUS_IDS.has(trigger)) prop += rt.expertBonusW;
+    if (!(prop > 0) || Math.random() * 100 >= prop) return kills;
+    const fromMob = hitList.find((m) => Number(m.hp) > 0) || hitList[0];
+    fireAbSeekerChain(ctx, {
+      isExpert: true,
+      fromMob,
+      onDone: (chainKills) => {
+        if (!chainKills?.length) return;
+        if (typeof ctx.onProjectileResolve === 'function') {
+          ctx.onProjectileResolve(chainKills);
+        } else {
+          syncMobStateAfterDamage(chainKills, ctx);
+        }
+      },
+    });
+    return kills;
+  }
+
   /** FA／暴風雪追加：安靜 tick 仍要跳出傷害數字（特效已 forcePlay） */
   function showFinalAttackDamage(ctx, mob, dmg, isCritical, opts) {
     if (!(dmg > 0) || !mob) return;
@@ -2571,6 +2944,8 @@ const SkillCombat = (() => {
       bzKills.forEach((m) => pushUniqueMob(kills, m));
       const nlKills = tryNightLordFollowups(ctx, skillId, hitMobs);
       nlKills.forEach((m) => pushUniqueMob(kills, m));
+      const abKills = tryAngelicBusterFollowups(ctx, skillId, hitMobs);
+      abKills.forEach((m) => pushUniqueMob(kills, m));
       // 意念只由主技能／非 silent 路徑觸發，避免連鎖同幀連續 proc
       if (!linkOpts.silentCombo
         && typeof SkillBuffRuntime !== 'undefined'
@@ -2632,6 +3007,19 @@ const SkillCombat = (() => {
       });
       return { kills: [], deferredKills: true };
     }
+
+    const seekerResult = tryAbSeekerCastAttack(
+      skill,
+      skillForFx,
+      formCommon,
+      fx,
+      ctx,
+      form,
+      null,
+      finishAfterDamage,
+      { mergeLink: false },
+    );
+    if (seekerResult) return seekerResult;
 
     const areaResult = tryAreaCastAttack(
       skill,
@@ -2834,6 +3222,10 @@ const SkillCombat = (() => {
       if (typeof CharacterCombatPanel !== 'undefined') {
         CharacterCombatPanel.syncToCombatPower?.();
       }
+      if (typeof UiCharacterInfo !== 'undefined') {
+        UiCharacterInfo.invalidateHuntCombatCache?.();
+        UiCharacterInfo.refresh?.();
+      }
       return {
         cast: true,
         skillId: skill.id,
@@ -2868,6 +3260,8 @@ const SkillCombat = (() => {
       bzKills.forEach((m) => pushUniqueMob(kills, m));
       const nlKills = tryNightLordFollowups(ctx, skill.id, hitMobs);
       nlKills.forEach((m) => pushUniqueMob(kills, m));
+      const abKills = tryAngelicBusterFollowups(ctx, skill.id, hitMobs);
+      abKills.forEach((m) => pushUniqueMob(kills, m));
       if (typeof SkillBuffRuntime !== 'undefined'
         && typeof SkillBuffRuntime.onSwordSkillCast === 'function') {
         const extra = SkillBuffRuntime.onSwordSkillCast(skill, ctx);
@@ -2955,6 +3349,32 @@ const SkillCombat = (() => {
       // 連鎖 2–4：與 1 號同時出手（投擲物本體延遲結算，跟隨技立即打）
       mergeLinkFollowers(picked, ctx, []);
 
+      return {
+        cast: true,
+        skillId: skill.id,
+        level,
+        actionDelayMs,
+        lockMs,
+        kills: [],
+        projectile: true,
+        deferredKills: true,
+        enhanced: !!form.enhanced,
+        skillLink: !!picked.isSkillLink,
+      };
+    }
+
+    const seekerResult = tryAbSeekerCastAttack(
+      skill,
+      skillForFx,
+      formCommon,
+      fx,
+      ctx,
+      form,
+      picked,
+      finishAfterDamage,
+      { mergeLink: true },
+    );
+    if (seekerResult) {
       return {
         cast: true,
         skillId: skill.id,
@@ -3064,8 +3484,7 @@ const SkillCombat = (() => {
       if (channelResult.sustain) {
         const channelLock = scaleGameDelayMs(channelResult.channelLockMs);
         castLockUntil = Math.max(castLockUntil, t + channelLock);
-        if (!skipBodyAction
-          && !(ctx.quietFx || (typeof document !== 'undefined' && document.hidden))
+        if (!(ctx.quietFx || (typeof document !== 'undefined' && document.hidden))
           && typeof Paperdoll !== 'undefined') {
           if (typeof Paperdoll.playHuntSwingLoop === 'function') {
             Paperdoll.playHuntSwingLoop(skillAction);

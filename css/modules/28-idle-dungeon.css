@@ -334,11 +334,12 @@
   margin-bottom: 8px;
 }
 
+/* 掛在 .idle-hunt-field-wrap、位於 #idleHuntField（IdleZone）外側上方 */
 .idle-dungeon-hud {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  top: 8px;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 4px);
   z-index: 4;
   padding: 6px 8px;
   border-radius: 4px;
@@ -346,13 +347,10 @@
   color: #ffe9a8;
   font-size: 12px;
   pointer-events: none;
+  box-sizing: border-box;
 }
 
-.idle-dungeon-hud.has-timer {
-  top: 68px;
-}
-
-/* 副本限時（IdleUiTimer / UI.Timer） */
+/* 副本限時仍疊在地圖內上方（IdleUiTimer / UI.Timer） */
 .idle-dungeon-timer-host {
   position: absolute;
   top: 8px;

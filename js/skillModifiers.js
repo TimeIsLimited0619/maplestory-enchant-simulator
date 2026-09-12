@@ -86,7 +86,10 @@ const SkillModifiers = (() => {
       padR: 0,
       damR: 0,
       bdR: 0,
+      /** pdR／mdR 同類相加（技能終傷一桶） */
       finalDamR: 0,
+      /** indiePMdR：每個來源獨立相乘，不進 finalDamR */
+      indiePMdR: 0,
       critDmg: 0,
       critRate: 0,
       ied: 0,
@@ -148,6 +151,21 @@ const SkillModifiers = (() => {
   const IGNIS_ROAR_ID = '23110004';
   const ISHTAR_RING_ID = '23121000';
   const IGNIS_EXTEND_ON_ISHTAR_SEC = 0.1;
+  const TRINITY_ID = '65121101';
+  const AFFINITY_IV_ID = '65120006';
+  /** 名稱綁技能、但說明是「習得後永久」的超技 IED（不進該招 skillIed） */
+  const HYPER_GLOBAL_IED_IDS = new Set(['65120047']);
+  /** 親和力 IV 除外：索魂精通（HEXA 加油氣球本專案不做） */
+  const AFFINITY_IV_EXCLUDE_IDS = new Set(['65120011']);
+  /** 三位一體疊層：傷害／IED */
+  let trinity = {
+    stacks: 0,
+    expiresAt: 0,
+    perStackDamR: 0,
+    perStackIed: 0,
+    maxStacks: 2,
+    skillId: TRINITY_ID,
+  };
   /** 自然力重置：u% 屬性耐性削弱 → 放置以終傷近似 */
   const ELEMENTAL_RESET_IDS = new Set(['2110015', '2210016']);
   /** 元素適應／水盾：永久異常／屬性抗性 → 放置以減傷近似 */
@@ -162,6 +180,7 @@ const SkillModifiers = (() => {
       cr: 0,
       ied: 0,
       bdR: 0,
+      coolTimeR: 0,
     };
   }
 
@@ -257,11 +276,13 @@ const SkillModifiers = (() => {
     if (WEAPON_MASTERY_PAD_IDS.has(id)) {
       flatPad += Number(stat.xVal) || 0;
     }
+    // pdR／mdR 進同一桶相加；indiePMdR 另存，由終傷來源獨立相乘
     let finalDamR = isComboBody ? 0 : ((Number(stat.pdR) || 0) + (Number(stat.mdR) || 0));
     // 自然力重置：屬性耐性削弱在放置以終傷近似
     if (ELEMENTAL_RESET_IDS.has(id)) {
       finalDamR += Math.max(0, Number(stat.u) || 0);
     }
+    const indiePMdR = isComboBody ? 0 : (Number(stat.indiePMdR) || 0);
     const damRBase = (Number(stat.damR) || 0) + (Number(stat.indieDamR) || 0);
     return {
       flatPad,
@@ -271,11 +292,16 @@ const SkillModifiers = (() => {
       flatLuk: Number(stat.lukX) || 0,
       padR: Number(stat.indiePadR) || 0,
       damR: (isComboBody || isHyperPas) ? 0 : damRBase,
-      bdR: (isComboBody || isHyperPas) ? 0 : (Number(stat.bdR) || 0),
+      bdR: (isComboBody || isHyperPas)
+        ? 0
+        : ((Number(stat.bdR) || 0) + (Number(stat.indieBDR) || 0)),
       finalDamR,
+      indiePMdR,
       critDmg: isComboBody ? 0 : (Number(stat.criticaldamage) || 0),
       critRate: (Number(stat.indieCr) || 0) + (Number(stat.cr) || 0),
-      ied: Number(stat.ignoreMobpdpR) || 0,
+      ied: (isComboBody || isHyperPas)
+        ? 0
+        : ((Number(stat.ignoreMobpdpR) || 0) + (Number(stat.indieIgnoreMobpdpR) || 0)),
       flatPdd: Number(stat.pddX) || 0,
       flatPddPerLevel: Number(stat.lv2pdd) || 0,
       flatMad,
@@ -383,6 +409,16 @@ const SkillModifiers = (() => {
       const ter = Math.max(0, Number(st.terR) || 0);
       out.damAbsorbPct += scaleMercedesDamAbsorb(id, asr);
       out.damAbsorbPct += scaleMercedesDamAbsorb(id, ter);
+    });
+
+    // 魔力彩帶-減輕盔甲：習得後永久 IED（超技名稱會誤綁技能，不走 getSkillEnhance）
+    HYPER_GLOBAL_IED_IDS.forEach((id) => {
+      const level = CharacterSkills.getLevel?.(id) || 0;
+      if (!(level > 0)) return;
+      const skill = SkillCatalog.getSkill?.(id);
+      if (!skill?.common) return;
+      const st = SkillFormula.evalStatCommon(skill.common, level);
+      out.ied += Number(st.ignoreMobpdpR) || 0;
     });
 
     out.mastery = Math.max(0, masteryCap);
@@ -508,6 +544,86 @@ const SkillModifiers = (() => {
     return true;
   }
 
+  function pruneTrinity(t = nowMs()) {
+    if (trinity.stacks > 0 && !(trinity.expiresAt > t)) {
+      trinity = {
+        stacks: 0,
+        expiresAt: 0,
+        perStackDamR: 0,
+        perStackIed: 0,
+        maxStacks: 2,
+        skillId: TRINITY_ID,
+      };
+    }
+  }
+
+  function getTrinityDamR(t = nowMs()) {
+    pruneTrinity(t);
+    if (!(trinity.stacks > 0)) return 0;
+    return Math.max(0, trinity.stacks * (Number(trinity.perStackDamR) || 0));
+  }
+
+  function getTrinityIed(t = nowMs()) {
+    pruneTrinity(t);
+    if (!(trinity.stacks > 0)) return 0;
+    return Math.max(0, trinity.stacks * (Number(trinity.perStackIed) || 0));
+  }
+
+  /** 三位一體命中：疊傷害／IED（最多 y 層、維持 time 秒） */
+  function tryProcTrinity(skillId) {
+    if (String(skillId || '') !== TRINITY_ID) return false;
+    if (typeof CharacterSkills === 'undefined' || typeof SkillCatalog === 'undefined') return false;
+    if (typeof SkillFormula === 'undefined') return false;
+    const level = CharacterSkills.getLevel?.(TRINITY_ID) || 0;
+    if (!(level > 0)) return false;
+    const skill = SkillCatalog.getSkill?.(TRINITY_ID);
+    if (!skill?.common) return false;
+    const st = SkillFormula.evalStatCommon(skill.common, level);
+    const per = Math.max(0, Number(st.xVal) || 0);
+    if (!(per > 0)) return false;
+    const maxStacks = Math.max(1, Math.floor(Number(st.y) || 2));
+    const timeSec = Math.max(1, Number(st.timeSec) || 30);
+    const t = nowMs();
+    pruneTrinity(t);
+    trinity.skillId = TRINITY_ID;
+    trinity.perStackDamR = per;
+    trinity.perStackIed = per;
+    trinity.maxStacks = maxStacks;
+    trinity.stacks = Math.min(maxStacks, (Number(trinity.stacks) || 0) + 1);
+    trinity.expiresAt = t + timeSec * 1000;
+    if (typeof IdleHunt !== 'undefined') IdleHunt.syncHuntOverlayBars?.();
+    if (typeof IdleBoss !== 'undefined') IdleBoss.syncBossOverlayBars?.();
+    return true;
+  }
+
+  /** 親和力 IV：本職攻擊觸發技能傷害 buff */
+  function tryProcAffinityHeart(skillId) {
+    if (typeof CharacterSkills === 'undefined' || typeof SkillCatalog === 'undefined') return false;
+    if (typeof SkillFormula === 'undefined') return false;
+    const sid = String(skillId || '');
+    if (!/^65(00|10|11|12)\d+/.test(sid)) return false;
+    if (AFFINITY_IV_EXCLUDE_IDS.has(sid)) return false;
+    const level = CharacterSkills.getLevel?.(AFFINITY_IV_ID) || 0;
+    if (!(level > 0)) return false;
+    const skill = SkillCatalog.getSkill?.(AFFINITY_IV_ID);
+    if (!skill?.common) return false;
+    const st = SkillFormula.evalStatCommon(skill.common, level);
+    const damR = Math.max(0, Number(st.y) || 0);
+    if (!(damR > 0)) return false;
+    const timeSec = Math.max(1, Number(st.timeSec) || 30);
+    const durationMs = Math.round(timeSec * 1000 * getBuffDurationMultiplier());
+    applyBuff({
+      id: AFFINITY_IV_ID,
+      name: skill.name || '',
+      icon: skill.icon || '',
+      durationMs,
+      damR,
+    });
+    if (typeof IdleHunt !== 'undefined') IdleHunt.syncHuntOverlayBars?.();
+    if (typeof IdleBoss !== 'undefined') IdleBoss.syncBossOverlayBars?.();
+    return true;
+  }
+
   /** 魔力激發等：攻擊技能耗血倍率用的 costmpR% 加總 */
   function getPassiveCostMpR() {
     if (typeof CharacterSkills === 'undefined' || typeof SkillCatalog === 'undefined') return 0;
@@ -610,9 +726,16 @@ const SkillModifiers = (() => {
       }
       out.prop += Number(st.prop) || 0;
       out.cr += Number(st.cr) || 0;
-      out.ied += Number(st.ignoreMobpdpR) || 0;
+      if (!HYPER_GLOBAL_IED_IDS.has(String(skill.id))) {
+        out.ied += Number(st.ignoreMobpdpR) || 0;
+      }
       out.bdR += Number(st.bdR) || 0;
+      out.coolTimeR += Number(st.coolTimeR) || 0;
     });
+    if (tid === TRINITY_ID) {
+      out.damR += getTrinityDamR();
+      out.ied += getTrinityIed();
+    }
     return out;
   }
 
@@ -675,6 +798,10 @@ const SkillModifiers = (() => {
     base.damagePct = (damR > 0 ? dmg * (1 + damR / 100) : dmg) + damPlus;
     base.attackCount = Math.max(1, (Number(base.attackCount) || 1) + (Number(en.attackCount) || 0));
     base.mobCount = Math.max(1, (Number(base.mobCount) || 1) + (Number(en.targetPlus) || 0));
+    const coolCut = Math.max(0, Number(en.coolTimeR) || 0);
+    if (coolCut > 0 && Number(base.cooltimeSec) > 0) {
+      base.cooltimeSec = Math.max(0, Number(base.cooltimeSec) * (1 - coolCut / 100));
+    }
     base._hyperEnhance = en;
     base._damPlus = damPlus;
     return base;
@@ -723,10 +850,69 @@ const SkillModifiers = (() => {
     return 1 + Math.max(0, pct) / 100;
   }
 
+  /**
+   * 技能終傷來源（每筆獨立 ×(1+x/100)，不把多招 pdR 加總成一桶）。
+   * — 被動／超技：pdR、mdR、indiePMdR
+   * — 時限 buff：同上（如靈魂深造 indiePMdR）
+   * — 精靈祝福等「習得即永久」終傷
+   */
+  function getSkillFinalDamageSources(t = nowMs()) {
+    const sources = [];
+    const seen = new Set();
+    const push = (id, name, value, tag) => {
+      const n = Number(value) || 0;
+      if (!(n > 0)) return;
+      const key = `${String(id || name || '')}:${tag || 'fd'}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      sources.push({ id: String(id || ''), name: name || '技能終傷', value: n });
+    };
+
+    pruneBuffs(t);
+    buffs.forEach((b) => {
+      const pd = (Number(b.finalDamR) || 0);
+      const indie = Number(b.indiePMdR) || 0;
+      if (pd > 0) push(b.id, b.name, pd, 'pd');
+      if (indie > 0) push(b.id, b.name, indie, 'indie');
+    });
+
+    if (typeof CharacterSkills === 'undefined' || typeof SkillCatalog === 'undefined') {
+      return sources;
+    }
+    if (typeof SkillFormula === 'undefined' || typeof SkillFormula.evalStatCommon !== 'function') {
+      return sources;
+    }
+    const jobId = CharacterSkills.currentJobId?.();
+    const skills = SkillCatalog.listSkills?.(jobId, { includeHidden: true }) || [];
+    skills.forEach((skill) => {
+      if (!skill || skill.skipPanel) return;
+      const level = CharacterSkills.getLevel?.(skill.id) || 0;
+      if (!(level > 0)) return;
+      const id = String(skill.id);
+      // 鬥氣本體終傷由 SkillComboOrbs 層數處理
+      if (COMBO_SKILL_IDS.has(id)) return;
+      const isPassiveLike = skill.type === 'passive' || skill.hyper === 1;
+      const isBuffLearned = BUFF_LEARNED_PASSIVE_IDS.has(id);
+      if (!isPassiveLike && !isBuffLearned) return;
+      const st = SkillFormula.evalStatCommon(skill.common, level);
+      if (isBuffLearned && id === '23121054') {
+        push(id, skill.name, st.pdR, 'pd');
+        return;
+      }
+      if (!isPassiveLike) return;
+      // hyper=1 的 damR 是技能強化，不是角色終傷
+      if (isHyperSkillPassive(skill)) return;
+      const row = modsFromStat(st, skill.id, skill.common, level, skill);
+      if ((Number(row.finalDamR) || 0) > 0) push(id, skill.name, row.finalDamR, 'pd');
+      if ((Number(row.indiePMdR) || 0) > 0) push(id, skill.name, row.indiePMdR, 'indie');
+    });
+    return sources;
+  }
+
   function getTotals(t = nowMs()) {
     const out = addInto(addInto(getPassiveTotals(), getBuffTotals(t)), getComboTotals());
     out.damR = (Number(out.damR) || 0) + getArcaneAimDamR(t);
-    out.finalDamR = (Number(out.finalDamR) || 0) + getIgnisRoarFinalDamR(t);
+    // 依古尼斯層數終傷不進 pdR 桶（層間加總，再與其他終傷來源相乘）
     out.speedModifiers = (Number(out.speedModifiers) || 0) + getIgnisRoarSpeedMod(t);
     if (out.speedModifiers < 0) {
       out.speedStages = Math.max(Number(out.speedStages) || 0, Math.abs(out.speedModifiers));
@@ -784,6 +970,14 @@ const SkillModifiers = (() => {
       speedMod: 0,
       skillId: IGNIS_ROAR_ID,
     };
+    trinity = {
+      stacks: 0,
+      expiresAt: 0,
+      perStackDamR: 0,
+      perStackIed: 0,
+      maxStacks: 2,
+      skillId: TRINITY_ID,
+    };
     if (hadPartner) notifyShadowPartnerClone();
   }
 
@@ -795,6 +989,8 @@ const SkillModifiers = (() => {
     if (arcaneAim.stacks > 0 && String(arcaneAim.skillId || ARCANE_AIM_IDS[0]) === key) return true;
     pruneIgnisRoar(t);
     if (ignisRoar.stacks > 0 && String(ignisRoar.skillId || IGNIS_ROAR_ID) === key) return true;
+    pruneTrinity(t);
+    if (trinity.stacks > 0 && String(trinity.skillId || TRINITY_ID) === key) return true;
     return false;
   }
 
@@ -859,6 +1055,7 @@ const SkillModifiers = (() => {
     pruneBuffs(t);
     pruneArcaneAim(t);
     pruneIgnisRoar(t);
+    pruneTrinity(t);
     const list = buffs.map((b) => ({
       id: b.id,
       name: b.name || b.id,
@@ -873,6 +1070,7 @@ const SkillModifiers = (() => {
     }));
     pushStackBuff(list, t, arcaneAim, ARCANE_AIM_IDS[0], '神祕狙擊');
     pushStackBuff(list, t, ignisRoar, IGNIS_ROAR_ID, '依古尼斯咆嘯');
+    pushStackBuff(list, t, trinity, TRINITY_ID, '三位一體');
     pushComboOrbBuff(list, t);
     return list;
   }
@@ -906,6 +1104,10 @@ const SkillModifiers = (() => {
     tryProcIgnisRoar,
     extendIgnisRoarFromHit,
     getIgnisRoarFinalDamR,
+    getSkillFinalDamageSources,
+    tryProcTrinity,
+    tryProcAffinityHeart,
+    getTrinityDamR,
     getShowStackBuffCounts,
     setShowStackBuffCounts,
     getShadowPartnerRate,

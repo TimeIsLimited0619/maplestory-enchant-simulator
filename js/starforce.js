@@ -779,10 +779,10 @@ const StarForceModule = {
       if (typeof appendStarClassStatBoostLines === 'function') {
         appendStarClassStatBoostLines(lines, this.itemData, classStatGains);
       }
-      if ((this.itemData.baseStats?.atk || 0) > 0 && gain.atkDiff > 0) {
+      if (gain.atkDiff > 0) {
         lines.push({ label: '攻擊力', val: gain.atkDiff });
       }
-      if ((this.itemData.baseStats?.matk || 0) > 0 && gain.matkDiff > 0) {
+      if (gain.matkDiff > 0) {
         lines.push({ label: '魔法攻擊力', val: gain.matkDiff });
       }
     }

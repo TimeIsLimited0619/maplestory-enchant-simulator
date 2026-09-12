@@ -380,8 +380,9 @@ const WeaponTypeMap = (() => {
    */
   function getEquippedWeaponMultiplier(getWornEntry, jobName) {
     const info = resolveFromEquippedSlots(getWornEntry);
-    if (shouldUseJobDefaultClaw(info, jobName)) {
-      return WEAPON_MULTIPLIER_BY_TYPE['拳套'] ?? DEFAULT_WEAPON_MULTIPLIER;
+    if (shouldUseJobDefaultWeapon(info, jobName)) {
+      const jobType = JOB_DEFAULT_WEAPON_TYPE[resolveJobNameForWeapon(jobName)];
+      return WEAPON_MULTIPLIER_BY_TYPE[jobType] ?? DEFAULT_WEAPON_MULTIPLIER;
     }
     if (info) return Number(info.weaponMultiplier) || DEFAULT_WEAPON_MULTIPLIER;
     return getWeaponMultiplierByJobName(jobName);
@@ -396,19 +397,26 @@ const WeaponTypeMap = (() => {
     return String(jobName);
   }
 
-  /** 夜使者等拳套職：穿新手劍時仍走職業預設拳套（無低等 0147 素材） */
-  function shouldUseJobDefaultClaw(info, jobName) {
+  /** 夜使者／天使破壞者等：穿新手劍時仍走職業預設專屬武器（無低等拳套／靈魂射手素材） */
+  function shouldUseJobDefaultWeapon(info, jobName) {
     const resolvedJob = resolveJobNameForWeapon(jobName);
     const jobType = JOB_DEFAULT_WEAPON_TYPE[resolvedJob];
-    if (jobType !== '拳套') return false;
-    return !info || info.weaponType !== '拳套';
+    if (jobType !== '拳套' && jobType !== '靈魂射手') return false;
+    return !info || info.weaponType !== jobType;
+  }
+
+  /** @deprecated 改走 shouldUseJobDefaultWeapon */
+  function shouldUseJobDefaultClaw(info, jobName) {
+    return shouldUseJobDefaultWeapon(info, jobName);
   }
 
   /** 依穿戴武器（或職業預設武器）回傳普攻動作候選 */
   function getBasicAttackActions(getWornEntry, jobName) {
     const info = resolveFromEquippedSlots(getWornEntry);
     const resolvedJob = resolveJobNameForWeapon(jobName);
-    const weaponType = (shouldUseJobDefaultClaw(info, jobName) ? '拳套' : null)
+    const weaponType = (shouldUseJobDefaultWeapon(info, jobName)
+      ? JOB_DEFAULT_WEAPON_TYPE[resolvedJob]
+      : null)
       || info?.weaponType
       || JOB_DEFAULT_WEAPON_TYPE[resolvedJob]
       || '';
@@ -570,8 +578,9 @@ const WeaponTypeMap = (() => {
   function getEquippedWzAttackSpeed(getWornEntry, jobName) {
     if (typeof getWornEntry === 'function') {
       const resolved = resolveFromEquippedSlots(getWornEntry);
-      if (shouldUseJobDefaultClaw(resolved, jobName)) {
-        return getDefaultWzAttackSpeedForType('拳套');
+      if (shouldUseJobDefaultWeapon(resolved, jobName)) {
+        const jobType = JOB_DEFAULT_WEAPON_TYPE[resolveJobNameForWeapon(jobName)];
+        return getDefaultWzAttackSpeedForType(jobType);
       }
       const slotId = resolved?.slotId || '11';
       const entry = getWornEntry(slotId) || getWornEntry('11') || getWornEntry('37');
