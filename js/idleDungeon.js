@@ -587,7 +587,7 @@ const IdleDungeon = (() => {
       : (isDamage
         ? '在時間內造成的傷害越高，獎勵越高；達最高階會自動提早離場。'
         : (isNormal
-          ? '達成擊殺數後召喚頭目，擊敗頭目才可獲得通關獎勵。'
+          ? `限時 ${d.durationSec > 0 ? d.durationSec : 60} 秒：達成擊殺數後召喚頭目，擊敗頭目才可通關。`
           : '限定時間內擊殺的怪物越多，獲得的楓幣越多。'));
     const repeatVal = n < 1 ? 0 : clampRepeatCount(repeatWanted, n);
     const repeatField = `<div class="idle-dungeon-repeat-bar">
@@ -844,7 +844,9 @@ const IdleDungeon = (() => {
 
     entering = true;
     selectedDiffId = diff.id;
-    const durationSec = (d.type === 'timed' || d.type === 'damage') ? (d.durationSec || 0) : 0;
+    const durationSec = (d.type === 'timed' || d.type === 'damage' || d.type === 'normal')
+      ? (d.durationSec > 0 ? d.durationSec : (d.type === 'normal' ? 60 : 0))
+      : 0;
     setOpen(false);
     try {
       const ok = await IdleHunt.beginDungeon({
@@ -984,9 +986,13 @@ const IdleDungeon = (() => {
     if (cur.type === 'normal') {
       const ok = reason === 'win';
       gold = ok ? (cur.clearGold || 0) : 0;
-      line = ok
-        ? `通關。擊敗頭目，獲得 ${formatN(gold)} 楓幣。`
-        : `未擊敗頭目（擊殺 ${cur.kills}／${cur.killNeed}），沒有通關獎勵。`;
+      if (ok) {
+        line = `通關。擊敗頭目，獲得 ${formatN(gold)} 楓幣。`;
+      } else if (reason === 'timeout') {
+        line = `時間到（擊殺 ${cur.kills}／${cur.killNeed}），沒有通關獎勵。`;
+      } else {
+        line = `未擊敗頭目（擊殺 ${cur.kills}／${cur.killNeed}），沒有通關獎勵。`;
+      }
     } else if (cur.type === 'damage') {
       const direct = isDirectGoldDamage(cur) || isDirectGoldDamage(d);
       if (direct) {
@@ -1114,7 +1120,7 @@ const IdleDungeon = (() => {
         </label>
         <label>入場券 ID <input id="idleDgTicketId" type="text"></label>
         <label>入場券名稱 <input id="idleDgTicketName" type="text"></label>
-        <label id="idleDgDurationLabel">時限（秒，0＝不限） <input id="idleDgDuration" type="number" min="0" step="1"></label>
+        <label id="idleDgDurationLabel">時限（秒，0＝不限；地下城建議 60） <input id="idleDgDuration" type="number" min="0" step="1"></label>
         <label>怪物等級（命中／減傷） <input id="idleDgMobLevel" type="number" min="1" max="300" step="1" title="副本怪固定用此等級，與章節地圖無關"></label>
         <label>入場等級（傷害副本用，0＝不限） <input id="idleDgReqLevel" type="number" min="0" max="300" step="1" title="傷害副本入場等級；計時／地下城請在各難度設定"></label>
         <label class="idle-gm-check"><input id="idleDgFieldDrops" type="checkbox"> 小怪掉落（野外表）</label>
@@ -1397,12 +1403,8 @@ const IdleDungeon = (() => {
   function syncTypeDependentGmUi() {
     const type = gmType();
     const isDamage = type === 'damage';
-    const isNormal = type === 'normal';
     $('idleDgDiffSection')?.classList.toggle('is-hidden', isDamage);
     $('idleDgRampSection')?.classList.toggle('is-hidden', !isDamage);
-    const durLabel = $('idleDgDurationLabel');
-    durLabel?.classList.toggle('is-hidden', isNormal);
-    if (isNormal && $('idleDgDuration')) $('idleDgDuration').value = '0';
   }
 
   function fillGmForm() {
@@ -1824,6 +1826,7 @@ const IdleDungeon = (() => {
         category: $('idleDgCategory')?.value || pickerCat || 'material',
         ticketId: `idle-ticket-${id}`,
         ticketName: '新副本入場券',
+        durationSec: 60,
         mobLevel: 100,
         diffs: [{ id: '1', name: '難度 1', killNeed: 20, clearGold: 1000, hpMult: 1, dmgMult: 1 }],
       });
