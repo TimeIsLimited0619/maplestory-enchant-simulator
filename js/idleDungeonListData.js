@@ -3,6 +3,183 @@
  */
 const IDLE_DUNGEON_LIST = [
   {
+    "id": "normal-dungeon-heart",
+    "name": "心臟素材地下城",
+    "type": "normal",
+    "category": "dungeon",
+    "enabled": true,
+    "ticketId": "idle-ticket-normal",
+    "ticketName": "地下城入場券",
+    "durationSec": 0,
+    "mobLevel": 1000,
+    "reqLevel": 0,
+    "useFieldDrops": false,
+    "useFieldGold": false,
+    "dmgRampRef": 100000,
+    "dmgRampPower": 0.5,
+    "map": {
+      "name": "心臟素材地下城",
+      "artId": "TreasureVault",
+      "mobs": [
+        {
+          "name": "幸運銀幣",
+          "icon": "9010147"
+        },
+        {
+          "name": "幸運金幣",
+          "icon": "9010148"
+        },
+        {
+          "name": "幸運銅幣",
+          "icon": "9410435"
+        }
+      ],
+      "mobName": "幸運銀幣",
+      "mobIcon": "9010147",
+      "bossName": "幸運大王",
+      "bossIcon": "9010148",
+      "baseMobHp": 200000000,
+      "baseBossHp": 5000000000,
+      "mobAtk1Dmg": 50000,
+      "mobAtk1Cd": 0.6,
+      "mobAtk2Dmg": 0,
+      "mobAtk2Cd": 0,
+      "mobAtk3Dmg": 0,
+      "mobAtk3Cd": 0,
+      "mobSkill1Dmg": 0,
+      "mobSkill1Cd": 8,
+      "mobSkill2Dmg": 0,
+      "mobSkill2Cd": 0,
+      "mobSkill3Dmg": 0,
+      "mobSkill3Cd": 0,
+      "bossAtk1Dmg": 100000,
+      "bossAtk1Cd": 1.2,
+      "bossAtk2Dmg": 0,
+      "bossAtk2Cd": 0,
+      "bossAtk3Dmg": 0,
+      "bossAtk3Cd": 0,
+      "bossSkill1Dmg": 0,
+      "bossSkill1Cd": 10,
+      "bossSkill2Dmg": 0,
+      "bossSkill2Cd": 0,
+      "bossSkill3Dmg": 0,
+      "bossSkill3Cd": 0
+    },
+    "mobDrops": [
+      {
+        "kind": "etc",
+        "itemId": "spell_trace",
+        "name": "咒文的痕跡",
+        "amount": 1,
+        "chance": 25
+      },
+      {
+        "kind": "etc",
+        "itemId": "meowcoin",
+        "name": "喵喵幣",
+        "amount": 1,
+        "chance": 15
+      }
+    ],
+    "rewards": [
+      {
+        "kind": "etc",
+        "itemId": "meowcoin",
+        "name": "喵喵幣",
+        "amount": 10,
+        "chance": 100
+      }
+    ],
+    "diffs": [
+      {
+        "id": "1",
+        "name": "難度 1",
+        "reqLevel": 120,
+        "killNeed": 30,
+        "settleGoldPerKill": 0,
+        "clearGold": 10000000,
+        "hpMult": 1,
+        "dmgMult": 1,
+        "dropAmountMult": 1,
+        "dropRateMult": 1,
+        "rewards": [
+          {
+            "kind": "etc",
+            "itemId": "04001324",
+            "name": "心臟升級材料Lv.1",
+            "amount": 1,
+            "chance": 100
+          }
+        ]
+      },
+      {
+        "id": "2",
+        "name": "難度 2",
+        "reqLevel": 130,
+        "killNeed": 50,
+        "settleGoldPerKill": 0,
+        "clearGold": 15000000,
+        "hpMult": 100,
+        "dmgMult": 5,
+        "dropAmountMult": 1,
+        "dropRateMult": 1,
+        "rewards": [
+          {
+            "kind": "etc",
+            "itemId": "04001322",
+            "name": "心臟升級材料Lv.2",
+            "amount": 1,
+            "chance": 100
+          }
+        ]
+      },
+      {
+        "id": "3",
+        "name": "難度 3",
+        "reqLevel": 150,
+        "killNeed": 70,
+        "settleGoldPerKill": 0,
+        "clearGold": 30000000,
+        "hpMult": 500,
+        "dmgMult": 10,
+        "dropAmountMult": 1,
+        "dropRateMult": 1,
+        "rewards": [
+          {
+            "kind": "etc",
+            "itemId": "04001325",
+            "name": "心臟升級材料Lv.3",
+            "amount": 1,
+            "chance": 100
+          }
+        ]
+      },
+      {
+        "id": "4",
+        "name": "難度 4",
+        "reqLevel": 160,
+        "killNeed": 100,
+        "settleGoldPerKill": 0,
+        "clearGold": 100000000,
+        "hpMult": 2000,
+        "dmgMult": 20,
+        "dropAmountMult": 1,
+        "dropRateMult": 1,
+        "rewards": [
+          {
+            "kind": "etc",
+            "itemId": "04001323",
+            "name": "心臟升級材料Lv.4",
+            "amount": 1,
+            "chance": 100
+          }
+        ]
+      }
+    ],
+    "goldPerDamage": 0,
+    "damageTiers": []
+  },
+  {
     "id": "normal-dungeon",
     "name": "影武者蒙面素材地下城",
     "type": "normal",
@@ -18,7 +195,7 @@ const IDLE_DUNGEON_LIST = [
     "dmgRampRef": 100000,
     "dmgRampPower": 0.5,
     "map": {
-      "name": "影武者蒙面素材地下城",
+      "name": "心臟素材地下城",
       "artId": "TreasureVault",
       "mobs": [
         {

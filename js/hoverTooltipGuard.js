@@ -76,7 +76,75 @@ const HoverTooltipGuard = (() => {
     syncLoop();
   }
 
-  return { watch, unwatch, check: checkAll };
+  /** 商店／物品欄：tooltip 貼在該 UI 面板右側，避免蓋住格內裝備 */
+  function resolveBagOrShopPanel(el) {
+    if (!el || typeof el.closest !== 'function') return null;
+    const shopShell = el.closest('.npc-shop-shell');
+    if (shopShell) return shopShell;
+    const shopRoot = el.closest('#npcShopRoot, .npc-shop');
+    if (shopRoot) {
+      return shopRoot.querySelector('.npc-shop-shell') || shopRoot;
+    }
+    return el.closest('#inventoryPanel');
+  }
+
+  function isBagOrShopAnchor(el) {
+    return !!resolveBagOrShopPanel(el);
+  }
+
+  /**
+   * @param {HTMLElement} tipEl
+   * @param {Element} anchorEl
+   * @param {{ gap?: number, fallbackW?: number, fallbackH?: number, mode?: 'auto'|'panel-right'|'prefer-right'|'prefer-left' }} [opts]
+   */
+  function placeTooltip(tipEl, anchorEl, opts = {}) {
+    if (!tipEl || !anchorEl) return;
+    const gap = Number.isFinite(opts.gap) ? opts.gap : 8;
+    const tipW = tipEl.offsetWidth || opts.fallbackW || 261;
+    const tipH = tipEl.offsetHeight || opts.fallbackH || 120;
+    const rect = anchorEl.getBoundingClientRect();
+    const panel = resolveBagOrShopPanel(anchorEl);
+    let mode = opts.mode || 'auto';
+    if (mode === 'auto') {
+      mode = panel ? 'panel-right' : 'prefer-right';
+    }
+
+    let left;
+    if (mode === 'panel-right') {
+      const panelRect = (panel || anchorEl).getBoundingClientRect();
+      left = panelRect.right + gap;
+      // 超出螢幕只夾在右緣，不翻回蓋住 UI 內容
+      if (left + tipW > window.innerWidth - gap) {
+        left = Math.max(gap, window.innerWidth - tipW - gap);
+      }
+    } else if (mode === 'prefer-left') {
+      left = rect.left - tipW - gap;
+      if (left < gap) left = rect.right + gap;
+    } else {
+      left = rect.right + gap;
+      if (left + tipW > window.innerWidth - gap) {
+        left = Math.max(gap, rect.left - tipW - gap);
+      }
+    }
+
+    let top = rect.top;
+    if (top + tipH > window.innerHeight - gap) {
+      top = Math.max(gap, window.innerHeight - tipH - gap);
+    }
+    if (top < gap) top = gap;
+
+    tipEl.style.left = `${left}px`;
+    tipEl.style.top = `${top}px`;
+  }
+
+  return {
+    watch,
+    unwatch,
+    check: checkAll,
+    isBagOrShopAnchor,
+    resolveBagOrShopPanel,
+    placeTooltip,
+  };
 })();
 
 if (typeof window !== 'undefined') {

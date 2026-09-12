@@ -331,6 +331,11 @@ const ScrollModule = {
 
     const positionTooltip = () => {
       if (token !== this._scrollTooltipToken) return;
+      if (typeof HoverTooltipGuard !== 'undefined'
+        && typeof HoverTooltipGuard.placeTooltip === 'function') {
+        HoverTooltipGuard.placeTooltip(tooltip, slot, { fallbackW: 261, fallbackH: 120 });
+        return;
+      }
       const rect = slot.getBoundingClientRect();
       const tipW = tooltip.offsetWidth || 261;
       const tipH = tooltip.offsetHeight || 120;

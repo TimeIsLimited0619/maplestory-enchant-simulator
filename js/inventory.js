@@ -410,6 +410,14 @@ const InventoryModule = {
       tip.classList.remove('hidden');
       tip.setAttribute('aria-hidden', 'false');
 
+      if (typeof HoverTooltipGuard !== 'undefined'
+        && typeof HoverTooltipGuard.placeTooltip === 'function') {
+        HoverTooltipGuard.placeTooltip(tip, anchorEl, {
+          fallbackW: img.naturalWidth || 290,
+          fallbackH: img.naturalHeight || 120,
+        });
+        return;
+      }
       const tipW = tip.offsetWidth || img.naturalWidth || 290;
       const tipH = tip.offsetHeight || img.naturalHeight || 120;
       let left = rect.right + 8;
@@ -624,6 +632,11 @@ const InventoryModule = {
   placeEtcTooltip(anchorEl) {
     const tip = document.getElementById('invEtcTooltip');
     if (!tip || !anchorEl?.isConnected) return;
+    if (typeof HoverTooltipGuard !== 'undefined'
+      && typeof HoverTooltipGuard.placeTooltip === 'function') {
+      HoverTooltipGuard.placeTooltip(tip, anchorEl, { fallbackW: 261, fallbackH: 120 });
+      return;
+    }
     const rect = anchorEl.getBoundingClientRect();
     const tipW = tip.offsetWidth || 261;
     const tipH = tip.offsetHeight || 120;

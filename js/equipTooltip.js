@@ -1745,6 +1745,16 @@ const EquipTooltipModule = {
   },
 
   position(tooltip, anchorEl) {
+    if (typeof HoverTooltipGuard !== 'undefined'
+      && typeof HoverTooltipGuard.placeTooltip === 'function') {
+      HoverTooltipGuard.placeTooltip(tooltip, anchorEl, {
+        mode: HoverTooltipGuard.isBagOrShopAnchor?.(anchorEl)
+          ? 'panel-right'
+          : 'prefer-left',
+        fallbackW: 324,
+      });
+      return;
+    }
     const rect = anchorEl.getBoundingClientRect();
     const gap = 8;
     let left = rect.left - tooltip.offsetWidth - gap;
