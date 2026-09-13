@@ -551,6 +551,32 @@ const IDLE_DUNGEON_LIST = [
         "dropAmountMult": 1,
         "dropRateMult": 1,
         "rewards": []
+      },
+      {
+        "id": "11",
+        "name": "難度 11",
+        "reqLevel": 0,
+        "killNeed": 0,
+        "settleGoldPerKill": 10240000,
+        "clearGold": 0,
+        "hpMult": 1280,
+        "dmgMult": 100,
+        "dropAmountMult": 1,
+        "dropRateMult": 1,
+        "rewards": []
+      },
+      {
+        "id": "12",
+        "name": "難度 12",
+        "reqLevel": 0,
+        "killNeed": 0,
+        "settleGoldPerKill": 20480000,
+        "clearGold": 0,
+        "hpMult": 2560,
+        "dmgMult": 150,
+        "dropAmountMult": 1,
+        "dropRateMult": 1,
+        "rewards": []
       }
     ],
     "goldPerDamage": 0,
