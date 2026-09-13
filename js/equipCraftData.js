@@ -465,6 +465,7 @@ const EQUIP_CRAFT_MAKE_LIST = [
         { id: 'short_wand', label: '短杖', output: '01372101' },
         { id: 'dual_crossbow', label: '雙弩槍', output: '01522021' },
         { id: 'fist_weapon', label: '拳套', output: '01472142' },
+        { id: 'soul_gun', label: '靈魂手槍', output: '01222017' },
       ],
     },
     {
@@ -691,6 +692,7 @@ const EQUIP_CRAFT_MAKE_LIST = [
         { id: 'short_wand', label: '短杖', output: '01372084' },
         { id: 'dual_crossbow', label: '雙弩槍', output: '01522018' },
         { id: 'fist_weapon', label: '拳套', output: '01472122' },
+        { id: 'soul_gun', label: '靈魂手槍', output: '01222014' },
       ],
     },
     {
@@ -797,6 +799,7 @@ const EQUIP_CRAFT_MAKE_LIST = [
         { id: 'short_wand', label: '短杖', output: '01372177' },
         { id: 'dual_crossbow', label: '雙弩槍', output: '01522094' },
         { id: 'fist_weapon', label: '拳套', output: '01472214' },
+        { id: 'soul_gun', label: '靈魂手槍', output: '01222058' },
       ],
     },
       {
@@ -854,6 +857,7 @@ const EQUIP_CRAFT_MAKE_LIST = [
         { id: 'job2', label: '冰雷', output: '01352246' },
         { id: 'job3', label: '精靈遊俠', output: '01352009' },
         { id: 'job4', label: '夜使者', output: '01352296' },
+        { id: 'job5', label: '靈魂手槍', output: '01352606' },
       ],
     },
   ],

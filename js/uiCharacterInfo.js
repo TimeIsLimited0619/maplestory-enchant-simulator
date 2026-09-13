@@ -381,7 +381,7 @@ const UiCharacterInfo = (() => {
    * 屬性攻擊力
    * 武器係數 × (4×主屬 + 副屬) × 總攻魔/100 × (1+(傷害%+額外傷害%)/100) × ∏(1+終傷_i%/100)
    * target: panel＝只算傷害%（角色視窗）；normal＝傷害%+一般怪物傷害%；boss＝傷害%+BOSS傷害%
-   * opts.skillBdR：技能專屬 BOSS 傷（與面板 BD 加算，對齊正服 1+(dmg+BD+skillBD)）
+   * opts.skillBdR：單招專屬 BOSS 傷（不在面板加總內；與面板 BD 加算）
    */
   function calcAttributeAttack(snapshot, combat, target, opts = {}) {
     if (!combat?.resolved) return 0;
@@ -405,8 +405,9 @@ const UiCharacterInfo = (() => {
     const dmgPct = Number(resolved.damageDetail?.panel) || 0;
     let extraPct = 0;
     if (target === 'boss') {
+      // panel 已含技能 B 傷（skillBossDmg 鏡射）；勿再加 skill，以免雙重計算。
+      // opts.skillBdR：單招專屬 B 傷（不在面板加總內）額外加算。
       extraPct = (Number(resolved.bossDamageDetail?.panel) || 0)
-        + (Number(resolved.bossDamageDetail?.skill) || 0)
         + Math.max(0, Number(opts.skillBdR) || 0);
     } else if (target === 'normal') {
       extraPct = Number(readValue(snapshot || {}, {
@@ -1247,6 +1248,7 @@ const UiCharacterInfo = (() => {
     rollMobHitOutcome,
     getHuntMaxHp,
     collectFinalDamageSources,
+    calcAttributeAttack,
     setBottomPage,
     getBottomPage: () => bottomPage,
   };

@@ -22,6 +22,10 @@ const UiStatInfo = (() => {
 
   function formatVal(n, isPercent, opts = {}) {
     const v = Number(n) || 0;
+    if (opts.power) {
+      if (typeof formatPower === 'function') return formatPower(v);
+      return String(Math.floor(v) || 0);
+    }
     const rounded = Math.round(v * 100) / 100;
     const body = Number.isInteger(rounded)
       ? rounded.toLocaleString('en-US')
@@ -46,11 +50,18 @@ const UiStatInfo = (() => {
     (host || document.body).appendChild(root);
   }
 
-  function pushRow(rows, kind, label, value, isPercent) {
+  function pushRow(rows, kind, label, value, isPercent, opts = {}) {
     const n = Number(value) || 0;
-    if (!n && kind !== 'current') return;
+    if (!n && kind !== 'current' && !opts.keepZero) return;
     // 列圖已含固定標籤時僅 current／彙總列用；其餘來源列用 is-desc 自訂標籤
-    rows.push({ kind, label, value: n, isPercent: !!isPercent });
+    rows.push({
+      kind,
+      label,
+      value: n,
+      isPercent: !!isPercent,
+      power: !!opts.power,
+      noSign: !!opts.noSign,
+    });
   }
 
   /** 依能力值 key 組來源列 */
@@ -58,6 +69,45 @@ const UiStatInfo = (() => {
     const rows = [];
     const percent = !!opts.percent;
     const key = statKey;
+
+    if (key === '屬性攻擊力') {
+      const panel = Number(totalDisplay) || 0;
+      let boss = 0;
+      let normal = 0;
+      if (typeof UiCharacterInfo !== 'undefined'
+        && typeof UiCharacterInfo.calcAttributeAttack === 'function') {
+        boss = UiCharacterInfo.calcAttributeAttack(snapshot, combat, 'boss');
+        normal = UiCharacterInfo.calcAttributeAttack(snapshot, combat, 'normal');
+      }
+      let weaponMult = 1.2;
+      if (typeof WeaponTypeMap !== 'undefined') {
+        const jobName = combat?.ctx?.jobName
+          || (typeof CharacterCombatPanel !== 'undefined'
+            ? CharacterCombatPanel.getState?.()?.jobName
+            : '')
+          || '';
+        if (typeof WeaponTypeMap.getEquippedWeaponMultiplier === 'function'
+          && typeof UiEquipModule !== 'undefined') {
+          weaponMult = WeaponTypeMap.getEquippedWeaponMultiplier(
+            (slotId) => UiEquipModule.getWornEntry?.(slotId),
+            jobName,
+          );
+        } else if (typeof WeaponTypeMap.getWeaponMultiplierByJobName === 'function') {
+          weaponMult = WeaponTypeMap.getWeaponMultiplierByJobName(jobName);
+        }
+      }
+      pushRow(rows, 'current', '現在數值', panel, false, { power: true, noSign: true });
+      pushRow(rows, 'desc', '武器係數', weaponMult, false, {
+        noSign: true, keepZero: true,
+      });
+      pushRow(rows, 'desc', '對BOSS屬性攻擊力', boss, false, {
+        power: true, noSign: true, keepZero: true,
+      });
+      pushRow(rows, 'desc', '對一般怪物屬性攻擊力', normal, false, {
+        power: true, noSign: true, keepZero: true,
+      });
+      return rows;
+    }
 
     pushRow(rows, 'current', '現在數值', totalDisplay, percent);
 
@@ -285,7 +335,10 @@ const UiStatInfo = (() => {
     if (!list) return;
     list.innerHTML = rows.map((row) => {
       const baked = hasBakedLabel(row.kind);
-      const val = formatVal(row.value, row.isPercent, { noSign: row.kind === 'current' });
+      const val = formatVal(row.value, row.isPercent, {
+        noSign: row.noSign || row.kind === 'current',
+        power: !!row.power,
+      });
       return `
       <div class="uci-stat-info-row ${rowClass(row.kind)}">
         ${baked ? '' : `<span class="uci-stat-info-k">${esc(row.label)}</span>`}

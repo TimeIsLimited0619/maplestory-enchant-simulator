@@ -61,7 +61,7 @@ const WeaponTypeMap = (() => {
     ['1492', '火槍', '海盜'],
   ];
 
-  /** 武器類型 → 表攻／屬性攻擊力係數（對齊常用楓之谷武器係數表） */
+  /** 武器類型 → 表攻／屬性攻擊力係數（對齊常用楓之谷武器係數表；已出職業已核對） */
   const WEAPON_MULTIPLIER_BY_TYPE = {
     單手劍: 1.20,
     單手斧: 1.20,
@@ -86,7 +86,7 @@ const WeaponTypeMap = (() => {
     調節器: 1.30,
     龍息射手: 1.30,
     長劍: 1.30,
-    靈魂射手: 1.30,
+    靈魂射手: 1.70,
     魔劍: 1.30,
     能量劍: 1.3125,
     記憶長杖: 1.34,
@@ -540,10 +540,25 @@ const WeaponTypeMap = (() => {
   }
 
   /**
-   * 屬性攻擊力主／副屬：優先依目前穿戴武器類型；無武器則依職業。
+   * 屬性攻擊力主／副屬：
+   * - dual／xenon／da：固定用職業標籤（短劍無法區分夜使者與影武；需保留第二副屬／HP）
+   * - 其餘：優先依穿戴武器類型（穿錯武時主屬跟著武器）；無武器則依職業
    */
   function getCombatStatLabels(getWornEntry, jobName) {
     const resolvedJob = resolveJobNameForWeapon(jobName);
+    const jobLabels = (typeof CombatJobs !== 'undefined'
+      && typeof CombatJobs.getJobStatLabelsByName === 'function')
+      ? CombatJobs.getJobStatLabelsByName(resolvedJob)
+      : { main: 'STR', sub: 'DEX', secondSub: '' };
+    const job = (typeof CombatJobs !== 'undefined'
+      && typeof CombatJobs.getJobByName === 'function')
+      ? CombatJobs.getJobByName(resolvedJob)
+      : null;
+    const cat = job?.category || '';
+    if (cat === 'dual' || cat === 'xenon' || cat === 'da') {
+      return jobLabels;
+    }
+
     const info = typeof getWornEntry === 'function'
       ? resolveFromEquippedSlots(getWornEntry)
       : null;
@@ -555,10 +570,7 @@ const WeaponTypeMap = (() => {
       || '';
     const fromWeapon = getStatLabelsForWeaponType(weaponType);
     if (fromWeapon) return fromWeapon;
-    if (typeof CombatJobs !== 'undefined' && typeof CombatJobs.getJobStatLabelsByName === 'function') {
-      return CombatJobs.getJobStatLabelsByName(resolvedJob);
-    }
-    return { main: 'STR', sub: 'DEX', secondSub: '' };
+    return jobLabels;
   }
 
   function isWeaponItemLike(item) {
