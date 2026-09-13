@@ -418,8 +418,14 @@ function canUseHammerEnhancement(item) {
   return (item.maxPlatinumHammer ?? 5) > 0 || (item.maxGoldenHammer ?? 1) > 0;
 }
 
-/** 是否可進行星力強化（有 tuc，或為阿特拉斯副武器；胸章／機器人除外） */
+/** 裝備是否因星力破壞而損壞 */
+function isStarforceBrokenItem(item) {
+  return Boolean(item?.broken);
+}
+
+/** 是否可進行星力強化（有 tuc，或為阿特拉斯副武器；胸章／機器人除外；已損壞不可） */
 function canUseStarForce(item) {
+  if (isStarforceBrokenItem(item)) return false;
   if (isEnhancementLockedItem(item)) return false;
   if (isPinItem(item)) return false;
   return hasBaseUpgradeSlots(item) || isAtlasOffHandWeapon(item);

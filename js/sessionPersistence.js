@@ -18,11 +18,14 @@ const MSS_FILE_ENC_VERSION = 1;
 /** 前端混淆用；無法真正防破解，只擋隨手改檔 */
 const MSS_FILE_ENC_SECRET = 'mss-file-obf-v1|maplestory-enchant-simulator|tw-zh';
 
+const SESSION_MIGRATION_STARFORCE_REMAP = 'starForceRemap20_23Once';
+
 const SessionPersistenceModule = {
   loadedFromStorage: false,
   equippedSlotIndex: null,
   saveTimer: null,
   _deferredPayload: null,
+  _migrations: null,
   activeProfile: 'sim',
   _needIdleStarter: false,
   /** 放置重置／首次進入時發放新手裝備；可填已 import:wz 的武器／防具／飾品 ID */
@@ -116,7 +119,11 @@ const SessionPersistenceModule = {
       format: MSS_SAVE_FORMAT,
       version: MSS_SAVE_FILE_VERSION,
       exportedAt: new Date().toISOString(),
-      session: this.collectSnapshot()
+      session: this.collectSnapshot(),
+      migrations: {
+        ...(this._migrations && typeof this._migrations === 'object' ? this._migrations : {}),
+        [SESSION_MIGRATION_STARFORCE_REMAP]: true,
+      },
     };
 
     if (typeof CostTrackerModule !== 'undefined' && typeof CostTrackerModule.getSavePayload === 'function') {
@@ -180,6 +187,8 @@ const SessionPersistenceModule = {
 
   saveToStorage() {
     try {
+      // 尚未成功載入存檔時禁止寫入，避免空世界覆蓋 localStorage
+      if (!this.loadedFromStorage) return;
       const payload = this.buildExportPayload();
       if (this.activeProfile === 'idle') {
         delete payload.costTracker;
@@ -700,6 +709,118 @@ const SessionPersistenceModule = {
     }
   },
 
+  /**
+   * 星力分段退星：20～24 → 20；25～30 → 23；未滿 20 不變。
+   * 回傳調整後星數（無改動則回傳原值）。
+   */
+  remapStarForceTier(star) {
+    const n = Math.floor(Number(star) || 0);
+    if (n >= 25) return 23;
+    if (n >= 20) return 20;
+    return n;
+  },
+
+  /** 裝備 state 套用分段退星（回傳是否有改動） */
+  remapEnchantStateStar(state) {
+    if (!state || typeof state !== 'object') return false;
+    const star = Math.floor(Number(state.star) || 0);
+    const next = this.remapStarForceTier(star);
+    if (next === star) return false;
+    state.star = next;
+    return true;
+  },
+
+  remapWearMapStarForce(wearMap) {
+    if (!wearMap || typeof wearMap !== 'object') return false;
+    let changed = false;
+    Object.keys(wearMap).forEach((slot) => {
+      const entry = wearMap[slot];
+      if (!entry || typeof entry !== 'object') return;
+      if (entry.state && this.remapEnchantStateStar(entry.state)) changed = true;
+    });
+    return changed;
+  },
+
+  /** 對 session 內背包／穿著／強化槽／倉庫裝備套用分段退星 */
+  remapSessionStarForce(session) {
+    if (!session || typeof session !== 'object') return false;
+    let changed = false;
+    if (Array.isArray(session.inventoryState)) {
+      session.inventoryState.forEach((st) => {
+        if (this.remapEnchantStateStar(st)) changed = true;
+      });
+    }
+    if (session.equippedItem?.state && this.remapEnchantStateStar(session.equippedItem.state)) {
+      changed = true;
+    }
+    if (this.remapWearMapStarForce(session.bodyWearActive)) changed = true;
+    if (session.bodyWearByPreset && typeof session.bodyWearByPreset === 'object') {
+      Object.keys(session.bodyWearByPreset).forEach((key) => {
+        if (this.remapWearMapStarForce(session.bodyWearByPreset[key])) changed = true;
+      });
+    }
+    if (Array.isArray(session.trunkSlots)) {
+      session.trunkSlots.forEach((entry) => {
+        if (entry?.kind === 'equip' && entry.state
+          && this.remapEnchantStateStar(entry.state)) {
+          changed = true;
+        }
+      });
+    }
+    return changed;
+  },
+
+  /**
+   * 一次性遷移：20～24→20、25～30→23；標記 migrations.starForceRemap20_23Once。
+   * 已標記者不再退星（之後可再衝高）。
+   */
+  migrateStarForceRemapPayload(payload) {
+    if (!payload || typeof payload !== 'object') return false;
+    if (!payload.migrations || typeof payload.migrations !== 'object') {
+      payload.migrations = {};
+    }
+    if (payload.migrations[SESSION_MIGRATION_STARFORCE_REMAP]) return false;
+    if (payload.session) this.remapSessionStarForce(payload.session);
+    payload.migrations[SESSION_MIGRATION_STARFORCE_REMAP] = true;
+    return true;
+  },
+
+  writePayloadFor(profile, payload) {
+    if (!payload?.session) return;
+    const keys = this.keysFor(profile);
+    localStorage.setItem(keys.full, JSON.stringify(payload));
+    localStorage.setItem(keys.session, JSON.stringify(payload.session));
+  },
+
+  /** 模擬器／放置兩份 localStorage 各跑一次分段退星 */
+  migrateStarForceRemapInLocalStorage() {
+    ['sim', 'idle'].forEach((profile) => {
+      const data = this.readPayloadFor(profile);
+      if (!data?.session) return;
+      const payload = (data.format === MSS_SAVE_FORMAT)
+        ? data
+        : {
+          format: MSS_SAVE_FORMAT,
+          version: MSS_SAVE_FILE_VERSION,
+          session: data.session,
+          migrations: data.migrations || {},
+        };
+      if (!this.migrateStarForceRemapPayload(payload)) return;
+      try {
+        this.writePayloadFor(profile, payload);
+      } catch (err) {
+        console.warn('[SessionPersistence] starForceRemap 遷移寫回失敗:', profile, err);
+      }
+    });
+  },
+
+  markStarForceRemapMigrated() {
+    if (!this._migrations || typeof this._migrations !== 'object') {
+      this._migrations = {};
+    }
+    this._migrations[SESSION_MIGRATION_STARFORCE_REMAP] = true;
+  },
+
   emptySessionSnapshot() {
     const count = typeof INVENTORY_SLOT_COUNT !== 'undefined' ? INVENTORY_SLOT_COUNT : 128;
     const trunkCount = typeof TRUNK_SLOT_COUNT !== 'undefined' ? TRUNK_SLOT_COUNT : count;
@@ -930,7 +1051,12 @@ const SessionPersistenceModule = {
     this.activeProfile = from;
     this.saveToStorage();
     this.activeProfile = want;
+    this.migrateStarForceRemapInLocalStorage();
     const data = this.readPayloadFor(want);
+    this._migrations = {
+      ...(data?.migrations && typeof data.migrations === 'object' ? data.migrations : {}),
+    };
+    this.markStarForceRemapMigrated();
     this._needIdleStarter = want === 'idle' && !data?.session;
     this.applyWorld(
       data?.session || this.emptySessionSnapshot(),
@@ -946,6 +1072,7 @@ const SessionPersistenceModule = {
     if (!inIdle) return false;
     this.activeProfile = 'idle';
     this._needIdleStarter = true;
+    this.markStarForceRemapMigrated();
     this.applyWorld(this.emptySessionSnapshot(), this.emptyExtraPayload());
     this.saveToStorage();
     return true;
@@ -954,8 +1081,13 @@ const SessionPersistenceModule = {
   loadFromStorage() {
     this.activeProfile = this.profileFromStorage();
     try {
+      this.migrateStarForceRemapInLocalStorage();
       const data = this.readPayloadFor(this.activeProfile);
       if (data?.session) {
+        this._migrations = {
+          ...(data.migrations && typeof data.migrations === 'object' ? data.migrations : {}),
+        };
+        this.markStarForceRemapMigrated();
         this.applySessionSnapshot(data.session);
         this._deferredPayload = data.format ? data : null;
         this.loadedFromStorage = true;
@@ -963,11 +1095,13 @@ const SessionPersistenceModule = {
       }
       if (this.activeProfile === 'idle') {
         this._needIdleStarter = true;
+        this.markStarForceRemapMigrated();
         this.applySessionSnapshot(this.emptySessionSnapshot());
         this._deferredPayload = this.emptyExtraPayload();
         this.loadedFromStorage = true;
         return true;
       }
+      this.markStarForceRemapMigrated();
       return false;
     } catch (err) {
       console.warn('[SessionPersistence] 讀取失敗:', err);
@@ -1153,6 +1287,12 @@ const SessionPersistenceModule = {
     if (!session || session.version !== SESSION_PERSISTENCE_VERSION) {
       throw new Error('存檔版本不相容');
     }
+
+    this.migrateStarForceRemapPayload(data);
+    this._migrations = {
+      ...(data.migrations && typeof data.migrations === 'object' ? data.migrations : {}),
+    };
+    this.markStarForceRemapMigrated();
 
     this.clearEquipSlotSilent();
     try {

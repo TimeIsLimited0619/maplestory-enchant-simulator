@@ -319,6 +319,8 @@ const DisassembleStore = {
     if (typeof playerInventoryEquip === 'undefined') return out;
     playerInventoryEquip.forEach((itemId, slotIndex) => {
       if (!itemId) return;
+      const state = typeof playerInventoryState !== 'undefined' ? playerInventoryState[slotIndex] : null;
+      if (typeof isStarforceBrokenItem === 'function' && isStarforceBrokenItem(state)) return;
       const materials = this.equipMaterials(itemId);
       if (!materials) return;
       out.push({
@@ -366,6 +368,11 @@ const DisassembleStore = {
     const itemId = playerInventoryEquip[slotIndex];
     const materials = this.equipMaterials(itemId);
     if (!itemId || !materials) return false;
+    const state = typeof playerInventoryState !== 'undefined' ? playerInventoryState[slotIndex] : null;
+    if (typeof isStarforceBrokenItem === 'function' && isStarforceBrokenItem(state)) {
+      if (typeof addLog === 'function') addLog('[分解] 已損壞裝備無法分解，請先恢復。', 'log-fail');
+      return false;
+    }
     if (typeof InventoryModule !== 'undefined' && InventoryModule.isEquipItemLocked?.(slotIndex)) {
       if (typeof addLog === 'function') addLog('[分解] 此裝備已便利鎖定，無法分解。', 'log-fail');
       return false;

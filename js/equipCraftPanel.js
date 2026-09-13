@@ -5,10 +5,10 @@ const EquipCraftPanel = (() => {
   let inited = false;
   let open = false;
   /**
-   * home | advance-line | make-series | make-category | detail
+   * hub | make-home | advance-line | make-series | make-category | detail | recover
    * @type {string}
    */
-  let view = 'home';
+  let view = 'hub';
   let lineId = '';
   let seriesId = '';
   let categoryId = '';
@@ -123,7 +123,7 @@ const EquipCraftPanel = (() => {
     return `<div id="equipCraftPanel" class="equip-craft-panel" role="dialog" aria-labelledby="equipCraftTitle" aria-hidden="true">
       <div class="equip-craft-head">
         <button type="button" id="equipCraftBack" class="equip-craft-nav" hidden>← 返回</button>
-        <span id="equipCraftTitle">裝備製作</span>
+        <span id="equipCraftTitle">裝備加工</span>
         <button type="button" id="equipCraftClose" class="equip-craft-nav">關閉</button>
       </div>
       <div id="equipCraftBody" class="equip-craft-body"></div>
@@ -154,7 +154,7 @@ const EquipCraftPanel = (() => {
     panel?.setAttribute('aria-hidden', open ? 'false' : 'true');
     $('btnViewEquipCraft')?.classList.toggle('is-active', open);
     const back = $('equipCraftBack');
-    if (back) back.hidden = view === 'home';
+    if (back) back.hidden = view === 'hub';
   }
 
   function setView(next, opts = {}) {
@@ -164,6 +164,54 @@ const EquipCraftPanel = (() => {
     categoryId = opts.categoryId || '';
     detail = opts.detail || null;
     render();
+  }
+
+  function hubMarkup() {
+    return `<div class="equip-craft-list">
+      <button type="button" class="equip-craft-row" data-action="open-make">
+        <span class="equip-craft-row__text">
+          <span class="equip-craft-row__name">裝備製作</span>
+          <span class="equip-craft-row__meta">製作／進階裝備</span>
+        </span>
+      </button>
+      <button type="button" class="equip-craft-row" data-action="open-disassemble">
+        <span class="equip-craft-row__text">
+          <span class="equip-craft-row__name">裝備分解</span>
+          <span class="equip-craft-row__meta">分解裝備／卷軸為素材</span>
+        </span>
+      </button>
+      <button type="button" class="equip-craft-row" data-action="open-recover">
+        <span class="equip-craft-row__text">
+          <span class="equip-craft-row__name">裝備恢復</span>
+          <span class="equip-craft-row__meta">星力損壞裝備：同裝 ×4 + 等級⁴ 楓幣（最高 ★22）</span>
+        </span>
+      </button>
+    </div>`;
+  }
+
+  function recoverMarkup() {
+    const s = store();
+    if (!s?.listBrokenEquips) return '<div class="equip-craft-empty">恢復功能尚未載入。</div>';
+    const rows = s.listBrokenEquips();
+    if (!rows.length) {
+      return '<div class="equip-craft-empty">背包中沒有已損壞的裝備。</div>';
+    }
+    return `<div class="equip-craft-list">${rows.map((row) => {
+      const starTxt = row.star > 0 ? `★${row.star}` : '★0';
+      const recoverTxt = row.recoverStar !== row.star
+        ? ` → 恢復後 ★${row.recoverStar}`
+        : '';
+      const mesoTxt = formatMeso(row.meso);
+      const ready = row.canRecover ? '可恢復' : `材料 ${row.fodderHave}/4${row.canAffordMeso ? '' : '／楓幣不足'}`;
+      return `<button type="button" class="equip-craft-row" data-action="recover-equip" data-slot="${row.slotIndex}" ${row.canRecover ? '' : 'disabled'}>
+        <img class="equip-craft-row__icon" src="${row.icon}" alt="" draggable="false"${tipAttr('equip', row.itemId)} onerror="this.style.opacity='0.3'">
+        <span class="equip-craft-row__text">
+          <span class="equip-craft-row__name" style="color:#ff5555">${starTxt}${recoverTxt} ${row.name}(已損壞)</span>
+          <span class="equip-craft-row__meta">Lv.${row.reqLevel}　同裝×4　${mesoTxt} 楓幣　${ready}</span>
+        </span>
+      </button>`;
+    }).join('')}</div>
+    <p class="equip-craft-hint">恢復消耗 4 件相同未損壞裝備 + 等級⁴ 楓幣；捲／潛能等進度保留，星力最高恢復到 ★22。</p>`;
   }
 
   function homeMarkup() {
@@ -399,7 +447,19 @@ const EquipCraftPanel = (() => {
     const body = $('equipCraftBody');
     if (!title || !body) return;
 
-    if (view === 'home') {
+    if (view === 'hub') {
+      title.textContent = '裝備加工';
+      body.innerHTML = hubMarkup();
+      return;
+    }
+
+    if (view === 'recover') {
+      title.textContent = '裝備恢復';
+      body.innerHTML = recoverMarkup();
+      return;
+    }
+
+    if (view === 'make-home' || view === 'home') {
       title.textContent = '裝備製作';
       body.innerHTML = homeMarkup();
       return;
@@ -436,7 +496,7 @@ const EquipCraftPanel = (() => {
   function setOpen(next) {
     open = !!next;
     if (open) {
-      view = 'home';
+      view = 'hub';
       lineId = '';
       seriesId = '';
       categoryId = '';
@@ -468,7 +528,7 @@ const EquipCraftPanel = (() => {
           categoryId: detail.categoryId,
         });
       } else {
-        setView('home');
+        setView('make-home');
       }
       return;
     }
@@ -477,7 +537,11 @@ const EquipCraftPanel = (() => {
       return;
     }
     if (view === 'make-series' || view === 'advance-line') {
-      setView('home');
+      setView('make-home');
+      return;
+    }
+    if (view === 'make-home' || view === 'recover' || view === 'home') {
+      setView('hub');
     }
   }
 
@@ -525,6 +589,34 @@ const EquipCraftPanel = (() => {
       const row = e.target.closest('[data-action]');
       if (!row) return;
       const action = row.getAttribute('data-action');
+
+      if (action === 'open-make') {
+        e.preventDefault();
+        setView('make-home');
+        return;
+      }
+      if (action === 'open-disassemble') {
+        e.preventDefault();
+        setOpen(false);
+        if (typeof DisassemblePanel !== 'undefined') DisassemblePanel.setOpen?.(true);
+        return;
+      }
+      if (action === 'open-recover') {
+        e.preventDefault();
+        setView('recover');
+        return;
+      }
+      if (action === 'recover-equip') {
+        e.preventDefault();
+        if (row.disabled) return;
+        const slot = Number(row.getAttribute('data-slot'));
+        const ok = store()?.recoverEquip?.(slot);
+        if (!ok && typeof addLog === 'function') {
+          addLog('[裝備恢復] 無法恢復（材料或楓幣不足）。', 'log-fail');
+        }
+        render();
+        return;
+      }
 
       if (action === 'open-line') {
         e.preventDefault();

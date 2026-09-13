@@ -340,39 +340,39 @@ const starMesoCosts = {
   ]
 };
 
-// 3. 星力點擊機率表 (成功 / 失敗 / 破壞)
+// 3. 星力點擊機率表（正服 KMS NEXT／現行：失敗維持星數；索引＝當前星→+1）
+// success / fail(維持) / destroy；safeguard＝該星可防爆（正服 15～17）
 const starRates = [
-  { success: 95, fail: 5, destroy: 0, safeguard: false },
-  { success: 90, fail: 10, destroy: 0, safeguard: false },
-  { success: 85, fail: 15, destroy: 0, safeguard: false },
-  { success: 85, fail: 15, destroy: 0, safeguard: false },
-  { success: 80, fail: 20, destroy: 0, safeguard: false },
-  { success: 75, fail: 25, destroy: 0, safeguard: false },
-  { success: 70, fail: 30, destroy: 0, safeguard: false },
-  { success: 65, fail: 35, destroy: 0, safeguard: false },
-  { success: 60, fail: 40, destroy: 0, safeguard: false },
-  { success: 55, fail: 45, destroy: 0, safeguard: false },
-  { success: 50, fail: 50, destroy: 0, safeguard: false },
-  { success: 45, fail: 55, destroy: 0, safeguard: false },
-  { success: 40, fail: 60, destroy: 0, safeguard: false },
-  { success: 35, fail: 65, destroy: 0, safeguard: false },
-  { success: 30, fail: 70, destroy: 0, safeguard: false },
-  { success: 30, fail: 67.9, destroy: 2.1, safeguard: true },
-  { success: 30, fail: 67.9, destroy: 2.1, safeguard: true },
-  { success: 30, fail: 67.9, destroy: 2.1, safeguard: true },
-  { success: 15, fail: 78.2, destroy: 6.8, safeguard: true },
-  { success: 15, fail: 78.2, destroy: 6.8, safeguard: false },
-  { success: 15, fail: 76.5, destroy: 8.5, safeguard: false },
-  { success: 30, fail: 59.5, destroy: 10.5, safeguard: false },
-  { success: 15, fail: 72.25, destroy: 12.75, safeguard: false },
-  { success: 15, fail: 68, destroy: 17, safeguard: false },
-  { success: 10, fail: 72, destroy: 18, safeguard: false },
-  { success: 10, fail: 72, destroy: 18, safeguard: false },
-  { success: 10, fail: 72, destroy: 18, safeguard: false },
-  { success: 7, fail: 74.4, destroy: 18.6, safeguard: false },
-  { success: 5, fail: 76, destroy: 19, safeguard: false },
-  { success: 3, fail: 77.6, destroy: 19.4, safeguard: false },
-  { success: 1, fail: 79.2, destroy: 19.8, safeguard: false },
+  { success: 95, fail: 5, destroy: 0, safeguard: false },       // 0→1
+  { success: 90, fail: 10, destroy: 0, safeguard: false },      // 1→2
+  { success: 85, fail: 15, destroy: 0, safeguard: false },      // 2→3
+  { success: 85, fail: 15, destroy: 0, safeguard: false },      // 3→4
+  { success: 80, fail: 20, destroy: 0, safeguard: false },      // 4→5
+  { success: 75, fail: 25, destroy: 0, safeguard: false },      // 5→6
+  { success: 70, fail: 30, destroy: 0, safeguard: false },      // 6→7
+  { success: 65, fail: 35, destroy: 0, safeguard: false },      // 7→8
+  { success: 60, fail: 40, destroy: 0, safeguard: false },      // 8→9
+  { success: 55, fail: 45, destroy: 0, safeguard: false },      // 9→10
+  { success: 50, fail: 50, destroy: 0, safeguard: false },      // 10→11
+  { success: 45, fail: 55, destroy: 0, safeguard: false },      // 11→12
+  { success: 40, fail: 60, destroy: 0, safeguard: false },      // 12→13
+  { success: 35, fail: 65, destroy: 0, safeguard: false },      // 13→14
+  { success: 30, fail: 70, destroy: 0, safeguard: false },      // 14→15
+  { success: 30, fail: 67.9, destroy: 2.1, safeguard: true },   // 15→16
+  { success: 30, fail: 67.9, destroy: 2.1, safeguard: true },   // 16→17
+  { success: 15, fail: 78.2, destroy: 6.8, safeguard: true },   // 17→18
+  { success: 15, fail: 78.2, destroy: 6.8, safeguard: false },  // 18→19
+  { success: 15, fail: 76.5, destroy: 8.5, safeguard: false },  // 19→20
+  { success: 30, fail: 59.5, destroy: 10.5, safeguard: false }, // 20→21
+  { success: 15, fail: 72.25, destroy: 12.75, safeguard: false }, // 21→22
+  { success: 15, fail: 68, destroy: 17, safeguard: false },     // 22→23
+  { success: 10, fail: 72, destroy: 18, safeguard: false },     // 23→24
+  { success: 10, fail: 72, destroy: 18, safeguard: false },     // 24→25
+  { success: 10, fail: 72, destroy: 18, safeguard: false },     // 25→26
+  { success: 7, fail: 74.4, destroy: 18.6, safeguard: false },  // 26→27
+  { success: 5, fail: 76, destroy: 19, safeguard: false },      // 27→28
+  { success: 3, fail: 77.6, destroy: 19.4, safeguard: false },  // 28→29
+  { success: 1, fail: 79.2, destroy: 19.8, safeguard: false },  // 29→30
 ];
 
 // 4. 鐵鎚種類與成功機率

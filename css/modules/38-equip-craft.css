@@ -291,6 +291,13 @@
   text-align: center;
 }
 
+.equip-craft-hint {
+  margin: 10px 4px 4px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.45);
+}
+
 .equip-craft-shared-mats {
   display: flex;
   flex-wrap: wrap;

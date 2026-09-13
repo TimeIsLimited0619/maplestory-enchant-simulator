@@ -159,6 +159,7 @@ function createEnchantState(itemData, slotIndex) {
     catValleyTotemStarted: Boolean(itemData.catValleyTotemStarted),
     catValleyJackpotMain: itemData.catValleyJackpotMain || null,
     catValleyJackpotAdd: itemData.catValleyJackpotAdd || null,
+    broken: Boolean(itemData.broken),
     goldenHammerUsed: 0,
     platinumHammerUsed: 0,
     upgradeSlots: itemData.upgradeSlots,
@@ -881,6 +882,14 @@ function loadEquipToSlot(itemId, slotIndex) {
   const itemData = ITEM_DATABASE[itemId];
   if (!itemData) return;
   if (!Number.isInteger(slotIndex) || slotIndex < 0 || !playerInventoryEquip[slotIndex]) {
+    return;
+  }
+
+  const pendingState = playerInventoryState[slotIndex];
+  if (typeof isStarforceBrokenItem === 'function' && isStarforceBrokenItem(pendingState)) {
+    if (typeof addLog === 'function') {
+      addLog('[強化] 已損壞的裝備無法放入強化槽，請先至裝備加工恢復。', 'log-fail');
+    }
     return;
   }
 

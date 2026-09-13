@@ -70,10 +70,18 @@ const ExpectedCostCalc = {
     const target = Math.min(toStar, maxStar);
     const catValley = typeof isStarForceCatValleyRatesEnabled === 'function'
       && isStarForceCatValleyRatesEnabled();
-    const protectDestroy = typeof StarForceModule !== 'undefined'
-      ? StarForceModule.isProtectDestroyEnabled?.()
+    const protectWanted = typeof StarForceModule !== 'undefined'
+      ? (StarForceModule.isProtectDestroyWanted?.()
+        || StarForceModule.isProtectDestroyEnabled?.())
       : false;
-    const rateOpts = { protectDestroy };
+    const protectAt = (star) => {
+      if (!protectWanted) return false;
+      if (typeof StarForceModule !== 'undefined' && StarForceModule.canUseProtectDestroy) {
+        return StarForceModule.canUseProtectDestroy(star);
+      }
+      const raw = (typeof starRates !== 'undefined' && starRates[star]) ? starRates[star] : null;
+      return Boolean(raw?.safeguard) && (Number(raw?.destroy) || 0) > 0;
+    };
 
     const failDest = (star) => (typeof getStarForceFailDestStar === 'function'
       ? getStarForceFailDestStar(star, catValley)
@@ -89,7 +97,7 @@ const ExpectedCostCalc = {
 
     for (let iter = 0; iter < 80; iter += 1) {
       for (let star = 0; star < target; star += 1) {
-        const rates = this.getStarOutcomeRates(star, rateOpts);
+        const rates = this.getStarOutcomeRates(star, { protectDestroy: protectAt(star) });
         const p = Math.max(rates.success, 1e-9);
         const q = 1 - p;
         const nextE = star + 1 >= target ? 0 : E[star + 1];
@@ -100,7 +108,7 @@ const ExpectedCostCalc = {
         const destM = dest >= target ? 0 : M[dest];
         const destD = dest >= target ? 0 : D[dest];
         const meso = mesoOf(star);
-        const destroyHit = protectDestroy ? 0 : rates.destroy;
+        const destroyHit = protectAt(star) ? 0 : rates.destroy;
 
         if (dest === star) {
           E[star] = (1 + p * nextE) / p;
@@ -116,7 +124,7 @@ const ExpectedCostCalc = {
 
     const steps = [];
     for (let star = fromStar; star < target; star += 1) {
-      const rates = this.getStarOutcomeRates(star, rateOpts);
+      const rates = this.getStarOutcomeRates(star, { protectDestroy: protectAt(star) });
       const dest = failDest(star);
       steps.push({
         star,
@@ -141,15 +149,15 @@ const ExpectedCostCalc = {
       expectedMeso: M[fromStar],
       expectedItemCost: E[fromStar] * cubePrice,
       expectedDestroyHits: D[fromStar],
-      protectDestroy,
+      protectDestroy: protectWanted,
       catValley,
       steps,
       method: 'analytic',
       note: catValley
         ? '貓谷機率：防止破壞鎖定開啟。21–24 與 27 星以上失敗降 1 星（20／25 保底、26 失敗不降）。期望已含降星重洗。'
-        : (protectDestroy
-          ? '依目前「防止破壞」勾選：破壞率併入失敗、楓幣為全額。失敗／破壞皆維持星數。'
-          : '未勾防止破壞時楓幣為半價；破壞仍維持星數（與本模擬器一致）。'),
+        : (protectWanted
+          ? '正服：失敗維持星數；防爆僅 15～17 星（破壞改失敗、該星楓幣×3）。'
+          : '正服：失敗維持星數；未防爆為基礎價，破壞會使裝備進入已損壞。'),
     };
   },
 
@@ -543,7 +551,7 @@ const ExpectedCostCalc = {
       rows.push(['期望觸發破壞', `約 ${result.expectedDestroyHits.toFixed(1)} 次`]);
     }
     if (result.protectDestroy != null) {
-      rows.push(['防止破壞', result.protectDestroy ? '開啟（全額楓幣）' : '關閉（半價楓幣）']);
+      rows.push(['防止破壞', result.protectDestroy ? '開啟（可防爆星楓幣×3）' : '關閉（基礎價）']);
     }
     if (result.expectedMeso > 0) {
       rows.push(['期望楓幣', this.formatMeso(result.expectedMeso)]);

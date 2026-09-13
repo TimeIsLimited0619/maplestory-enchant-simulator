@@ -138,12 +138,17 @@ const DisassemblePanel = (() => {
     root?.classList.toggle('is-open', open);
     root?.setAttribute('aria-hidden', open ? 'false' : 'true');
     $('btnViewDisassemble')?.classList.toggle('is-active', open);
+    // 導覽已合併：分解開啟時也標示裝備加工按鈕
+    if (!$('btnViewDisassemble')) {
+      $('btnViewEquipCraft')?.classList.toggle('is-active', open
+        || (typeof EquipCraftPanel !== 'undefined' && EquipCraftPanel.isOpen?.()));
+    }
 
     const back = $('disassembleBack');
     if (back) back.hidden = view === 'home';
     const title = $('disassembleTitle');
     if (title) {
-      title.textContent = view === 'equip' ? '分解裝備' : (view === 'scroll' ? '分解卷軸' : '分解中心');
+      title.textContent = view === 'equip' ? '分解裝備' : (view === 'scroll' ? '分解卷軸' : '裝備分解');
     }
 
     const showRecipe = open && recipeOpen;
@@ -295,7 +300,7 @@ const DisassemblePanel = (() => {
     open = !!next;
     if (open) {
       view = 'home';
-      if (typeof EquipCraftPanel !== 'undefined') EquipCraftPanel.setOpen?.(false);
+      // 由裝備加工 hub 開啟時不關加工殼；僅互斥其他面板
       if (typeof JobChangePanel !== 'undefined') JobChangePanel.setOpen?.(false);
       if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.setPickerOpen === 'function') {
         IdleHunt.setPickerOpen(false);
@@ -333,9 +338,14 @@ const DisassemblePanel = (() => {
   }
 
   function bindEvents() {
+    // 導覽已合併至「裝備加工」；保留 id 相容舊呼叫
     $('btnViewDisassemble')?.addEventListener('click', (e) => {
       e.preventDefault();
-      toggle();
+      if (typeof EquipCraftPanel !== 'undefined') {
+        EquipCraftPanel.setOpen?.(true);
+      } else {
+        toggle();
+      }
     });
     $('disassembleClose')?.addEventListener('click', (e) => {
       e.preventDefault();

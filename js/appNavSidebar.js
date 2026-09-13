@@ -14,8 +14,7 @@ const AppNavSidebar = (() => {
   ];
 
   const MAIN_DRAWER_ITEMS = [
-    { id: 'btnViewEquipCraft', label: '裝備製作', icon: 'equipcraft', title: '裝備製作' },
-    { id: 'btnViewDisassemble', label: '分解中心', icon: 'enchanttoolspanel', title: '分解裝備／分解卷軸' },
+    { id: 'btnViewEquipCraft', label: '裝備加工', icon: 'enchanttoolspanel', title: '裝備製作／分解／恢復' },
   ];
 
   const MAIN_ITEMS_AFTER_CRAFT = [

@@ -379,6 +379,14 @@ const UiEquipModule = (() => {
       return false;
     }
 
+    const bagState = typeof playerInventoryState !== 'undefined' ? playerInventoryState[bagIndex] : null;
+    if (typeof isStarforceBrokenItem === 'function' && isStarforceBrokenItem(bagState)) {
+      if (typeof addLog === 'function') {
+        addLog(`[裝備欄]【${item.name}】已損壞，無法穿著。請至裝備加工恢復。`, 'log-fail');
+      }
+      return false;
+    }
+
     const currentJobName = (typeof CharacterSkills !== 'undefined'
       && typeof CharacterSkills.getCombatJobNameForCurrentLine === 'function')
       ? (CharacterSkills.getCombatJobNameForCurrentLine() || '')

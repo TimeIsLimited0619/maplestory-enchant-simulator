@@ -210,6 +210,11 @@
   text-rendering: geometricPrecision;
 }
 
+.eq-tip-name.is-broken {
+  color: #ff5555;
+  text-shadow: 1px 0px 0 #aa2222;
+}
+
 .eq-tip-trade {
   text-align: center;
   color: #ff8a18;
@@ -807,6 +812,8 @@
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+  z-index: 5;
+  pointer-events: auto;
 }
 
 .ae-sf-protect-btn {
@@ -818,16 +825,19 @@
   background-color: transparent;
   border: none;
   border-radius: 0;
-  cursor: default;
-  pointer-events: none;
+  cursor: pointer;
+  pointer-events: auto !important;
+  z-index: 6;
 }
 
-.ae-sf-protect-btn:disabled {
+.ae-sf-protect-btn:disabled,
+.ae-sf-protect-btn.is-locked {
   opacity: 1;
+  cursor: default;
 }
 
 .ae-sf-protect-btn.is-checked {
-  filter: none;
+  filter: brightness(1.25);
 }
 
 .ae-sf-actions {

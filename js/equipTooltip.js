@@ -1361,7 +1361,12 @@ const EquipTooltipModule = {
 
     const nameEl = document.createElement('div');
     nameEl.className = 'eq-tip-name';
-    nameEl.textContent = item.name;
+    if (typeof isStarforceBrokenItem === 'function' && isStarforceBrokenItem(item)) {
+      nameEl.classList.add('is-broken');
+      nameEl.textContent = `${item.name}(已損壞)`;
+    } else {
+      nameEl.textContent = item.name;
+    }
     nameRow.appendChild(nameEl);
     root.appendChild(nameRow);
 

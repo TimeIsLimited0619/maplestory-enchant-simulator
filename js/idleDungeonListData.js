@@ -161,7 +161,7 @@ const IDLE_DUNGEON_LIST = [
         "killNeed": 100,
         "settleGoldPerKill": 0,
         "clearGold": 100000000,
-        "hpMult": 2000,
+        "hpMult": 1000,
         "dmgMult": 20,
         "dropAmountMult": 1,
         "dropRateMult": 1,

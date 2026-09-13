@@ -954,23 +954,35 @@ const EquipCraftStore = (() => {
       && InventoryModule.isEquipItemLocked(slotIndex);
   }
 
-  function countEquipInBag(itemId, { includeLocked = true } = {}) {
+  function countEquipInBag(itemId, { includeLocked = true, excludeBroken = false, excludeSlot = -1 } = {}) {
     const id = String(itemId || '');
     if (!id || typeof playerInventoryEquip === 'undefined') return 0;
     return playerInventoryEquip.reduce((sum, entry, index) => {
       if (entry !== id) return sum;
+      if (index === excludeSlot) return sum;
       if (!includeLocked && isBagEquipLocked(index)) return sum;
+      if (excludeBroken) {
+        const st = typeof playerInventoryState !== 'undefined' ? playerInventoryState[index] : null;
+        if (typeof isStarforceBrokenItem === 'function' && isStarforceBrokenItem(st)) return sum;
+      }
       return sum + 1;
     }, 0);
   }
 
-  function takeEquipFromBag(itemId, amount = 1) {
+  function takeEquipFromBag(itemId, amount = 1, { excludeBroken = false, excludeSlot = -1 } = {}) {
     const id = String(itemId || '');
     let need = Math.max(1, Math.floor(Number(amount) || 1));
-    if (!id || countEquipInBag(id, { includeLocked: false }) < need) return false;
+    if (!id || countEquipInBag(id, { includeLocked: false, excludeBroken, excludeSlot }) < need) {
+      return false;
+    }
     for (let i = 0; i < playerInventoryEquip.length && need > 0; i++) {
       if (playerInventoryEquip[i] !== id) continue;
+      if (i === excludeSlot) continue;
       if (isBagEquipLocked(i)) continue;
+      if (excludeBroken) {
+        const st = typeof playerInventoryState !== 'undefined' ? playerInventoryState[i] : null;
+        if (typeof isStarforceBrokenItem === 'function' && isStarforceBrokenItem(st)) continue;
+      }
       playerInventoryEquip[i] = null;
       if (typeof playerInventoryState !== 'undefined') playerInventoryState[i] = null;
       need -= 1;
@@ -978,7 +990,7 @@ const EquipCraftStore = (() => {
     if (typeof playerInventory !== 'undefined' && Array.isArray(playerInventory)) {
       playerInventory.splice(0, playerInventory.length, ...playerInventoryEquip);
     }
-    return true;
+    return need <= 0;
   }
 
   /** 強化進度分數：優先有星力／卷軸／潛能等的基底；同分取較前槽 */
@@ -1247,6 +1259,115 @@ const EquipCraftStore = (() => {
     return findMakeFlatRecipe(recipeId);
   }
 
+  /** 裝備恢復楓幣：reqLevel^4 */
+  function recoverMesoCost(reqLevel) {
+    const lv = Math.max(0, Math.floor(Number(reqLevel) || 0));
+    return lv * lv * lv * lv;
+  }
+
+  /** 炸裝恢復後星力上限 */
+  const RECOVER_STAR_CAP = 22;
+
+  function recoverStarAfterRepair(star) {
+    return Math.min(RECOVER_STAR_CAP, Math.max(0, Math.floor(Number(star) || 0)));
+  }
+
+  function listBrokenEquips() {
+    const out = [];
+    if (typeof playerInventoryEquip === 'undefined') return out;
+    playerInventoryEquip.forEach((itemId, slotIndex) => {
+      if (!itemId) return;
+      const state = typeof playerInventoryState !== 'undefined' ? playerInventoryState[slotIndex] : null;
+      if (typeof isStarforceBrokenItem !== 'function' || !isStarforceBrokenItem(state)) return;
+      const reqLevel = Number(state?.reqLevel)
+        || Number((typeof ITEM_DATABASE !== 'undefined' && ITEM_DATABASE[itemId]?.reqLevel) || 0);
+      const meso = recoverMesoCost(reqLevel);
+      const star = Number(state?.star) || 0;
+      const fodder = countEquipInBag(itemId, {
+        includeLocked: false,
+        excludeBroken: true,
+        excludeSlot: slotIndex,
+      });
+      out.push({
+        slotIndex,
+        itemId,
+        name: equipName(itemId),
+        icon: equipIcon(itemId),
+        star,
+        recoverStar: recoverStarAfterRepair(star),
+        reqLevel,
+        meso,
+        fodderHave: fodder,
+        fodderNeed: 4,
+        canAffordMeso: canAffordMeso(meso),
+        canRecover: fodder >= 4 && canAffordMeso(meso) && !isBagEquipLocked(slotIndex),
+      });
+    });
+    return out;
+  }
+
+  function recoverEquip(slotIndex) {
+    if (!Number.isInteger(slotIndex) || slotIndex < 0) return false;
+    if (typeof playerInventoryEquip === 'undefined') return false;
+    const itemId = playerInventoryEquip[slotIndex];
+    const state = typeof playerInventoryState !== 'undefined' ? playerInventoryState[slotIndex] : null;
+    if (!itemId || typeof isStarforceBrokenItem !== 'function' || !isStarforceBrokenItem(state)) {
+      if (typeof addLog === 'function') addLog('[裝備恢復] 請選擇已損壞的裝備。', 'log-fail');
+      return false;
+    }
+    if (isBagEquipLocked(slotIndex)) {
+      if (typeof addLog === 'function') addLog('[裝備恢復] 此裝備已便利鎖定。', 'log-fail');
+      return false;
+    }
+    const reqLevel = Number(state?.reqLevel)
+      || Number((typeof ITEM_DATABASE !== 'undefined' && ITEM_DATABASE[itemId]?.reqLevel) || 0);
+    const meso = recoverMesoCost(reqLevel);
+    const fodder = countEquipInBag(itemId, {
+      includeLocked: false,
+      excludeBroken: true,
+      excludeSlot: slotIndex,
+    });
+    if (fodder < 4) {
+      if (typeof addLog === 'function') {
+        addLog(`[裝備恢復] 需要 4 件相同未損壞裝備作為材料（目前 ${fodder}）。`, 'log-fail');
+      }
+      return false;
+    }
+    if (!canAffordMeso(meso)) {
+      if (typeof addLog === 'function') addLog('[裝備恢復] 楓幣不足。', 'log-fail');
+      return false;
+    }
+    if (!takeEquipFromBag(itemId, 4, { excludeBroken: true, excludeSlot: slotIndex })) {
+      if (typeof addLog === 'function') addLog('[裝備恢復] 扣除材料失敗。', 'log-fail');
+      return false;
+    }
+    if (!spendMeso(meso)) {
+      if (typeof addLog === 'function') addLog('[裝備恢復] 扣除楓幣失敗。', 'log-fail');
+      return false;
+    }
+    const starBefore = Number(state.star) || 0;
+    const starAfter = recoverStarAfterRepair(starBefore);
+    state.broken = false;
+    state.star = starAfter;
+    playerInventoryState[slotIndex] = state;
+    if (typeof SessionPersistenceModule !== 'undefined') SessionPersistenceModule.scheduleSave?.();
+    if (typeof InventoryModule !== 'undefined') {
+      InventoryModule.render?.();
+      InventoryModule.updateSlotCount?.();
+      InventoryModule.updateMesoDisplay?.();
+    }
+    if (typeof addLog === 'function') {
+      const starNote = starBefore !== starAfter
+        ? `，星力 ★${starBefore} → ★${starAfter}（恢復上限 ★${RECOVER_STAR_CAP}）`
+        : `，星力 ★${starAfter}`;
+      addLog(
+        `[裝備恢復] 已恢復【${equipName(itemId)}】（消耗同裝 ×4、${meso.toLocaleString('zh-TW')} 楓幣${starNote}）。`,
+        'log-success',
+      );
+    }
+    return true;
+  }
+
   return {
     listAdvanceLines,
     listMakeEntries,
@@ -1274,6 +1395,9 @@ const EquipCraftStore = (() => {
     heldMeso,
     canAffordMeso,
     canAffordMaterials,
+    recoverMesoCost,
+    listBrokenEquips,
+    recoverEquip,
   };
 })();
 

@@ -13,9 +13,9 @@ const STARFORCE_RADIANT_23_SCROLL_MESO = 5000000000;
 let starForceUseCatValleyRates = false;
 
 function isStarForceCatValleyRatesEnabled() {
-  // 放置模式：強制貓谷星力（降星／鎖定防止破壞），不看開關
+  // 放置模式：鎖定正常星力（不套用貓谷降星／強制防爆）
   if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
-    return true;
+    return false;
   }
   if (typeof isCatValleyContentUnlocked !== 'function' || !isCatValleyContentUnlocked()) {
     return false;
@@ -24,6 +24,10 @@ function isStarForceCatValleyRatesEnabled() {
 }
 
 function setStarForceCatValleyRatesEnabled(enabled) {
+  if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
+    starForceUseCatValleyRates = false;
+    return;
+  }
   starForceUseCatValleyRates = Boolean(enabled);
 }
 
@@ -108,6 +112,10 @@ const StarForceModule = {
   costItemEventsBound: false,
 
   loadEquip(item) {
+    if (typeof isStarforceBrokenItem === 'function' && isStarforceBrokenItem(item)) {
+      this.clearEquipState();
+      return;
+    }
     if (typeof applyStarForceItemRules === 'function') applyStarForceItemRules(item);
     this.itemData = item;
     this.currentStars = Math.min(item.star ?? 0, this.getMaxStar());
@@ -268,6 +276,10 @@ const StarForceModule = {
   async runAutoEnhance() {
     if (this.autoRunning || !this.itemData) return;
 
+    if (typeof isStarforceBrokenItem === 'function' && isStarforceBrokenItem(this.itemData)) {
+      return addLog('⚠️ 已損壞的裝備無法進行自動強化。', 'log-fail');
+    }
+
     const target = typeof AutoEnchantStarForceModule !== 'undefined'
       ? AutoEnchantStarForceModule.targetStar
       : parseInt(document.getElementById('autoStarTarget')?.value, 10);
@@ -289,6 +301,7 @@ const StarForceModule = {
 
     const startStars = this.currentStars;
     let attempts = 0;
+    let destroyed = false;
 
     try {
       while (
@@ -297,9 +310,25 @@ const StarForceModule = {
         this.currentStars < target &&
         this.currentStars < maxStar
       ) {
+        if (typeof AutoEnchantStarForceModule !== 'undefined'
+          && typeof AutoEnchantStarForceModule.applyProtectForCurrentStar === 'function') {
+          AutoEnchantStarForceModule.applyProtectForCurrentStar();
+        } else if (!this.canUseProtectDestroy()) {
+          this.setProtectDestroyChecked(false);
+        }
+
         const prev = this.currentStars;
-        this.enhanceStar({ silent: true });
+        const outcome = this.enhanceStar({ silent: true });
         attempts++;
+
+        if (outcome === 'destroy'
+          || !this.itemData
+          || (typeof isStarforceBrokenItem === 'function' && isStarforceBrokenItem(this.itemData))
+          || (typeof currentEnchantItem !== 'undefined' && !currentEnchantItem)) {
+          destroyed = true;
+          this.autoRunning = false;
+          break;
+        }
 
         if (this.currentStars !== prev) {
           await new Promise((resolve) => setTimeout(resolve, this.AUTO_ENHANCE_DELAY_MS * 2));
@@ -322,7 +351,12 @@ const StarForceModule = {
       AutoEnchantStarForceModule.syncAutoCheckbox();
     }
 
-    if (wasCancelled) {
+    if (destroyed) {
+      addLog(
+        `💥 自動強化因裝備損壞中止：★ ${startStars} → ★ ${this.currentStars || startStars}（共 ${attempts} 次）`,
+        'log-fail'
+      );
+    } else if (wasCancelled) {
       addLog(
         `⏹️ 已取消自動強化（任意鍵）：★ ${startStars} → ★ ${this.currentStars}（共 ${attempts} 次）`,
         'log-info'
@@ -350,24 +384,48 @@ const StarForceModule = {
     };
   },
 
-  isProtectDestroyEnabled() {
+  /** 玩家是否想開防爆（不看當前星是否可防） */
+  isProtectDestroyWanted() {
     if (typeof isStarForceCatValleyRatesEnabled === 'function' && isStarForceCatValleyRatesEnabled()) {
       return true;
     }
     return Boolean(document.getElementById('chkProtectDestroy')?.checked);
   },
 
+  isProtectDestroyEnabled(star = this.currentStars) {
+    if (!this.canUseProtectDestroy(star)) return false;
+    return this.isProtectDestroyWanted();
+  },
+
+  /** 當前星數是否允許防爆（對齊 starRates.safeguard；正服 15～17） */
+  canUseProtectDestroy(star = this.currentStars) {
+    const rates = this.getRates(star);
+    return Boolean(rates?.safeguard) && rates.destroy > 0;
+  },
+
+  setProtectDestroyChecked(on) {
+    const el = document.getElementById('chkProtectDestroy');
+    if (!el || el.disabled) return;
+    el.checked = Boolean(on);
+  },
+
   syncProtectDestroyLock() {
     const el = document.getElementById('chkProtectDestroy');
     const wrap = document.querySelector('.sf-protect-destroy');
-    const locked = typeof isStarForceCatValleyRatesEnabled === 'function'
+    const catLocked = typeof isStarForceCatValleyRatesEnabled === 'function'
       && isStarForceCatValleyRatesEnabled();
+    const canSafeguard = this.canUseProtectDestroy();
     if (el) {
-      if (locked) el.checked = true;
-      el.disabled = locked;
+      if (catLocked && canSafeguard) el.checked = true;
+      if (!canSafeguard) el.checked = false;
+      el.disabled = catLocked || !canSafeguard;
     }
-    wrap?.classList.toggle('is-locked', locked);
-    wrap?.setAttribute('title', locked ? '貓谷機率開啟時鎖定防止破壞' : '');
+    wrap?.classList.toggle('is-locked', catLocked && canSafeguard);
+    wrap?.classList.toggle('is-unavailable', !canSafeguard);
+    let title = '';
+    if (!canSafeguard) title = '此星數無法使用防止破壞';
+    else if (catLocked) title = '貓谷機率開啟時鎖定防止破壞';
+    wrap?.setAttribute('title', title);
   },
 
   bindProtectDestroyToggle() {
@@ -385,9 +443,12 @@ const StarForceModule = {
     if (!el) return;
     this._catValleyRatesBound = true;
     el.addEventListener('change', () => {
-      // 放置模式強制貓谷，忽略手動切換
+      // 放置模式鎖定正常星力，忽略手動切換
       if (typeof isIdlePlayMode === 'function' && isIdlePlayMode()) {
-        el.checked = true;
+        el.checked = false;
+        if (typeof setStarForceCatValleyRatesEnabled === 'function') {
+          setStarForceCatValleyRatesEnabled(false);
+        }
         return;
       }
       if (typeof setStarForceCatValleyRatesEnabled === 'function') {
@@ -404,13 +465,16 @@ const StarForceModule = {
     const el = document.getElementById('chkStarForceCatValleyRates');
     const idleForced = typeof isIdlePlayMode === 'function' && isIdlePlayMode();
     if (el && typeof isStarForceCatValleyRatesEnabled === 'function') {
+      if (idleForced && typeof setStarForceCatValleyRatesEnabled === 'function') {
+        setStarForceCatValleyRatesEnabled(false);
+      }
       el.checked = isStarForceCatValleyRatesEnabled();
       el.disabled = idleForced;
     }
     const label = el?.closest('label');
     if (label) {
       label.title = idleForced
-        ? '放置模式強制套用貓谷機率（21–24 與 27 星以上失敗降 1 星、20／25 保底、26 不降；並鎖定防止破壞）'
+        ? '放置模式鎖定正常星力（不套用貓谷降星／不強制防爆；19 星以上失敗可能損壞裝備）'
         : '開啟：21–24 與 27 星以上失敗降 1 星、20／25 保底、26 不降；並鎖定防止破壞。新舊永恆／光輝飾品另套用星力卷軸規則。';
     }
     this.syncProtectDestroyLock();
@@ -427,9 +491,12 @@ const StarForceModule = {
   },
 
   getMesoCost(star) {
-    const base = this.getBaseMesoCost(star);
-    if (!base) return 0;
-    return this.isProtectDestroyEnabled() ? base : Math.floor(base / 2);
+    const raw = this.getBaseMesoCost(star);
+    if (!raw) return 0;
+    // getBaseMesoCost 存的是「半價×2」；正服防爆為基礎費用的 3 倍
+    const unit = Math.floor(raw / 2);
+    if (!unit) return 0;
+    return this.isProtectDestroyEnabled(star) ? unit * 3 : unit;
   },
 
   getStar23ScrollExtraMeso(item = this.itemData) {
@@ -825,6 +892,11 @@ const StarForceModule = {
     const silent = options.silent === true;
     if (!this.itemData) return null;
 
+    if (typeof isStarforceBrokenItem === 'function' && isStarforceBrokenItem(this.itemData)) {
+      if (!silent) addLog('⚠️ 已損壞的裝備無法進行星力強化。', 'log-fail');
+      return null;
+    }
+
     if (!canUseStarForce(this.itemData)) {
       if (!silent) addLog('⚠️ 此裝備無法進行星力強化。', 'log-fail');
       return null;
@@ -999,19 +1071,53 @@ const StarForceModule = {
           if (!silent) {
             addLog(`✨ 星力成功升至 ★ ${this.currentStars}！`, 'log-success');
           }
+          this.afterEnhanceUpdate();
         } else if (outcome === 'drop') {
           this.currentStars = failDest;
           if (!silent) {
             addLog(`星力強化失敗，下降至 ★ ${this.currentStars}。`, 'log-fail');
           }
+          this.afterEnhanceUpdate();
         } else if (outcome === 'destroy') {
-          if (!silent) addLog(`星力強化失敗（破壞），維持在 ★ ${this.currentStars}。`, 'log-fail');
-        } else if (!silent) {
-          addLog(`星力失敗，維持在 ★ ${this.currentStars}。`, 'log-fail');
+          this.applyStarforceDestroy({ silent });
+        } else {
+          if (!silent) {
+            addLog(`星力失敗，維持在 ★ ${this.currentStars}。`, 'log-fail');
+          }
+          this.afterEnhanceUpdate();
         }
-        this.afterEnhanceUpdate();
       },
     };
+  },
+
+  /** 星力破壞：標記已損壞並卸回背包 */
+  applyStarforceDestroy(options = {}) {
+    const silent = options.silent === true;
+    const item = this.itemData || (typeof currentEnchantItem !== 'undefined' ? currentEnchantItem : null);
+    const name = item?.name || '裝備';
+    const star = this.currentStars;
+
+    if (item) {
+      item.broken = true;
+      item.star = star;
+      if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem === item) {
+        currentEnchantItem.broken = true;
+        currentEnchantItem.star = star;
+      }
+    }
+
+    if (!silent) {
+      addLog(`💥 星力強化失敗，【${name}】已損壞（★ ${star}）！請至裝備加工恢復。`, 'log-fail');
+    }
+
+    this.afterEnhanceUpdate();
+
+    if (typeof unloadEquipFromSlot === 'function' && typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
+      const ok = unloadEquipFromSlot({ silent: true });
+      if (!ok && !silent) {
+        addLog('⚠️ 背包已滿，已損壞裝備暫留強化槽；請清出空位後卸下。', 'log-fail');
+      }
+    }
   },
 
   /** 卷軸成功時需播 summaryIcon 的星數（from+1 … to） */

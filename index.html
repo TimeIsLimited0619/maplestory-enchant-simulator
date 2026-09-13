@@ -28,14 +28,14 @@
   <!-- 自訂 CSS（modules；file:// 勿用 @import） -->
   <link rel="stylesheet" href="css/modules/01-base.css?v=20260902nav1">
   <link rel="stylesheet" href="css/modules/37-app-nav.css?v=20260904bossNavLock1">
-  <link rel="stylesheet" href="css/modules/38-equip-craft.css?v=20260907craftTips">
-  <link rel="stylesheet" href="css/modules/39-disassemble.css?v=20260908recipe1">
+  <link rel="stylesheet" href="css/modules/38-equip-craft.css?v=20260913process1">
+  <link rel="stylesheet" href="css/modules/39-disassemble.css?v=20260913process1">
   <link rel="stylesheet" href="css/modules/02-sidebar.css?v=20260829cv1">
   <link rel="stylesheet" href="css/modules/03-main-panel.css?v=20260813rateLimit3">
   <link rel="stylesheet" href="css/modules/04-inventory.css?v=20260830sortId2">
   <link rel="stylesheet" href="css/modules/05-forms-modal.css?v=20260813wear3">
   <link rel="stylesheet" href="css/modules/06-starforce-extras.css?v=20260813wear3">
-  <link rel="stylesheet" href="css/modules/07-starforce.css?v=20260822sfCat1">
+  <link rel="stylesheet" href="css/modules/07-starforce.css?v=20260913sfBreak1">
   <link rel="stylesheet" href="css/modules/08-control-shared.css?v=20260813wear3">
   <link rel="stylesheet" href="css/modules/09-hammer.css?v=20260822hmCat1">
   <link rel="stylesheet" href="css/modules/10-soul-weapon.css?v=20260820optAlign1">
@@ -43,7 +43,7 @@
   <link rel="stylesheet" href="css/modules/12-scroll.css?v=20260904traceCost2">
   <link rel="stylesheet" href="css/modules/13-potential.css?v=20260820ptCube2">
   <link rel="stylesheet" href="css/modules/14-potential-inspect.css?v=20260814inspect1">
-  <link rel="stylesheet" href="css/modules/15-equip-tooltip.css?v=20260824etcTip1">
+  <link rel="stylesheet" href="css/modules/15-equip-tooltip.css?v=20260913sfProtectClick2">
   <link rel="stylesheet" href="css/modules/16-bonus-stat.css?v=20260820btnAlign1">
   <link rel="stylesheet" href="css/modules/17-uiequip.css?v=20260825doll2">
   <link rel="stylesheet" href="css/modules/18-equip-stat-panel.css?v=20260814esp2">
@@ -2058,9 +2058,9 @@
             <img id="aeSfProgressAlert" class="ae-sf-progress-alert hidden" alt="" aria-hidden="true">
 
             <div class="ae-sf-protect-row">
-              <button type="button" id="aeSfProtect15" class="ae-sf-protect-btn" disabled aria-disabled="true">15星防破壞</button>
-              <button type="button" id="aeSfProtect16" class="ae-sf-protect-btn" disabled aria-disabled="true">16星防破壞</button>
-              <button type="button" id="aeSfProtect17" class="ae-sf-protect-btn" disabled aria-disabled="true">17星防破壞</button>
+              <button type="button" id="aeSfProtect15" class="ae-sf-protect-btn" aria-disabled="false" onclick="AutoEnchantStarForceModule.toggleProtect(15)">15星防破壞</button>
+              <button type="button" id="aeSfProtect16" class="ae-sf-protect-btn" aria-disabled="false" onclick="AutoEnchantStarForceModule.toggleProtect(16)">16星防破壞</button>
+              <button type="button" id="aeSfProtect17" class="ae-sf-protect-btn" aria-disabled="false" onclick="AutoEnchantStarForceModule.toggleProtect(17)">17星防破壞</button>
             </div>
 
             <div class="ae-sf-target-controls">
@@ -2103,16 +2103,16 @@
   </div>
 
   <!-- JavaScript 載入 (順序：資料庫 -> 數據配置 -> 互動邏輯) -->
-  <script src="js/appNavSidebar.js?v=20260912settings1"></script>
+  <script src="js/appNavSidebar.js?v=20260913process1"></script>
   <script src="js/starforceSuperiorData.js?v=20260824sfLv1"></script>
   <script src="js/starforceRules.js?v=20260824sfLv1"></script>
-  <script src="js/item.js?v=20260911invSave1"></script>
+  <script src="js/item.js?v=20260913sfBreak1"></script>
   <script src="js/generatedEquips.js?v=20260823empty2"></script>
   <script src="js/wzImportedEquips.js?v=20260912rmWarArmor1"></script>
   <script src="js/paperdollItems.js?v=20260912rmWarArmor1"></script>
   <script src="js/generatedEquipLoader.js?v=20260825doll1"></script>
   <script src="js/trunkData.js?v=20260912strip1"></script>
-  <script src="js/sessionPersistence.js?v=20260912wearDup1"></script>
+  <script src="js/sessionPersistence.js?v=20260913sfRemap1"></script>
   <script src="js/equipTooltipData.js?v=20260820tools1"></script>
   <script src="js/wzImportedSetItems.js?v=20260907set1"></script>
   <script src="js/equipSetData.js?v=20260907set1"></script>
@@ -2120,11 +2120,11 @@
   <script src="js/inventory.js?v=20260912tipRight2"></script>
   <script src="js/trunk.js?v=20260911nl4"></script>
   <script src="js/itemRequestPanel.js?v=20260824req2"></script>
-  <script src="js/uiEquip.js?v=20260913jobWep1"></script>
+  <script src="js/uiEquip.js?v=20260913sfBreak1"></script>
   <script src="js/paperdollData.js?v=20260912rmWarArmor1"></script>
   <script src="js/paperdollActionInstructions.js?v=20260829instr1"></script>
   <script src="js/paperdoll.js?v=20260911nl5"></script>
-  <script src="js/data.js?v=20260913sfHeart2"></script>
+  <script src="js/data.js?v=20260913sfOfficial1"></script>
   <script src="js/modalAnimation.js"></script>
   <script src="js/imagePreload.js?v=20260908critSkinPin1"></script>
   <script src="js/scrollData.js?v=20260904traceCost1"></script>
@@ -2134,9 +2134,9 @@
   <script src="js/starforceEffect.js?v=20260820destroy1"></script>
   <script src="js/starforceScrollData.js?v=20260911nl4"></script>
   <script src="js/potentialScrollData.js?v=20260824idlePot1"></script>
-  <script src="js/starforce.js?v=20260913sfHeart1"></script>
+  <script src="js/starforce.js?v=20260913sfOfficial1"></script>
   <script src="js/autoEnchantData.js?v=20260911aeDelay1"></script>
-  <script src="js/autoEnchantStarForce.js?v=20260820sfRate1"></script>
+  <script src="js/autoEnchantStarForce.js?v=20260913sfProtectClick2"></script>
   <script src="js/scroll.js?v=20260912tipRight2"></script>
   <script src="js/hammerEffectData.js"></script>
   <script src="js/hammerEffect.js?v=20260910hmCap1"></script>
@@ -2150,10 +2150,10 @@
   <script src="js/exceptional.js"></script>
   <script src="js/catValleyUnlock.js?v=20260831sfCatOff1"></script>
   <script src="js/catValleyEnhanceData.js?v=20260913abyss1"></script>
-  <script src="js/equipCraftData.js?v=20260907novaLabelFix"></script>
-  <script src="js/equipCraftPanel.js?v=20260907craftTips"></script>
-  <script src="js/disassembleData.js?v=20260908recipeOrder1"></script>
-  <script src="js/disassemblePanel.js?v=20260908recipe1"></script>
+  <script src="js/equipCraftData.js?v=20260913recover22"></script>
+  <script src="js/equipCraftPanel.js?v=20260913recover22"></script>
+  <script src="js/disassembleData.js?v=20260913process1"></script>
+  <script src="js/disassemblePanel.js?v=20260913process1"></script>
   <script src="js/catValleyEnhance.js?v=20260829cv2"></script>
   <script src="js/cubeRates/event8421.js"></script>
   <script src="js/cubeRates/event8422.js"></script>
@@ -2338,7 +2338,7 @@
 
   <script src="js/bonusStatInspect.js?v=20260910bsIdleSf1"></script>
   <script src="js/potentialInspect.js?v=20260814inspect1"></script>
-  <script src="js/equipTooltip.js?v=20260912tipRight2"></script>
+  <script src="js/equipTooltip.js?v=20260913sfBreak1"></script>
   <script src="js/equipStatPanel.js?v=20260903allStatPct1"></script>
   <script src="js/panelDrag.js?v=20260823drag1"></script>
   <script src="js/formatPower.js?v=20260817padWan1"></script>
@@ -2403,14 +2403,14 @@
   <script src="js/idleSessionRefresh.js?v=20260913cdEnter2"></script>
   <script src="js/idleNpcShopData.js?v=20260911starShop1"></script>
   <script src="js/uiNpcShop.js?v=20260912shopEnter1"></script>
-  <script src="js/uiToadsHammer.js?v=20260913thWep1"></script>
+  <script src="js/uiToadsHammer.js?v=20260913sfBreak1"></script>
   <script src="js/uiIdleGmDrops.js?v=20260911nl4"></script>
   <script src="js/appMode.js?v=20260908sfIdleCat1"></script>
   <script src="js/costTracker.js?v=20260913abyss1"></script>
   <script src="js/autoSessionLog.js?v=20260820tools1"></script>
-  <script src="js/expectedCostCalc.js?v=20260822bsCat1"></script>
+  <script src="js/expectedCostCalc.js?v=20260913sfOfficial1"></script>
   <script src="js/shareCode.js?v=20260820tools1"></script>
   <script src="js/enchantToolsPanel.js?v=20260821expect2"></script>
-  <script src="js/main.js?v=20260912settings1"></script>
+  <script src="js/main.js?v=20260913sfBreak1"></script>
 </body>
 </html>

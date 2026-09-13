@@ -522,6 +522,12 @@
   pointer-events: none;
 }
 
+.sf-protect-destroy.is-unavailable {
+  opacity: 0.45;
+  pointer-events: none;
+  filter: grayscale(0.4);
+}
+
 .sf-prob-line--destroy.is-hidden {
   display: none;
 }

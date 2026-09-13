@@ -43,6 +43,7 @@ const UiToadsHammer = (() => {
     'scrollDamR', 'scrollBdR', 'scrollImdR', 'scrollAllStatR',
     'catValleyLevel', 'medalEnhanceLevel', 'medalEnhanceStarted',
     'catValleyTotemStarted', 'catValleyJackpotMain', 'catValleyJackpotAdd',
+    'broken',
     'goldenHammerUsed', 'platinumHammerUsed',
     'potential', 'additionalPotential', 'bonusStat',
     'soul', 'soulEnchanterApplied', 'soulGrade', 'soulName', 'soulOption', 'soulStats',

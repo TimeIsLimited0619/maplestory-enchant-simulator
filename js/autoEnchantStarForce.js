@@ -7,15 +7,21 @@ const AutoEnchantStarForceModule = {
   isRunning: false,
   cancelled: false,
   targetStar: 0,
+  /** 分星防爆：鍵為當前星（強化 from→from+1） */
   protectDestroy: { 15: false, 16: false, 17: false },
   progressFrame: 0,
   progressTimer: null,
   cancelHandler: null,
   loopDelayMs: 8,
+  /** 正服可防爆星：15～17 */
+  PROTECT_STARS: [15, 16, 17],
 
   canOpen() {
     if (typeof AUTO_ENCHANT_USE_OVERLAY === 'undefined' || !AUTO_ENCHANT_USE_OVERLAY) return false;
     if (!StarForceModule?.itemData) return false;
+    if (typeof isStarforceBrokenItem === 'function' && isStarforceBrokenItem(StarForceModule.itemData)) {
+      return false;
+    }
     if (!canUseStarForce(StarForceModule.itemData)) return false;
     if (StarForceModule.selectedScrollId) return false;
     if (StarForceModule.autoRunning) return false;
@@ -174,17 +180,46 @@ const AutoEnchantStarForceModule = {
   },
 
   toggleProtect(star) {
-    return;
+    if (this.isRunning) return;
+    const n = Number(star);
+    if (!this.PROTECT_STARS.includes(n)) return;
+    this.protectDestroy[n] = !this.protectDestroy[n];
+    this.render();
+  },
+
+  /** 正服可預設防爆星（15～17）；面板上可預先勾選 */
+  isProtectStarAvailable(star) {
+    return this.PROTECT_STARS.includes(Number(star));
+  },
+
+  /** 依當前星套用主面板防爆勾選 */
+  applyProtectForCurrentStar() {
+    if (typeof StarForceModule === 'undefined') return;
+    const star = StarForceModule.currentStars;
+    const want = this.isProtectStarAvailable(star) && Boolean(this.protectDestroy[star]);
+    if (typeof StarForceModule.setProtectDestroyChecked === 'function') {
+      if (StarForceModule.canUseProtectDestroy?.(star)) {
+        const el = document.getElementById('chkProtectDestroy');
+        if (el && !el.disabled) el.checked = want;
+        else if (el && !want) el.checked = false;
+      } else {
+        StarForceModule.setProtectDestroyChecked(false);
+      }
+    }
+    StarForceModule.syncProtectDestroyLock?.();
   },
 
   getProtectDestroyStars() {
     return Object.entries(this.protectDestroy)
-      .filter(([, on]) => on)
+      .filter(([star, on]) => on && this.isProtectStarAvailable(Number(star)))
       .map(([star]) => Number(star));
   },
 
   canStart() {
     if (!StarForceModule.itemData) return false;
+    if (typeof isStarforceBrokenItem === 'function' && isStarforceBrokenItem(StarForceModule.itemData)) {
+      return false;
+    }
     if (StarForceModule.selectedScrollId) return false;
     if (StarForceModule.currentStars >= this.getMaxStar()) return false;
     return this.targetStar > StarForceModule.currentStars;
@@ -245,8 +280,8 @@ const AutoEnchantStarForceModule = {
     const startStars = StarForceModule.currentStars;
     const target = this.targetStar;
     const maxStar = this.getMaxStar();
-    const protectStars = [];
     let attempts = 0;
+    let destroyed = false;
 
     this.startProgressAlert();
     this.render();
@@ -259,7 +294,7 @@ const AutoEnchantStarForceModule = {
       detail: {
         targetStar: target,
         startStars,
-        protectDestroy: StarForceModule.isProtectDestroyEnabled?.(),
+        protectStars: this.getProtectDestroyStars(),
       },
     });
 
@@ -271,12 +306,22 @@ const AutoEnchantStarForceModule = {
         StarForceModule.currentStars < target &&
         StarForceModule.currentStars < maxStar
       ) {
+        this.applyProtectForCurrentStar();
         const prev = StarForceModule.currentStars;
-        StarForceModule.enhanceStar({
+        const outcome = StarForceModule.enhanceStar({
           silent: true,
         });
         attempts += 1;
         this.render();
+
+        if (outcome === 'destroy'
+          || !StarForceModule.itemData
+          || (typeof isStarforceBrokenItem === 'function' && isStarforceBrokenItem(StarForceModule.itemData))
+          || (typeof currentEnchantItem !== 'undefined' && !currentEnchantItem)) {
+          destroyed = true;
+          this.isRunning = false;
+          break;
+        }
 
         const delay = StarForceModule.currentStars !== prev
           ? this.loopDelayMs * 2
@@ -295,7 +340,12 @@ const AutoEnchantStarForceModule = {
       this.syncAutoCheckbox();
     }
 
-    if (this.cancelled) {
+    if (destroyed) {
+      addLog(
+        `💥 自動強化因裝備損壞中止：★ ${startStars} → ★ ${StarForceModule.currentStars || startStars}（共 ${attempts} 次）`,
+        'log-fail'
+      );
+    } else if (this.cancelled) {
       addLog(
         `⏹️ 已取消自動強化：★ ${startStars} → ★ ${StarForceModule.currentStars}（共 ${attempts} 次）`,
         'log-info'
@@ -307,12 +357,14 @@ const AutoEnchantStarForceModule = {
       );
     }
 
-    const sfTargetHit = StarForceModule.currentStars >= target && !this.cancelled;
+    const sfTargetHit = !destroyed && StarForceModule.currentStars >= target && !this.cancelled;
     aeSessionLogEnd({
-      outcome: aeSessionLogResolveOutcome({
-        cancelled: this.cancelled,
-        targetHit: sfTargetHit,
-      }),
+      outcome: destroyed
+        ? 'fail'
+        : aeSessionLogResolveOutcome({
+          cancelled: this.cancelled,
+          targetHit: sfTargetHit,
+        }),
       attempts,
       targetHit: sfTargetHit,
       cancelled: this.cancelled,
@@ -320,6 +372,7 @@ const AutoEnchantStarForceModule = {
         startStars,
         endStars: StarForceModule.currentStars,
         targetStar: target,
+        destroyed,
       },
     });
   },
@@ -445,17 +498,39 @@ const AutoEnchantStarForceModule = {
       targetInput.value = String(this.targetStar);
     }
 
-    [15, 16, 17].forEach((star) => {
+    this.PROTECT_STARS.forEach((star) => {
       const el = document.getElementById(`aeSfProtect${star}`);
       if (!el) return;
-      el.disabled = true;
-      el.classList.remove('is-checked');
+      if (el.dataset.aeProtectBound !== '1') {
+        el.dataset.aeProtectBound = '1';
+        // HTML 已有 onclick；這裡不再重複綁定，避免連點切兩次
+      }
+      const interactive = !this.isRunning;
+      const checked = Boolean(this.protectDestroy[star]);
+      // 勿用 disabled：素材 _disabled_ 才是帶開關的「關閉」外觀，disabled 會擋點擊
+      el.disabled = false;
+      el.setAttribute('aria-disabled', interactive ? 'false' : 'true');
+      el.classList.toggle('is-checked', checked);
+      el.classList.toggle('is-locked', !interactive);
       const protect = cfg.protectDestroy?.[star];
+      const NS = AUTO_ENCHANT_NATIVE_SIZE.starForceButtons.protect;
       if (protect?.labelSrc) {
         el.textContent = '';
-        const NS = AUTO_ENCHANT_NATIVE_SIZE.starForceButtons.protect;
-        applyAutoEnchantImage(el, protect.labelSrc, 'disabled', NS.w, NS.h);
+        // WZ：_disabled_＝含開關的關閉態；_normal_＝開啟態標籤
+        applyAutoEnchantImage(
+          el,
+          protect.labelSrc,
+          checked ? 'normal' : 'disabled',
+          NS.w,
+          NS.h,
+        );
+        el.dataset.aeProtectState = checked ? 'checked' : 'normal';
+      } else {
+        el.textContent = `${star}星防破壞`;
       }
+      el.title = !interactive
+        ? '自動強化進行中，無法變更防破壞'
+        : (checked ? `已開啟 ${star}→${star + 1} 防止破壞` : `點擊開啟 ${star}→${star + 1} 防止破壞`);
     });
 
     const btnAction = document.getElementById('aeSfBtnAction');

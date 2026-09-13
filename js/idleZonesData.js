@@ -19981,13 +19981,20 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobIcon": "4130100",
     "bossName": "銅甲石人·7",
     "bossIcon": "4130100",
-    "monsterHp": 1,
+    "monsterHp": 100,
     "bossHp": 500000,
     "killExp": 223,
     "killGold": 10,
     "bossKillExp": 4460,
     "bossKillGold": 892,
-    "mobDrops": [],
+    "mobDrops": [
+      {
+        "kind": "equip",
+        "itemId": "01042258",
+        "chance": 5,
+        "amount": 1
+      }
+    ],
     "bossDrops": [],
     "drops": [],
     "custom": true,
