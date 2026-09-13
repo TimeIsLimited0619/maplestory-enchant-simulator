@@ -291,6 +291,11 @@ const CharacterSkills = (() => {
     jobLineChosen = true;
     ensureDefaults();
     syncCombatJobName(key);
+    const combatJobName = getCombatJobNameForLine(key) || COMBAT_JOB_BY_LINE[key] || '';
+    if (combatJobName && typeof UiEquipModule !== 'undefined'
+      && typeof UiEquipModule.unequipIncompatibleWeapons === 'function') {
+      UiEquipModule.unequipIncompatibleWeapons(combatJobName);
+    }
     save();
     if (typeof SkillBoardPanel !== 'undefined') SkillBoardPanel.refresh?.();
     if (typeof SkillCombat !== 'undefined') SkillCombat.reset?.();

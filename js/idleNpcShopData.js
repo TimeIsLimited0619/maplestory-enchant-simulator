@@ -164,6 +164,18 @@ const IDLE_NPC_SHOP = {
     { kind: 'equip', itemId: '01472033', buyPrice: 150000, amount: 1, minLevel: 90, maxLevel: 99 },
     { kind: 'equip', itemId: '01472053', buyPrice: 300000, amount: 1, minLevel: 100, maxLevel: 109 },
     { kind: 'equip', itemId: '01472052', buyPrice: 400000, amount: 1, minLevel: 110 },
+    //天破武器
+    { kind: 'equip', itemId: '01222001', buyPrice: 100, amount: 1, minLevel: 10, maxLevel: 19 },
+    { kind: 'equip', itemId: '01222027', buyPrice: 1000, amount: 1, minLevel: 20, maxLevel: 29 },
+    { kind: 'equip', itemId: '01222002', buyPrice: 5000, amount: 1, minLevel: 30, maxLevel: 39 },
+    { kind: 'equip', itemId: '01222028', buyPrice: 10000, amount: 1, minLevel: 40, maxLevel: 49 },
+    { kind: 'equip', itemId: '01222003', buyPrice: 20000, amount: 1, minLevel: 50, maxLevel: 59 },
+    { kind: 'equip', itemId: '01222004', buyPrice: 40000, amount: 1, minLevel: 60, maxLevel: 69 },
+    { kind: 'equip', itemId: '01222005', buyPrice: 80000, amount: 1, minLevel: 70, maxLevel: 79 },
+    { kind: 'equip', itemId: '01222006', buyPrice: 100000, amount: 1, minLevel: 80, maxLevel: 89 },
+    { kind: 'equip', itemId: '01222007', buyPrice: 150000, amount: 1, minLevel: 90, maxLevel: 99 },
+    { kind: 'equip', itemId: '01222008', buyPrice: 300000, amount: 1, minLevel: 100, maxLevel: 109 },
+    { kind: 'equip', itemId: '01222010', buyPrice: 400000, amount: 1, minLevel: 110 },
 
     { kind: 'consume', itemId: 'potion-red', buyPrice: 50, amount: 1, minLevel: 1, maxLevel: 15 },
     { kind: 'consume', itemId: 'potion-orange', buyPrice: 150, amount: 1, minLevel: 15 },

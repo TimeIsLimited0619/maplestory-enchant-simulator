@@ -346,9 +346,16 @@ const CombatPower = (() => {
 
     const jobCategory = opts.jobCategory || 'normal';
     const jobName = opts.jobName || '';
-    const labels = (typeof CombatJobs !== 'undefined' && CombatJobs.getJobStatLabelsByName)
-      ? CombatJobs.getJobStatLabelsByName(jobName)
-      : { main: 'STR', sub: 'DEX', secondSub: '' };
+    const labels = (typeof WeaponTypeMap !== 'undefined'
+      && typeof WeaponTypeMap.getCombatStatLabels === 'function'
+      && typeof UiEquipModule !== 'undefined')
+      ? WeaponTypeMap.getCombatStatLabels(
+        (slotId) => UiEquipModule.getWornEntry?.(slotId),
+        jobName,
+      )
+      : ((typeof CombatJobs !== 'undefined' && CombatJobs.getJobStatLabelsByName)
+        ? CombatJobs.getJobStatLabelsByName(jobName)
+        : { main: 'STR', sub: 'DEX', secondSub: '' });
 
     const delta = {
       baseMain: 0,
@@ -556,9 +563,16 @@ const CombatPower = (() => {
       jobName: ctx.jobName,
       includeEquipDelta: includeEquip,
     });
-    const labels = (typeof CombatJobs !== 'undefined' && CombatJobs.getJobStatLabelsByName)
-      ? CombatJobs.getJobStatLabelsByName(ctx.jobName || '')
-      : { main: 'STR', sub: 'DEX', secondSub: '' };
+    const labels = (typeof WeaponTypeMap !== 'undefined'
+      && typeof WeaponTypeMap.getCombatStatLabels === 'function'
+      && typeof UiEquipModule !== 'undefined')
+      ? WeaponTypeMap.getCombatStatLabels(
+        (slotId) => UiEquipModule.getWornEntry?.(slotId),
+        ctx.jobName || '',
+      )
+      : ((typeof CombatJobs !== 'undefined' && CombatJobs.getJobStatLabelsByName)
+        ? CombatJobs.getJobStatLabelsByName(ctx.jobName || '')
+        : { main: 'STR', sub: 'DEX', secondSub: '' });
     return {
       fields,
       ctx,

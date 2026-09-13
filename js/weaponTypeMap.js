@@ -277,6 +277,138 @@ const WeaponTypeMap = (() => {
     陰陽師: '陰陽扇',
     琳恩: '記憶長杖',
     墨玄: '武拳',
+    // 低轉／共通
+    劍士: '雙手劍',
+    狂戰士: '雙手劍',
+    十字軍: '雙手劍',
+    法師: '長杖',
+    '巫師（冰、雷）': '長杖',
+    '魔導士（冰、雷）': '長杖',
+    '巫師（火、毒）': '長杖',
+    '魔導士（火、毒）': '長杖',
+  };
+
+  /** 職業可裝備的武器類型（自由轉職後限制；專屬武另以 exclusive.jobName 判定） */
+  const JOB_ALLOWED_WEAPON_TYPES = {
+    劍士: ['單手劍', '單手斧', '單手棍', '雙手劍', '雙手斧', '雙手棍', '槍', '矛'],
+    狂戰士: ['單手劍', '單手斧', '雙手劍', '雙手斧'],
+    十字軍: ['單手劍', '單手斧', '雙手劍', '雙手斧'],
+    英雄: ['單手劍', '單手斧', '雙手劍', '雙手斧'],
+    聖騎士: ['單手劍', '單手棍', '雙手劍', '雙手棍'],
+    黑騎士: ['槍', '矛'],
+    法師: ['短杖', '長杖'],
+    '巫師（冰、雷）': ['短杖', '長杖'],
+    '魔導士（冰、雷）': ['短杖', '長杖'],
+    '大魔導士（冰、雷）': ['短杖', '長杖'],
+    '巫師（火、毒）': ['短杖', '長杖'],
+    '魔導士（火、毒）': ['短杖', '長杖'],
+    '大魔導士（火、毒）': ['短杖', '長杖'],
+    主教: ['短杖', '長杖'],
+    烈焰巫師: ['短杖', '長杖'],
+    龍魔導士: ['短杖', '長杖'],
+    夜光: ['閃亮克魯'],
+    煉獄巫師: ['短杖', '長杖'],
+    伊利恩: ['魔法護腕'],
+    菈菈: ['短杖', '長杖'],
+    凱內西斯: ['ESP限制器'],
+    陰陽師: ['陰陽扇'],
+    琳恩: ['記憶長杖'],
+    箭神: ['弓'],
+    神射手: ['弩'],
+    開拓者: ['古代之弓'],
+    破風使者: ['弓'],
+    精靈遊俠: ['雙弩槍'],
+    狂豹獵人: ['弩'],
+    凱殷: ['龍息射手'],
+    墨玄: ['武拳'],
+    夜使者: ['拳套'],
+    暗影神偷: ['短劍'],
+    影武者: ['短劍'],
+    暗夜行者: ['拳套'],
+    幻影俠盜: ['手杖'],
+    卡莉: ['環刃'],
+    虎影: ['仙扇'],
+    卡蒂娜: ['鎖鏈'],
+    槍神: ['火槍'],
+    拳霸: ['指虎'],
+    重砲指揮官: ['加農砲'],
+    閃雷悍將: ['指虎'],
+    隱月: ['指虎'],
+    爆拳槍神: ['重拳槍'],
+    機甲戰神: ['火槍'],
+    天使破壞者: ['靈魂射手'],
+    亞克: ['指虎'],
+    聖魂劍士: ['單手劍', '雙手劍'],
+    米哈逸: ['單手劍'],
+    狂狼勇士: ['矛'],
+    惡魔殺手: ['單手斧', '單手棍'],
+    惡魔復仇者: ['魔劍'],
+    傑諾: ['能量劍'],
+    凱撒: ['雙手劍'],
+    阿戴爾: ['調節器'],
+    蓮: ['長劍'],
+    神之子: ['琉', '璃'],
+    劍豪: ['太刀'],
+  };
+
+  /** 武器類型 → 屬性攻擊力主／副屬（穿錯武時以武器為準） */
+  const WEAPON_TYPE_STAT_LABELS = {
+    單手劍: { main: 'STR', sub: 'DEX' },
+    單手斧: { main: 'STR', sub: 'DEX' },
+    單手棍: { main: 'STR', sub: 'DEX' },
+    雙手劍: { main: 'STR', sub: 'DEX' },
+    雙手斧: { main: 'STR', sub: 'DEX' },
+    雙手棍: { main: 'STR', sub: 'DEX' },
+    槍: { main: 'STR', sub: 'DEX' },
+    矛: { main: 'STR', sub: 'DEX' },
+    調節器: { main: 'STR', sub: 'DEX' },
+    長劍: { main: 'STR', sub: 'DEX' },
+    琉: { main: 'STR', sub: 'DEX' },
+    璃: { main: 'STR', sub: 'DEX' },
+    太刀: { main: 'STR', sub: 'DEX' },
+    武拳: { main: 'DEX', sub: 'STR' },
+    重拳槍: { main: 'STR', sub: 'DEX' },
+    指虎: { main: 'STR', sub: 'DEX' },
+    短杖: { main: 'INT', sub: 'LUK' },
+    長杖: { main: 'INT', sub: 'LUK' },
+    閃亮克魯: { main: 'INT', sub: 'LUK' },
+    ESP限制器: { main: 'INT', sub: 'LUK' },
+    魔法護腕: { main: 'INT', sub: 'LUK' },
+    記憶長杖: { main: 'INT', sub: 'LUK' },
+    陰陽扇: { main: 'INT', sub: 'LUK' },
+    弓: { main: 'DEX', sub: 'STR' },
+    弩: { main: 'DEX', sub: 'STR' },
+    雙弩槍: { main: 'DEX', sub: 'STR' },
+    古代之弓: { main: 'DEX', sub: 'STR' },
+    龍息射手: { main: 'DEX', sub: 'STR' },
+    靈魂射手: { main: 'DEX', sub: 'STR' },
+    火槍: { main: 'DEX', sub: 'STR' },
+    加農砲: { main: 'DEX', sub: 'STR' },
+    短劍: { main: 'LUK', sub: 'DEX' },
+    拳套: { main: 'LUK', sub: 'DEX' },
+    手杖: { main: 'LUK', sub: 'DEX' },
+    環刃: { main: 'LUK', sub: 'DEX' },
+    仙扇: { main: 'LUK', sub: 'DEX' },
+    鎖鏈: { main: 'LUK', sub: 'STR', secondSub: 'DEX' },
+    魔劍: { main: 'HP', sub: 'STR' },
+    能量劍: { main: 'STR', sub: 'DEX', secondSub: 'LUK' },
+  };
+
+  const JOB_NAME_TO_GROUP = {
+    劍士: '劍士', 狂戰士: '劍士', 十字軍: '劍士', 英雄: '劍士', 聖騎士: '劍士', 黑騎士: '劍士',
+    聖魂劍士: '劍士', 米哈逸: '劍士', 狂狼勇士: '劍士', 惡魔殺手: '劍士', 凱撒: '劍士',
+    阿戴爾: '劍士', 蓮: '劍士', 神之子: '劍士', 劍豪: '劍士', 亞克: '海盜',
+    法師: '法師', '巫師（冰、雷）': '法師', '魔導士（冰、雷）': '法師', '大魔導士（冰、雷）': '法師',
+    '巫師（火、毒）': '法師', '魔導士（火、毒）': '法師', '大魔導士（火、毒）': '法師', 主教: '法師',
+    烈焰巫師: '法師', 龍魔導士: '法師', 夜光: '法師', 煉獄巫師: '法師', 伊利恩: '法師',
+    菈菈: '法師', 凱內西斯: '法師', 陰陽師: '法師', 琳恩: '法師',
+    箭神: '弓箭手', 神射手: '弓箭手', 開拓者: '弓箭手', 破風使者: '弓箭手',
+    精靈遊俠: '弓箭手', 狂豹獵人: '弓箭手', 凱殷: '弓箭手', 墨玄: '弓箭手',
+    夜使者: '盜賊', 暗影神偷: '盜賊', 影武者: '盜賊', 暗夜行者: '盜賊',
+    幻影俠盜: '盜賊', 卡莉: '盜賊', 虎影: '盜賊', 卡蒂娜: '盜賊',
+    槍神: '海盜', 拳霸: '海盜', 重砲指揮官: '海盜', 閃雷悍將: '海盜',
+    隱月: '海盜', 爆拳槍神: '海盜', 機甲戰神: '海盜', 天使破壞者: '海盜',
+    惡魔復仇者: '海盜', 傑諾: '盜賊',
   };
 
   const byCode = Object.create(null);
@@ -395,6 +527,83 @@ const WeaponTypeMap = (() => {
       if (job?.name) return job.name;
     }
     return String(jobName);
+  }
+
+  function getStatLabelsForWeaponType(weaponType) {
+    const labels = WEAPON_TYPE_STAT_LABELS[weaponType];
+    if (!labels) return null;
+    return {
+      main: labels.main,
+      sub: labels.sub,
+      secondSub: labels.secondSub || '',
+    };
+  }
+
+  /**
+   * 屬性攻擊力主／副屬：優先依目前穿戴武器類型；無武器則依職業。
+   */
+  function getCombatStatLabels(getWornEntry, jobName) {
+    const resolvedJob = resolveJobNameForWeapon(jobName);
+    const info = typeof getWornEntry === 'function'
+      ? resolveFromEquippedSlots(getWornEntry)
+      : null;
+    const weaponType = (shouldUseJobDefaultWeapon(info, resolvedJob)
+      ? JOB_DEFAULT_WEAPON_TYPE[resolvedJob]
+      : null)
+      || info?.weaponType
+      || JOB_DEFAULT_WEAPON_TYPE[resolvedJob]
+      || '';
+    const fromWeapon = getStatLabelsForWeaponType(weaponType);
+    if (fromWeapon) return fromWeapon;
+    if (typeof CombatJobs !== 'undefined' && typeof CombatJobs.getJobStatLabelsByName === 'function') {
+      return CombatJobs.getJobStatLabelsByName(resolvedJob);
+    }
+    return { main: 'STR', sub: 'DEX', secondSub: '' };
+  }
+
+  function isWeaponItemLike(item) {
+    if (!item) return false;
+    const main = String(item.mainType || '');
+    return main === 'WEAPON'
+      || item.islot === 'Wp'
+      || item.islot === 'Gw'
+      || item.islot === 'Op'
+      || item.islot === 'Wpsi'
+      || item.islot === 'WpSi';
+  }
+
+  /**
+   * 目前職業是否可裝備此武器（含專屬武／職業允許列表／reqJob 位元）。
+   * 非武器一律 true。
+   */
+  function isWeaponAllowedForJob(item, jobName) {
+    if (!item || !isWeaponItemLike(item)) return true;
+    const resolvedJob = resolveJobNameForWeapon(jobName);
+    if (!resolvedJob) return true;
+
+    const info = getByItemId(item.itemId || item.id);
+    if (info?.exclusive) {
+      if (info.jobName === resolvedJob) return true;
+      if (typeof CombatJobs !== 'undefined' && typeof CombatJobs.getJobByName === 'function') {
+        const exclusiveJob = CombatJobs.getJobByName(info.jobName);
+        const currentJob = CombatJobs.getJobByName(resolvedJob);
+        if (exclusiveJob && currentJob && exclusiveJob.name === currentJob.name) return true;
+      }
+      return false;
+    }
+
+    const weaponType = info?.weaponType || '';
+    const allowed = JOB_ALLOWED_WEAPON_TYPES[resolvedJob];
+    if (Array.isArray(allowed) && allowed.length) {
+      if (weaponType) return allowed.includes(weaponType);
+    }
+
+    const reqJob = Number(item.reqJob) || 0;
+    if (!reqJob) return true;
+    const group = JOB_NAME_TO_GROUP[resolvedJob] || '';
+    const bit = JOB_GROUP_REQ[group] || 0;
+    if (!bit) return true;
+    return !!(reqJob & bit);
   }
 
   /** 夜使者／天使破壞者等：穿新手劍時仍走職業預設專屬武器（無低等拳套／靈魂射手素材） */
@@ -625,6 +834,8 @@ const WeaponTypeMap = (() => {
     JOB_GROUP_REQ,
     WEAPON_MULTIPLIER_BY_TYPE,
     JOB_DEFAULT_WEAPON_TYPE,
+    JOB_ALLOWED_WEAPON_TYPES,
+    WEAPON_TYPE_STAT_LABELS,
     DEFAULT_WEAPON_MULTIPLIER,
     DEFAULT_WZ_ATTACK_SPEED_BY_TYPE,
     DEFAULT_WZ_ATTACK_SPEED,
@@ -667,6 +878,10 @@ const WeaponTypeMap = (() => {
     calculateActionDelayMs,
     getAttackDelayMs,
     getAttackSpeedDpsFactor,
+    getStatLabelsForWeaponType,
+    getCombatStatLabels,
+    isWeaponAllowedForJob,
+    isWeaponItemLike,
   };
 })();
 

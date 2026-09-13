@@ -379,6 +379,22 @@ const UiEquipModule = (() => {
       return false;
     }
 
+    const currentJobName = (typeof CharacterSkills !== 'undefined'
+      && typeof CharacterSkills.getCombatJobNameForCurrentLine === 'function')
+      ? (CharacterSkills.getCombatJobNameForCurrentLine() || '')
+      : (typeof CharacterCombatPanel !== 'undefined'
+        ? (CharacterCombatPanel.getState?.()?.jobName || '')
+        : '');
+    if (currentJobName
+      && typeof WeaponTypeMap !== 'undefined'
+      && typeof WeaponTypeMap.isWeaponAllowedForJob === 'function'
+      && !WeaponTypeMap.isWeaponAllowedForJob(item, currentJobName)) {
+      if (typeof addLog === 'function') {
+        addLog(`[裝備欄]【${item.name}】不符合目前職業【${currentJobName}】的武器限制。`, 'log-fail');
+      }
+      return false;
+    }
+
     const target = resolveWearTarget(item, preferredSlotId);
     if (!target) {
       if (typeof addLog === 'function') {
@@ -463,6 +479,34 @@ const UiEquipModule = (() => {
       if (item) addLog(`[裝備欄] 已脫下【${item.name}】`, 'log-info');
     }
 
+    refresh();
+    scheduleSave();
+    return true;
+  }
+
+  /** 轉職後卸下不符合新職業的主武／神之子副武 */
+  function unequipIncompatibleWeapons(jobName, { silent = false } = {}) {
+    if (!jobName || typeof WeaponTypeMap === 'undefined'
+      || typeof WeaponTypeMap.isWeaponAllowedForJob !== 'function') {
+      return false;
+    }
+    let changed = false;
+    const removedNames = [];
+    ['11', '37'].forEach((slotId) => {
+      const entry = activeWear[slotId];
+      if (!entry?.itemId) return;
+      const item = getItemData(entry.itemId);
+      if (!item) return;
+      if (WeaponTypeMap.isWeaponAllowedForJob(item, jobName)) return;
+      if (!returnEntryToBagOrWarn(entry)) return;
+      activeWear[slotId] = null;
+      changed = true;
+      if (item.name) removedNames.push(item.name);
+    });
+    if (!changed) return false;
+    if (!silent && typeof addLog === 'function' && removedNames.length) {
+      addLog(`[裝備欄] 轉職後已卸下不符職業的武器：${removedNames.join('、')}`, 'log-info');
+    }
     refresh();
     scheduleSave();
     return true;
@@ -1193,6 +1237,7 @@ const UiEquipModule = (() => {
     moveWornSlotToEnchant,
     unequipSlot,
     unequipItemId,
+    unequipIncompatibleWeapons,
     destroyWornItem,
     isItemWorn,
     getWornItemIds,

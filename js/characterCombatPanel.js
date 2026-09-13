@@ -68,10 +68,19 @@ const CharacterCombatPanel = (() => {
   }
 
   function labels() {
+    const jobName = state.jobName;
+    if (typeof WeaponTypeMap !== 'undefined'
+      && typeof WeaponTypeMap.getCombatStatLabels === 'function'
+      && typeof UiEquipModule !== 'undefined') {
+      return WeaponTypeMap.getCombatStatLabels(
+        (slotId) => UiEquipModule.getWornEntry?.(slotId),
+        jobName,
+      );
+    }
     if (typeof CombatJobs === 'undefined') {
       return { main: 'STR', sub: 'DEX', secondSub: '' };
     }
-    return CombatJobs.getJobStatLabelsByName(state.jobName);
+    return CombatJobs.getJobStatLabelsByName(jobName);
   }
 
   function sanitizeValues(raw) {
@@ -283,14 +292,19 @@ const CharacterCombatPanel = (() => {
   }
 
   /**
-   * 專屬武器：自動寫入職業並鎖下拉。
-   * 共用／無武器：解開下拉，職業維持上次選擇。
+   * 專屬武器：僅在與目前技能線職業一致時鎖定下拉。
+   * 自由轉職後以技能線職業為準，不再被舊專屬武覆寫成別職（例如英雄被雙弩鎖回精靈遊俠）。
    */
   function syncFromEquippedWeapon() {
     const detected = detectEquippedWeapon();
-    const nextLocked = !!(detected && detected.exclusive && detected.jobName);
+    const skillJob = (typeof CharacterSkills !== 'undefined'
+      && typeof CharacterSkills.getCombatJobNameForCurrentLine === 'function')
+      ? (CharacterSkills.getCombatJobNameForCurrentLine() || '')
+      : '';
+    const nextJob = skillJob || state.jobName;
+    const nextLocked = !!(detected && detected.exclusive && detected.jobName
+      && detected.jobName === nextJob);
     const nextType = nextLocked ? (detected.weaponType || '') : '';
-    const nextJob = nextLocked ? detected.jobName : state.jobName;
     const jobChanged = nextJob !== state.jobName;
     const lockChanged = nextLocked !== state.jobLockedByWeapon
       || nextType !== state.detectedWeaponType;
