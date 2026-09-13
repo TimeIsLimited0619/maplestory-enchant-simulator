@@ -65,6 +65,7 @@ const SkillMobStatus = (() => {
    * @type {Map<string, {
    *   expiresAt: number,
    *   damageTakenPct: number,
+   *   atkDownPct: number,
    *   dotPct: number,
    *   intervalSec: number,
    *   dotAcc: number,
@@ -355,6 +356,11 @@ const SkillMobStatus = (() => {
       + getNlDomainDamageTakenPct();
   }
 
+  function getIncisingAtkDownPct(mob, t = nowMs()) {
+    const cut = getMapRow(incising, mob, t);
+    return Math.max(0, Number(cut?.atkDownPct) || 0);
+  }
+
   function clearScar(mobOrUid) {
     const uid = typeof mobOrUid === 'string' || typeof mobOrUid === 'number'
       ? String(mobOrUid)
@@ -542,7 +548,7 @@ const SkillMobStatus = (() => {
    * 命中後結冰加／扣層（對齊 WZ 結冰特效）：
    * - 冰屬白名單／冰魔 → 加層
    * - 閃電球 → 不改層
-   * - 雷屬 → 消耗全部層數（終傷已在傷害階段套用）
+   * - 雷屬 → 減少 1 層（終傷已在傷害階段依當前層數套用）
    * - 其餘 → 不改層
    */
   function applyOrConsumeFreeze(mob, skillId) {
@@ -563,8 +569,7 @@ const SkillMobStatus = (() => {
     }
 
     if (isLightningSkill(sid) && hasFreeze(mob)) {
-      const stacks = getFreezeStacks(mob);
-      if (stacks > 0) consumeFreeze(mob, stacks);
+      consumeFreeze(mob, 1);
     }
   }
 
@@ -609,14 +614,16 @@ const SkillMobStatus = (() => {
     const durationMs = scaleGameMs(Math.max(0, Number(opts.durationMs) || 0));
     if (!(durationMs > 0)) return false;
     const damageTakenPct = Math.max(0, Number(opts.damageTakenPct) || 0);
+    const atkDownPct = Math.max(0, Number(opts.atkDownPct) || 0);
     const dotPct = Math.max(0, Number(opts.dotPct) || 0);
     const intervalSec = Math.max(0.2, Number(opts.intervalSec) || 2);
-    if (!(damageTakenPct > 0) && !(dotPct > 0)) return false;
+    if (!(damageTakenPct > 0) && !(dotPct > 0) && !(atkDownPct > 0)) return false;
     const skillId = String(opts.skillId || '1121015');
     const existing = incising.get(uid);
     const row = {
       expiresAt: nowMs() + durationMs,
       damageTakenPct,
+      atkDownPct,
       dotPct,
       intervalSec,
       dotAcc: existing?.dotAcc ?? 0,
@@ -658,11 +665,13 @@ const SkillMobStatus = (() => {
     );
     const durationMs = durationSec * 1000;
     const damageTakenPct = Math.max(0, Number(info.stat.xVal) || 0);
+    const atkDownPct = Math.max(0, Number(info.stat.w) || 0);
     const dotPct = Math.max(0, Number(info.stat.dotPct) || 0);
     const intervalSec = Math.max(0.2, Number(info.stat.dotIntervalSec) || 2);
     return applyIncising(mob, {
       durationMs,
       damageTakenPct,
+      atkDownPct,
       dotPct,
       intervalSec,
       skillId: sid,
@@ -976,7 +985,9 @@ const SkillMobStatus = (() => {
   function applyIncomingMobDamageMods(mob, dmg) {
     let out = Math.max(0, Math.floor(Number(dmg) || 0));
     if (!(out > 0)) return out;
-    const pct = (mob ? getScarAtkDownPct(mob) : 0) + getNlDomainAtkDownPct();
+    const pct = (mob ? getScarAtkDownPct(mob) : 0)
+      + (mob ? getIncisingAtkDownPct(mob) : 0)
+      + getNlDomainAtkDownPct();
     if (!(pct > 0)) return out;
     return Math.max(0, Math.floor(out * (1 - Math.min(100, pct) / 100)));
   }

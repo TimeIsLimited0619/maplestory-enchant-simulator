@@ -529,7 +529,7 @@
   pointer-events: none;
 }
 
-/* 過圖黑屏（本體消失 → 獎勵箱） */
+/* 過圖黑屏（本體消失 → 獎勵箱）／入場載入 */
 .idle-boss-field-fade {
   position: absolute;
   inset: 0;
@@ -537,6 +537,17 @@
   background: #000;
   opacity: 0;
   pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.idle-boss-field-fade__msg {
+  color: #e8eef8;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 2px #000;
 }
 
 .idle-boss-actor {

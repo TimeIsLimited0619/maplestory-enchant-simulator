@@ -35,7 +35,7 @@ const IdleBoss = (() => {
   let playerAtkAcc = 0;
   /** @type {Record<string, Record<string, number>>} */
   let partAtkAcc = Object.create(null);
-  const ARENA_UI_VER = '16';
+  const ARENA_UI_VER = '17';
   let exitConfirmPending = false;
   /** 死亡失敗彈窗（你已死亡／挑戰失敗） */
   let failModalOpen = false;
@@ -265,6 +265,12 @@ const IdleBoss = (() => {
   /** @type {Promise<void>|null} */
   let fightWarmPromise = null;
   let fightWarmListId = '';
+  /** GitHub Pages：全幀預載過久時先開戰，其餘邊打邊載 */
+  const FIGHT_WARM_TIMEOUT_MS = 15000;
+  /** 本場是否已扣券（改為開戰才扣，避免黑畫面卡死白扣） */
+  let arenaTicketPaid = false;
+  /** 本場是否已計入 repeatLeft */
+  let arenaAttemptCounted = false;
 
   /** 列表按鈕三態＋選取後的 mob／Icon（開面板前預載，避免 GitHub Pages 閃爍） */
   function collectListPreloadUrls() {
@@ -321,19 +327,35 @@ const IdleBoss = (() => {
     return (wzRow(listId)?.parts || []).map((p) => String(p.mobId || '')).filter(Boolean);
   }
 
-  /** 入場時預載本場 BOSS 動畫＋地圖層，避免換幀卡住 */
+  function setBossFieldLoading(msg) {
+    const el = $('idleBossFieldFadeMsg');
+    if (!el) return;
+    const text = String(msg || '').trim();
+    el.textContent = text || '載入中…';
+    el.hidden = !text;
+  }
+
+  /** 入場時預載本場必要幀＋地圖層；逾時仍放行（Pages 全幀會卡黑畫面） */
   function warmFightAssets(listId) {
     const id = String(listId || '').trim();
     if (!id) return Promise.resolve();
-    if (fightWarmListId === id && fightWarmPromise) return fightWarmPromise;
+    if (fightWarmListId === id && fightWarmPromise) {
+      return Promise.race([
+        fightWarmPromise,
+        new Promise((resolve) => window.setTimeout(resolve, FIGHT_WARM_TIMEOUT_MS)),
+      ]);
+    }
 
     const tasks = [];
     if (typeof IdleBossFight !== 'undefined' && IdleBossFight.warmAssets) {
       tasks.push(IdleBossFight.warmAssets(id));
-    } else if (typeof IdleMobAnim !== 'undefined' && IdleMobAnim.preloadMob) {
-      collectFightMobIds(id).forEach((mobId) => {
-        tasks.push(IdleMobAnim.preloadMob(mobId));
-      });
+    } else if (typeof IdleMobAnim !== 'undefined') {
+      const preload = IdleMobAnim.preloadMobEssential || IdleMobAnim.preloadMob;
+      if (preload) {
+        collectFightMobIds(id).forEach((mobId) => {
+          tasks.push(preload.call(IdleMobAnim, mobId));
+        });
+      }
     }
     const mapUrls = collectArenaMapUrls(id);
     if (mapUrls.length && typeof EnchantImagePreload !== 'undefined' && EnchantImagePreload.preloadMany) {
@@ -342,7 +364,44 @@ const IdleBoss = (() => {
 
     fightWarmListId = id;
     fightWarmPromise = Promise.all(tasks).then(() => {}).catch(() => {});
-    return fightWarmPromise;
+    return Promise.race([
+      fightWarmPromise,
+      new Promise((resolve) => window.setTimeout(resolve, FIGHT_WARM_TIMEOUT_MS)),
+    ]);
+  }
+
+  /** 開戰當下才扣券／計次；失敗回 false（不開戰） */
+  function spendArenaTicket() {
+    if (!arenaTicketPaid) {
+      if (!hasTicket()) {
+        if (typeof addLog === 'function') {
+          addLog(`需要【${bossTicketMeta().name}】才能挑戰。`, 'log-fail');
+        }
+        return false;
+      }
+      if (!takeTicket()) {
+        if (typeof addLog === 'function') {
+          addLog('扣除入場券失敗。', 'log-fail');
+        }
+        return false;
+      }
+      arenaTicketPaid = true;
+      const bossName = getBoss(arenaBossId)?.name || 'BOSS';
+      const curIdx = Math.max(1, repeatTotal - repeatLeft + (arenaAttemptCounted ? 0 : 1));
+      const autoHint = repeatTotal > 1
+        ? `（自動 ${curIdx}/${repeatTotal}）`
+        : '';
+      if (typeof addLog === 'function') {
+        addLog(`已消耗【${bossTicketMeta().name}】，進入【${bossName}】挑戰。${autoHint}`, 'log-info');
+      }
+    }
+    if (!arenaAttemptCounted) {
+      repeatLeft = Math.max(0, repeatLeft - 1);
+      arenaAttemptCounted = true;
+    }
+    syncChallengeBtn();
+    syncRepeatInput();
+    return true;
   }
 
   function playerDisplayName() {
@@ -394,6 +453,7 @@ const IdleBoss = (() => {
     if (!fade) return;
     fade.style.transition = '';
     fade.style.opacity = '0';
+    setBossFieldLoading('');
   }
 
   function diffsFor(listId) {
@@ -710,7 +770,9 @@ const IdleBoss = (() => {
             </div>
             <div id="idleBossExitHint" class="idle-boss-exit-hint" hidden></div>
             <div class="idle-hunt-cds" id="idleBossCds" aria-label="技能冷卻" hidden></div>
-            <div id="idleBossFieldFade" class="idle-boss-field-fade" aria-hidden="true"></div>
+            <div id="idleBossFieldFade" class="idle-boss-field-fade" aria-hidden="true">
+              <span id="idleBossFieldFadeMsg" class="idle-boss-field-fade__msg" hidden>載入中…</span>
+            </div>
           </div>
         </div>
       </div>
@@ -1672,26 +1734,33 @@ const IdleBoss = (() => {
     const want = !!next;
     if (want === arenaRunning) {
       syncStartBtn();
-      return;
+      return arenaRunning;
     }
     if (want) {
-      if (!arenaOpen || !arenaBossId) return;
+      if (!arenaOpen || !arenaBossId) return false;
       if (!arenaAssetsReady) {
         const id = arenaBossId;
+        setBossFieldLoading('載入中…');
         warmFightAssets(id).finally(() => {
           if (!arenaOpen || arenaBossId !== id) return;
           arenaAssetsReady = true;
+          setBossFieldLoading('');
           syncStartBtn();
           setArenaRunning(true);
         });
         syncStartBtn();
-        return;
+        return false;
+      }
+      if (!spendArenaTicket()) {
+        syncStartBtn();
+        return false;
       }
       initArenaParts(arenaBossId);
       partAtkAcc = Object.create(null);
       playerAtkAcc = 0;
       clearBossDrops(false);
       ensureBossDrops();
+      setBossFieldLoading('');
       resetBossFieldFade();
       resetChallengeTimer(arenaBossId);
       exitCountdownActive = false;
@@ -1723,7 +1792,7 @@ const IdleBoss = (() => {
       syncArenaCloseBtn();
       syncNavLock();
       startCombatLoop();
-      return;
+      return true;
     }
     arenaRunning = false;
     challengeTimer?.stop();
@@ -1733,6 +1802,7 @@ const IdleBoss = (() => {
     syncStartBtn();
     syncArenaCloseBtn();
     syncNavLock();
+    return false;
   }
 
   function stopArenaSprites() {
@@ -2058,34 +2128,18 @@ const IdleBoss = (() => {
         return false;
       }
       const skipTicket = !!opts.skipTicket;
-      if (!skipTicket) {
-        if (!hasTicket()) {
-          syncChallengeBtn();
-          renderReqLevel();
-          if (typeof addLog === 'function') {
-            addLog(`需要【${bossTicketMeta().name}】才能挑戰。`, 'log-fail');
-          }
-          if (fromAuto) clearRepeatState();
-          return false;
+      if (!skipTicket && !hasTicket()) {
+        syncChallengeBtn();
+        renderReqLevel();
+        if (typeof addLog === 'function') {
+          addLog(`需要【${bossTicketMeta().name}】才能挑戰。`, 'log-fail');
         }
-        if (!takeTicket()) {
-          syncChallengeBtn();
-          renderReqLevel();
-          if (typeof addLog === 'function') {
-            addLog('扣除入場券失敗。', 'log-fail');
-          }
-          if (fromAuto) clearRepeatState();
-          return false;
-        }
+        if (fromAuto) clearRepeatState();
+        return false;
       }
-      repeatLeft = Math.max(0, repeatLeft - 1);
-      const bossName = getBoss(arenaBossId)?.name || 'BOSS';
-      const autoHint = repeatTotal > 1
-        ? `（自動 ${repeatTotal - repeatLeft}/${repeatTotal}${repeatLeft > 0 ? `，還剩 ${repeatLeft} 場` : ''}）`
-        : '';
-      if (typeof addLog === 'function') {
-        addLog(`已消耗【${bossTicketMeta().name}】，進入【${bossName}】挑戰。${autoHint}`, 'log-info');
-      }
+      // 開戰才扣券；載入／關場不白扣（github.io 黑畫面常見）
+      arenaTicketPaid = !!skipTicket;
+      arenaAttemptCounted = false;
       arenaOpen = true;
       open = true;
       arenaRunning = false;
@@ -2117,8 +2171,11 @@ const IdleBoss = (() => {
       if (typeof IdlePlayerDeathFx !== 'undefined') IdlePlayerDeathFx.cancel?.();
       clearBossDrops(false);
       arenaAssetsReady = false;
-      fightWarmPromise = null;
-      fightWarmListId = '';
+      // 同 BOSS 連續自動挑戰保留預載快取，避免 Pages 每場重抓千張圖
+      if (fightWarmListId !== arenaBossId) {
+        fightWarmPromise = null;
+        fightWarmListId = '';
+      }
       resetBossFieldFade();
       if (typeof IdleHunt !== 'undefined') {
         IdleHunt.setPickerOpen?.(false);
@@ -2135,6 +2192,7 @@ const IdleBoss = (() => {
       syncStartBtn();
       const warmId = arenaBossId;
       const shouldAutoStart = fromAuto || repeatTotal > 1;
+      setBossFieldLoading('載入中…');
       fadeBossField(1, 0);
       warmFightAssets(warmId).finally(() => {
         if (!arenaOpen || arenaBossId !== warmId) return;
@@ -2143,12 +2201,15 @@ const IdleBoss = (() => {
         resetChallengeTimer(warmId);
         render();
         syncStartBtn();
+        setBossFieldLoading('');
         fadeBossField(0, MAP_FADE_MS);
         if (shouldAutoStart) {
           window.setTimeout(() => {
             if (!arenaOpen || arenaBossId !== warmId || arenaRunning || failModalOpen) return;
             if (!arenaAssetsReady) return;
-            setArenaRunning(true);
+            if (setArenaRunning(true) === false) {
+              setArenaOpen(false, null, { cancelRepeat: true });
+            }
           }, MAP_FADE_MS + 80);
         }
       });
@@ -2167,8 +2228,9 @@ const IdleBoss = (() => {
     arenaParts = null;
     arenaRunning = false;
     arenaAssetsReady = false;
-    fightWarmPromise = null;
-    fightWarmListId = '';
+    arenaTicketPaid = false;
+    arenaAttemptCounted = false;
+    // 保留 fightWarm*：自動連打同王不必每場重載
     failModalOpen = false;
     deathFxPlaying = false;
     if (typeof IdlePlayerDeathFx !== 'undefined') IdlePlayerDeathFx.cancel?.();
@@ -2330,12 +2392,13 @@ const IdleBoss = (() => {
     bindArenaEvents();
   }
 
-  /** 定時重整用：含進行中的一場（已扣券） */
+  /** 定時重整用：含進行中的一場（已開場／已扣券） */
   function getAutoResumeState() {
     if (repeatCancel) return null;
     const id = String(arenaBossId || selectedId || '');
     if (!id) return null;
-    const left = arenaOpen ? (repeatLeft + 1) : repeatLeft;
+    // 已開戰才把本場算進「已消耗」；僅載入中則 left 仍含本場
+    const left = (arenaOpen && arenaAttemptCounted) ? (repeatLeft + 1) : repeatLeft;
     if (left <= 0 || repeatTotal <= 0) return null;
     return {
       kind: 'boss',
@@ -2343,6 +2406,7 @@ const IdleBoss = (() => {
       diffId: selectedDiffId || 'easy',
       repeatLeft: left,
       repeatTotal,
+      ticketPaid: !!arenaTicketPaid,
       afterAfkMode: afterAfkMode === 'farm' ? 'farm' : 'push',
     };
   }
@@ -2362,7 +2426,11 @@ const IdleBoss = (() => {
     if (repeatLeft <= 0 || repeatTotal <= 0) return false;
     if (typeof IdleDungeon !== 'undefined') IdleDungeon.setOpen?.(false);
     setOpen(false);
-    return !!setArenaOpen(true, id, { fromAuto: true, skipTicket: true });
+    // 僅在重整前已扣券時跳過；載入中未扣則進場後開戰再扣
+    return !!setArenaOpen(true, id, {
+      fromAuto: true,
+      skipTicket: !!snap.ticketPaid,
+    });
   }
 
   function exitForSessionRefresh() {

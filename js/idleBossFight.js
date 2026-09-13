@@ -5233,13 +5233,13 @@ const IdleBossFight = (() => {
     return [...arts];
   }
 
-  /** 入場前預載本場會用到的 BOSS 動畫幀 */
+  /** 入場前預載本場會用到的 BOSS 動畫幀（Pages 改必要幀，其餘邊打邊載） */
   function warmAssets(listId) {
-    if (typeof IdleMobAnim === 'undefined' || !IdleMobAnim.preloadMob) {
-      return Promise.resolve();
-    }
+    if (typeof IdleMobAnim === 'undefined') return Promise.resolve();
+    const preload = IdleMobAnim.preloadMobEssential || IdleMobAnim.preloadMob;
+    if (!preload) return Promise.resolve();
     const ids = collectVisualMobIds(listId);
-    return Promise.all(ids.map((id) => IdleMobAnim.preloadMob(id))).then(() => {});
+    return Promise.all(ids.map((id) => preload.call(IdleMobAnim, id))).then(() => {});
   }
 
   /** 拉圖斯進場：時鐘 stand／regen（有則播），結束後開戰 */

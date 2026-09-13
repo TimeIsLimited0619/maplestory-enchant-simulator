@@ -1171,6 +1171,52 @@ const IdleMobAnim = (() => {
     }))).then(() => {});
   }
 
+  /**
+   * GitHub Pages 等慢網：只預載進場／站立／移動／受擊／死亡等必要幀。
+   * 其餘招式改邊打邊載，避免黑畫面卡死仍扣券。
+   */
+  function collectEssentialFrameUrls(iconId) {
+    const id = pad(iconId);
+    const entry = getMobEntry(id);
+    if (!entry) return [];
+    const keys = new Set();
+    const prefer = [
+      'stand', 'move', 'walk', 'fly', 'hit', 'regen', 'skill0',
+      'die', 'die1', 'die2', 'attack1', 'attack2', 'skill1',
+    ];
+    prefer.forEach((name) => {
+      const resolved = resolveAction(id, name);
+      if (resolved && Array.isArray(entry[resolved])) keys.add(resolved);
+    });
+    // 若沒解析到 stand，至少抓資料裡第一個陣列動作
+    if (!keys.size) {
+      Object.keys(entry).forEach((key) => {
+        if (Array.isArray(entry[key]) && entry[key].some((f) => f?.src)) keys.add(key);
+      });
+    }
+    const urls = [];
+    keys.forEach((key) => {
+      (entry[key] || []).forEach((f) => {
+        if (f?.src) urls.push(f.src);
+      });
+    });
+    return [...new Set(urls)];
+  }
+
+  function preloadMobEssential(iconId) {
+    const urls = collectEssentialFrameUrls(iconId);
+    if (!urls.length) return Promise.resolve();
+    if (typeof EnchantImagePreload !== 'undefined' && EnchantImagePreload.preloadMany) {
+      return EnchantImagePreload.preloadMany(urls).catch(() => {});
+    }
+    return Promise.all(urls.map((url) => new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = url;
+    }))).then(() => {});
+  }
+
   function isSticker() {
     return false;
   }
@@ -1472,7 +1518,9 @@ const IdleMobAnim = (() => {
     actionDurationMs,
     preloadAction,
     collectFrameUrls,
+    collectEssentialFrameUrls,
     preloadMob,
+    preloadMobEssential,
     isSticker,
     actorBodyImg,
     spriteKind,
