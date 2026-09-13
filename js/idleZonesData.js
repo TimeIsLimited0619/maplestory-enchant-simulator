@@ -101,7 +101,7 @@ const IDLE_ZONE_GLOBAL_DROPS = {
       "kind": "etc",
       "itemId": "idle-ticket-boss",
       "name": "BOSS 副本入場券",
-      "chance": 5,
+      "chance": 10,
       "amount": 1
     }
   ]
@@ -2848,7 +2848,36 @@ const IDLE_ZONE_BAND_DEFS = [
         "amount": 1
       }
     ],
-    "bossDrops": []
+    "bossDrops": [
+      {
+        "kind": "etc",
+        "itemId": "idle-ticket-boss",
+        "name": "BOSS 副本入場券",
+        "chance": 8,
+        "amount": 1
+      },
+      {
+        "kind": "etc",
+        "itemId": "idle-ticket-damage",
+        "name": "傷害副本入場券",
+        "chance": 8,
+        "amount": 1
+      },
+      {
+        "kind": "etc",
+        "itemId": "idle-ticket-timed",
+        "name": "計時副本入場券",
+        "chance": 8,
+        "amount": 1
+      },
+      {
+        "kind": "etc",
+        "itemId": "idle-ticket-normal",
+        "name": "地下城入場券",
+        "chance": 8,
+        "amount": 1
+      }
+    ]
   },
   {
     "id": "band-1788876290721",
@@ -2870,7 +2899,36 @@ const IDLE_ZONE_BAND_DEFS = [
         "amount": 1
       }
     ],
-    "bossDrops": []
+    "bossDrops": [
+      {
+        "kind": "etc",
+        "itemId": "idle-ticket-timed",
+        "name": "計時副本入場券",
+        "chance": 5,
+        "amount": 1
+      },
+      {
+        "kind": "etc",
+        "itemId": "idle-ticket-normal",
+        "name": "地下城入場券",
+        "chance": 5,
+        "amount": 1
+      },
+      {
+        "kind": "etc",
+        "itemId": "idle-ticket-damage",
+        "name": "傷害副本入場券",
+        "chance": 5,
+        "amount": 1
+      },
+      {
+        "kind": "etc",
+        "itemId": "idle-ticket-boss",
+        "name": "BOSS 副本入場券",
+        "chance": 5,
+        "amount": 1
+      }
+    ]
   },
   {
     "id": "band-1789059379066",
@@ -16513,10 +16571,10 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "dropMax": 180,
     "artId": "blackheaven-10000",
     "bandKey": "band-1788876265095",
-    "mobName": "克雷塞爾·6",
-    "mobIcon": "7130000",
-    "bossName": "菇菇王·12",
-    "bossIcon": "2220000",
+    "mobName": "藍機器狩獵犬",
+    "mobIcon": "8250006",
+    "bossName": "藍機器狩獵犬",
+    "bossIcon": "8250006",
     "monsterHp": 3472900000,
     "bossHp": 52093500000,
     "killExp": 31600,
@@ -16527,8 +16585,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "黑暗天堂",
     "bandMin": 180,
     "bandMax": 190,
@@ -16549,7 +16607,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 477000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -16564,8 +16622,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillCd": 10,
     "mobPool": [
       {
-        "name": "克雷塞爾·6",
-        "icon": "7130000"
+        "name": "藍機器狩獵犬",
+        "icon": "8250006"
       }
     ]
   },
@@ -16580,10 +16638,10 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "dropMax": 190,
     "artId": "blackheaven-10001",
     "bandKey": "band-1788876265095",
-    "mobName": "火焰野豬·6",
-    "mobIcon": "7120100",
-    "bossName": "藍蘑菇王·12",
-    "bossIcon": "2220001",
+    "mobName": "紅機器狩獵犬",
+    "mobIcon": "8250005",
+    "bossName": "紅機器狩獵犬",
+    "bossIcon": "8250005",
     "monsterHp": 3782100000,
     "bossHp": 56731500000,
     "killExp": 32800,
@@ -16594,8 +16652,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "黑暗天堂",
     "replayBossKills": 250,
     "smallKills": 2425,
@@ -16614,7 +16672,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 491000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -16631,8 +16689,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 190,
     "mobPool": [
       {
-        "name": "火焰野豬·6",
-        "icon": "7120100"
+        "name": "紅機器狩獵犬",
+        "icon": "8250005"
       }
     ]
   },
@@ -16647,10 +16705,10 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "dropMax": 190,
     "artId": "blackheaven-10002",
     "bandKey": "band-1788876265095",
-    "mobName": "狼人·6",
-    "mobIcon": "5100004",
-    "bossName": "史萊姆王·12",
-    "bossIcon": "5220000",
+    "mobName": "藍追隨者機器人",
+    "mobIcon": "8250004",
+    "bossName": "藍追隨者機器人",
+    "bossIcon": "8250004",
     "monsterHp": 4118800000,
     "bossHp": 61782000000,
     "killExp": 34000,
@@ -16661,8 +16719,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "黑暗天堂",
     "replayBossKills": 250,
     "smallKills": 2475,
@@ -16681,7 +16739,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 506000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -16698,8 +16756,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 190,
     "mobPool": [
       {
-        "name": "狼人·6",
-        "icon": "5100004"
+        "name": "藍追隨者機器人",
+        "icon": "8250004"
       }
     ]
   },
@@ -16714,10 +16772,10 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "dropMax": 190,
     "artId": "blackheaven-10003",
     "bandKey": "band-1788876265095",
-    "mobName": "殭屍·6",
-    "mobIcon": "5130103",
-    "bossName": "樹妖王·12",
-    "bossIcon": "3220000",
+    "mobName": "紅追隨者機器人",
+    "mobIcon": "8250003",
+    "bossName": "紅追隨者機器人",
+    "bossIcon": "8250003",
     "monsterHp": 4485500000,
     "bossHp": 67282500000,
     "killExp": 35300,
@@ -16728,8 +16786,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "黑暗天堂",
     "replayBossKills": 250,
     "smallKills": 2500,
@@ -16748,7 +16806,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 521000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -16765,8 +16823,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 190,
     "mobPool": [
       {
-        "name": "殭屍·6",
-        "icon": "5130103"
+        "name": "紅追隨者機器人",
+        "icon": "8250003"
       }
     ]
   },
@@ -16781,10 +16839,10 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "dropMax": 190,
     "artId": "blackheaven-10004",
     "bandKey": "band-1788876265095",
-    "mobName": "骷髏士兵·6",
-    "mobIcon": "5150001",
-    "bossName": "殭屍蘑菇王·12",
-    "bossIcon": "6300005",
+    "mobName": "修理機器人",
+    "mobIcon": "8240084",
+    "bossName": "修理機器人",
+    "bossIcon": "8240084",
     "monsterHp": 4884800000,
     "bossHp": 73272000000,
     "killExp": 36600,
@@ -16795,8 +16853,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "黑暗天堂",
     "replayBossKills": 250,
     "smallKills": 2525,
@@ -16815,7 +16873,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 537000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -16832,8 +16890,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 190,
     "mobPool": [
       {
-        "name": "骷髏士兵·6",
-        "icon": "5150001"
+        "name": "修理機器人",
+        "icon": "8240084"
       }
     ]
   },
@@ -16848,10 +16906,10 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "dropMax": 190,
     "artId": "blackheaven-10005",
     "bandKey": "band-1788876265095",
-    "mobName": "骷髏警衛兵·6",
-    "mobIcon": "5150000",
-    "bossName": "浮士德·12",
-    "bossIcon": "5220002",
+    "mobName": "失敗作機器人",
+    "mobIcon": "8250001",
+    "bossName": "失敗作機器人",
+    "bossIcon": "8250001",
     "monsterHp": 5319700000,
     "bossHp": 79795500000,
     "killExp": 37900,
@@ -16862,8 +16920,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "黑暗天堂",
     "replayBossKills": 250,
     "smallKills": 2575,
@@ -16882,7 +16940,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 553000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -16899,8 +16957,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 190,
     "mobPool": [
       {
-        "name": "骷髏警衛兵·6",
-        "icon": "5150000"
+        "name": "失敗作機器人",
+        "icon": "8250001"
       }
     ]
   },
@@ -16915,10 +16973,10 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "dropMax": 190,
     "artId": "blackheaven-10006",
     "bandKey": "band-1788876265095",
-    "mobName": "小石龍·6",
-    "mobIcon": "8144000",
-    "bossName": "巴洛古·12",
-    "bossIcon": "6130101",
+    "mobName": "雷射機器人",
+    "mobIcon": "8250002",
+    "bossName": "雷射機器人",
+    "bossIcon": "8250002",
     "monsterHp": 5793200000,
     "bossHp": 86898000000,
     "killExp": 39300,
@@ -16929,8 +16987,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "黑暗天堂",
     "replayBossKills": 250,
     "smallKills": 2600,
@@ -16949,7 +17007,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 570000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -16966,8 +17024,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 190,
     "mobPool": [
       {
-        "name": "小石龍·6",
-        "icon": "8144000"
+        "name": "雷射機器人",
+        "icon": "8250002"
       }
     ]
   },
@@ -16983,9 +17041,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "artId": "blackheaven-10007",
     "bandKey": "band-1788876265095",
     "mobName": "龍族雜兵·6",
-    "mobIcon": "8190003",
+    "mobIcon": "8250010",
     "bossName": "拉圖斯·12",
-    "bossIcon": "8500001",
+    "bossIcon": "8250010",
     "monsterHp": 6309000000,
     "bossHp": 94635000000,
     "killExp": 40800,
@@ -16996,8 +17054,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "黑暗天堂",
     "replayBossKills": 250,
     "smallKills": 2625,
@@ -17016,7 +17074,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 587000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -17034,7 +17092,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobPool": [
       {
         "name": "龍族雜兵·6",
-        "icon": "8190003"
+        "icon": "8250010"
       }
     ]
   },
@@ -17049,10 +17107,10 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "dropMax": 190,
     "artId": "blackheaven-10008",
     "bandKey": "band-1788876265095",
-    "mobName": "玩具黃鴨·6",
-    "mobIcon": "3230300",
-    "bossName": "殘暴炎魔·12",
-    "bossIcon": "8800002",
+    "mobName": "內部警衛機器人",
+    "mobIcon": "8250011",
+    "bossName": "內部警衛機器人",
+    "bossIcon": "8250011",
     "monsterHp": 6870600000,
     "bossHp": 103059000000,
     "killExp": 42300,
@@ -17063,8 +17121,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "黑暗天堂",
     "replayBossKills": 250,
     "smallKills": 2675,
@@ -17083,7 +17141,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 605000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -17100,8 +17158,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 190,
     "mobPool": [
       {
-        "name": "玩具黃鴨·6",
-        "icon": "3230300"
+        "name": "內部警衛機器人",
+        "icon": "8250011"
       }
     ]
   },
@@ -17116,10 +17174,10 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "dropMax": 190,
     "artId": "blackheaven-10009",
     "bandKey": "band-1788876265095",
-    "mobName": "發條老鼠·6",
-    "mobIcon": "3230302",
-    "bossName": "闇黑龍王·12",
-    "bossIcon": "8810018",
+    "mobName": "固鐵新時代機器人A",
+    "mobIcon": "8250019",
+    "bossName": "固鐵新時代機器人A",
+    "bossIcon": "8250019",
     "monsterHp": 7482200000,
     "bossHp": 112233000000,
     "killExp": 43900,
@@ -17130,8 +17188,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "黑暗天堂",
     "replayBossKills": 250,
     "smallKills": 2700,
@@ -17150,7 +17208,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 623000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -17167,26 +17225,26 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 190,
     "mobPool": [
       {
-        "name": "發條老鼠·6",
-        "icon": "3230302"
+        "name": "固鐵新時代機器人A",
+        "icon": "8250019"
       }
     ]
   },
   {
     "regionId": "band-1788876265095",
     "regionName": "世界樹",
-    "name": "新狩獵場",
+    "name": "世界樹底層",
     "mapId": "c341",
     "mapIndex": 341,
     "unlockLevel": 190,
     "dropMin": 190,
     "dropMax": 190,
-    "artId": "",
+    "artId": "DarkWorldTree-10000",
     "bandKey": "band-1788876290721",
-    "mobName": "機器人A·6",
-    "mobIcon": "4230106",
-    "bossName": "皮卡啾·12",
-    "bossIcon": "8820001",
+    "mobName": "受汙染的樹液",
+    "mobIcon": "3503000",
+    "bossName": "受汙染的樹液",
+    "bossIcon": "3503000",
     "monsterHp": 7482200000,
     "bossHp": 112233000000,
     "killExp": 43900,
@@ -17197,8 +17255,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "世界樹",
     "bandMin": 190,
     "bandMax": 200,
@@ -17219,7 +17277,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 623000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -17234,26 +17292,26 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillCd": 10,
     "mobPool": [
       {
-        "name": "機器人A·6",
-        "icon": "4230106"
+        "name": "受汙染的樹液",
+        "icon": "3503000"
       }
     ]
   },
   {
     "regionId": "band-1788876290721",
     "regionName": "世界樹",
-    "name": "新狩獵場",
+    "name": "世界樹下端分支",
     "mapId": "c342",
     "mapIndex": 342,
     "unlockLevel": 191,
     "dropMin": 191,
     "dropMax": 200,
-    "artId": "",
+    "artId": "DarkWorldTree-10000",
     "bandKey": "band-1788876290721",
-    "mobName": "機器人B·6",
-    "mobIcon": "4230107",
-    "bossName": "西格諾斯·12",
-    "bossIcon": "8850011",
+    "mobName": "腐敗的樹液",
+    "mobIcon": "3503001",
+    "bossName": "腐敗的樹液",
+    "bossIcon": "3503001",
     "monsterHp": 8148300000,
     "bossHp": 122224500000,
     "killExp": 45500,
@@ -17264,8 +17322,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "世界樹",
     "replayBossKills": 250,
     "smallKills": 2725,
@@ -17284,7 +17342,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 642000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -17301,26 +17359,26 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 200,
     "mobPool": [
       {
-        "name": "機器人B·6",
-        "icon": "4230107"
+        "name": "腐敗的樹液",
+        "icon": "3503001"
       }
     ]
   },
   {
     "regionId": "band-1788876290721",
     "regionName": "世界樹",
-    "name": "新狩獵場",
+    "name": "世界樹下端左邊分支",
     "mapId": "c343",
     "mapIndex": 343,
     "unlockLevel": 192,
     "dropMin": 192,
     "dropMax": 200,
-    "artId": "",
+    "artId": "DarkWorldTree-10000",
     "bandKey": "band-1788876290721",
-    "mobName": "外星雞·6",
-    "mobIcon": "9400000",
-    "bossName": "凡雷恩·12",
-    "bossIcon": "8840000",
+    "mobName": "墮落魔族劍兵",
+    "mobIcon": "3503002",
+    "bossName": "墮落魔族劍兵",
+    "bossIcon": "3503002",
     "monsterHp": 8873700000,
     "bossHp": 133105500000,
     "killExp": 47200,
@@ -17331,8 +17389,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "世界樹",
     "replayBossKills": 250,
     "smallKills": 2775,
@@ -17351,7 +17409,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 662000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -17368,26 +17426,26 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 200,
     "mobPool": [
       {
-        "name": "外星雞·6",
-        "icon": "9400000"
+        "name": "墮落魔族劍兵",
+        "icon": "3503002"
       }
     ]
   },
   {
     "regionId": "band-1788876290721",
     "regionName": "世界樹",
-    "name": "新狩獵場",
+    "name": "世界樹下端右邊分支",
     "mapId": "c344",
     "mapIndex": 344,
     "unlockLevel": 193,
     "dropMin": 193,
     "dropMax": 200,
-    "artId": "",
+    "artId": "DarkWorldTree-10000",
     "bandKey": "band-1788876290721",
-    "mobName": "外星章魚·6",
-    "mobIcon": "9400002",
-    "bossName": "希拉·12",
-    "bossIcon": "8870000",
+    "mobName": "墮落魔族強化劍兵",
+    "mobIcon": "3503003",
+    "bossName": "墮落魔族強化劍兵",
+    "bossIcon": "3503003",
     "monsterHp": 9663700000,
     "bossHp": 144955500000,
     "killExp": 49000,
@@ -17398,8 +17456,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "世界樹",
     "replayBossKills": 250,
     "smallKills": 2800,
@@ -17418,7 +17476,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 682000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -17435,26 +17493,26 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 200,
     "mobPool": [
       {
-        "name": "外星章魚·6",
-        "icon": "9400002"
+        "name": "墮落魔族強化劍兵",
+        "icon": "3503003"
       }
     ]
   },
   {
     "regionId": "band-1788876290721",
     "regionName": "世界樹",
-    "name": "新狩獵場",
+    "name": "世界樹中端岔路",
     "mapId": "c345",
     "mapIndex": 345,
     "unlockLevel": 194,
     "dropMin": 194,
     "dropMax": 200,
-    "artId": "",
+    "artId": "DarkWorldTree-10000",
     "bandKey": "band-1788876290721",
-    "mobName": "半人馬·6",
-    "mobIcon": "9400543",
-    "bossName": "麥格納斯·12",
-    "bossIcon": "8880000",
+    "mobName": "墮落魔族斧頭兵",
+    "mobIcon": "3503004",
+    "bossName": "墮落魔族斧頭兵",
+    "bossIcon": "3503004",
     "monsterHp": 10524000000,
     "bossHp": 157860000000,
     "killExp": 50800,
@@ -17465,8 +17523,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "世界樹",
     "replayBossKills": 250,
     "smallKills": 2825,
@@ -17485,7 +17543,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 702000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -17502,26 +17560,26 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 200,
     "mobPool": [
       {
-        "name": "半人馬·6",
-        "icon": "9400543"
+        "name": "墮落魔族斧頭兵",
+        "icon": "3503004"
       }
     ]
   },
   {
     "regionId": "band-1788876290721",
     "regionName": "世界樹",
-    "name": "新狩獵場",
+    "name": "世界樹中端左邊分支",
     "mapId": "c346",
     "mapIndex": 346,
     "unlockLevel": 196,
     "dropMin": 196,
     "dropMax": 200,
-    "artId": "",
+    "artId": "DarkWorldTree-10000",
     "bandKey": "band-1788876290721",
-    "mobName": "黑暗半人馬·6",
-    "mobIcon": "9400544",
-    "bossName": "史烏·12",
-    "bossIcon": "8880100",
+    "mobName": "墮落魔族強化斧頭兵",
+    "mobIcon": "3503005",
+    "bossName": "墮落魔族強化斧頭兵",
+    "bossIcon": "3503005",
     "monsterHp": 11460900000,
     "bossHp": 171913500000,
     "killExp": 52700,
@@ -17532,8 +17590,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "世界樹",
     "replayBossKills": 250,
     "smallKills": 2875,
@@ -17552,7 +17610,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 723000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -17569,26 +17627,26 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 200,
     "mobPool": [
       {
-        "name": "黑暗半人馬·6",
-        "icon": "9400544"
+        "name": "墮落魔族強化斧頭兵",
+        "icon": "3503005"
       }
     ]
   },
   {
     "regionId": "band-1788876290721",
     "regionName": "世界樹",
-    "name": "新狩獵場",
+    "name": "世界樹中端右邊分支",
     "mapId": "c347",
     "mapIndex": 347,
     "unlockLevel": 197,
     "dropMin": 197,
     "dropMax": 200,
-    "artId": "",
+    "artId": "DarkWorldTree-10000",
     "bandKey": "band-1788876290721",
-    "mobName": "骷髏犬·6",
-    "mobIcon": "8190004",
-    "bossName": "露希妲·12",
-    "bossIcon": "8880141",
+    "mobName": "墮落魔族盾牌兵",
+    "mobIcon": "3503006",
+    "bossName": "墮落魔族盾牌兵",
+    "bossIcon": "3503006",
     "monsterHp": 12481100000,
     "bossHp": 187216500000,
     "killExp": 54700,
@@ -17599,8 +17657,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "世界樹",
     "replayBossKills": 250,
     "smallKills": 2900,
@@ -17619,7 +17677,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 745000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -17636,26 +17694,26 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 200,
     "mobPool": [
       {
-        "name": "骷髏犬·6",
-        "icon": "8190004"
+        "name": "墮落魔族盾牌兵",
+        "icon": "3503006"
       }
     ]
   },
   {
     "regionId": "band-1788876290721",
     "regionName": "世界樹",
-    "name": "新狩獵場",
+    "name": "世界樹上層岔路",
     "mapId": "c348",
     "mapIndex": 348,
     "unlockLevel": 198,
     "dropMin": 198,
     "dropMax": 200,
-    "artId": "",
+    "artId": "DarkWorldTree-10000",
     "bandKey": "band-1788876290721",
-    "mobName": "火焰骷髏·6",
-    "mobIcon": "7130010",
-    "bossName": "威爾·12",
-    "bossIcon": "8880301",
+    "mobName": "墮落魔族強化盾牌兵",
+    "mobIcon": "3503007",
+    "bossName": "墮落魔族強化盾牌兵",
+    "bossIcon": "3503007",
     "monsterHp": 13592200000,
     "bossHp": 203883000000,
     "killExp": 56700,
@@ -17666,8 +17724,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "世界樹",
     "replayBossKills": 250,
     "smallKills": 2925,
@@ -17686,7 +17744,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 768000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -17703,26 +17761,26 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 200,
     "mobPool": [
       {
-        "name": "火焰骷髏·6",
-        "icon": "7130010"
+        "name": "墮落魔族強化盾牌兵",
+        "icon": "3503007"
       }
     ]
   },
   {
     "regionId": "band-1788876290721",
     "regionName": "世界樹",
-    "name": "新狩獵場",
+    "name": "世界樹上層左邊分支",
     "mapId": "c349",
     "mapIndex": 349,
     "unlockLevel": 199,
     "dropMin": 199,
     "dropMax": 200,
-    "artId": "",
+    "artId": "DarkWorldTree-10000",
     "bandKey": "band-1788876290721",
-    "mobName": "冰石人·6",
-    "mobIcon": "8210001",
-    "bossName": "戴斯克·12",
-    "bossIcon": "8880405",
+    "mobName": "墮落魔族狼旗手",
+    "mobIcon": "3503008",
+    "bossName": "墮落魔族狼旗手",
+    "bossIcon": "3503008",
     "monsterHp": 14802300000,
     "bossHp": 222034500000,
     "killExp": 58800,
@@ -17733,8 +17791,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "世界樹",
     "replayBossKills": 250,
     "smallKills": 2975,
@@ -17753,7 +17811,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 791000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -17770,26 +17828,26 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 200,
     "mobPool": [
       {
-        "name": "冰石人·6",
-        "icon": "8210001"
+        "name": "墮落魔族狼旗手",
+        "icon": "3503008"
       }
     ]
   },
   {
     "regionId": "band-1788876290721",
     "regionName": "世界樹",
-    "name": "新狩獵場",
+    "name": "世界樹上層右邊分支",
     "mapId": "c350",
     "mapIndex": 350,
     "unlockLevel": 200,
     "dropMin": 200,
     "dropMax": 200,
-    "artId": "",
+    "artId": "DarkWorldTree-10000",
     "bandKey": "band-1788876290721",
-    "mobName": "沙漠土龍·6",
-    "mobIcon": "2100103",
-    "bossName": "真希拉·12",
-    "bossIcon": "8880503",
+    "mobName": "墮落魔族強化狼旗手",
+    "mobIcon": "3503009",
+    "bossName": "墮落魔族強化狼旗手",
+    "bossIcon": "3503009",
     "monsterHp": 16120000000,
     "bossHp": 241800000000,
     "killExp": 61000,
@@ -17800,8 +17858,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossDrops": [],
     "drops": [],
     "custom": true,
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "世界樹",
     "replayBossKills": 250,
     "smallKills": 3000,
@@ -17820,7 +17878,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 815000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -17837,8 +17895,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandMax": 200,
     "mobPool": [
       {
-        "name": "沙漠土龍·6",
-        "icon": "2100103"
+        "name": "墮落魔族強化狼旗手",
+        "icon": "3503009"
       }
     ]
   },
@@ -20042,12 +20100,12 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "unlockLevel": 180,
     "dropMin": 180,
     "dropMax": 190,
-    "artId": "",
+    "artId": "blackheaven-10010",
     "bandKey": "band-1788876265095",
-    "mobName": "鐵甲石人·7",
-    "mobIcon": "4230101",
-    "bossName": "卡林·13",
-    "bossIcon": "8880900",
+    "mobName": "固鐵新時代機器人B",
+    "mobIcon": "8250025",
+    "bossName": "固鐵新時代機器人B",
+    "bossIcon": "8250025",
     "monsterHp": 7482200000,
     "bossHp": 112233000000,
     "killExp": 43900,
@@ -20060,12 +20118,12 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "custom": true,
     "mobPool": [
       {
-        "name": "鐵甲石人·7",
-        "icon": "4230101"
+        "name": "固鐵新時代機器人B",
+        "icon": "8250025"
       }
     ],
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "黑暗天堂",
     "replayBossKills": 250,
     "smallKills": 2700,
@@ -20084,7 +20142,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 623000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -20107,12 +20165,12 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "unlockLevel": 180,
     "dropMin": 180,
     "dropMax": 190,
-    "artId": "",
+    "artId": "blackheaven-10011",
     "bandKey": "band-1788876265095",
-    "mobName": "蝙蝠魔·7",
-    "mobIcon": "2230102",
-    "bossName": "守護天使綠水靈·13",
-    "bossIcon": "8880020",
+    "mobName": "鋼鐵新時代機器人A",
+    "mobIcon": "8250017",
+    "bossName": "鋼鐵新時代機器人A",
+    "bossIcon": "8250017",
     "monsterHp": 7482200000,
     "bossHp": 112233000000,
     "killExp": 43900,
@@ -20125,12 +20183,12 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "custom": true,
     "mobPool": [
       {
-        "name": "蝙蝠魔·7",
-        "icon": "2230102"
+        "name": "鋼鐵新時代機器人A",
+        "icon": "8250017"
       }
     ],
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "黑暗天堂",
     "replayBossKills": 250,
     "smallKills": 2700,
@@ -20149,7 +20207,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 623000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -20172,12 +20230,12 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "unlockLevel": 180,
     "dropMin": 180,
     "dropMax": 190,
-    "artId": "",
+    "artId": "blackheaven-10012",
     "bandKey": "band-1788876265095",
-    "mobName": "小雪吉拉·7",
-    "mobIcon": "8130100",
-    "bossName": "頓凱爾·13",
-    "bossIcon": "8644600",
+    "mobName": "鋼鐵新時代機器人B",
+    "mobIcon": "8250023",
+    "bossName": "鋼鐵新時代機器人B",
+    "bossIcon": "8250023",
     "monsterHp": 7482200000,
     "bossHp": 112233000000,
     "killExp": 43900,
@@ -20190,12 +20248,12 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "custom": true,
     "mobPool": [
       {
-        "name": "小雪吉拉·7",
-        "icon": "8130100"
+        "name": "鋼鐵新時代機器人B",
+        "icon": "8250023"
       }
     ],
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "黑暗天堂",
     "replayBossKills": 250,
     "smallKills": 2700,
@@ -20214,7 +20272,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 623000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -20237,12 +20295,12 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "unlockLevel": 180,
     "dropMin": 180,
     "dropMax": 190,
-    "artId": "",
+    "artId": "blackheaven-10013",
     "bandKey": "band-1788876265095",
-    "mobName": "白雪人·7",
-    "mobIcon": "8140000",
-    "bossName": "受選者·13",
-    "bossIcon": "8880700",
+    "mobName": "合金新時代機器人A",
+    "mobIcon": "8250015",
+    "bossName": "合金新時代機器人A",
+    "bossIcon": "8250015",
     "monsterHp": 7482200000,
     "bossHp": 112233000000,
     "killExp": 43900,
@@ -20255,12 +20313,12 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "custom": true,
     "mobPool": [
       {
-        "name": "白雪人·7",
-        "icon": "8140000"
+        "name": "合金新時代機器人A",
+        "icon": "8250015"
       }
     ],
-    "bossScaleSprite": false,
-    "bossScaleHud": false,
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
     "bandName": "黑暗天堂",
     "replayBossKills": 250,
     "smallKills": 2700,
@@ -20279,7 +20337,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
     "bossAtk1Dmg": 624000,
-    "bossAtk1Cd": 2,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
@@ -20302,34 +20360,34 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "unlockLevel": 180,
     "dropMin": 180,
     "dropMax": 190,
-    "artId": "",
+    "artId": "blackheaven-10014",
     "bandKey": "band-1788876265095",
-    "mobName": "雪吉拉·7",
-    "mobIcon": "8150000",
-    "bossName": "覺醒希拉·13",
-    "bossIcon": "8880510",
-    "monsterHp": 1219837768,
-    "bossHp": 63492555824,
-    "killExp": 227,
-    "killGold": 113,
-    "bossKillExp": 4540,
-    "bossKillGold": 908,
+    "mobName": "合金新時代機器人B",
+    "mobIcon": "8250021",
+    "bossName": "改造過的巨大機器人",
+    "bossIcon": "8250026",
+    "monsterHp": 7482200000,
+    "bossHp": 112233000000,
+    "killExp": 43900,
+    "killGold": 439000,
+    "bossKillExp": 439000,
+    "bossKillGold": 439000,
     "mobDrops": [],
     "bossDrops": [],
     "drops": [],
     "custom": true,
     "mobPool": [
       {
-        "name": "雪吉拉·7",
-        "icon": "8150000"
+        "name": "合金新時代機器人B",
+        "icon": "8250021"
       }
     ],
     "bossScaleSprite": false,
     "bossScaleHud": false,
     "bandName": "黑暗天堂",
-    "replayBossKills": 10,
-    "smallKills": 100,
-    "mobAtk1Dmg": 5,
+    "replayBossKills": 250,
+    "smallKills": 2700,
+    "mobAtk1Dmg": 312000,
     "mobAtk1Cd": 0.6,
     "mobAtk2Dmg": 0,
     "mobAtk2Cd": 0,
@@ -20343,8 +20401,8 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkill3Cd": 0,
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
-    "bossAtk1Dmg": 15,
-    "bossAtk1Cd": 2,
+    "bossAtk1Dmg": 624000,
+    "bossAtk1Cd": 0.6,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
     "bossAtk3Dmg": 0,
