@@ -2164,32 +2164,119 @@ const SkillCombat = (() => {
       : null);
   }
 
-  function playNlMarkArcVolley(ctx, frames, targets, starCount, onHit, onDone) {
-    const list = (targets || []).filter((m) => m && Number(m.hp) > 0);
-    if (typeof SkillEffectPlayer === 'undefined'
-      || typeof SkillEffectPlayer.playRandomArcVolley !== 'function'
-      || !frames?.length
-      || !list.length) {
-      const n = Math.max(1, Math.floor(Number(starCount) || 1));
-      for (let i = 0; i < n; i += 1) {
-        const mob = list[i % Math.max(1, list.length)];
-        if (mob && typeof onHit === 'function') onHit(mob);
-      }
+  /**
+   * 刻印飛鏢鎖敵：與天使破壞者靈魂探索者相同（BOSS／低血優先、預留 HP 分散、死亡改鎖）。
+   * 引爆源怪優先排除，改追周圍活怪。
+   */
+  function pickNlMarkStarTargets(ctx, count, pending, estDmg, excludeMob) {
+    const n = Math.max(1, Math.floor(Number(count) || 1));
+    const alive = abSeekerAlivePool(ctx);
+    if (!alive.length) return [];
+    const excludeUid = excludeMob && excludeMob.uid != null ? String(excludeMob.uid) : '';
+    const others = excludeUid
+      ? alive.filter((m) => String(m.uid) !== excludeUid)
+      : alive;
+    const pool = rankAbSeekerPool(others.length ? others : alive);
+    if (!pool.length) return [];
+    const est = Math.max(1, Number(estDmg) || 1);
+    const out = [];
+    for (let i = 0; i < n; i += 1) {
+      let pick = pool.find((m) => abSeekerPendingHp(m, pending) > 0);
+      if (!pick) pick = pool[0];
+      out.push(pick);
+      abSeekerReserve(pending, pick, est);
+    }
+    return out;
+  }
+
+  /** 刻印飛鏢：裝備飛鏢圖 + 探求者鎖敵／追蹤 */
+  function playNlMarkArcVolley(ctx, frames, starCount, damagePct, onHit, onDone, excludeMob) {
+    const n = Math.max(1, Math.floor(Number(starCount) || 1));
+    const hpPending = new Map();
+    const estHit = estimateAbSeekerHitDmg(Number(damagePct) || 0, 1);
+    const list = pickNlMarkStarTargets(ctx, n, hpPending, estHit, excludeMob);
+    if (!list.length) {
       if (typeof onDone === 'function') onDone();
       return;
     }
-    SkillEffectPlayer.playRandomArcVolley({
+    const retargetInFlight = (fromMob) => {
+      abSeekerReleaseReserve(hpPending, fromMob, estHit);
+      return pickAbSeekerNextTarget(ctx, fromMob, hpPending, estHit);
+    };
+    if (typeof SkillEffectPlayer === 'undefined'
+      || typeof SkillEffectPlayer.playHomingVolley !== 'function'
+      || !frames?.length) {
+      list.forEach((mob) => {
+        if (typeof onHit === 'function') onHit(mob);
+      });
+      if (typeof onDone === 'function') onDone();
+      return;
+    }
+    SkillEffectPlayer.playHomingVolley({
       fieldEl: ctx.fieldEl || document.getElementById('idleHuntField'),
       playerEl: ctx.playerEl,
       mobs: list,
       frames,
-      count: starCount,
+      anchorAt: 'player',
       facingRight: ctxFacingRight(ctx),
+      startOffset: [-48, -36],
+      staggerMs: 28,
+      holdMs: 50,
+      speedPxPerMs: 0.78,
+      spriteScale: 1,
+      centerOrigin: false,
+      kickOutPx: 0,
+      retarget: retargetInFlight,
+      onMiss: (mob) => abSeekerReleaseReserve(hpPending, mob, estHit),
       onHit: (mob) => {
+        abSeekerReleaseReserve(hpPending, mob, estHit);
         if (typeof onHit === 'function') onHit(mob);
       },
       onDone,
     });
+  }
+
+  /** 消耗刻印並射出飛鏢（再攻擊／死亡共用） */
+  function fireNlMarkBurst(ctx, sourceSkillId, fromMob, killSink) {
+    const kills = Array.isArray(killSink) ? killSink : [];
+    const spec = typeof SkillMobStatus !== 'undefined'
+      ? SkillMobStatus.resolveNlMarkBurstSpec?.(sourceSkillId)
+      : null;
+    if (!spec || !(spec.damagePct > 0)) return kills;
+    const frames = nlMarkStarFrames();
+    const starCount = Math.max(1, Number(spec.bulletCount) || 1);
+    const applyBurst = (mob) => {
+      if (!mob || !(Number(mob.hp) > 0)) return;
+      const res = dealNlExtraHits(ctx, spec.burstSkill, spec.damagePct, spec.attackCount, [mob]);
+      res.kills.forEach((m) => pushUniqueMob(kills, m));
+    };
+    const notify = () => {
+      if (kills.length && typeof ctx.onProjectileResolve === 'function') {
+        ctx.onProjectileResolve(kills);
+      }
+    };
+    if (frames?.length) {
+      playNlMarkArcVolley(ctx, frames, starCount, spec.damagePct, applyBurst, notify, fromMob);
+    } else {
+      const hpPending = new Map();
+      const estHit = estimateAbSeekerHitDmg(spec.damagePct, 1);
+      const pool = pickNlMarkStarTargets(ctx, starCount, hpPending, estHit, fromMob);
+      for (let i = 0; i < starCount; i += 1) {
+        applyBurst(pool[i % Math.max(1, pool.length)]);
+      }
+      notify();
+    }
+    return kills;
+  }
+
+  /** 怪物死亡時若仍有刻印 → 立刻飛出飛鏢（DoT／非 NL followup 擊殺） */
+  function tryNlMarkBurstOnDeath(ctx, mob) {
+    if (!ctx || !mob || !isNightLordJob()) return [];
+    if (ctx.skipNightLordExtras) return [];
+    if (typeof SkillMobStatus === 'undefined' || !SkillMobStatus.hasNlMark?.(mob)) return [];
+    const src = SkillMobStatus.consumeNlMark(mob);
+    if (!src) return [];
+    return fireNlMarkBurst(ctx, src, mob, []);
   }
 
   function playNlStarVolley(ctx, frames, targets, onHit, onDone) {
@@ -2275,35 +2362,16 @@ const SkillCombat = (() => {
     });
 
     if (typeof SkillMobStatus !== 'undefined') {
+      // 再攻擊（活）與擊殺（死）都會引爆刻印；勿只看 liveHits
+      const allHits = Array.isArray(hitMobs) ? hitMobs : [];
       const burstMobs = [];
-      liveHits.forEach((mob) => {
-        if (!SkillMobStatus.hasNlMark?.(mob)) return;
+      allHits.forEach((mob) => {
+        if (!mob || !SkillMobStatus.hasNlMark?.(mob)) return;
         const src = SkillMobStatus.consumeNlMark(mob);
         if (src) burstMobs.push({ mob, src });
       });
       burstMobs.forEach((row) => {
-        const spec = SkillMobStatus.resolveNlMarkBurstSpec?.(row.src);
-        if (!spec || !(spec.damagePct > 0)) return;
-        const nearby = resolveSkillTargets(ctx, spec.burstId, spec.mobCount);
-        const pool = nearby.length ? nearby : [row.mob];
-        const frames = nlMarkStarFrames();
-        const starCount = Math.max(1, Number(spec.bulletCount) || pool.length || 1);
-        const applyBurst = (mob) => {
-          if (!mob || !(Number(mob.hp) > 0)) return;
-          const res = dealNlExtraHits(ctx, spec.burstSkill, spec.damagePct, spec.attackCount, [mob]);
-          res.kills.forEach((m) => pushUniqueMob(kills, m));
-        };
-        if (frames?.length) {
-          playNlMarkArcVolley(ctx, frames, pool, starCount, applyBurst, () => {
-            if (kills.length && typeof ctx.onProjectileResolve === 'function') {
-              ctx.onProjectileResolve(kills);
-            }
-          });
-        } else {
-          for (let i = 0; i < starCount; i += 1) {
-            applyBurst(pool[i % pool.length]);
-          }
-        }
+        fireNlMarkBurst(ctx, row.src, row.mob, kills);
       });
       liveHits.forEach((mob) => {
         SkillMobStatus.tryApplyNlMarkOnHit?.(mob, trigger);
@@ -2454,21 +2522,63 @@ const SkillCombat = (() => {
   function rankAbSeekerPool(alive) {
     const bosses = alive.filter((m) => m.isBoss)
       .sort((a, b) => (Number(b.maxHp) || 0) - (Number(a.maxHp) || 0));
-    const rest = alive.filter((m) => !m.isBoss);
+    // 一般怪：低血優先，方便清場；避免全堆同一隻
+    const rest = alive.filter((m) => !m.isBoss)
+      .sort((a, b) => (Number(a.hp) || 0) - (Number(b.hp) || 0));
     return bosses.length ? bosses.concat(rest) : rest;
   }
 
-  function pickAbSeekerTargets(ctx, count) {
+  function abSeekerPendingHp(mob, pending) {
+    if (!mob || mob.uid == null || !pending) return Math.max(0, Number(mob?.hp) || 0);
+    const reserved = Number(pending.get(String(mob.uid))) || 0;
+    return Math.max(0, (Number(mob.hp) || 0) - reserved);
+  }
+
+  function abSeekerReserve(pending, mob, amount) {
+    if (!pending || !mob || mob.uid == null) return;
+    const uid = String(mob.uid);
+    const add = Math.max(0, Number(amount) || 0);
+    pending.set(uid, (Number(pending.get(uid)) || 0) + add);
+  }
+
+  function abSeekerReleaseReserve(pending, mob, amount) {
+    if (!pending || !mob || mob.uid == null) return;
+    const uid = String(mob.uid);
+    const next = Math.max(0, (Number(pending.get(uid)) || 0) - Math.max(0, Number(amount) || 0));
+    if (next > 0) pending.set(uid, next);
+    else pending.delete(uid);
+  }
+
+  /** 預估單球傷害（略偏高 → 寧可少疊、多分散） */
+  function estimateAbSeekerHitDmg(damagePct, outgoingMult) {
+    const sample = rollSkillHit(false, Number(damagePct) || 0, { forceCritical: true });
+    const raw = Math.max(0, Number(sample?.dmg) || 0);
+    const mult = Number(outgoingMult);
+    const scaled = Number.isFinite(mult) && mult > 0 ? raw * mult : raw;
+    return Math.max(1, Math.round(scaled * 1.05));
+  }
+
+  /**
+   * 依「尚未被飛行中預留傷害蓋滿」的怪分散鎖敵。
+   * 優先 BOSS／低血；額度已夠秒殺的怪最後才再疊。
+   */
+  function pickAbSeekerTargets(ctx, count, pending, estDmg) {
     const n = Math.max(1, Math.floor(Number(count) || 1));
     const pool = rankAbSeekerPool(abSeekerAlivePool(ctx));
     if (!pool.length) return [];
+    const est = Math.max(1, Number(estDmg) || 1);
     const out = [];
-    for (let i = 0; i < n; i += 1) out.push(pool[i % pool.length]);
+    for (let i = 0; i < n; i += 1) {
+      let pick = pool.find((m) => abSeekerPendingHp(m, pending) > 0);
+      if (!pick) pick = pool[0];
+      out.push(pick);
+      abSeekerReserve(pending, pick, est);
+    }
     return out;
   }
 
-  /** 重生球：有其他活怪就鎖定下一隻（BOSS 優先）；只剩當前這隻才再打它 */
-  function pickAbSeekerNextTarget(ctx, excludeMob) {
+  /** 重生球：避開剛打到的怪，優先尚未被預留秒殺的活怪（BOSS／低血） */
+  function pickAbSeekerNextTarget(ctx, excludeMob, pending, estDmg) {
     const alive = abSeekerAlivePool(ctx);
     if (!alive.length) return null;
     const excludeUid = excludeMob && excludeMob.uid != null ? String(excludeMob.uid) : '';
@@ -2476,7 +2586,11 @@ const SkillCombat = (() => {
       ? alive.filter((m) => String(m.uid) !== excludeUid)
       : alive;
     const pool = rankAbSeekerPool(others.length ? others : alive);
-    return pool[0] || null;
+    if (!pool.length) return null;
+    let pick = pool.find((m) => abSeekerPendingHp(m, pending) > 0);
+    if (!pick) pick = pool[0];
+    abSeekerReserve(pending, pick, Math.max(1, Number(estDmg) || 1));
+    return pick || null;
   }
 
   /** 探求者本體傷害、重生機率、灌注球數／終傷乘算 */
@@ -2554,6 +2668,7 @@ const SkillCombat = (() => {
   /**
    * 發射探求者追蹤球：圓弧飛向目標。命中後依 s% 從怪身上先甩出再弧線追下一隻活怪
    *（沒有下一隻才繞回當前）。每顆最多 z 次。精通生球同一條鏈。
+   * 鎖敵會依預估傷害預留 HP，避免多球全疊在已夠秒殺的同一隻。
    */
   function fireAbSeekerChain(ctx, opts = {}) {
     const rt = getAbSeekerRuntime();
@@ -2583,6 +2698,9 @@ const SkillCombat = (() => {
     let spawned = 0;
     let pending = 0;
     let settled = false;
+    /** @type {Map<string, number>} uid → 飛行中預留傷害 */
+    const hpPending = new Map();
+    const estHit = estimateAbSeekerHitDmg(rt.damagePct, outgoingMult);
     const settle = () => {
       if (settled) return;
       settled = true;
@@ -2618,6 +2736,11 @@ const SkillCombat = (() => {
       return live;
     };
 
+    const retargetInFlight = (fromMob) => {
+      abSeekerReleaseReserve(hpPending, fromMob, estHit);
+      return pickAbSeekerNextTarget(ctx, fromMob, hpPending, estHit);
+    };
+
     const launch = (n, bounceLeft, fromMob, lockTarget) => {
       if (settled || !isAsyncCastLive(asyncId)) return;
       const remain = maxSpawns - spawned;
@@ -2629,16 +2752,17 @@ const SkillCombat = (() => {
           || (lockTarget && Number(lockTarget.hp) > 0 ? lockTarget : null);
         targets = locked ? [locked] : [];
       } else {
-        targets = pickAbSeekerTargets(ctx, actual);
+        targets = pickAbSeekerTargets(ctx, actual, hpPending, estHit);
       }
       if (!targets.length) return;
       spawned += targets.length;
       beginWave();
       const frames = abSeekerOrbFrames();
       const onHit = (mob) => {
+        abSeekerReleaseReserve(hpPending, mob, estHit);
         const live = dealOne(mob);
         if (bounceLeft > 0 && rt.respawnProp > 0 && Math.random() * 100 < rt.respawnProp) {
-          const next = pickAbSeekerNextTarget(ctx, live || mob);
+          const next = pickAbSeekerNextTarget(ctx, live || mob, hpPending, estHit);
           if (next) launch(1, bounceLeft - 1, live || mob, next);
         }
       };
@@ -2664,6 +2788,8 @@ const SkillCombat = (() => {
           kickOutPx: fromMob ? 62 : 0,
           spawnFrame: fromMob ? null : (rt.skill?.fx?.effect?.[3] || null),
           spawnDelayMs: fromMob ? 0 : abSeekerCastSpawnDelay(rt.skill),
+          retarget: retargetInFlight,
+          onMiss: (mob) => abSeekerReleaseReserve(hpPending, mob, estHit),
           onHit,
           onDone,
         });
@@ -3592,6 +3718,7 @@ const SkillCombat = (() => {
     reserveChainMobs,
     releaseChainReservation,
     releaseMobFromChainReservation,
+    tryNlMarkBurstOnDeath,
   };
 })();
 

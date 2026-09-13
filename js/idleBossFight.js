@@ -2968,6 +2968,16 @@ const IdleBossFight = (() => {
   function afterExternalHits(mobs) {
     // 契約：優先 touched；空陣列仍跑轉階（讀 fight 全域）。勿無故全掃 getCombatMobs。
     const list = Array.isArray(mobs) ? mobs : (mobs ? [mobs] : []);
+    // 刻印怪死亡：立刻飛鏢（戰鬥 followup 已引爆則無印）
+    if (typeof SkillCombat !== 'undefined'
+      && typeof SkillCombat.tryNlMarkBurstOnDeath === 'function'
+      && typeof SkillMobStatus !== 'undefined') {
+      list.forEach((mob) => {
+        if (!mob || !(Number(mob.hp) <= 0)) return;
+        if (!SkillMobStatus.hasNlMark?.(mob)) return;
+        SkillCombat.tryNlMarkBurstOnDeath(combatCtx(), mob);
+      });
+    }
     if (isPinkBean()) {
       list.forEach((mob) => {
         if (!mob || !fight) return;

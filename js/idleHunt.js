@@ -1721,10 +1721,21 @@ const IdleHunt = (() => {
     if (fieldTransition?.kind === 'bossIntro' && fieldTransition.phase === 'warning') {
       return;
     }
-    // 靜默丟掉已死占槽者（獎勵應已在 applySkillMobStateSync／applyKill 發過）
-    state.queue = (state.queue || []).filter((m) => (
-      m && (Number(m.hp) > 0 || keepDamageTrialBossAlive(m))
-    ));
+    // 已死占槽：必須先 applyKill（發獎勵／副本進度），不可靜默丢掉。
+    // 非同步球（探求者等）常在 onDone 才 sync；其間 render／tick 會進 fillQueue，
+    // 若只 filter 掉會造成「畫面死很多、擊殺進度幾乎不動」。
+    const orphans = [];
+    state.queue = (state.queue || []).filter((m) => {
+      if (!m) return false;
+      if (keepDamageTrialBossAlive(m)) return true;
+      if (Number(m.hp) > 0) return true;
+      orphans.push(m);
+      return false;
+    });
+    if (orphans.length) {
+      orphans.forEach((m) => applyKill(m, { skipFillQueue: true, skipSave: true }));
+      save();
+    }
     if (state.huntMode === 'boss') {
       state.queue = state.queue.filter((mob) => mob.isBoss);
       if (!state.queue.length) {
@@ -3493,9 +3504,20 @@ const IdleHunt = (() => {
 
   function applyKill(dead, opts = {}) {
     if (!dead) return;
+    // 防止 fillQueue 補結算與 flushSkillMobStateSync／deferred 重複發獎、重複加進度
+    if (dead._huntKillSettled) return;
+    dead._huntKillSettled = true;
     if (keepDamageTrialBossAlive(dead)) {
+      dead._huntKillSettled = false;
       if (!state.queue.includes(dead)) state.queue.unshift(dead);
       return;
+    }
+    // 刻印怪死亡：立刻飛出飛鏢（DoT／非 followup 擊殺；戰鬥 followup 已引爆則無印）
+    if (typeof SkillCombat !== 'undefined'
+      && typeof SkillCombat.tryNlMarkBurstOnDeath === 'function'
+      && typeof SkillMobStatus !== 'undefined'
+      && SkillMobStatus.hasNlMark?.(dead)) {
+      SkillCombat.tryNlMarkBurstOnDeath(huntCombatCtx(), dead);
     }
     if (typeof SkillMobStatus !== 'undefined') SkillMobStatus.clearMob?.(dead);
     const idx = mobQueueIndex(dead);

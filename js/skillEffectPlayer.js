@@ -11,6 +11,37 @@ const SkillEffectPlayer = (() => {
   const fieldPtCache = new Map();
   let fieldPtCacheFrame = 0;
 
+  /** 探求者等追蹤球同時上限；超過刪最舊 */
+  const HOMING_ORB_CAP = 20;
+  /** @type {Array<{ done?: boolean, cancel: (settleHits?: boolean) => void, _culled?: boolean }>} */
+  const activeHomingOrbs = [];
+
+  function unregisterHomingOrb(kid) {
+    const i = activeHomingOrbs.indexOf(kid);
+    if (i >= 0) activeHomingOrbs.splice(i, 1);
+  }
+
+  function registerHomingOrb(kid) {
+    while (activeHomingOrbs.length >= HOMING_ORB_CAP) {
+      const oldest = activeHomingOrbs[0];
+      if (!oldest) {
+        activeHomingOrbs.shift();
+        continue;
+      }
+      if (oldest.done) {
+        unregisterHomingOrb(oldest);
+        continue;
+      }
+      oldest._culled = true;
+      try {
+        oldest.cancel(false);
+      } catch (_) {
+        unregisterHomingOrb(oldest);
+      }
+    }
+    activeHomingOrbs.push(kid);
+  }
+
   function scaleRealMs(ms) {
     if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.scaleDelayMs === 'function') {
       return IdleHunt.scaleDelayMs(ms);
@@ -1327,6 +1358,10 @@ const SkillEffectPlayer = (() => {
       spawnDelayMs = 0,
       onHit,
       onDone,
+      /** 原目標已死時改追下一隻（回傳新 mob 或 null） */
+      retarget,
+      /** 飛行結束卻無有效目標時回呼（釋放預留等） */
+      onMiss,
     } = opts;
     const list = (frames || []).filter((f) => f && f.src);
     const targets = (mobs || []).filter((m) => m && Number(m.hp) > 0);
@@ -1422,7 +1457,7 @@ const SkillEffectPlayer = (() => {
     };
 
     const launchOne = (starIndex) => {
-      const mob = targets[starIndex];
+      let mob = targets[starIndex];
       const kid = {
         stage: null,
         rafId: null,
@@ -1430,9 +1465,11 @@ const SkillEffectPlayer = (() => {
         launchTimer: null,
         done: false,
         hit: false,
+        _culled: false,
         cancel(settleHits) {
           if (kid.done) return;
           kid.done = true;
+          unregisterHomingOrb(kid);
           if (kid.holdTimer != null) {
             clearTimeout(kid.holdTimer);
             kid.holdTimer = null;
@@ -1448,12 +1485,16 @@ const SkillEffectPlayer = (() => {
           if (settleHits && !kid.hit && typeof onHit === 'function' && Number(mob?.hp) > 0) {
             kid.hit = true;
             onHit(mob, starIndex);
+          } else if (kid._culled && !kid.hit && typeof onMiss === 'function') {
+            // 超上限刪球：釋放 HP 預留，不結算傷害
+            onMiss(mob, starIndex);
           }
           kid.stage?.remove();
           kid.stage = null;
           markDone();
         },
       };
+      registerHomingOrb(kid);
 
       const start = () => {
         if (kid.done) return;
@@ -1478,18 +1519,34 @@ const SkillEffectPlayer = (() => {
         let frameIdx = 0;
         let frameAcc = 0;
         const applyFrame = () => applyCenteredFrame(img, list[frameIdx % list.length]);
+        const resolveTarget = () => {
+          if (mob && Number(mob.hp) > 0) return mob;
+          if (typeof retarget === 'function') {
+            const next = retarget(mob, starIndex);
+            if (next && Number(next.hp) > 0) {
+              mob = next;
+              return mob;
+            }
+          }
+          return null;
+        };
         const liveEnd = () => {
-          if (mob && Number(mob.hp) > 0) {
-            const mp = fieldPointFromMob(fieldEl, mob);
+          const live = resolveTarget();
+          if (live) {
+            const mp = fieldPointFromMob(fieldEl, live);
             if (mp && Number.isFinite(mp.x)) return mp;
           }
           return spawn;
         };
         const strike = () => {
           if (kid.hit || kid.done) return;
-          if (typeof onHit === 'function') {
+          const live = resolveTarget();
+          if (typeof onHit === 'function' && live) {
             kid.hit = true;
-            onHit(mob, starIndex);
+            onHit(live, starIndex);
+          } else {
+            kid.hit = true;
+            if (typeof onMiss === 'function') onMiss(mob, starIndex);
           }
           kid.cancel(false);
         };
@@ -1896,6 +1953,7 @@ const SkillEffectPlayer = (() => {
       try { p.cancel(false); } catch (_) { /* ignore */ }
     });
     projectiles.clear();
+    activeHomingOrbs.length = 0;
     stopSharedLoop();
     fieldPtCache.clear();
     scrubTransientFxDom({ includeLoop: true });
@@ -1911,6 +1969,7 @@ const SkillEffectPlayer = (() => {
       try { p.cancel(settleHits); } catch (_) { /* ignore */ }
     });
     projectiles.clear();
+    activeHomingOrbs.length = 0;
     [...instances].forEach((inst) => {
       if (inst.loop) return;
       destroy(inst);
