@@ -159,20 +159,49 @@ const UiToadsHammer = (() => {
   }
 
   function reqLevelOf(entryOrState) {
-    return Number(entryOrState?.reqLevel ?? entryOrState?.state?.reqLevel ?? 0) || 0;
+    const id = entryOrState?.itemId || entryOrState?.id || '';
+    const fromDb = id && typeof ITEM_DATABASE !== 'undefined'
+      ? ITEM_DATABASE[id]?.reqLevel
+      : null;
+    const n = Number(
+      entryOrState?.reqLevel
+      ?? entryOrState?.state?.reqLevel
+      ?? fromDb
+      ?? 0,
+    );
+    return Number.isFinite(n) ? n : 0;
   }
 
-  /** 119 級以下裝備可繼承至同部位、高 1～25 等；120 級以上需同等級以上同部位 */
+  /** 主武器（含神之子 WpSi）：同等級可互傳，不細分劍／斧／弓等 */
+  function isMainWeaponPart(item) {
+    if (!item) return false;
+    const id = item.itemId || item.id || '';
+    const db = id && typeof ITEM_DATABASE !== 'undefined' ? ITEM_DATABASE[id] : null;
+    const main = item.mainType || db?.mainType || '';
+    if (main === 'WEAPON' || (typeof EQUIP_TYPE !== 'undefined' && main === EQUIP_TYPE.WEAPON)) {
+      return true;
+    }
+    const islot = String(item.islot || db?.islot || '').toLowerCase();
+    return islot === 'wp' || islot === 'gw' || islot === 'wpsi';
+  }
+
+  function inheritPartKey(item) {
+    if (isMainWeaponPart(item)) return 'weapon';
+    return String(item?.islot || '').toLowerCase();
+  }
+
+  /** 119 級以下裝備可繼承至同部位、高 0～25 等；120 級以上需同等級以上同部位 */
   const MAX_INHERIT_LEVEL_GAP = 25;
 
   /**
    * 同部位。
+   * 主武器：一律視為同部位，同等級可互傳（不細分武器種類）。
    * 尊貴裝備：僅可與同等級尊貴裝備互傳（不可與一般裝備混傳）。
-   * 一般裝備：≤119 可傳給高 1～25 等；>119 需同等級以上。
+   * 一般裝備：≤119 可傳給同～高 25 等；>119 需同等級以上。
    */
   function canInheritTo(src, dst) {
     if (!src || !dst) return false;
-    if (String(src.islot || '') !== String(dst.islot || '')) return false;
+    if (inheritPartKey(src) !== inheritPartKey(dst)) return false;
     const srcSup = isSuperiorEquip(src);
     const dstSup = isSuperiorEquip(dst);
     if (srcSup || dstSup) {
@@ -180,6 +209,8 @@ const UiToadsHammer = (() => {
     }
     const sl = reqLevelOf(src);
     const dl = reqLevelOf(dst);
+    // 同等級：可互傳（含武器）
+    if (sl === dl) return true;
     if (sl <= 119) return dl >= sl && dl <= sl + MAX_INHERIT_LEVEL_GAP;
     return dl >= sl;
   }
@@ -295,7 +326,7 @@ const UiToadsHammer = (() => {
     });
     $('thHelp')?.addEventListener('click', () => {
       if (typeof addLog === 'function') {
-        addLog('[裝備繼承] ① 左欄選抽取裝備 → ② 右欄選繼承裝備 → ③ 確認傳授。傳授後來源裝備會消失。尊貴裝備僅可與同等級、同部位的尊貴裝備互相繼承。', 'log-info');
+        addLog('[裝備繼承] ① 左欄選抽取裝備 → ② 右欄選繼承裝備 → ③ 確認傳授。傳授後來源裝備會消失。主武器同等級可互傳；尊貴裝備僅可與同等級尊貴裝備互相繼承。', 'log-info');
       }
     });
     $('thOnlyExtractable')?.addEventListener('click', () => {
@@ -663,7 +694,7 @@ const UiToadsHammer = (() => {
     if (!src || !dst) return;
     if (!canInheritTo(src, dst)) {
       if (typeof addLog === 'function') {
-        addLog('[裝備繼承] 來源與目標不符合繼承條件（部位／等級；尊貴裝備僅限同等級互傳）。', 'log-fail');
+        addLog('[裝備繼承] 來源與目標不符合繼承條件（部位／等級；主武器同等級可互傳；尊貴裝備僅限同等級互傳）。', 'log-fail');
       }
       return;
     }

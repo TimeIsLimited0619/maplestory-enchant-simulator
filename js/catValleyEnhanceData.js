@@ -10,6 +10,7 @@ const CAT_VALLEY_ENHANCE_TYPE = {
   OFFHAND: 'offhand',
   TOTEM: 'totem',
   ARCANE: 'arcane',
+  ABYSS: 'abyss',
 };
 
 const CAT_VALLEY_ENHANCE_META = {
@@ -43,6 +44,11 @@ const CAT_VALLEY_ENHANCE_META = {
   [CAT_VALLEY_ENHANCE_TYPE.ARCANE]: {
     id: CAT_VALLEY_ENHANCE_TYPE.ARCANE,
     label: '神祕強化',
+    maxLevel: 30,
+  },
+  [CAT_VALLEY_ENHANCE_TYPE.ABYSS]: {
+    id: CAT_VALLEY_ENHANCE_TYPE.ABYSS,
+    label: '深淵強化',
     maxLevel: 30,
   },
 };
@@ -85,6 +91,11 @@ const CAT_VALLEY_COST_TABLES = {
   ],
   [CAT_VALLEY_ENHANCE_TYPE.ARCANE]: [
     { maxLevel: 30, arcanepcs: 15, arcanecoin: 15, nekopow: 15 },
+  ],
+  [CAT_VALLEY_ENHANCE_TYPE.ABYSS]: [
+    { maxLevel: 10, '04310225': 5, '04008003': 15, nekopow: 15, meowcoin: 30 },
+    { maxLevel: 20, '04310225': 10, '04008003': 30, nekopow: 30, meowcoin: 60 },
+    { maxLevel: 30, '04310225': 20, '04008003': 60, nekopow: 60, meowcoin: 120 },
   ],
   [CAT_VALLEY_ENHANCE_TYPE.TOTEM]: [
     { maxLevel: 5, taichu: 200, saint: 200, nekopow: 500 },
@@ -316,6 +327,28 @@ function isCatValleyArcaneItem(item) {
   return true;
 }
 
+/** 150 等深淵防具：帽子／上衣／褲（不含武器） */
+const CAT_VALLEY_ABYSS_ARMOR_IDS = new Set([
+  '01003797', '01003798', '01003799', '01003800', '01003801',
+  '01042254', '01042255', '01042256', '01042257', '01042258',
+  '01062165', '01062166', '01062167', '01062168', '01062169',
+]);
+const CAT_VALLEY_ABYSS_ARMOR_SLOTS = new Set(['Cp', 'Ma', 'Pn', 'MaPn']);
+
+function isCatValleyAbyssArmorItem(item) {
+  if (!item) return false;
+  const id = normalizeCatValleyItemId(item);
+  if (CAT_VALLEY_ABYSS_ARMOR_IDS.has(id)) return true;
+
+  const name = String(item.name || '');
+  if (!/深淵|法弗納|fafnir/i.test(name)) return false;
+  if ((Number(item.reqLevel) || 0) !== 150) return false;
+  if (typeof EQUIP_TYPE !== 'undefined' && item.mainType === EQUIP_TYPE.WEAPON) return false;
+  const islot = item.islot || '';
+  if (islot === 'Wp' || islot === 'Wpsi' || islot === 'Gw' || islot === 'Op') return false;
+  return CAT_VALLEY_ABYSS_ARMOR_SLOTS.has(islot);
+}
+
 function isCatValleyMitraItem(item) {
   if (!item) return false;
   if (typeof isEnergyBadgeItem === 'function' && isEnergyBadgeItem(item)) {
@@ -387,6 +420,7 @@ function getCatValleyEnhanceType(item) {
   if (isCatValleyTotemItem(item)) return CAT_VALLEY_ENHANCE_TYPE.TOTEM;
   if (isCatValleyMitraItem(item)) return CAT_VALLEY_ENHANCE_TYPE.MITRA;
   if (isCatValleyOffhandItem(item)) return CAT_VALLEY_ENHANCE_TYPE.OFFHAND;
+  if (isCatValleyAbyssArmorItem(item)) return CAT_VALLEY_ENHANCE_TYPE.ABYSS;
   if (isCatValleyArcaneItem(item)) return CAT_VALLEY_ENHANCE_TYPE.ARCANE;
 
   if (isCatValleyEternalItem(item)) {
@@ -987,6 +1021,8 @@ const CAT_VALLEY_COST_LABELS = {
   Nohimepcs: '濃姬粉塵',
   arcanepcs: '神祕粉塵',
   arcanecoin: '神秘強化幣',
+  '04008003': '深淵裝備粉塵',
+  '04310225': '深淵強化幣',
   taichu: '太初之力',
   meowcoin: '喵喵幣',
   saint: '聖者之石',
@@ -1052,6 +1088,10 @@ function computeCatValleyEnhanceChanges(item, nextLevel, meta) {
   } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.ARCANE) {
     add('scrollStat', 8, '四屬');
     add('scrollHp', 140, '最大HP');
+  } else if (meta.id === CAT_VALLEY_ENHANCE_TYPE.ABYSS) {
+    add('scrollStat', 8, '四屬');
+    add('scrollDef', 100, '防禦力');
+    add('scrollHp', 50, '最大HP');
   }
   return changes;
 }

@@ -76,6 +76,8 @@ const IDLE_ETC_DATABASE = [
   { id: '04001325', name: '心臟升級材料Lv.3', icon: 'images/ETCicon/04001325.png', desc: '心臟升級材料，可通過地下城副本獲取。' },
   { id: '04001323', name: '心臟升級材料Lv.4', icon: 'images/ETCicon/04001323.png', desc: '心臟升級材料，可通過地下城副本獲取。' },
   { id: '01102832', name: '心臟升級材料Lv.5', icon: 'images/ETCicon/01102832.png', desc: '心臟升級材料，可通過擊敗極限史烏獲取。' },
+  { id: '04008003', name: '深淵裝備粉塵', icon: 'images/ETCicon/04008003.png', desc: '深淵強化素材，可通過分解深淵裝備獲取。' },
+  { id: '04310225', name: '深淵強化幣', icon: 'images/ETCicon/04310225.png', desc: '深淵強化素材，可通過擊敗深淵四王獲取。' },
 ];
 
 const IdleEtcStore = {

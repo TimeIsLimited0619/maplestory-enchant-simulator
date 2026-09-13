@@ -18,6 +18,8 @@ const COST_TRACKER_CAT_VALLEY_MATERIALS = [
   { id: 'Nohimepcs', label: '每5濃姬粉塵', unitSize: 5 },
   { id: 'eternalpcs', label: '每10永恆粉塵', unitSize: 10 },
   { id: 'arcanepcs', label: '每5神祕粉塵', unitSize: 5 },
+  { id: '04310225', label: '深淵強化幣', unitSize: 1 },
+  { id: '04008003', label: '每5深淵粉塵', unitSize: 5 },
 ];
 
 const CostTrackerModule = {
@@ -35,6 +37,8 @@ const CostTrackerModule = {
     Nohimepcs: 0,
     eternalpcs: 0,
     arcanepcs: 0,
+    '04310225': 0,
+    '04008003': 0,
     scrollGlory: 0,
     recoveryCard: 0,
     goldenHammer: 0,
@@ -71,6 +75,8 @@ const CostTrackerModule = {
       Nohimepcs: 0,
       eternalpcs: 0,
       arcanepcs: 0,
+      '04310225': 0,
+      '04008003': 0,
       scrollGlory: 0,
       recoveryCard: 0,
       goldenHammer: 0,
