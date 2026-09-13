@@ -382,7 +382,13 @@ const DisassembleStore = {
       return false;
     }
     const name = this.equipName(itemId);
-    if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem?.slotIndex === slotIndex) {
+    // 僅當強化槽仍綁定「同一背包格實體」時才清；持有裝 slotIndex=-1 不可被誤清
+    if (typeof currentEnchantItem !== 'undefined'
+      && currentEnchantItem
+      && Number.isInteger(currentEnchantItem.slotIndex)
+      && currentEnchantItem.slotIndex === slotIndex
+      && currentEnchantItem.slotIndex >= 0
+      && resolveEquipItemId(currentEnchantItem) === resolveEquipItemId(itemId)) {
       currentEnchantItem = null;
       if (typeof updateUI === 'function') updateUI();
     }

@@ -356,6 +356,15 @@ const UiEquipModule = (() => {
     return playerLevel() >= need;
   }
 
+  function emptyEquipBagCount() {
+    if (typeof playerInventoryEquip === 'undefined' || !Array.isArray(playerInventoryEquip)) return 0;
+    let n = 0;
+    for (let i = 0; i < playerInventoryEquip.length; i++) {
+      if (!playerInventoryEquip[i]) n++;
+    }
+    return n;
+  }
+
   /**
    * 穿上：從背包取出 → 放入身體槽；原槽有裝備則放回背包
    */
@@ -420,13 +429,52 @@ const UiEquipModule = (() => {
       activeWear[onlyConflict] = null;
     }
 
+    // 預估需放回背包的件數：take 後會多 1 格，不足則先拒絕（避免 take 後回存失敗導致新件消失）
+    const willReturnPants = item.islot === 'MaPn' && !!activeWear['6'];
+    const willReturnCoatForPants = item.islot === 'Pn' && activeWear['5']
+      && getItemData(activeWear['5'].itemId)?.islot === 'MaPn';
+    const displacedPreview = activeWear[target];
+    let needReturn = 0;
+    if (willReturnPants) needReturn += 1;
+    if (willReturnCoatForPants) needReturn += 1;
+    if (displacedPreview) {
+      const alreadyCounted = (willReturnPants && String(target) === '6')
+        || (willReturnCoatForPants && String(target) === '5');
+      if (!alreadyCounted) needReturn += 1;
+    }
+    if (emptyEquipBagCount() + 1 < needReturn) {
+      if (typeof addLog === 'function') {
+        addLog('[裝備欄] 背包空間不足，無法穿上（需先騰出空位）。', 'log-fail');
+      }
+      return false;
+    }
+
     const entry = takeFromBag(bagIndex);
     if (!entry) return false;
+
+    const abortKeepEntry = () => {
+      if (putToBag(entry) >= 0) return;
+      if (!activeWear[target]) {
+        activeWear[target] = entry;
+        return;
+      }
+      for (const id of SLOT_IDS) {
+        if (activeWear[id]) continue;
+        activeWear[id] = entry;
+        if (typeof addLog === 'function') {
+          addLog(`[裝備欄] 背包已滿，【${item.name}】暫放於 ${SLOT_LABELS[id] || id}。`, 'log-fail');
+        }
+        return;
+      }
+      if (typeof addLog === 'function') {
+        addLog(`[裝備欄] 嚴重：無法安置【${item.name}】，請立即匯出存檔並回報。`, 'log-fail');
+      }
+    };
 
     // 套服清褲；穿褲時先脫套服
     if (item.islot === 'MaPn' && activeWear['6']) {
       if (!returnEntryToBagOrWarn(activeWear['6'])) {
-        putToBag(entry);
+        abortKeepEntry();
         return false;
       }
       activeWear['6'] = null;
@@ -435,7 +483,7 @@ const UiEquipModule = (() => {
       const coat = getItemData(activeWear['5'].itemId);
       if (coat?.islot === 'MaPn') {
         if (!returnEntryToBagOrWarn(activeWear['5'])) {
-          putToBag(entry);
+          abortKeepEntry();
           return false;
         }
         activeWear['5'] = null;
@@ -446,7 +494,7 @@ const UiEquipModule = (() => {
     const displaced = activeWear[target];
     if (displaced) {
       if (!returnEntryToBagOrWarn(displaced)) {
-        putToBag(entry);
+        abortKeepEntry();
         return false;
       }
       activeWear[target] = null;
@@ -567,6 +615,21 @@ const UiEquipModule = (() => {
     return true;
   }
 
+  /** 銷毀目前 preset 指定槽（避免同 ID 誤刪其他 preset） */
+  function destroyWornSlot(uiSlotId, { refreshUi = true } = {}) {
+    const id = String(uiSlotId);
+    if (!activeWear[id]) return false;
+    activeWear[id] = null;
+    if (refreshUi) refresh();
+    scheduleSave();
+    return true;
+  }
+
+  /** 外部（存檔還原等）放回背包；成功回傳 bagIndex，失敗 -1 */
+  function putEntryToBag(entry) {
+    return putToBag(entry);
+  }
+
   function isItemWorn(itemId) {
     return findItemAcrossPresets(itemId) != null;
   }
@@ -596,7 +659,12 @@ const UiEquipModule = (() => {
   function applyLayoutToPreset(presetNo, layout) {
     const map = presetWear[presetNo];
     if (!map) return false;
-    dumpWearMapToBag(map);
+    if (!dumpWearMapToBag(map)) {
+      if (typeof addLog === 'function') {
+        addLog('[裝備欄] 背包已滿，無法套用舊版穿著配置（已保留原穿著）。', 'log-fail');
+      }
+      return false;
+    }
 
     const usedBag = new Set();
     SLOT_IDS.forEach((id) => {
@@ -822,12 +890,16 @@ const UiEquipModule = (() => {
         activeWear[fromSlot] = null;
         activeWear[targetId] = entry;
 
-        if (displaced && displaced.itemId !== entry.itemId) {
+        // 同 itemId 也可能是不同強化實體，不可丟棄 displaced
+        if (displaced) {
           if (isSlotCompatible(fromSlot, getItemData(displaced.itemId))) {
             activeWear[fromSlot] = displaced;
           } else if (!returnEntryToBagOrWarn(displaced)) {
             activeWear[fromSlot] = entry;
             activeWear[targetId] = displaced;
+            if (typeof addLog === 'function') {
+              addLog('[裝備欄] 背包已滿，無法移動裝備。', 'log-fail');
+            }
             return;
           }
         }
@@ -1247,6 +1319,8 @@ const UiEquipModule = (() => {
     unequipItemId,
     unequipIncompatibleWeapons,
     destroyWornItem,
+    destroyWornSlot,
+    putEntryToBag,
     isItemWorn,
     getWornItemIds,
     forEachWornEntry,

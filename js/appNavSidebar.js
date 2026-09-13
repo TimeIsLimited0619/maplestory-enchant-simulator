@@ -25,12 +25,12 @@ const AppNavSidebar = (() => {
   const MAIN_ITEMS_AFTER_SKILL = [
     { id: 'btnViewJobChange', label: '自由轉職', icon: 'job', title: '自由轉職' },
     { id: 'btnViewSaveBackup', label: '存檔', icon: 'save', title: '存檔備份' },
+    { id: 'btnViewLog', label: 'Log', icon: 'log', title: '開關 Log' },
     { id: 'btnViewGameSettings', label: '設定', icon: 'equipcraft', title: '設定' },
   ];
 
   const SIM_ITEMS = [
     { id: 'btnViewRequest', label: '清單', icon: 'itemrequest', title: '開關物品清單' },
-    { id: 'btnViewLog', label: 'Log', icon: 'log', title: '開關 Log' },
     { id: 'btnViewCost', label: '成本', icon: 'logcostpanels', title: '開關成本統計' },
     { id: 'btnViewCombat', label: '數值', icon: 'charactercombatpanel', title: '開關戰鬥力數值' },
     { id: 'btnViewEfficiency', label: '效益', icon: 'combatefficiencypanel', title: '開關數值換算表' },

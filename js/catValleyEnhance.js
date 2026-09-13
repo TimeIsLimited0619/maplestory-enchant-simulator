@@ -446,9 +446,29 @@ const CatValleyEnhanceModule = {
     }
   },
 
+  /**
+   * 寫回進度：強化槽持有裝必須維持 slotIndex=-1，且 itemId 正規化後再存檔。
+   * （否則可能寫到空背包格／被分解依 slotIndex 誤清 currentEnchantItem）
+   */
   persistItem(item) {
-    if (typeof saveInventoryItemState === 'function' && item.slotIndex != null) {
-      saveInventoryItemState(item.slotIndex, item);
+    if (!item) return;
+    const id = (typeof resolveEquipItemId === 'function'
+      ? resolveEquipItemId(item)
+      : null) || item.itemId || item.id || null;
+    if (id) {
+      item.itemId = id;
+      item.id = id;
+    }
+
+    const isHeldEnchant = (typeof currentEnchantItem !== 'undefined' && currentEnchantItem === item)
+      || !Number.isInteger(item.slotIndex)
+      || item.slotIndex < 0;
+    if (isHeldEnchant) {
+      item.slotIndex = -1;
+    }
+
+    if (typeof saveInventoryItemState === 'function') {
+      saveInventoryItemState(isHeldEnchant ? -1 : item.slotIndex, item);
     }
     if (typeof updateStatusPanel === 'function') updateStatusPanel();
     if (typeof updateActiveModuleEquip === 'function') updateActiveModuleEquip();
@@ -604,10 +624,7 @@ const CatValleyEnhanceModule = {
       }
 
       if (progressed) {
-        if (typeof saveInventoryItemState === 'function' && current.slotIndex != null) {
-          saveInventoryItemState(current.slotIndex, current);
-        }
-        this.pinEquipTooltip();
+        this.persistItem(current);
         this.updateSubmenuState();
       }
 

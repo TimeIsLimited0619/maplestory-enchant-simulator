@@ -55,6 +55,7 @@ const SessionPersistenceModule = {
   },
 
   scheduleSave() {
+    if (this._applyingWorld) return;
     if (this.saveTimer) clearTimeout(this.saveTimer);
     this.saveTimer = setTimeout(() => {
       this.saveTimer = null;
@@ -85,10 +86,23 @@ const SessionPersistenceModule = {
 
     let equippedItem = null;
     if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
-      const itemId = this.resolveItemId(currentEnchantItem);
+      // 強化槽持有裝：強制正規化 ID／slot，避免貓谷強化後寫出空 equippedItem
+      let itemId = this.resolveItemId(currentEnchantItem);
+      if (!itemId) {
+        itemId = currentEnchantItem.itemId || currentEnchantItem.id || null;
+      }
+      if (itemId) {
+        currentEnchantItem.itemId = itemId;
+        currentEnchantItem.id = itemId;
+      }
+      if (!Number.isInteger(currentEnchantItem.slotIndex) || currentEnchantItem.slotIndex < 0) {
+        currentEnchantItem.slotIndex = -1;
+      }
       const state = this.stampState(currentEnchantItem, itemId);
       if (itemId && state) {
         equippedItem = { itemId, state };
+      } else if (typeof addLog === 'function') {
+        addLog('[存檔] 警告：強化槽裝備無法寫入存檔快照，請立即匯出並回報。', 'log-fail');
       }
     }
 
@@ -189,6 +203,8 @@ const SessionPersistenceModule = {
     try {
       // 尚未成功載入存檔時禁止寫入，避免空世界覆蓋 localStorage
       if (!this.loadedFromStorage) return;
+      // 套用世界中途禁止寫入，避免空穿著／空強化槽覆寫
+      if (this._applyingWorld) return;
       const payload = this.buildExportPayload();
       if (this.activeProfile === 'idle') {
         delete payload.costTracker;
@@ -863,27 +879,36 @@ const SessionPersistenceModule = {
   },
 
   applyWorld(session, extra) {
-    try { this.clearEquipSlotSilent(); } catch (err) {
-      console.warn('[SessionPersistence] 清強化槽失敗', err);
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+      this.saveTimer = null;
     }
+    this._applyingWorld = true;
     try {
-      if (typeof UiEquipModule !== 'undefined') UiEquipModule.clearAllPresets?.();
-    } catch (err) {
-      console.warn('[SessionPersistence] 清裝備欄失敗', err);
-    }
-    this.applySessionSnapshot(session || this.emptySessionSnapshot());
-    try {
-      this.applyExtraPayload({ ...this.emptyExtraPayload(), ...(extra || {}) });
-    } catch (err) {
-      console.warn('[SessionPersistence] 套用額外存檔失敗', err);
-    }
-    try { this.refreshWorldUi(); } catch (err) {
-      console.warn('[SessionPersistence] 重整介面失敗', err);
-    }
-    if (this.activeProfile === 'idle') {
-      try { this.grantIdleStarterIfNeeded(); } catch (err) {
-        console.warn('[SessionPersistence] 發放新手武器失敗', err);
+      try { this.clearEquipSlotSilent(); } catch (err) {
+        console.warn('[SessionPersistence] 清強化槽失敗', err);
       }
+      try {
+        if (typeof UiEquipModule !== 'undefined') UiEquipModule.clearAllPresets?.();
+      } catch (err) {
+        console.warn('[SessionPersistence] 清裝備欄失敗', err);
+      }
+      this.applySessionSnapshot(session || this.emptySessionSnapshot());
+      try {
+        this.applyExtraPayload({ ...this.emptyExtraPayload(), ...(extra || {}) });
+      } catch (err) {
+        console.warn('[SessionPersistence] 套用額外存檔失敗', err);
+      }
+      try { this.refreshWorldUi(); } catch (err) {
+        console.warn('[SessionPersistence] 重整介面失敗', err);
+      }
+      if (this.activeProfile === 'idle') {
+        try { this.grantIdleStarterIfNeeded(); } catch (err) {
+          console.warn('[SessionPersistence] 發放新手武器失敗', err);
+        }
+      }
+    } finally {
+      this._applyingWorld = false;
     }
   },
 
@@ -1590,9 +1615,50 @@ const SessionPersistenceModule = {
   restoreEquippedItem() {
     if (this._pendingEquippedItem?.itemId) {
       const held = this._pendingEquippedItem;
-      this._pendingEquippedItem = null;
+      let recovered = false;
+
       if (typeof loadEnchantItemHeld === 'function') {
-        loadEnchantItemHeld(held.itemId, held.state);
+        recovered = !!loadEnchantItemHeld(held.itemId, held.state);
+      }
+
+      if (!recovered && typeof UiEquipModule !== 'undefined'
+        && typeof UiEquipModule.putEntryToBag === 'function') {
+        if (UiEquipModule.putEntryToBag({ itemId: held.itemId, state: held.state }) >= 0) {
+          recovered = true;
+          if (typeof addLog === 'function') {
+            addLog('[存檔] 強化槽裝備無法直接還原，已放回背包。', 'log-fail');
+          }
+          if (typeof InventoryModule !== 'undefined') {
+            InventoryModule.render?.();
+            InventoryModule.updateSlotCount?.();
+          }
+        }
+      }
+
+      if (!recovered
+        && typeof mergeEnchantFromSaved === 'function'
+        && typeof ITEM_DATABASE !== 'undefined') {
+        const resolvedId = (typeof resolveEquipItemId === 'function'
+          ? resolveEquipItemId(held.itemId)
+          : held.itemId) || held.itemId;
+        const itemData = ITEM_DATABASE[resolvedId];
+        if (itemData) {
+          // 緊急：直接掛回強化槽，避免實體消失
+          currentEnchantItem = mergeEnchantFromSaved(itemData, held.state, -1);
+          if (typeof afterEnchantEquipLoaded === 'function') {
+            afterEnchantEquipLoaded(itemData, { log: false });
+          }
+          recovered = true;
+          if (typeof addLog === 'function') {
+            addLog('[存檔] 強化槽裝備以緊急方式還原。', 'log-fail');
+          }
+        }
+      }
+
+      if (recovered) {
+        this._pendingEquippedItem = null;
+      } else if (typeof addLog === 'function') {
+        addLog('[存檔] 強化槽裝備還原失敗，請立即匯出存檔並回報。', 'log-fail');
       }
       return;
     }

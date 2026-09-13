@@ -371,7 +371,9 @@ const CAT_VALLEY_TOTEM_ITEM_NAMES = new Set(['超越的圖騰']);
 
 function isCatValleyTotemItem(item) {
   if (!item) return false;
-  const id = String(item.itemId || item.id || '');
+  const id = typeof normalizeCatValleyItemId === 'function'
+    ? normalizeCatValleyItemId(item)
+    : String(item.itemId || item.id || '');
   if (CAT_VALLEY_TOTEM_ITEM_IDS.has(id)) return true;
   if (CAT_VALLEY_TOTEM_ITEM_NAMES.has(String(item.name || ''))) return true;
   return false;
@@ -603,7 +605,9 @@ const CAT_VALLEY_POTENTIAL_ITEM_NAMES = new Set(['不朽的遺產', '喵喵天�
 
 function isCatValleyPotentialItem(item) {
   if (!item) return false;
-  const id = String(item.itemId || item.id || '');
+  const id = typeof normalizeCatValleyItemId === 'function'
+    ? normalizeCatValleyItemId(item)
+    : String(item.itemId || item.id || '');
   if (CAT_VALLEY_POTENTIAL_ITEM_IDS.has(id)) return true;
   return CAT_VALLEY_POTENTIAL_ITEM_NAMES.has(String(item.name || ''));
 }

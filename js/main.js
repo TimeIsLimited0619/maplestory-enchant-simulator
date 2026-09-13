@@ -322,7 +322,23 @@ function refreshEquippedItemUI() {
 
 function saveInventoryItemState(slotIndex, state) {
   // 強化槽持有中（已移出背包）：只同步記憶體並排程存檔
-  if (!Number.isInteger(slotIndex) || slotIndex < 0) {
+  // 若誤帶正整數 slot 但該背包格已空／不是同件，視為持有裝，勿寫孤兒 state
+  let slot = slotIndex;
+  if (state && typeof currentEnchantItem !== 'undefined' && state === currentEnchantItem) {
+    const bagHasSame = Number.isInteger(slot)
+      && slot >= 0
+      && typeof playerInventoryEquip !== 'undefined'
+      && playerInventoryEquip[slot]
+      && (
+        resolveEquipItemId(playerInventoryEquip[slot]) === resolveEquipItemId(state)
+      );
+    if (!bagHasSame) {
+      slot = -1;
+      state.slotIndex = -1;
+    }
+  }
+
+  if (!Number.isInteger(slot) || slot < 0) {
     if (state && typeof syncEnchantStateFromModules === 'function') {
       syncEnchantStateFromModules(state);
     }
@@ -333,7 +349,7 @@ function saveInventoryItemState(slotIndex, state) {
   }
 
   if (!state) {
-    playerInventoryState[slotIndex] = null;
+    playerInventoryState[slot] = null;
     if (typeof SessionPersistenceModule !== 'undefined') {
       SessionPersistenceModule.scheduleSave();
     }
@@ -342,9 +358,9 @@ function saveInventoryItemState(slotIndex, state) {
   syncEnchantStateFromModules(state);
   const snapshot = stampEnchantItemId(
     cloneEnchantState(state) || {},
-    resolveEquipItemId(state) || playerInventoryEquip[slotIndex]
+    resolveEquipItemId(state) || playerInventoryEquip[slot]
   );
-  playerInventoryState[slotIndex] = snapshot;
+  playerInventoryState[slot] = snapshot;
   if (typeof SessionPersistenceModule !== 'undefined') {
     SessionPersistenceModule.scheduleSave();
   }
@@ -809,6 +825,15 @@ function presentEnchantedEquip(itemData) {
 }
 
 function afterEnchantEquipLoaded(itemData, { log = true } = {}) {
+  if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
+    const id = resolveEquipItemId(currentEnchantItem) || itemData?.itemId || itemData?.id;
+    if (id) {
+      currentEnchantItem.itemId = id;
+      currentEnchantItem.id = id;
+    }
+    // 放入強化槽後一律視為持有實體（不在背包）
+    currentEnchantItem.slotIndex = -1;
+  }
   presentEnchantedEquip(itemData);
   if (log) {
     addLog(`[系統] 已成功載入【${itemData.name}】！`, 'log-success');

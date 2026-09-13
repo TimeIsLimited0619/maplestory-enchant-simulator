@@ -672,17 +672,20 @@ const UiToadsHammer = (() => {
 
   function discardSourceEquipment(srcSlot, srcItemId) {
     if (isWearSlotKey(srcSlot)) {
+      const uiSlot = srcSlot.slice(5);
       if (typeof UiEquipModule !== 'undefined') {
-        UiEquipModule.destroyWornItem?.(srcItemId, { refreshUi: true });
+        if (typeof UiEquipModule.destroyWornSlot === 'function') {
+          UiEquipModule.destroyWornSlot(uiSlot, { refreshUi: true });
+        } else {
+          UiEquipModule.destroyWornItem?.(srcItemId, { refreshUi: true });
+        }
       }
       return;
     }
-    if (typeof UiEquipModule !== 'undefined' && UiEquipModule.isItemWorn?.(srcItemId)) {
-      UiEquipModule.unequipItemId?.(srcItemId, { refreshUi: false });
-    }
+    // 背包來源：只刪該格，勿依 itemId 卸其他 preset 的同 ID 裝備
     if (typeof InventoryModule !== 'undefined' && InventoryModule.removeEquipToCatalog) {
       InventoryModule.removeEquipToCatalog(srcSlot);
-    } else {
+    } else if (Number.isInteger(srcSlot) && srcSlot >= 0) {
       playerInventoryEquip[srcSlot] = null;
       playerInventoryState[srcSlot] = null;
     }
