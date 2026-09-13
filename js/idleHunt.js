@@ -350,6 +350,7 @@ const IdleHunt = (() => {
       && typeof IdleBossFight.afterAppliedDamage === 'function') {
       IdleBossFight.afterAppliedDamage(mob, finalDmg);
     }
+    if (mob.isBoss) syncBossTopHud();
     return finalDmg;
   }
 
@@ -402,17 +403,45 @@ const IdleHunt = (() => {
       if (stage) stage.insertAdjacentElement('afterend', layer);
       else field.appendChild(layer);
     }
+    if (!field.querySelector('.idle-hunt-mob-hud-fx')) {
+      const layer = document.createElement('div');
+      layer.className = 'idle-hunt-mob-hud-fx';
+      layer.setAttribute('aria-hidden', 'true');
+      const skillFx = field.querySelector('.idle-hunt-skill-fx');
+      const dmg = field.querySelector('.idle-hunt-damage-fx');
+      if (dmg) dmg.insertAdjacentElement('beforebegin', layer);
+      else if (skillFx) skillFx.insertAdjacentElement('afterend', layer);
+      else field.appendChild(layer);
+    }
     if (!field.querySelector('.idle-hunt-damage-fx')) {
+      const hudFx = field.querySelector('.idle-hunt-mob-hud-fx');
       const skillFx = field.querySelector('.idle-hunt-skill-fx');
       const dmgLayer = document.createElement('div');
       dmgLayer.className = 'idle-hunt-damage-fx';
       dmgLayer.setAttribute('aria-hidden', 'true');
-      if (skillFx) skillFx.insertAdjacentElement('afterend', dmgLayer);
+      if (hudFx) hudFx.insertAdjacentElement('afterend', dmgLayer);
+      else if (skillFx) skillFx.insertAdjacentElement('afterend', dmgLayer);
       else {
         const stage = field.querySelector('.idle-hunt-stage');
         if (stage) stage.insertAdjacentElement('afterend', dmgLayer);
         else field.appendChild(dmgLayer);
       }
+    }
+    if (!field.querySelector('#idleHuntBossTopHud')) {
+      field.insertAdjacentHTML('beforeend', `
+      <div class="idle-hunt-boss-top-hud" id="idleHuntBossTopHud" hidden aria-label="BOSS HP">
+        <div class="idle-hunt-boss-top-row">
+          <img id="idleHuntBossTopIcon" class="idle-hunt-boss-top-icon" alt="" draggable="false" hidden>
+          <div class="idle-boss-hp" id="idleHuntBossTopHp">
+            <div class="idle-boss-hp__fill" id="idleHuntBossTopFill"></div>
+            <span class="idle-boss-hp__pct" id="idleHuntBossTopPct">100%</span>
+            <div class="idle-boss-hp__text">
+              <span id="idleHuntBossTopName">BOSS</span>
+              <span id="idleHuntBossTopText">0 / 0</span>
+            </div>
+          </div>
+        </div>
+      </div>`);
     }
     ensureBuffBar();
     ensureCdBar();
@@ -623,6 +652,75 @@ const IdleHunt = (() => {
   function syncHuntOverlayBars() {
     syncBuffBarUi();
     syncCdBarUi();
+    syncBossTopHud();
+  }
+
+  function formatBossTopHp(hp, maxHp) {
+    const h = Math.max(0, Math.floor(Number(hp) || 0));
+    const m = Math.max(0, Math.floor(Number(maxHp) || 0));
+    return `${h.toLocaleString('zh-TW')} / ${m.toLocaleString('zh-TW')}`;
+  }
+
+  function formatBossTopHpPct(hp, maxHp) {
+    const max = Math.max(1, Number(maxHp) || 1);
+    const pct = Math.max(0, Math.min(100, ((Number(hp) || 0) / max) * 100));
+    if (pct <= 0) return '0%';
+    if (pct >= 100) return '100%';
+    return `${pct.toFixed(1)}%`;
+  }
+
+  function findActiveBossMob() {
+    const live = (state.queue || []).find((m) => m && m.isBoss && Number(m.hp) > 0);
+    if (live) return live;
+    return (state.dying || []).find((m) => m && m.isBoss) || null;
+  }
+
+  function syncBossTopHud() {
+    ensureFieldFx();
+    const field = $('idleHuntField');
+    const wrap = $('idleHuntBossTopHud');
+    if (!field || !wrap) return;
+    const boss = findActiveBossMob();
+    const show = !!boss && Number(boss.hp) > 0;
+    field.classList.toggle('has-boss-top-hp', show);
+    wrap.hidden = !show;
+    if (!show) {
+      mobHudLayer()?.querySelectorAll('.idle-mob-hud-host.is-boss-top-hp').forEach((h) => {
+        h.classList.remove('is-boss-top-hp');
+      });
+      return;
+    }
+    const hp = Math.max(0, Number(boss.hp) || 0);
+    const maxHp = Math.max(1, Number(boss.maxHp) || 1);
+    const pct = Math.max(0, Math.min(100, (hp / maxHp) * 100));
+    const fill = $('idleHuntBossTopFill');
+    const text = $('idleHuntBossTopText');
+    const pctEl = $('idleHuntBossTopPct');
+    const nameEl = $('idleHuntBossTopName');
+    const icon = $('idleHuntBossTopIcon');
+    if (fill) fill.style.width = `${pct}%`;
+    if (text) text.textContent = formatBossTopHp(hp, maxHp);
+    if (pctEl) pctEl.textContent = formatBossTopHpPct(hp, maxHp);
+    if (nameEl) nameEl.textContent = String(boss.name || 'BOSS');
+    if (icon) {
+      const url = (typeof IdleMobAnim !== 'undefined' && IdleMobAnim.previewUrl)
+        ? IdleMobAnim.previewUrl(boss.iconId)
+        : '';
+      if (url) {
+        if (icon.dataset.src !== url) {
+          icon.dataset.src = url;
+          icon.src = url;
+        }
+        icon.alt = boss.name || '';
+        icon.hidden = false;
+      } else {
+        icon.hidden = true;
+      }
+    }
+    const uid = boss.uid != null ? String(boss.uid) : '';
+    mobHudLayer()?.querySelectorAll('.idle-mob-hud-host').forEach((h) => {
+      h.classList.toggle('is-boss-top-hp', !!uid && h.getAttribute('data-uid') === uid);
+    });
   }
 
   function fadeField(opacity, ms = MAP_FADE_MS) {
@@ -1609,21 +1707,29 @@ const IdleHunt = (() => {
     el.classList.remove('is-moving');
     el.dataset.moveUntil = '0';
     el.style.transition = 'none';
-    if (!moving) return;
+    if (!moving) {
+      syncMobHudHost(el);
+      return;
+    }
     const cs = window.getComputedStyle(el);
     const left = parseFloat(cs.left);
     const top = parseFloat(cs.top);
     if (Number.isFinite(left) && Number.isFinite(top)) {
       el.style.left = `${Math.round(left)}px`;
       el.style.top = `${Math.round(top)}px`;
+      syncMobHudHost(el);
       return;
     }
     const stage = el.closest('.idle-hunt-stage');
-    if (!stage) return;
+    if (!stage) {
+      syncMobHudHost(el);
+      return;
+    }
     const sr = stage.getBoundingClientRect();
     const ar = el.getBoundingClientRect();
     el.style.left = `${Math.round(ar.left - sr.left)}px`;
     el.style.top = `${Math.round(ar.top - sr.top)}px`;
+    syncMobHudHost(el);
   }
 
   /** 固定速度走到目標格（步數 × MOVE_MS）；可錯開 delay 做隊列節奏 */
@@ -1648,6 +1754,8 @@ const IdleHunt = (() => {
       el.style.transition = `left ${ms}ms linear, top ${ms}ms linear`;
       el.style.top = `${ty}px`;
       el.style.left = `${tx}px`;
+      const host = syncMobHudHost(el);
+      if (host) host.style.transition = el.style.transition;
     };
 
     if (delayMs > 0) {
@@ -1705,6 +1813,66 @@ const IdleHunt = (() => {
     el.style.zIndex = isDying
       ? String(MOB_Z_DYING)
       : String(mobStackZ(mob, queueIndex));
+    syncMobHudHost(el);
+  }
+
+  /** 怪物血條／名稱掛在 skill-fx 上方獨立層，本體仍在特效後面 */
+  function mobHudLayer() {
+    return $('idleHuntField')?.querySelector('.idle-hunt-mob-hud-fx') || null;
+  }
+
+  function findMobHudHost(uid) {
+    const id = uid != null ? String(uid) : '';
+    if (!id) return null;
+    return mobHudLayer()?.querySelector(`.idle-mob-hud-host[data-uid="${id}"]`) || null;
+  }
+
+  function removeMobHudHost(uid) {
+    findMobHudHost(uid)?.remove();
+  }
+
+  function clearAllMobHudHosts() {
+    mobHudLayer()?.replaceChildren();
+  }
+
+  function syncMobHudHost(actorEl, hostEl) {
+    if (!actorEl?.classList?.contains('idle-actor--mob')) return null;
+    const uid = actorEl.getAttribute('data-uid');
+    if (!uid) return null;
+    ensureFieldFx();
+    let host = hostEl || findMobHudHost(uid);
+    if (!host) {
+      const layer = mobHudLayer();
+      if (!layer) return null;
+      host = document.createElement('div');
+      host.className = 'idle-mob-hud-host';
+      host.setAttribute('data-uid', uid);
+      layer.appendChild(host);
+    }
+    const hud = actorEl.querySelector('.idle-actor-hud');
+    const name = actorEl.querySelector(':scope > .idle-actor-name');
+    if (hud && hud.parentElement !== host) host.appendChild(hud);
+    if (name && name.parentElement !== host) host.appendChild(name);
+    host.style.left = actorEl.style.left || '';
+    host.style.top = actorEl.style.top || '';
+    host.style.zIndex = actorEl.style.zIndex || '';
+    host.style.transition = actorEl.style.transition || '';
+    host.classList.toggle('is-moving', actorEl.classList.contains('is-moving'));
+    host.classList.toggle('is-dying', actorEl.classList.contains('is-dying'));
+    host.classList.toggle('is-boss-scale-hud', actorEl.classList.contains('is-boss-scale-hud'));
+    host.classList.toggle('is-boss-top-hp', actorEl.classList.contains('is-boss'));
+    ['--ox', '--oy', '--boss-sprite-scale', '--boss-hud-scale', '--hud-gap'].forEach((key) => {
+      const v = actorEl.style.getPropertyValue(key);
+      if (v) host.style.setProperty(key, v);
+    });
+    return host;
+  }
+
+  function queryMobHpWrap(actorEl) {
+    if (!actorEl) return null;
+    const uid = actorEl.getAttribute('data-uid');
+    return findMobHudHost(uid)?.querySelector('.idle-actor-hp')
+      || actorEl.querySelector('.idle-actor-hp');
   }
 
   function respawnMobs() {
@@ -1713,6 +1881,7 @@ const IdleHunt = (() => {
     resetMobAtk();
     const stage = $('idleHuntField')?.querySelector('.idle-hunt-stage');
     stage?.querySelectorAll('.idle-actor--mob').forEach((el) => el.remove());
+    clearAllMobHudHosts();
     fillQueue();
     if (open) render();
   }
@@ -1845,6 +2014,7 @@ const IdleHunt = (() => {
     state.queue = [];
     const stage = $('idleHuntField')?.querySelector('.idle-hunt-stage');
     stage?.querySelectorAll('.idle-actor--mob').forEach((el) => el.remove());
+    clearAllMobHudHosts();
     fillQueue();
     save();
   }
@@ -2053,10 +2223,12 @@ const IdleHunt = (() => {
     mob.hp -= finalDmg;
     if (keepDamageTrialBossAlive(mob)) {
       flashHit(mob.uid);
+      if (mob.isBoss) syncBossTopHud();
       return;
     }
     if (mob.hp <= 0) applySkillMobStateSync([mob]);
     else flashHit(mob.uid);
+    if (mob.isBoss) syncBossTopHud();
   }
 
   function hurtPlayer(amount, opts = {}) {
@@ -2942,10 +3114,12 @@ const IdleHunt = (() => {
       el.classList.add('is-moving');
       el.dataset.moveUntil = String(Date.now() + ms);
       el.style.left = `${x}px`;
+      syncMobHudHost(el);
       return;
     }
     if (el.classList.contains('is-moving')) return;
     el.style.left = `${x}px`;
+    syncMobHudHost(el);
   }
 
   function spriteKind(el) {
@@ -3042,7 +3216,7 @@ const IdleHunt = (() => {
     stopMobMovement(el);
     if (!el.classList.contains('is-dying')) {
       el.classList.remove('is-front', 'is-wait');
-      const hpWrap = el.querySelector('.idle-actor-hp');
+      const hpWrap = queryMobHpWrap(el);
       if (hpWrap) hpWrap.hidden = true;
       const iconId = mob.iconId || el.querySelector('.idle-actor-sprite')?.dataset?.iconId;
       if (typeof IdleMobAnim !== 'undefined' && IdleMobAnim.beginActorDie) {
@@ -3124,6 +3298,7 @@ const IdleHunt = (() => {
         if (!el) return;
         el.classList.remove('is-moving');
         el.dataset.moveUntil = '0';
+        syncMobHudHost(el);
       });
     }
 
@@ -3169,9 +3344,9 @@ const IdleHunt = (() => {
         el.classList.toggle('is-boss-scale-hud', !!mob.isBoss && !!mob.bossScaleHud);
         applyMobStackZ(el, mob, i, false);
         const hpPct = Math.max(0, Math.min(100, (mob.hp / mob.maxHp) * 100));
-        const bar = el.querySelector('.idle-actor-hp span');
+        const hpWrap = queryMobHpWrap(el);
+        const bar = hpWrap?.querySelector('span');
         if (bar) bar.style.width = `${hpPct}%`;
-        const hpWrap = el.querySelector('.idle-actor-hp');
         if (hpWrap) hpWrap.hidden = false;
         const oldSlot = el.dataset.queueSlot != null ? Number(el.dataset.queueSlot) : NaN;
         const slotChanged = Number.isFinite(oldSlot) && oldSlot !== i;
@@ -3210,7 +3385,7 @@ const IdleHunt = (() => {
         el.dataset.moveUntil = '0';
         delete el.dataset.introAction;
         delete el.dataset.introLock;
-        const hpWrap = el.querySelector('.idle-actor-hp');
+        const hpWrap = queryMobHpWrap(el);
         if (hpWrap) hpWrap.hidden = true;
         el.dataset.dieDone = '0';
         const img = el.querySelector('.idle-actor-sprite:not(.idle-actor-sprite--effect)');
@@ -3225,12 +3400,22 @@ const IdleHunt = (() => {
     });
     stage.querySelectorAll('.idle-actor--mob').forEach((el) => {
       const uid = el.getAttribute('data-uid');
-      if (!live.has(String(uid))) el.remove();
+      if (!live.has(String(uid))) {
+        removeMobHudHost(uid);
+        el.remove();
+      }
+    });
+    // 清掉沒有對應 actor 的殘留 HUD
+    const hudLayer = mobHudLayer();
+    hudLayer?.querySelectorAll('.idle-mob-hud-host').forEach((host) => {
+      const uid = host.getAttribute('data-uid');
+      if (!live.has(String(uid))) host.remove();
     });
     applyFieldArt();
     $('idleHuntField')?.querySelector('#idleHuntPlayerHp')?.remove();
     syncComboOrbsUi();
     syncHuntOverlayBars();
+    syncBossTopHud();
   }
 
   function bindArtFallback(field) {
@@ -4028,6 +4213,7 @@ const IdleHunt = (() => {
     clearFieldDrops(true);
     const stage = $('idleHuntField')?.querySelector('.idle-hunt-stage');
     stage?.querySelectorAll('.idle-actor--mob').forEach((el) => el.remove());
+    clearAllMobHudHosts();
     render();
 
     try {
@@ -4994,6 +5180,7 @@ const IdleHunt = (() => {
     try { SkillCombat.reset?.({ keepBuffs: true, keepCombo: true }); } catch (_) { /* ignore */ }
     const stage = $('idleHuntField')?.querySelector('.idle-hunt-stage');
     stage?.querySelectorAll('.idle-actor--mob').forEach((el) => el.remove());
+    clearAllMobHudHosts();
     fillQueue();
     applyFieldArt();
     render();
@@ -5010,6 +5197,7 @@ const IdleHunt = (() => {
     clearFieldDrops(true);
     const stage = $('idleHuntField')?.querySelector('.idle-hunt-stage');
     stage?.querySelectorAll('.idle-actor--mob').forEach((el) => el.remove());
+    clearAllMobHudHosts();
     // 副本內死亡退出後自動復活（通關／結算離開同樣補滿）
     revivePlayer();
     fillQueue();

@@ -314,6 +314,14 @@ const IdleMobAnim = (() => {
     if (updateActor && actor) {
       actor.style.setProperty('--ox', `${ox}px`);
       actor.style.setProperty('--oy', `${oy}px`);
+      const uid = actor.getAttribute('data-uid');
+      if (uid) {
+        const host = document.querySelector(`#idleHuntField .idle-hunt-mob-hud-fx > .idle-mob-hud-host[data-uid="${uid}"]`);
+        if (host) {
+          host.style.setProperty('--ox', `${ox}px`);
+          host.style.setProperty('--oy', `${oy}px`);
+        }
+      }
     }
   }
 

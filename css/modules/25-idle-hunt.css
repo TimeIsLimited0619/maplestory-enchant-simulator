@@ -345,14 +345,79 @@
   margin: 0;
 }
 
-/* 章節 BOSS 限時（IdleUiTimer） */
-.idle-hunt-boss-timer-host {
+/* 章節／副本 BOSS：IdleZone 頂部血條（類似 BOSS 挑戰場） */
+.idle-hunt-boss-top-hud {
   position: absolute;
   top: 8px;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 100025;
+  width: min(760px, calc(100% - 24px));
+  pointer-events: none;
+}
+
+.idle-hunt-boss-top-hud[hidden] {
+  display: none !important;
+}
+
+.idle-hunt-boss-top-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.idle-hunt-boss-top-icon {
+  flex-shrink: 0;
+  width: auto;
+  height: 28px;
+  max-width: 48px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  display: block;
+}
+
+.idle-hunt-boss-top-icon[hidden] {
+  display: none !important;
+}
+
+.idle-hunt-boss-top-hud .idle-boss-hp {
+  flex: 1;
+  min-width: 0;
+}
+
+.idle-hunt-field {
+  --idle-hunt-boss-top-shift: 0px;
+}
+
+.idle-hunt-field.has-boss-top-hp {
+  --idle-hunt-boss-top-shift: 44px;
+}
+
+/* 章節 BOSS 限時（IdleUiTimer） */
+.idle-hunt-boss-timer-host {
+  position: absolute;
+  top: calc(8px + var(--idle-hunt-boss-top-shift, 0px));
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 100015;
   line-height: 0;
+  pointer-events: none;
+}
+
+/* 作用中 buff：畫面右上，由右往左排；有頂部 BOSS 血條時下移 */
+.idle-hunt-buffs {
+  position: absolute;
+  top: calc(8px + var(--idle-hunt-boss-top-shift, 0px));
+  right: 8px;
+  z-index: 100010;
+  display: flex;
+  flex-direction: row-reverse;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: 280px;
   pointer-events: none;
 }
 
@@ -398,7 +463,7 @@
   overflow: visible;
 }
 
-/* 技能特效專用層：高於 stage 內怪物堆疊 */
+/* 技能特效專用層：高於 stage 內怪物本體 */
 .idle-hunt-skill-fx {
   position: absolute;
   left: 0;
@@ -410,7 +475,37 @@
   overflow: visible;
 }
 
-/* 傷害數字專用層：高於 skill-fx */
+/* 怪物血條／名稱：高於技能特效、低於傷害數字 */
+.idle-hunt-mob-hud-fx {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 800px;
+  height: 500px;
+  z-index: 105;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.idle-mob-hud-host {
+  position: absolute;
+  width: 0;
+  height: 0;
+  min-width: 0;
+  transform: none;
+  transition: left 0.32s linear;
+  pointer-events: none;
+  --boss-sprite-scale: 1;
+  --boss-hud-scale: 1;
+  --hud-gap: 4px;
+}
+
+.idle-mob-hud-host.is-dying {
+  opacity: 0.92;
+  transition: none;
+}
+
+/* 傷害數字專用層：高於 skill-fx 與 mob-hud */
 .idle-hunt-damage-fx {
   position: absolute;
   left: 0;
@@ -431,21 +526,6 @@
 }
 
 /* 作用中 buff：畫面右上，由右往左排 */
-.idle-hunt-buffs {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 100010;
-  display: flex;
-  flex-direction: row-reverse;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 6px;
-  max-width: 280px;
-  pointer-events: none;
-}
-
 .idle-hunt-buffs[hidden] {
   display: none !important;
 }
@@ -671,7 +751,8 @@
   pointer-events: none;
 }
 
-.idle-actor .idle-actor-name {
+.idle-actor .idle-actor-name,
+.idle-mob-hud-host .idle-actor-name {
   width: max-content;
   max-width: none;
   text-align: center;
@@ -697,7 +778,8 @@
   --hud-gap: 4px;
 }
 
-.idle-actor--mob .idle-actor-hud {
+.idle-actor--mob .idle-actor-hud,
+.idle-mob-hud-host .idle-actor-hud {
   position: absolute;
   left: 0;
   top: calc(-1 * var(--boss-sprite-scale) * var(--oy, 64px) - var(--hud-gap));
@@ -711,7 +793,8 @@
 }
 
 /* 怪物名稱在腳下；血條仍在頭頂 .idle-actor-hud */
-.idle-actor--mob > .idle-actor-name {
+.idle-actor--mob > .idle-actor-name,
+.idle-mob-hud-host > .idle-actor-name {
   position: absolute;
   left: 0;
   top: var(--hud-gap, 4px);
@@ -720,8 +803,13 @@
   z-index: 4;
 }
 
-.idle-actor--mob .idle-actor-hp {
+.idle-actor--mob .idle-actor-hp,
+.idle-mob-hud-host .idle-actor-hp {
   width: 52px;
+}
+
+.idle-mob-hud-host.is-boss-top-hp .idle-actor-hp {
+  display: none !important;
 }
 
 .idle-actor-sprite-stage {
@@ -1083,12 +1171,14 @@
 }
 
 /* 只放大名稱／血條，不動定位容器 */
-.idle-actor--mob.is-boss-scale-hud .idle-actor-name {
+.idle-actor--mob.is-boss-scale-hud .idle-actor-name,
+.idle-mob-hud-host.is-boss-scale-hud .idle-actor-name {
   transform: translate(-50%, 0) scale(var(--boss-hud-scale));
   transform-origin: center top;
 }
 
-.idle-actor--mob.is-boss-scale-hud .idle-actor-hp {
+.idle-actor--mob.is-boss-scale-hud .idle-actor-hp,
+.idle-mob-hud-host.is-boss-scale-hud .idle-actor-hp {
   transform: scale(var(--boss-hud-scale));
   transform-origin: center bottom;
 }

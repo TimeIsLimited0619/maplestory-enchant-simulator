@@ -350,10 +350,10 @@
   box-sizing: border-box;
 }
 
-/* 副本限時仍疊在地圖內上方（IdleUiTimer / UI.Timer） */
+/* 副本限時仍疊在地圖內上方（IdleUiTimer / UI.Timer）；有頂部 BOSS 血條時下移 */
 .idle-dungeon-timer-host {
   position: absolute;
-  top: 8px;
+  top: calc(8px + var(--idle-hunt-boss-top-shift, 0px));
   left: 50%;
   transform: translateX(-50%);
   z-index: 100015;
