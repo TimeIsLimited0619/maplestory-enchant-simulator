@@ -80,6 +80,7 @@ const SaveBackupPanel = (() => {
         fileName: '',
         lastWriteAt: 0,
         profile: 'sim',
+        importCooldown: { remainingMs: 0, ready: true, lastAt: 0 },
       };
       return status;
     }
@@ -94,6 +95,15 @@ const SaveBackupPanel = (() => {
       : '尚未綁定本機備份檔';
     const writeLine = `上次寫入：${escapeHtml(formatTime(s.lastWriteAt))}`;
     const modeLine = `目前模式：${escapeHtml(profileLabel(s.profile))}`;
+    const cd = s.importCooldown || {};
+    const cdReady = cd.ready !== false && !(Number(cd.remainingMs) > 0);
+    const cdRemain = (!cdReady && typeof SessionPersistenceModule !== 'undefined')
+      ? SessionPersistenceModule.formatImportCooldownRemain?.(cd.remainingMs)
+      : '';
+    const cdLine = cdReady
+      ? '匯入冷卻：可匯入'
+      : `匯入冷卻：尚餘 ${escapeHtml(cdRemain || '…')}`;
+    const importDisabled = cdReady ? '' : 'disabled';
 
     let bindSection = '';
     if (s.supports) {
@@ -105,7 +115,7 @@ const SaveBackupPanel = (() => {
             <button type="button" class="save-backup-btn" data-action="bind">${s.bound ? '重新綁定' : '綁定本機備份檔'}</button>
             <button type="button" class="save-backup-btn" data-action="unbind" ${s.bound ? '' : 'disabled'}>解除綁定</button>
             <button type="button" class="save-backup-btn save-backup-btn--primary" data-action="flush" ${s.bound ? '' : 'disabled'}>立即寫入備份</button>
-            <button type="button" class="save-backup-btn" data-action="load-bound" ${s.bound ? '' : 'disabled'}>從綁定檔讀回</button>
+            <button type="button" class="save-backup-btn" data-action="load-bound" ${s.bound && cdReady ? '' : 'disabled'}>從綁定檔讀回</button>
           </div>
         </section>`;
     } else {
@@ -123,16 +133,17 @@ const SaveBackupPanel = (() => {
           <li>${modeLine}</li>
           <li>${boundLine}</li>
           <li>${writeLine}</li>
+          <li>${cdLine}</li>
         </ul>
         ${s.bound ? '' : '<p class="save-backup-warn">未綁定時，清理瀏覽器／網站資料可能遺失進度。</p>'}
       </section>
       ${bindSection}
       <section class="save-backup-section" aria-label="匯出匯入">
         <h3 class="save-backup-section-title">匯出／匯入</h3>
-        <p class="save-backup-hint">匯出為 .mss（不會被自動備份覆蓋）。不含楓幣；消耗欄僅藥水。匯入會覆蓋裝備／進度等；新檔不含的楓幣與非藥水消耗不會從檔案還原。</p>
+        <p class="save-backup-hint">匯出為 .mss（不會被自動備份覆蓋）。不含楓幣；消耗欄僅藥水。匯入會覆蓋裝備／進度等，並有 1 小時冷卻。</p>
         <div class="save-backup-actions">
           <button type="button" class="save-backup-btn save-backup-btn--primary" data-action="export">匯出存檔</button>
-          <button type="button" class="save-backup-btn" data-action="import">匯入存檔</button>
+          <button type="button" class="save-backup-btn" data-action="import" ${importDisabled}>匯入存檔</button>
         </div>
       </section>`;
   }
@@ -179,6 +190,7 @@ const SaveBackupPanel = (() => {
           addLog(ok ? '[存檔] 已立即寫入本機備份。' : '[存檔] 寫入失敗或尚未綁定。', ok ? 'log-success' : 'log-fail');
         }
       } else if (action === 'load-bound') {
+        SessionPersistenceModule.assertImportCooldownClear?.();
         const ok = await confirmImport();
         if (!ok) return;
         await SPM.loadFromBoundBackupFile();
@@ -186,6 +198,7 @@ const SaveBackupPanel = (() => {
       } else if (action === 'export') {
         SPM.exportSaveToFile();
       } else if (action === 'import') {
+        SessionPersistenceModule.assertImportCooldownClear?.();
         $('saveBackupImportFile')?.click();
         return;
       }

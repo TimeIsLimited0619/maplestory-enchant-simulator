@@ -625,7 +625,7 @@ const IDLE_DUNGEON_LIST = [
       "mobSkill3Dmg": 0,
       "mobSkill3Cd": 0,
       "bossAtk1Dmg": 400,
-      "bossAtk1Cd": 1,
+      "bossAtk1Cd": 1.5,
       "bossAtk2Dmg": 0,
       "bossAtk2Cd": 0,
       "bossAtk3Dmg": 0,

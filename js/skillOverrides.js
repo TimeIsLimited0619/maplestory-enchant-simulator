@@ -186,7 +186,7 @@ const SkillOverrides = (() => {
       desc: '結冰層數特效與對凍結敵人的爆擊／雷屬增傷。',
       common: {
         x: '3',
-        y: '3',
+        y: '2',
       },
     },
     '2200012': {
@@ -198,7 +198,7 @@ const SkillOverrides = (() => {
       desc: '強化結冰特效的爆擊傷害與雷屬最終傷害。',
       common: {
         x: '4',
-        y: '2',
+        y: '3',
       },
     },
     '2210016': {
@@ -398,7 +398,10 @@ const SkillOverrides = (() => {
         ballDelay1: '90',
         ballDelay2: '90',
         ballDelay3: '90',
+        damPlus: '8*x',
       },
+      h: '消耗MP#mpCon，消耗#bulletCount個飛鏢，以#damage%傷害攻擊4次\\n[被動效果：三飛閃傷害增加#damPlus%]',
+      desc: '連續投擲4個飛鏢。學習後永久強化三飛閃的傷害。',
     },
     // 強力投擲：WZ prop＝爆擊率 → 戰鬥／說明改 cr
     '4100001': {

@@ -134,6 +134,8 @@ const SkillModifiers = (() => {
     '23121003': ['23111003'],
     '23121011': ['23101001', '23110006'],
     '4121052': ['4120018', '4120019'],
+    // 四飛閃：被動強化三飛閃傷害（%p）
+    '4121013': ['4111010'],
   };
   /**
    * 超技名稱綁定在 carrier，但數值應加成到另一招的 damPlus
@@ -994,6 +996,16 @@ const SkillModifiers = (() => {
     return false;
   }
 
+  /** 時限 buff 剩餘毫秒（未生效／非表列堆疊 buff 回 0） */
+  function getBuffRemainMs(id, t = nowMs()) {
+    pruneBuffs(t);
+    const key = String(id || '');
+    if (!key) return 0;
+    const row = buffs.find((b) => b.id === key);
+    if (!row || !(row.expiresAt > t)) return 0;
+    return Math.max(0, row.expiresAt - t);
+  }
+
   /** 影分身：最終傷害追加段 %（WZ x，override 為 shadowPartnerR） */
   const SHADOW_PARTNER_ID = '4111002';
   function getShadowPartnerRate() {
@@ -1096,6 +1108,7 @@ const SkillModifiers = (() => {
     clearBuff,
     reset,
     hasBuff,
+    getBuffRemainMs,
     listActiveBuffs,
     modsFromStat,
     flatStatKey,

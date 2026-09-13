@@ -12,6 +12,9 @@ const MSS_BACKUP_STORE = 'handles';
 const MSS_BACKUP_META_KEY = 'mss-file-backup-meta-v1';
 const MSS_BACKUP_REMIND_KEY = 'mss-file-backup-remind-v1';
 const MSS_BACKUP_WRITE_MIN_MS = 30000;
+/** 存檔匯入冷卻（抑制 S/L）；sim／idle 分開計算 */
+const MSS_IMPORT_CD_MS = 60 * 60 * 1000;
+const MSS_IMPORT_CD_KEY = 'mss-import-cd-v1';
 /** 匯出／本機備份檔加密包裝（localStorage 仍為明文） */
 const MSS_FILE_ENC_FORMAT = 'mss-save-enc';
 const MSS_FILE_ENC_VERSION = 1;
@@ -52,6 +55,56 @@ const SessionPersistenceModule = {
 
   hasSavedSession() {
     return this.loadedFromStorage;
+  },
+
+  importCdStorageKey(profile = this.activeProfile) {
+    const suffix = profile === 'idle' ? '.idle' : '.sim';
+    return MSS_IMPORT_CD_KEY + suffix;
+  },
+
+  /** @returns {{ remainingMs: number, ready: boolean, lastAt: number }} */
+  getImportCooldown(profile = this.activeProfile) {
+    let lastAt = 0;
+    try {
+      lastAt = Math.max(0, Math.floor(Number(localStorage.getItem(this.importCdStorageKey(profile))) || 0));
+    } catch (_) {
+      lastAt = 0;
+    }
+    const elapsed = Date.now() - lastAt;
+    const remainingMs = lastAt > 0
+      ? Math.max(0, MSS_IMPORT_CD_MS - elapsed)
+      : 0;
+    return {
+      remainingMs,
+      ready: remainingMs <= 0,
+      lastAt,
+      cooldownMs: MSS_IMPORT_CD_MS,
+    };
+  },
+
+  formatImportCooldownRemain(ms) {
+    const left = Math.max(0, Math.ceil(Number(ms) || 0));
+    if (!(left > 0)) return '';
+    const totalSec = Math.ceil(left / 1000);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    if (h > 0) return `${h} 小時 ${m} 分`;
+    if (m > 0) return `${m} 分 ${s} 秒`;
+    return `${s} 秒`;
+  },
+
+  assertImportCooldownClear(profile = this.activeProfile) {
+    const info = this.getImportCooldown(profile);
+    if (info.ready) return true;
+    const remain = this.formatImportCooldownRemain(info.remainingMs);
+    throw new Error(`存檔匯入冷卻中，請再等 ${remain}`);
+  },
+
+  markImportCooldown(profile = this.activeProfile) {
+    try {
+      localStorage.setItem(this.importCdStorageKey(profile), String(Date.now()));
+    } catch (_) { /* ignore */ }
   },
 
   scheduleSave() {
@@ -418,12 +471,12 @@ const SessionPersistenceModule = {
       return payload;
     }
 
-    // 楓幣：放置持有、倉庫
+    // 楓幣：放置持有、倉庫（寫 0，讀檔時才會覆寫；勿只 delete）
     if (clone.idleHunt && typeof clone.idleHunt === 'object') {
-      delete clone.idleHunt.gold;
+      clone.idleHunt.gold = 0;
     }
     if (clone.session && typeof clone.session === 'object') {
-      delete clone.session.trunkMeso;
+      clone.session.trunkMeso = 0;
       if (Array.isArray(clone.session.inventoryConsume)) {
         clone.session.inventoryConsume = clone.session.inventoryConsume.map((entry) => (
           this.isPotionConsumeEntry(entry) ? entry : null
@@ -523,6 +576,7 @@ const SessionPersistenceModule = {
       fileName: meta.fileName || (hasHandle ? this.defaultBackupFileName(profile) : ''),
       lastWriteAt: meta.lastWriteAt || 0,
       profile: profile === 'idle' ? 'idle' : 'sim',
+      importCooldown: this.getImportCooldown(profile),
     };
   },
 
@@ -651,6 +705,7 @@ const SessionPersistenceModule = {
 
   async importSaveFromFile(file) {
     if (!file) throw new Error('未選擇檔案');
+    this.assertImportCooldownClear();
     const text = await file.text();
     const data = await this.parseSaveFileText(text);
     this.importSaveFromObject(data);
@@ -1308,10 +1363,17 @@ const SessionPersistenceModule = {
       throw new Error('無效的存檔格式');
     }
 
+    this.assertImportCooldownClear();
+
     const session = data.session;
     if (!session || session.version !== SESSION_PERSISTENCE_VERSION) {
       throw new Error('存檔版本不相容');
     }
+
+    // 讀取檔案存檔：楓幣一律清空（與匯出 strip 對齊；舊檔若仍帶 gold 也清）
+    if (!data.idleHunt || typeof data.idleHunt !== 'object') data.idleHunt = {};
+    data.idleHunt.gold = 0;
+    session.trunkMeso = 0;
 
     this.migrateStarForceRemapPayload(data);
     this._migrations = {
@@ -1325,6 +1387,22 @@ const SessionPersistenceModule = {
     } catch (_) { /* ignore */ }
     this.applySessionSnapshot(session);
     this.applyExtraPayload(data);
+
+    // 保險：apply 後再強制歸零（避免 idleHunt 缺欄時沿用記憶體舊值）
+    try {
+      if (typeof IdleHunt !== 'undefined') {
+        IdleHunt.applySavePayload?.({ gold: 0 });
+      }
+    } catch (_) { /* ignore */ }
+    try {
+      if (typeof TrunkData !== 'undefined') TrunkData.setMeso?.(0);
+    } catch (_) { /* ignore */ }
+    try {
+      if (typeof TrunkModule !== 'undefined') TrunkModule.updateMesoDisplay?.();
+    } catch (_) { /* ignore */ }
+    try {
+      if (typeof InventoryModule !== 'undefined') InventoryModule.updateMesoDisplay?.();
+    } catch (_) { /* ignore */ }
 
     if (typeof aeCloseAllAutoEnchantOverlays === 'function') {
       aeCloseAllAutoEnchantOverlays();
@@ -1350,6 +1428,7 @@ const SessionPersistenceModule = {
     }
 
     this.loadedFromStorage = true;
+    this.markImportCooldown();
     this.saveToStorage();
   },
 

@@ -226,12 +226,27 @@ const SkillCombat = (() => {
     return skill.type === 'buff' && Number(common?.timeSec) > 0;
   }
 
-  /** 無 CD buff：持續時間內視為仍生效，不重複施放 */
+  /** 無 CD buff：剩餘 ≤2 秒（含已結束）時可再補；開關技仍僅在未開啟時施放 */
+  const NO_CD_BUFF_REFRESH_REMAIN_MS = 2000;
+
   function isBuffDurationActive(skillId, t = nowMs()) {
     if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.hasBuff === 'function') {
       return !!SkillModifiers.hasBuff(skillId, t);
     }
     return false;
+  }
+
+  function shouldCastNoCdBuff(candidate, t = nowMs()) {
+    if (!candidate?.skill) return false;
+    if (typeof SkillBuffRuntime !== 'undefined'
+      && SkillBuffRuntime.isToggleBuffSkill?.(candidate.skill)) {
+      return !isBuffDurationActive(candidate.skill.id, t);
+    }
+    if (typeof SkillModifiers !== 'undefined'
+      && typeof SkillModifiers.getBuffRemainMs === 'function') {
+      return SkillModifiers.getBuffRemainMs(candidate.skill.id, t) <= NO_CD_BUFF_REFRESH_REMAIN_MS;
+    }
+    return !isBuffDurationActive(candidate.skill.id, t);
   }
 
   /**
@@ -1586,9 +1601,9 @@ const SkillCombat = (() => {
     ));
     if (cdBuff) return cdBuff;
 
-    // 2) 無 CD 的 buff／開關技（持續時間內不重複；開關技開啟後維持）
+    // 2) 無 CD 的 buff／開關技（一般 buff：剩 ≤2 秒提前補；開關技：未開啟才放）
     const noCdBuff = candidates.find((c) => (
-      c.isBuff && !c.hasCd && c.ready && !isBuffDurationActive(c.skill.id, t)
+      c.isBuff && !c.hasCd && c.ready && shouldCastNoCdBuff(c, t)
     ));
     if (noCdBuff) return noCdBuff;
 

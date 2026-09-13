@@ -806,6 +806,7 @@ const CostTrackerModule = {
           || typeof SessionPersistenceModule.importSaveFromFile !== 'function') {
           throw new Error('存檔模組未載入');
         }
+        SessionPersistenceModule.assertImportCooldownClear?.();
         await SessionPersistenceModule.importSaveFromFile(file);
         addLog('📂 已匯入存檔。', 'log-success');
         this.render();
