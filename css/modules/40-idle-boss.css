@@ -708,6 +708,137 @@
   overflow: visible;
 }
 
+/* 史烏過熱量表（common/UI）＋過熱邊框（alertFrameEffect/1366） */
+.idle-boss-suu-gauge {
+  position: absolute;
+  left: 0;
+  top: 100px;
+  width: 181px;
+  height: 241px;
+  z-index: 60;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.idle-boss-suu-gauge__bg,
+.idle-boss-suu-gauge__bg0 {
+  position: absolute;
+  left: 0;
+  top: 0;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.idle-boss-suu-gauge__bg {
+  z-index: 1;
+}
+
+.idle-boss-suu-gauge__bg0 {
+  z-index: 2;
+}
+
+.idle-boss-suu-gauge__track {
+  position: absolute;
+  width: 8px;
+  height: 102px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.idle-boss-suu-gauge__fill-wrap {
+  width: 100%;
+  height: 0%;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+.idle-boss-suu-gauge__fill {
+  display: block;
+  width: 8px;
+  height: 102px;
+  image-rendering: pixelated;
+}
+
+.idle-boss-suu-gauge__tip {
+  position: absolute;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.idle-boss-suu-gauge__label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8px;
+  text-align: center;
+  font-size: 12px;
+  color: #f5e6c8;
+  text-shadow: 0 0 2px #000, 1px 0 1px #000, -1px 0 1px #000, 0 1px 1px #000;
+  z-index: 5;
+}
+
+.idle-boss-suu-gauge.is-destruction .idle-boss-suu-gauge__label {
+  color: #ffb4a8;
+}
+
+.idle-boss-suu-gauge.is-overload .idle-boss-suu-gauge__label {
+  color: #c8d4ff;
+}
+
+.idle-boss-suu-alert {
+  position: absolute;
+  inset: 0;
+  width: 1366px;
+  height: 768px;
+  z-index: 55;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.idle-boss-suu-alert__img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1366px;
+  height: 768px;
+  object-fit: fill;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+/* 史烏 BossPattern FX：一律掛 field，用腳底／王體 field 座標 */
+.idle-boss-field > .idle-boss-suu-fx-stage,
+.idle-actor--player > .idle-boss-suu-fx-stage,
+.idle-boss-stage > .idle-boss-suu-fx-stage {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 28;
+}
+
+.idle-boss-field > .idle-boss-suu-fx-stage {
+  z-index: 48;
+}
+
+.idle-boss-stage > .idle-boss-suu-fx-stage {
+  z-index: 48;
+}
+
+.idle-boss-suu-fx-stage .idle-boss-suu-fx-sprite {
+  position: absolute;
+  left: calc(-1 * var(--ox, 0px));
+  top: calc(-1 * var(--oy, 0px));
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
 .idle-boss-bq-bomb .idle-actor-sprite {
   position: absolute;
   left: calc(-1 * var(--ox, 0px));
@@ -789,6 +920,25 @@
   transition: width 0.25s ease-out;
 }
 
+/* 史烏護盾：包覆紅血條的白色半透明層（寬＝剩餘護盾／護盾上限） */
+.idle-boss-hp__shield {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.72) 0%,
+    rgba(230, 240, 255, 0.45) 55%,
+    rgba(200, 220, 255, 0.35) 100%
+  );
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  transition: width 0.2s ease-out;
+}
+
 .idle-boss-hp__pct {
   position: absolute;
   left: 8px;
@@ -808,7 +958,7 @@
 .idle-boss-hp__text {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;

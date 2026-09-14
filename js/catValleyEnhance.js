@@ -447,8 +447,7 @@ const CatValleyEnhanceModule = {
   },
 
   /**
-   * 寫回進度：強化槽持有裝必須維持 slotIndex=-1，且 itemId 正規化後再存檔。
-   * （否則可能寫到空背包格／被分解依 slotIndex 誤清 currentEnchantItem）
+   * 寫回進度：強化焦點寫回原背包格／穿著槽（不再強制 slotIndex=-1 持有實體）。
    */
   persistItem(item) {
     if (!item) return;
@@ -460,15 +459,8 @@ const CatValleyEnhanceModule = {
       item.id = id;
     }
 
-    const isHeldEnchant = (typeof currentEnchantItem !== 'undefined' && currentEnchantItem === item)
-      || !Number.isInteger(item.slotIndex)
-      || item.slotIndex < 0;
-    if (isHeldEnchant) {
-      item.slotIndex = -1;
-    }
-
     if (typeof saveInventoryItemState === 'function') {
-      saveInventoryItemState(isHeldEnchant ? -1 : item.slotIndex, item);
+      saveInventoryItemState(item.slotIndex, item);
     }
     if (typeof updateStatusPanel === 'function') updateStatusPanel();
     if (typeof updateActiveModuleEquip === 'function') updateActiveModuleEquip();

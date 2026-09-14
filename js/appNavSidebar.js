@@ -352,6 +352,23 @@ const AppNavSidebar = (() => {
 
   buildDom();
 
+  /** 設定「自訂快捷鍵」用：各 menu 功能清單（不含重置確認鈕） */
+  function getHotkeyCatalog() {
+    return [
+      {
+        group: 'MAIN',
+        items: [
+          ...MAIN_ITEMS_BEFORE_CRAFT,
+          ...MAIN_DRAWER_ITEMS,
+          ...MAIN_ITEMS_AFTER_CRAFT,
+          ...MAIN_ITEMS_AFTER_SKILL,
+        ],
+      },
+      { group: '模擬器', items: [...SIM_ITEMS] },
+      { group: '放置', items: [...IDLE_ITEMS] },
+    ];
+  }
+
   return {
     init,
     refreshProfile,
@@ -359,6 +376,7 @@ const AppNavSidebar = (() => {
     setButtonsLocked,
     isButtonsLocked: () => buttonsLocked,
     collectPreloadUrls,
+    getHotkeyCatalog,
   };
 })();
 

@@ -362,6 +362,34 @@ const DisassembleStore = {
     return out;
   },
 
+  /**
+   * 是否曾以卷軸／白槌（黃金／白金錘）／星力／星火強化過。
+   * 供分解確認防呆使用。
+   */
+  isEquipEnhanced(state) {
+    if (!state || typeof state !== 'object') return false;
+    if ((Number(state.star) || 0) > 0) return true;
+    if ((Number(state.scrollUsed) || 0) > 0) return true;
+    if ((Number(state.scrollFailUses) || 0) > 0) return true;
+    if (Array.isArray(state.scrollSlotResults) && state.scrollSlotResults.length > 0) return true;
+    if ((Number(state.goldenHammerUsed) || 0) > 0) return true;
+    if ((Number(state.platinumHammerUsed) || 0) > 0) return true;
+    const bs = state.bonusStat;
+    if (bs && typeof bs === 'object') {
+      if ((Number(bs.level) || 0) > 0) return true;
+      if ((Number(bs.starFireLevel) || 0) > 0) return true;
+      if ((Number(bs.atkPow) || 0) > 0) return true;
+      if (Array.isArray(bs.lines) && bs.lines.some((line) => {
+        if (!line || typeof line !== 'object') return false;
+        if ((Number(line.starTier) || 0) > 0) return true;
+        if (line.statId || line.stat) return true;
+        if (Number(line.value) > 0) return true;
+        return false;
+      })) return true;
+    }
+    return false;
+  },
+
   disassembleEquip(slotIndex) {
     if (!Number.isInteger(slotIndex) || slotIndex < 0) return false;
     if (typeof playerInventoryEquip === 'undefined') return false;
@@ -382,15 +410,19 @@ const DisassembleStore = {
       return false;
     }
     const name = this.equipName(itemId);
-    // 僅當強化槽仍綁定「同一背包格實體」時才清；持有裝 slotIndex=-1 不可被誤清
+    // 強化焦點在此格：先清焦點再分解
     if (typeof currentEnchantItem !== 'undefined'
       && currentEnchantItem
       && Number.isInteger(currentEnchantItem.slotIndex)
       && currentEnchantItem.slotIndex === slotIndex
       && currentEnchantItem.slotIndex >= 0
       && resolveEquipItemId(currentEnchantItem) === resolveEquipItemId(itemId)) {
-      currentEnchantItem = null;
-      if (typeof updateUI === 'function') updateUI();
+      if (typeof unloadEquipFromSlot === 'function') unloadEquipFromSlot({ silent: true });
+    }
+    if (typeof ItemStore !== 'undefined') {
+      const bags = ItemStore.getBagSlots?.() || [];
+      const uid = bags[slotIndex];
+      if (uid) ItemStore.destroy(uid);
     }
     playerInventoryEquip[slotIndex] = null;
     if (typeof playerInventoryState !== 'undefined') playerInventoryState[slotIndex] = null;

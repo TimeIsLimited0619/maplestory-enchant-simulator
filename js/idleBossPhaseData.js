@@ -33,6 +33,8 @@ const IdleBossDiff = (() => {
         formHpMult: (row.formHpMult && typeof row.formHpMult === 'object')
           ? { ...row.formHpMult }
           : null,
+        // 史烏等：pattern／shield CD＝基準秒 × 此倍率（Hard＝1 方便之後微調）
+        patternCdMult: Number(row.patternCdMult) > 0 ? Number(row.patternCdMult) : 1,
         reqLevel: Math.max(0, Math.floor(Number(row.reqLevel) || 0)),
         timeLimitSec: Math.max(1, Math.floor(Number(row.timeLimitSec) || Number(script?.timeLimitSec) || 1800)),
         rewards: Array.isArray(row.rewards) ? row.rewards : [],
@@ -1405,6 +1407,602 @@ const IDLE_BOSS_PHASE = {
           { kind: 'etc', itemId: 'nekopow', amount: 10 },
           { kind: 'etc', itemId: 'nekopow', amount: 10 },
           { kind: 'etc', itemId: 'nekopow', amount: 10 },
+        ],
+      },
+    ],
+  },
+
+  /**
+   * 史烏 Remaster：三階分血（原地）；BossPattern 精選子集＋簡化過熱／護盾。
+   * Normal 目標血：5000億／5000億／7500億（WZ 21億 × formHpMult）。
+   * Hard／極限：formHpMult 已內建 ×20／×1000（現有 hpMult 對 formHpMult 是覆寫不是相乘）。
+   * 出傷＝深淵四王公式（PA×ratio×dmgMult）。
+   */
+  '13': {
+    name: '史烏',
+    kind: 'suu',
+    bodyForms: [
+      { statMob: '8881100', visualMob: '8881100', mapArt: '13/1' },
+      { statMob: '8881101', visualMob: '8881101', mapArt: '13/2' },
+      { statMob: '8881102', visualMob: '8881102', mapArt: '13/3' },
+    ],
+    chestMob: '8881103',
+    exitSec: 30,
+    suuKit: {
+      // P1 核心（鋸刃 pre）：地圖下方正中央；之後可微調像素
+      corePos: { x: 680, y: 625 },
+      // 過熱：被打升溫；對王累積傷害降溫
+      gauge: {
+        max: 100,
+        heatOnHit: 8,
+        // 每造成 maxHp 的 1% → 降 coolPerMaxHpPct 點
+        coolPerMaxHpPct: 2,
+        // destruction＝滿表過熱模式；結束後 overloadSec 短暫不加過熱
+        purgeSec: 18,
+        overloadSec: 5,
+        p3Start: 55,
+      },
+      shield: {
+        cdSec: 40,
+        durationSec: 20,
+        // 額外護盾池＝當階 maxHp × hpRatio（나무 0.5%）
+        hpRatio: 0.005,
+        damageReduce: 0.9,
+        // 逾時回血上限（依剩餘護盾比例縮放）
+        healRatioOnExpire: 0.04,
+      },
+      // 無施法動作：招式動畫可同時在場；開招之間全域間隔（秒）
+      patternCastGapSec: 1,
+      // 各階本體 skill：盡量播正服動畫（effect／areaWarning／hit）
+      phaseKits: {
+        '8881100': {
+          // 一階無本體 skill，只靠 pattern
+          excludeActions: ['skill1', 'skill2', 'skill3', 'skill4', 'skill5', 'skill6', 'skill7'],
+          attackHpRatio: {},
+        },
+        '8881101': {
+          excludeActions: ['skillAfter4', 'move'],
+          attackHpRatio: {
+            skill1: 1.15,
+            skill2: 1.0,
+            skill3: 1.2,
+            skill4: 1.05,
+            skill5: 1.25,
+            skill6: 1.1,
+            skill7: 1.35,
+          },
+          attackCdSec: {
+            skill1: 8,
+            skill2: 10,
+            skill3: 12,
+            skill4: 14,
+            skill5: 11,
+            skill6: 13,
+            skill7: 16,
+          },
+          heatOnHit: {
+            skill1: 6,
+            skill2: 7,
+            skill3: 8,
+            skill4: 6,
+            skill5: 9,
+            skill6: 7,
+            skill7: 10,
+          },
+        },
+        '8881102': {
+          excludeActions: ['flip', 'skillAfter7', 'move'],
+          attackHpRatio: {
+            skill1: 1.15,
+            skill2: 1.05,
+            skill3: 1.35,
+            skill4: 1.1,
+            skill5: 1.2,
+            skill6: 1.15,
+            skill7: 1.3,
+            skill8: 1.25,
+            skill9: 1.4,
+          },
+          attackCdSec: {
+            skill1: 8,
+            skill2: 10,
+            skill3: 12,
+            skill4: 11,
+            skill5: 13,
+            skill6: 12,
+            skill7: 15,
+            skill8: 14,
+            skill9: 18,
+          },
+          heatOnHit: {
+            skill1: 6,
+            skill2: 7,
+            skill3: 10,
+            skill4: 7,
+            skill5: 8,
+            skill6: 8,
+            skill7: 9,
+            skill8: 9,
+            skill9: 11,
+          },
+        },
+      },
+      // pattern：深淵公式；節奏／分層依 나무위키＋正服（scripts/_suu-pattern-fx-notes.mjs）
+      // CD：下列 cdSec／cdSecByPhase＝Hard 基準秒；實際＝基準 × difficulty.patternCdMult
+      // 略：Teleport／真移動／破平台本體／mobHit 降溫；1000/005 包內無；1002/000·001·003 空殼
+      patterns: [
+        // —— 共通：소형 기계팔 —— pre/pre2 瞄準；end 隨機角插下；special當hit
+        // Extreme：소형10 → 大臂（ball2頭＋ball3×N身體＋ball）→ 소형2
+        {
+          id: 'arm',
+          phases: [1, 2, 3],
+          cdSec: 25,
+          cdSecByPhase: { 1: 25, 2: 32, 3: 22 },
+          attackHpRatio: 0.45,
+          heatOnHit: 4,
+          castMode: 'armSlam',
+          aimMs: 540,
+          hitCount: 6,
+          hitGapMs: 800,
+          hitGapMsByPhase: { 3: 600 },
+          armMaxTiltRad: 0.7,
+          largeArmExtreme: true,
+          largeArmAfterSmall: 10,
+          largeArmThenSmall: 2,
+          largeAimMs: 1140,
+          largeAttackHpRatio: 0.8,
+          largeHeatOnHit: 12,
+          hitCountExtreme: 13,
+          // largeArmBodyCount 省略＝依場高自動堆 ball3
+          assetKeyByPhase: { 1: '1001/001', 2: '1003/001', 3: '1005/002' },
+        },
+        // —— 共通：추적 레이저 —— 追蹤→鎖定 1s→開火；左上／右上（P3＋正上）
+        {
+          id: 'laser',
+          phases: [1, 2, 3],
+          cdSec: 12,
+          cdSecByPhase: { 1: 12, 2: 12, 3: 10 },
+          attackHpRatio: 1.1,
+          heatOnHit: 10,
+          castMode: 'trackingLaser',
+          lockMs: 1000,
+          trackMsByPhase: { 1: 1000, 2: 1000, 3: 1420 },
+          beamCountByPhase: { 1: 2, 2: 2, 3: 3 },
+          assetKeyByPhase: { 1: '1001/000', 2: '1003/000', 3: '1005/000' },
+        },
+        // —— 一階：칼날 톱니 —— pre 核心 → 1.32s 後左右錯開升起；升起後再出傷
+        {
+          id: 'saw',
+          phases: [1],
+          cdSec: 10,
+          attackHpRatio: 0.7,
+          heatOnHit: 5,
+          castMode: 'sawRise',
+          warningMs: 1320,
+          riseMs: 480,
+          // 左右多顆僅視覺；傷害只算玩家身上那顆
+          visualCount: 5,
+          spreadPx: 250,
+          assetKey: '1000/000',
+        },
+        {
+          id: 'sawAlt',
+          phases: [1],
+          cdSec: 10,
+          attackHpRatio: 0.7,
+          heatOnHit: 5,
+          castMode: 'sawRise',
+          warningMs: 1320,
+          riseMs: 480,
+          visualCount: 5,
+          spreadPx: 160,
+          assetKey: '1000/001',
+        },
+        {
+          id: 'sawSide',
+          phases: [1],
+          cdSec: 10,
+          attackHpRatio: 0.85,
+          heatOnHit: 6,
+          castMode: 'sawRise',
+          warningMs: 1320,
+          riseMs: 360,
+          visualCount: 5,
+          spreadPx: 140,
+          assetKey: '1000/002',
+        },
+        // —— 一階：에너지 압축 —— pre 在王；釋放 effect 在王周圍；hit 在玩家
+        {
+          id: 'energyCompress',
+          phases: [1],
+          cdSec: 25,
+          attackHpRatio: 1.4,
+          heatOnHit: 9,
+          warningMs: 1380,
+          assetKey: '1000/003',
+          fxWarnLayers: [{ action: 'pre', anchor: 'boss' }],
+          fxHitLayers: [
+            { action: 'effect', anchor: 'boss' },
+            { action: 'hit', anchor: 'feet' },
+          ],
+        },
+        {
+          id: 'energyCompressDown',
+          phases: [1],
+          cdSec: 25,
+          attackHpRatio: 1.4,
+          heatOnHit: 9,
+          warningMs: 1380,
+          assetKey: '1000/004',
+          fxWarnLayers: [{ action: 'pre', anchor: 'boss' }],
+          fxHitLayers: [
+            { action: 'effect', anchor: 'boss' },
+            { action: 'hit', anchor: 'feet' },
+          ],
+        },
+        // —— 一階：자폭 지뢰 —— 中樞 effect → 腳邊地雷（同 effect）
+        {
+          id: 'mine',
+          phases: [1],
+          cdSec: 12,
+          attackHpRatio: 1.0,
+          heatOnHit: 6,
+          warningMs: 1500,
+          assetKey: '1000/007',
+          fxWarnLayers: [{ action: 'effect', anchor: 'boss' }],
+          fxHitLayers: [{ action: 'effect', anchor: 'feet' }],
+        },
+        // —— 一階：폭발물 낙하 —— regen空中→stand落下→pre(repeatIdx6)→end
+        {
+          id: 'scrap',
+          phases: [1],
+          cdSec: 30,
+          attackHpRatio: 1.6,
+          heatOnHit: 8,
+          castMode: 'dropExplode',
+          fuseMs: 3000,
+          fallMs: 420,
+          fallAirPx: 280,
+          preRepeatIdx: 6,
+          // 左右多顆僅視覺；傷害只算玩家身上那顆
+          visualCount: 5,
+          spreadPx: 350,
+          assetKey: '1007/000',
+        },
+        // —— 一階：전류 방출 —— 寬幅預警 1.74s → 單發放電
+        {
+          id: 'floorCurrent',
+          phases: [1],
+          cdSec: 45,
+          attackHpRatio: 2.2,
+          heatOnHit: 12,
+          castMode: 'floorCurrent',
+          warningMs: 1740,
+          // WZ pre 無 repeatIdx；自設從 0 循環避免凍幀
+          preRepeatIdx: 0,
+          // special3 橫向鋪地板（不用 special／2 避免重疊）
+          specialStepPx: 150,
+          specialActions: ['special3'],
+          assetKey: '1007/001',
+        },
+        // —— 二階：위치 제어 프로토콜 —— 王周圍圓波 → 3s 後玩家頭上黑洞二段
+        {
+          id: 'positionCtrl',
+          phases: [2],
+          cdSec: 12,
+          attackHpRatio: 0.55,
+          heatOnHit: 5,
+          warningMs: 1140,
+          hit2Ms: 3000,
+          hit2Ratio: 1.2,
+          assetKey: '1002/002',
+          fxWarnLayers: [
+            { action: 'special', anchor: 'boss' },
+            { action: 'loop', anchor: 'boss' },
+          ],
+          fxHitLayers: [
+            { action: 'hit', anchor: 'boss' },
+            { action: 'end', anchor: 'boss' },
+          ],
+          fxHit2Layers: [
+            { action: 'special2', anchor: 'feet' },
+            { action: 'loop2', anchor: 'feet' },
+            { action: 'end2', anchor: 'feet' },
+            { action: 'hit', anchor: 'feet' },
+          ],
+        },
+        // —— 二階：부품 추락 —— 無 hit 層；end／end2 為落下
+        {
+          id: 'debris',
+          phases: [2],
+          cdSec: 14,
+          attackHpRatio: 1.0,
+          heatOnHit: 7,
+          warningMs: 720,
+          hitCount: 3,
+          hitGapMs: 1260,
+          assetKey: '1002/004',
+          fxWarnLayers: [
+            { action: 'regen', anchor: 'map' },
+            { action: 'loop', anchor: 'map' },
+          ],
+          fxHitLayers: [
+            { action: 'end', anchor: 'map' },
+            { action: 'end2', anchor: 'map' },
+          ],
+        },
+        // —— 二階：포격 프로토콜 —— 頭頂球機；regen/stand 在王，彈往玩家
+        {
+          id: 'bombard',
+          phases: [2],
+          cdSec: 40,
+          attackHpRatio: 1.1,
+          heatOnHit: 6,
+          warningMs: 800,
+          hitCount: 5,
+          hitGapMs: 2000,
+          assetKey: '1002/005',
+          fxWarnLayers: [
+            { action: 'regen', anchor: 'boss' },
+            { action: 'stand', anchor: 'boss' },
+          ],
+          fxHitLayers: [
+            { action: 'ball', anchor: 'feet' },
+            { action: 'attack', anchor: 'feet' },
+            { action: 'hit', anchor: 'feet' },
+          ],
+        },
+        // —— 二階：슬로우 방벽 → 爆炸
+        {
+          id: 'slowWall',
+          phases: [2],
+          cdSec: 20,
+          attackHpRatio: 1.15,
+          heatOnHit: 7,
+          warningMs: 2800,
+          assetKey: '1002/006',
+          fxWarnLayers: [
+            { action: 'warning', anchor: 'map' },
+            { action: 'loop', anchor: 'map' },
+          ],
+          fxHitLayers: [
+            { action: 'end', anchor: 'map' },
+            { action: 'hit', anchor: 'feet' },
+          ],
+        },
+        // —— 三階：유도탄 —— 資產層較短的 1005/001（1005/002 已給機械臂）
+        {
+          id: 'rocket',
+          phases: [3],
+          cdSec: 5,
+          attackHpRatio: 0.7,
+          heatOnHit: 4,
+          warningMs: 480,
+          hitCount: 3,
+          hitGapMs: 420,
+          assetKey: '1005/001',
+          fxWarnLayers: [{ action: 'pre', anchor: 'feet' }],
+          fxHitLayers: [
+            { action: 'ball', anchor: 'feet' },
+            { action: 'end', anchor: 'feet' },
+            { action: 'hit', anchor: 'feet' },
+          ],
+        },
+        // —— 三階：제압용 벙커 —— effect 只播一次（長動畫）；兩段 hit 隔 0.99s
+        {
+          id: 'bunker',
+          phases: [3],
+          cdSec: 20,
+          attackHpRatio: 1.3,
+          heatOnHit: 9,
+          warningMs: 1260,
+          hitCount: 2,
+          hitGapMs: 990,
+          assetKey: '1004/002',
+          fxWarnLayers: [{ action: 'effect', anchor: 'boss' }],
+          fxHitLayers: [{ action: 'hit', anchor: 'feet' }],
+        },
+        // —— 三階：전 방향 중력구속 → 어둠의 기운
+        {
+          id: 'gravityBind',
+          phases: [3],
+          cdSec: 40,
+          attackHpRatio: 1.0,
+          heatOnHit: 8,
+          warningMs: 1320,
+          hit2Ms: 1800,
+          hit2Ratio: 2.0,
+          assetKey: '1004/003',
+          fxWarnLayers: [
+            { action: 'pre', anchor: 'boss' },
+            { action: 'regen', anchor: 'boss' },
+            { action: 'loop', anchor: 'boss' },
+          ],
+          fxHitLayers: [
+            { action: 'hit', anchor: 'feet' },
+            { action: 'end', anchor: 'boss' },
+          ],
+          fxHit2Layers: [
+            { action: 'end', anchor: 'boss' },
+            { action: 'hit', anchor: 'feet' },
+          ],
+        },
+        // —— 三階：발판 파괴簡化＝鎖點飛彈
+        {
+          id: 'platformShot',
+          phases: [3],
+          cdSec: 45,
+          attackHpRatio: 1.15,
+          heatOnHit: 7,
+          warningMs: 1000,
+          hitCount: 3,
+          hitGapMs: 450,
+          assetKey: '1004/005',
+          fxWarnLayers: [
+            { action: 'lockOn', anchor: 'feet' },
+            { action: 'special', anchor: 'feet' },
+          ],
+          fxHitLayers: [
+            { action: 'ball', anchor: 'feet' },
+            { action: 'destroyed', anchor: 'feet' },
+            { action: 'hit', anchor: 'feet' },
+          ],
+        },
+        // —— 三階：함포 —— 召喚／廣預警後下砸
+        {
+          id: 'cannons',
+          phases: [3],
+          cdSec: 60,
+          attackHpRatio: 1.4,
+          heatOnHit: 8,
+          warningMs: 1800,
+          hitCount: 3,
+          hitGapMs: 900,
+          assetKey: '1004/008',
+          fxWarnLayers: [
+            { action: 'summon', anchor: 'map' },
+            { action: 'summonSpecial', anchor: 'mapCenter' },
+            { action: 'areaWarning', anchor: 'feet' },
+            { action: 'stand', anchor: 'map' },
+          ],
+          fxHitLayers: [
+            { action: 'attack', anchor: 'map' },
+            { action: 'ball', anchor: 'feet' },
+            { action: 'hit', anchor: 'feet' },
+          ],
+        },
+        // —— 三階：무차별 폭격 —— 1.5s 預警、約 4.5s 間隔×3
+        {
+          id: 'mapBarrage',
+          phases: [3],
+          cdSec: 60,
+          attackHpRatio: 1.25,
+          heatOnHit: 8,
+          warningMs: 1500,
+          hitCount: 3,
+          hitGapMs: 4500,
+          assetKey: '1004/009',
+          fxWarnLayers: [
+            { action: 'pre', anchor: 'map' },
+            { action: 'effect', anchor: 'map' },
+          ],
+          fxHitLayers: [
+            { action: 'effect', anchor: 'map' },
+            { action: 'hit', anchor: 'feet' },
+          ],
+        },
+        // —— destruction：상단 포격 —— 每次重新鎖點
+        {
+          id: 'downLaser',
+          phases: [2, 3],
+          cdSec: 12,
+          cdSecByPhase: { 2: 12, 3: 20 },
+          attackHpRatio: 2.0,
+          heatOnHit: 12,
+          castMode: 'pinpointVolley',
+          requiresPurge: true,
+          warningMs: 1000,
+          hitCountByPhase: { 2: 3, 3: 4 },
+          hitGapMs: 1700,
+          assetKeyByPhase: { 2: '1008/003', 3: '1009/003' },
+        },
+        // —— destruction：전기장 드론 —— 0追蹤／1電場／hit tick
+        {
+          id: 'drone',
+          phases: [1, 2, 3],
+          cdSec: 25,
+          cdSecByPhase: { 1: 25, 2: 35, 3: 30 },
+          attackHpRatio: 0.55,
+          heatOnHit: 4,
+          castMode: 'fieldDrone',
+          requiresPurge: true,
+          chaseMs: 3000,
+          fieldMs: 3500,
+          hitGapMs: 360,
+          assetKeyByPhase: { 1: '1006/002', 2: '1008/002', 3: '1009/002' },
+        },
+        // —— destruction：가로 포격 —— 僅 P2／P3；0發射器／1光波
+        {
+          id: 'purgeRoutine',
+          phases: [2, 3],
+          cdSec: 24,
+          attackHpRatio: 2.4,
+          heatOnHit: 16,
+          castMode: 'horizontalBarrage',
+          requiresPurge: true,
+          warningMs: 1500,
+          fireMs: 3000,
+          tickMs: 500,
+          gunAttackRepeatIdx: 13,
+          waveSpecialRepeatIdx: 4,
+          assetKeyByPhase: { 2: '1008/000', 3: '1009/000' },
+        },
+      ],
+    },
+    difficulties: [
+      {
+        id: 'normal',
+        hpMult: 1,
+        formHpMult: {
+          '8881100': 240,
+          '8881101': 238.095238,
+          '8881102': 357.142857,
+        },
+        dmgMult: 8,
+        // 相對 Hard：CD 稍長（全模式再 ×0.75）
+        patternCdMult: 0.8625,
+        reqLevel: 190,
+        timeLimitSec: 1800,
+        rewards: [
+          { kind: 'etc', itemId: 'meowcoin', amount: 5 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 5 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 5 },
+          { kind: 'etc', itemId: 'nekopow', amount: 5 },
+          { kind: 'etc', itemId: 'nekopow', amount: 5 },
+          { kind: 'etc', itemId: 'nekopow', amount: 5 },
+        ],
+      },
+      {
+        id: 'hard',
+        hpMult: 1,
+        formHpMult: {
+          '8881100': 4761.90476,
+          '8881101': 4761.90476,
+          '8881102': 7142.85714,
+        },
+        dmgMult: 16,
+        patternCdMult: 0.75,
+        reqLevel: 210,
+        timeLimitSec: 1800,
+        rewards: [
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+          { kind: 'etc', itemId: 'nekopow', amount: 10 },
+        ],
+      },
+      {
+        id: 'extreme',
+        hpMult: 1,
+        formHpMult: {
+          '8881100': 238095.238,
+          '8881101': 238095.238,
+          '8881102': 357142.857,
+        },
+        dmgMult: 40,
+        // 相對 Hard：CD 稍短（全模式再 ×0.75）
+        patternCdMult: 0.6,
+        reqLevel: 250,
+        timeLimitSec: 1800,
+        rewards: [
+          { kind: 'etc', itemId: 'meowcoin', amount: 20 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 20 },
+          { kind: 'etc', itemId: 'meowcoin', amount: 20 },
+          { kind: 'etc', itemId: 'nekopow', amount: 20 },
+          { kind: 'etc', itemId: 'nekopow', amount: 20 },
+          { kind: 'etc', itemId: 'nekopow', amount: 20 },
         ],
       },
     ],

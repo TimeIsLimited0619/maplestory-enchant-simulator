@@ -110,7 +110,7 @@ const SaveBackupPanel = (() => {
       bindSection = `
         <section class="save-backup-section" aria-label="本機自動備份">
           <h3 class="save-backup-section-title">本機自動備份</h3>
-          <p class="save-backup-hint">綁定後會定期覆寫備份（.mss）。檔案不含楓幣；消耗欄只保留藥水（方塊／卷軸等不進檔）。清瀏覽器後可用此檔還原。</p>
+          <p class="save-backup-hint">綁定後會定期覆寫完整備份（.mss，含楓幣與消耗欄）。清瀏覽器後可用此檔還原。匯入／讀回有 1 小時冷卻。</p>
           <div class="save-backup-actions">
             <button type="button" class="save-backup-btn" data-action="bind">${s.bound ? '重新綁定' : '綁定本機備份檔'}</button>
             <button type="button" class="save-backup-btn" data-action="unbind" ${s.bound ? '' : 'disabled'}>解除綁定</button>
@@ -140,7 +140,7 @@ const SaveBackupPanel = (() => {
       ${bindSection}
       <section class="save-backup-section" aria-label="匯出匯入">
         <h3 class="save-backup-section-title">匯出／匯入</h3>
-        <p class="save-backup-hint">匯出為 .mss（不會被自動備份覆蓋）。不含楓幣；消耗欄僅藥水。匯入會覆蓋裝備／進度等，並有 1 小時冷卻。</p>
+        <p class="save-backup-hint">匯出為完整 .mss（不會被自動備份覆蓋）。匯入會覆蓋目前進度，並有 1 小時冷卻以抑制 S/L。</p>
         <div class="save-backup-actions">
           <button type="button" class="save-backup-btn save-backup-btn--primary" data-action="export">匯出存檔</button>
           <button type="button" class="save-backup-btn" data-action="import" ${importDisabled}>匯入存檔</button>
@@ -163,7 +163,7 @@ const SaveBackupPanel = (() => {
       : ({ message }) => Promise.resolve(window.confirm(message));
     return confirmFn({
       title: '匯入存檔',
-      message: '匯入存檔會覆蓋目前的背包、強化進度與成本統計，以及清除消耗欄藥水以外的所有道具，確定要繼續嗎？',
+      message: '匯入存檔會覆蓋目前的背包、強化進度、楓幣、消耗欄與成本統計，確定要繼續嗎？',
       confirmText: '確定匯入',
       cancelText: '取消',
     });

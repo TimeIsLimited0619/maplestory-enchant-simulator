@@ -12,6 +12,7 @@
  * - 比艾樂（kind: 'pierre'）：8900000 打到 50% → 分裂 8900001＋8900002 共血；0002 move 貼近接觸傷
  * - 班班（kind: 'banban'）：skill1 召喚香蕉 → skillAfter1 窗；擊殺→弱化／逾時→強化
  * - 貝倫（kind: 'vellum'）：本體＋尾巴共血；尾巴週期竄出攻擊
+ * - 史烏（kind: 'suu'）：三階分血原地；簡化過熱／護盾＋BossPattern 子集
  * 由 IdleBoss 呼叫；UI／紙娃娃仍在 IdleBoss。
  */
 const IdleBossFight = (() => {
@@ -85,6 +86,11 @@ const IdleBossFight = (() => {
     return !!(script && script.kind === 'vellum' && script.bodyStatMob);
   }
 
+  function isSuuScript(script) {
+    return !!(script && script.kind === 'suu'
+      && Array.isArray(script.bodyForms) && script.bodyForms.length);
+  }
+
   function isZakum(f = fight) {
     return !!(f && (f.kind === 'zakum' || isZakumScript(f.script)));
   }
@@ -125,13 +131,17 @@ const IdleBossFight = (() => {
     return !!(f && (f.kind === 'vellum' || isVellumScript(f.script)));
   }
 
+  function isSuu(f = fight) {
+    return !!(f && (f.kind === 'suu' || isSuuScript(f.script)));
+  }
+
   function cygnusSleeping(f = fight) {
     return isCygnus(f) && !!f?.cygnusSleep;
   }
 
   /** 單本體（無手臂／多部位） */
   function isBodyOnly(f = fight) {
-    return isPapulatus(f) || isSimple(f) || isBloodyQueen(f);
+    return isPapulatus(f) || isSimple(f) || isBloodyQueen(f) || isSuu(f);
   }
 
   /** 炎魔／龍王／粉豆雕像：以 arms[] 當前可打部位列表 */
@@ -395,6 +405,7 @@ const IdleBossFight = (() => {
     if (isPierreScript(script)) return createPierreFight(listId, script);
     if (isBanbanScript(script)) return createBanbanFight(listId, script);
     if (isVellumScript(script)) return createVellumFight(listId, script);
+    if (isSuuScript(script)) return createSuuFight(listId, script);
     if (isBloodyQueenScript(script)) return createBloodyQueenFight(listId, script);
     if (isPapulatusScript(script)) return createPapulatusFight(listId, script);
     if (isSimpleScript(script)) return createSimpleFight(listId, script);
@@ -810,6 +821,58 @@ const IdleBossFight = (() => {
       chest: null,
       mode: 'fight',
       rewardsGranted: false,
+    };
+  }
+
+  function createSuuFight(listId, script) {
+    const forms = Array.isArray(script.bodyForms) ? script.bodyForms : [];
+    const form0 = forms[0] || { statMob: '8881100', visualMob: '8881100' };
+    const bodyMax = maxHpOfBodyForm(listId, form0);
+    const kit = script.suuKit || {};
+    const gaugeMax = Math.max(1, Number(kit.gauge?.max) || 100);
+    return {
+      listId: String(listId),
+      kind: 'suu',
+      script,
+      phase: 1,
+      bodyFormIndex: 0,
+      bodyZ: Number.isFinite(Number(script.bodyZ)) ? Number(script.bodyZ) : 20,
+      body: {
+        key: 'body',
+        uid: 'body',
+        isBoss: true,
+        visualId: pad(form0.visualMob || form0.statMob),
+        hp: bodyMax,
+        maxHp: bodyMax,
+        targetable: true,
+        invincible: false,
+        dead: false,
+      },
+      handL: null,
+      handR: null,
+      arms: [],
+      chest: null,
+      mode: 'fight',
+      rewardsGranted: false,
+      suuGauge: 0,
+      suuGaugeMax: gaugeMax,
+      suuPurgeUntil: 0,
+      suuPurgeDurationMs: 0,
+      suuOverloadUntil: 0,
+      suuShieldUntil: 0,
+      suuNextShieldAt: 0,
+      suuShieldActive: false,
+      suuShieldHp: 0,
+      suuShieldMax: 0,
+      suuPatternAcc: Object.create(null),
+      suuPatternBusyUntil: 0,
+      suuNextPatternAt: 0,
+      suuDamageTowardCool: 0,
+      suuAlertFrame: 0,
+      suuAlertAcc: 0,
+      suuUiBgFrame: 0,
+      suuUiBg0Frame: 0,
+      suuUiAnimAcc: 0,
     };
   }
 
@@ -1523,7 +1586,7 @@ const IdleBossFight = (() => {
       return null;
     }
 
-    if (isSimple() || isBloodyQueen()) {
+    if (isSimple() || isBloodyQueen() || isSuu()) {
       if (fight.body.hp > 0 && !fight.body.invincible && fight.body.targetable) {
         return { kind: 'body', unit: fight.body };
       }
@@ -2376,6 +2439,17 @@ const IdleBossFight = (() => {
     if (isVellum()) {
       retractVellumTail({ force: true });
     }
+    if (isSuu()) {
+      clearSuuPatternsRuntime();
+      fight.suuShieldActive = false;
+      fight.suuShieldUntil = 0;
+      fight.suuShieldHp = 0;
+      fight.suuShieldMax = 0;
+      fight.suuPurgeUntil = 0;
+      fight.suuPurgeDurationMs = 0;
+      fight.suuOverloadUntil = 0;
+      clearSuuGaugeHud();
+    }
     if (!fight || fight.mode !== 'fight') return;
     busy = true;
     stopSustainCombat();
@@ -2609,7 +2683,7 @@ const IdleBossFight = (() => {
       return 0;
     }
 
-    if (isPapulatus() || isSimple() || isBloodyQueen()) {
+    if (isPapulatus() || isSimple() || isBloodyQueen() || isSuu()) {
       if (kind === 'body') return hp;
       return 0;
     }
@@ -2689,7 +2763,7 @@ const IdleBossFight = (() => {
     return hp;
   }
 
-  function capIncomingDamage(mob, dmg) {
+  function capIncomingDamage(mob, dmg, opts = {}) {
     let raw = Math.max(0, Math.floor(Number(dmg) || 0));
     if (isBanban() && fight?.banbanPhase === 'weaken') {
       const kind = mob?.uid || mob?.key;
@@ -2698,6 +2772,10 @@ const IdleBossFight = (() => {
         raw = Math.floor(raw * mult);
       }
     }
+    if (isSuu()) {
+      const kind = mob?.uid || mob?.key;
+      if (kind === 'body') raw = applySuuShieldIncoming(raw, opts);
+    }
     if (!mob) return raw;
     return Math.min(raw, maxDamageAllowed(mob));
   }
@@ -2705,7 +2783,17 @@ const IdleBossFight = (() => {
   /** 實際扣血後：粉豆殼鏡像／雕像保底（勿掛在 showMobDamage） */
   function afterAppliedDamage(mob, appliedDmg) {
     const dmg = Math.max(0, Math.floor(Number(appliedDmg) || 0));
-    if (!mob || !(dmg > 0) || !fight) return;
+    if (!mob || !fight) return;
+    if (isSuu()) {
+      const kind = mob.uid || mob.key;
+      if (kind === 'body') {
+        if (dmg > 0) coolSuuGaugeByDamage(dmg);
+        // 護盾可能吃掉傷害（dmg=0），仍刷新白條
+        syncHud();
+      }
+      return;
+    }
+    if (!(dmg > 0)) return;
     if (!isPinkBean() || pinkBeanInBodyPhase() || !fight.shell) return;
     const kind = mob.uid || mob.key;
     if (!findArm(kind)) return;
@@ -2736,10 +2824,12 @@ const IdleBossFight = (() => {
     if (typeof IdleHunt !== 'undefined' && IdleHunt.resolveMobHitDamage) {
       dmg = IdleHunt.resolveMobHitDamage(target.unit, dmg);
     } else {
-      dmg = capIncomingDamage(target.unit, dmg);
+      dmg = capIncomingDamage(target.unit, dmg, { commit: true });
     }
     if (!(dmg > 0)) {
       showDmg(target.unit.key, 0, false);
+      // 史烏護盾可能吃掉整段傷害，仍要刷新白條
+      if (isSuu()) syncHud();
       return;
     }
     target.unit.hp = Math.max(0, target.unit.hp - dmg);
@@ -2793,6 +2883,13 @@ const IdleBossFight = (() => {
     if (isSimple() || isBloodyQueen()) {
       if (target.kind === 'body' && target.unit.hp <= 0) {
         onBodyDead();
+      }
+      return;
+    }
+
+    if (isSuu()) {
+      if (target.kind === 'body' && target.unit.hp <= 0) {
+        onSuuPhaseDown();
       }
       return;
     }
@@ -2923,7 +3020,7 @@ const IdleBossFight = (() => {
       if (!cygnusSleeping()) pushIf(fight.body);
       return out;
     }
-    if (isPapulatus() || isSimple() || isBloodyQueen()) {
+    if (isPapulatus() || isSimple() || isBloodyQueen() || isSuu()) {
       pushIf(fight.body);
       return out;
     }
@@ -3053,6 +3150,21 @@ const IdleBossFight = (() => {
         }
         if (kind === 'body' && mob.hp <= 0 && fight.mode === 'fight') {
           onBodyDead();
+        }
+      });
+      syncHud();
+      return;
+    }
+    if (isSuu()) {
+      list.forEach((mob) => {
+        if (!mob || !fight) return;
+        const kind = mob.uid || mob.key;
+        if (kind === 'chest' && mob.hp <= 0) {
+          if (!busy && fight.chest && !fight.rewardsGranted) onChestDead();
+          return;
+        }
+        if (kind === 'body' && mob.hp <= 0 && fight.mode === 'fight') {
+          onSuuPhaseDown();
         }
       });
       syncHud();
@@ -3294,6 +3406,11 @@ const IdleBossFight = (() => {
 
   function unitAttacks(listId, visualOrStatMob) {
     const mobId = pad(visualOrStatMob);
+    if (isSuu()) {
+      const built = buildSuuAttacks(listId, mobId);
+      if (built && built.length) return built;
+      return [];
+    }
     if (isBanban()) {
       const built = buildBanbanAttacks(listId, mobId);
       if (built && built.length) return built;
@@ -3456,6 +3573,10 @@ const IdleBossFight = (() => {
         trueDamage: !!opts.trueDamage,
         ignoreHurtIframe: !!opts.ignoreHurtIframe,
       });
+    }
+    if (isSuu() && opts.heatOnHit !== false) {
+      const heat = Number(opts.heatOnHit);
+      heatSuuGauge(Number.isFinite(heat) && heat > 0 ? heat : 6);
     }
     hooks?.syncPlayerHp?.();
   }
@@ -4903,7 +5024,10 @@ const IdleBossFight = (() => {
       if (playerEl && typeof IdleMobAnim?.playPlayerHit === 'function') {
         IdleMobAnim.playPlayerHit(playerEl, castId, key, immediateHit ? { immediate: true } : undefined);
       }
-      hurtPlayerFromBoss(slotKey, hitDmg);
+      const heatOpts = (isSuu() && Number(atk.heatOnHit) > 0)
+        ? { heatOnHit: Number(atk.heatOnHit) }
+        : undefined;
+      hurtPlayerFromBoss(slotKey, hitDmg, heatOpts);
     };
 
     if (isAreaWarn && playerEl && typeof IdleMobAnim.playAreaWarning === 'function') {
@@ -4943,7 +5067,10 @@ const IdleBossFight = (() => {
           tileWidth: 128,
         });
       }
-      hurtPlayerFromBoss(slotKey, hitDmg);
+      const heatOpts = (isSuu() && Number(atk.heatOnHit) > 0)
+        ? { heatOnHit: Number(atk.heatOnHit) }
+        : undefined;
+      hurtPlayerFromBoss(slotKey, hitDmg, heatOpts);
     });
     hooks?.syncPlayerHp?.();
   }
@@ -5000,6 +5127,11 @@ const IdleBossFight = (() => {
       fight.body.active = true;
       const attacks = unitAttacks(fight.listId, fight.body.visualId);
       tickUnitAttack('body', fight.body, attacks, dt);
+      return;
+    }
+
+    if (isSuu()) {
+      tickSuu(dt);
       return;
     }
 
@@ -5163,7 +5295,15 @@ const IdleBossFight = (() => {
         return { hp, maxHp: Math.max(1, maxHp), phase: fight.phase, mode: fight.mode };
       }
     }
-    return { hp: fight.body.hp, maxHp: fight.body.maxHp, phase: fight.phase, mode: fight.mode };
+    return {
+      hp: fight.body.hp,
+      maxHp: fight.body.maxHp,
+      phase: fight.phase,
+      mode: fight.mode,
+      shieldHp: isSuu() ? Math.max(0, Number(fight.suuShieldHp) || 0) : 0,
+      shieldMax: isSuu() ? Math.max(0, Number(fight.suuShieldMax) || 0) : 0,
+      shieldActive: isSuu() ? !!fight.suuShieldActive : false,
+    };
   }
 
   function reset(listId, nextHooks, diffId) {
@@ -5229,6 +5369,9 @@ const IdleBossFight = (() => {
     const script = phaseScript(listId);
     (script?.stages || []).forEach((st) => {
       if (st?.mapArt) arts.add(String(st.mapArt));
+    });
+    (script?.bodyForms || []).forEach((form) => {
+      if (form?.mapArt) arts.add(String(form.mapArt));
     });
     return [...arts];
   }
@@ -6319,6 +6462,1939 @@ const IdleBossFight = (() => {
     }
   }
 
+  /* ========== 史烏（suu）========== */
+  function suuKitCfg() {
+    return fight?.script?.suuKit || phaseScript(fight?.listId)?.suuKit || {};
+  }
+
+  function suuPhaseKit() {
+    const kit = suuKitCfg();
+    const id = pad(fight?.body?.visualId || '');
+    return kit.phaseKits?.[id] || kit.phaseKits?.[String(Number(id))] || {};
+  }
+
+  function suuPatternData() {
+    return (typeof IDLE_BOSS_SUU_PATTERN_DATA !== 'undefined')
+      ? IDLE_BOSS_SUU_PATTERN_DATA
+      : null;
+  }
+
+  function suuPatternMeta() {
+    return (typeof IDLE_BOSS_SUU_PATTERN_META !== 'undefined')
+      ? IDLE_BOSS_SUU_PATTERN_META
+      : { uiPos: { x: 0, y: 100 } };
+  }
+
+  function suuPatternFrame(assetKey, action, frameIdx = 0) {
+    const frames = suuPatternData()?.[assetKey]?.[action];
+    if (!Array.isArray(frames) || !frames.length) return null;
+    const i = Math.max(0, Math.min(frames.length - 1, Math.floor(Number(frameIdx) || 0)));
+    return frames[i] || null;
+  }
+
+  function ensureSuuGaugeDom() {
+    const field = getBossFieldEl();
+    if (!field) return null;
+    let root = field.querySelector(':scope > .idle-boss-suu-gauge');
+    if (!root) {
+      root = document.createElement('div');
+      root.className = 'idle-boss-suu-gauge';
+      // 疊層：backgrnd → backgrnd0（前）→ 條 → tip → label
+      root.innerHTML = [
+        '<img class="idle-boss-suu-gauge__bg" alt="" draggable="false">',
+        '<img class="idle-boss-suu-gauge__bg0" alt="" draggable="false">',
+        '<div class="idle-boss-suu-gauge__track" aria-hidden="true">',
+        '  <div class="idle-boss-suu-gauge__fill-wrap">',
+        '    <img class="idle-boss-suu-gauge__fill" alt="" draggable="false">',
+        '  </div>',
+        '</div>',
+        '<img class="idle-boss-suu-gauge__tip" alt="" draggable="false" hidden>',
+        '<div class="idle-boss-suu-gauge__label"></div>',
+      ].join('');
+      field.appendChild(root);
+    }
+    return root;
+  }
+
+  function ensureSuuAlertDom() {
+    const field = getBossFieldEl();
+    if (!field) return null;
+    let root = field.querySelector(':scope > .idle-boss-suu-alert');
+    if (!root) {
+      root = document.createElement('div');
+      root.className = 'idle-boss-suu-alert';
+      root.hidden = true;
+      root.innerHTML = '<img class="idle-boss-suu-alert__img" alt="" draggable="false">';
+      field.appendChild(root);
+    }
+    return root;
+  }
+
+  function clearSuuGaugeHud() {
+    const field = getBossFieldEl();
+    field?.querySelector(':scope > .idle-boss-suu-gauge')?.remove();
+    field?.querySelector(':scope > .idle-boss-suu-alert')?.remove();
+    if (fight) {
+      fight.suuAlertFrame = 0;
+      fight.suuAlertAcc = 0;
+      fight.suuUiBgFrame = 0;
+      fight.suuUiBg0Frame = 0;
+      fight.suuUiAnimAcc = 0;
+    }
+    hooks?.syncChallengeHud?.({ hide: true });
+  }
+
+  /** destruction＝滿表過熱；overload＝destruction 結束後短暫鎖升溫 */
+  function suuInDestruction() {
+    return !!(fight && isSuu() && (Number(fight.suuPurgeUntil) || 0) > Date.now());
+  }
+
+  function suuInOverload() {
+    return !!(fight && isSuu() && (Number(fight.suuOverloadUntil) || 0) > Date.now());
+  }
+
+  function suuInPurge() {
+    return suuInDestruction();
+  }
+
+  function suuGaugeSkin() {
+    if (suuInDestruction()) return 'destruction';
+    if (suuInOverload()) return 'overload';
+    return 'default';
+  }
+
+  function suuPatternFrames(assetKey, action) {
+    const frames = suuPatternData()?.[assetKey]?.[action];
+    return Array.isArray(frames) && frames.length ? frames : null;
+  }
+
+  function syncSuuGaugeHud() {
+    if (!fight || !isSuu()) return;
+    const max = Math.max(1, Number(fight.suuGaugeMax) || 100);
+    const cur = Math.max(0, Math.min(max, Number(fight.suuGauge) || 0));
+    const destruction = suuInDestruction();
+    const overload = suuInOverload();
+    const shield = !!fight.suuShieldActive;
+    const root = ensureSuuGaugeDom();
+    if (!root) return;
+
+    const skin = suuGaugeSkin();
+    const bgFrames = suuPatternFrames(`common/UI/${skin}/backgrnd`, '0')
+      || suuPatternFrames('common/UI/default/backgrnd', '0');
+    const bg0Frames = suuPatternFrames(`common/UI/${skin}/backgrnd0`, '0')
+      || suuPatternFrames('common/UI/default/backgrnd0', '0');
+    const fillFr = suuPatternFrame(`common/UI/${skin}/gauge`, '0')
+      || suuPatternFrame('common/UI/default/gauge', '0');
+    const tipFr = suuPatternFrame(`common/UI/${skin}/gauge`, '1')
+      || suuPatternFrame('common/UI/default/gauge', '1');
+    const pos = suuPatternMeta()?.uiPos || { x: 0, y: 100 };
+
+    // 常駐顯示（含 0）；靠畫面最左
+    root.hidden = false;
+    root.classList.toggle('is-destruction', destruction);
+    root.classList.toggle('is-overload', overload);
+    root.classList.toggle('is-shield', shield);
+    root.style.left = '0px';
+    root.style.top = `${Math.round(Number(pos.y) || 100)}px`;
+
+    const bgEl = root.querySelector('.idle-boss-suu-gauge__bg');
+    const bg0El = root.querySelector('.idle-boss-suu-gauge__bg0');
+    const track = root.querySelector('.idle-boss-suu-gauge__track');
+    const fillWrap = root.querySelector('.idle-boss-suu-gauge__fill-wrap');
+    const fillEl = root.querySelector('.idle-boss-suu-gauge__fill');
+    const tipEl = root.querySelector('.idle-boss-suu-gauge__tip');
+    const label = root.querySelector('.idle-boss-suu-gauge__label');
+
+    const bgFi = Math.floor(Number(fight.suuUiBgFrame) || 0);
+    const bg0Fi = Math.floor(Number(fight.suuUiBg0Frame) || 0);
+    const bg = bgFrames ? bgFrames[bgFi % bgFrames.length] : null;
+    const bg0 = bg0Frames ? bg0Frames[bg0Fi % bg0Frames.length] : null;
+
+    if (bgEl) {
+      if (bg?.src) {
+        bgEl.hidden = false;
+        bgEl.src = bg.src;
+      } else bgEl.hidden = true;
+    }
+    if (bg0El) {
+      if (bg0?.src) {
+        bg0El.hidden = false;
+        bg0El.src = bg0.src;
+      } else bg0El.hidden = true;
+    }
+
+    // overload：短暫不加過熱條 → 顯示容器但不漲 fill
+    // destruction：依剩餘持續時間從滿慢慢清空
+    let pct = 0;
+    if (destruction) {
+      const dur = Math.max(1, Number(fight.suuPurgeDurationMs) || 1);
+      const left = Math.max(0, (Number(fight.suuPurgeUntil) || 0) - Date.now());
+      pct = Math.max(0, Math.min(1, left / dur));
+      fight.suuGauge = max * pct;
+    } else if (!overload) {
+      pct = cur / max;
+    }
+    const showFill = !overload;
+    const fox = Number(fillFr?.origin?.[0]);
+    const foy = Number(fillFr?.origin?.[1]);
+    const fillLeft = Number.isFinite(fox) ? -fox : 86;
+    const fillTop = Number.isFinite(foy) ? -foy : 74;
+    if (track) {
+      track.hidden = !showFill;
+      track.style.left = `${Math.round(fillLeft)}px`;
+      track.style.top = `${Math.round(fillTop)}px`;
+    }
+    if (fillEl && fillFr?.src) fillEl.src = fillFr.src;
+    if (fillWrap) {
+      fillWrap.style.height = `${Math.max(0, Math.min(100, pct * 100)).toFixed(2)}%`;
+    }
+    if (tipEl) {
+      if (showFill && tipFr?.src && pct > 0.02) {
+        tipEl.hidden = false;
+        tipEl.src = tipFr.src;
+        const tox = Number(tipFr.origin?.[0]) || 1;
+        const toy = Number(tipFr.origin?.[1]) || 1;
+        tipEl.style.left = `${Math.round(fillLeft + 4 - tox)}px`;
+        tipEl.style.top = `${Math.round(fillTop + 102 * (1 - pct) - toy)}px`;
+      } else {
+        tipEl.hidden = true;
+      }
+    }
+    if (label) {
+      label.hidden = true;
+      label.textContent = '';
+    }
+
+    if (destruction) showSuuAlertFrame();
+    else hideSuuAlertFrame();
+
+    hooks?.syncChallengeHud?.({ hide: true });
+  }
+
+  function showSuuAlertFrame() {
+    const frames = suuPatternData()?.['common/alertFrameEffect/1366']?.['0'];
+    const root = ensureSuuAlertDom();
+    if (!root) return;
+    if (!Array.isArray(frames) || !frames.length) {
+      root.hidden = true;
+      return;
+    }
+    root.hidden = false;
+    if (!Number.isFinite(Number(fight.suuAlertFrame))) fight.suuAlertFrame = 0;
+    if (!Number.isFinite(Number(fight.suuAlertAcc))) fight.suuAlertAcc = 0;
+    const img = root.querySelector('.idle-boss-suu-alert__img');
+    const fr = frames[Math.floor(Number(fight.suuAlertFrame) || 0) % frames.length];
+    if (img && fr?.src) img.src = fr.src;
+  }
+
+  function hideSuuAlertFrame() {
+    const root = getBossFieldEl()?.querySelector(':scope > .idle-boss-suu-alert');
+    if (root) root.hidden = true;
+    if (fight) {
+      fight.suuAlertFrame = 0;
+      fight.suuAlertAcc = 0;
+    }
+  }
+
+  function tickSuuAlertFrame(dt) {
+    if (!fight || !isSuu() || !suuInDestruction()) {
+      if (!suuInDestruction()) hideSuuAlertFrame();
+      return;
+    }
+    const frames = suuPatternData()?.['common/alertFrameEffect/1366']?.['0'];
+    if (!Array.isArray(frames) || !frames.length) return;
+    const root = ensureSuuAlertDom();
+    if (!root) return;
+    root.hidden = false;
+    fight.suuAlertAcc = (Number(fight.suuAlertAcc) || 0) + Math.max(0, Number(dt) || 0) * 1000;
+    let fi = Math.floor(Number(fight.suuAlertFrame) || 0) % frames.length;
+    let guard = 0;
+    while (guard < 16) {
+      const delay = Math.max(30, Number(frames[fi]?.delay) || 60);
+      if ((Number(fight.suuAlertAcc) || 0) < delay) break;
+      fight.suuAlertAcc -= delay;
+      fi = (fi + 1) % frames.length;
+      guard += 1;
+    }
+    fight.suuAlertFrame = fi;
+    const img = root.querySelector('.idle-boss-suu-alert__img');
+    if (img && frames[fi]?.src) img.src = frames[fi].src;
+  }
+
+  function tickSuuGaugeUiAnim(dt) {
+    if (!fight || !isSuu()) return;
+    const skin = suuGaugeSkin();
+    // 僅 destruction 的 backgrnd／backgrnd0 多幀需循環
+    if (skin !== 'destruction') {
+      fight.suuUiBgFrame = 0;
+      fight.suuUiBg0Frame = 0;
+      fight.suuUiAnimAcc = 0;
+      return;
+    }
+    const bgFrames = suuPatternFrames('common/UI/destruction/backgrnd', '0');
+    const bg0Frames = suuPatternFrames('common/UI/destruction/backgrnd0', '0');
+    if (!bgFrames && !bg0Frames) return;
+    fight.suuUiAnimAcc = (Number(fight.suuUiAnimAcc) || 0) + Math.max(0, Number(dt) || 0) * 1000;
+    const step = 60;
+    let guard = 0;
+    while ((Number(fight.suuUiAnimAcc) || 0) >= step && guard < 16) {
+      fight.suuUiAnimAcc -= step;
+      if (bgFrames?.length) {
+        fight.suuUiBgFrame = (Math.floor(Number(fight.suuUiBgFrame) || 0) + 1) % bgFrames.length;
+      }
+      if (bg0Frames?.length) {
+        fight.suuUiBg0Frame = (Math.floor(Number(fight.suuUiBg0Frame) || 0) + 1) % bg0Frames.length;
+      }
+      guard += 1;
+    }
+  }
+
+  function enterSuuDestruction() {
+    if (!fight || !isSuu()) return;
+    const sec = Math.max(3, Number(suuKitCfg().gauge?.purgeSec) || 18);
+    const durMs = scaleDelayMs(sec * 1000);
+    fight.suuPurgeDurationMs = durMs;
+    fight.suuPurgeUntil = Date.now() + durMs;
+    fight.suuOverloadUntil = 0;
+    fight.suuUiBgFrame = 0;
+    fight.suuUiBg0Frame = 0;
+    fight.suuUiAnimAcc = 0;
+    syncSuuGaugeHud();
+  }
+
+  function endSuuDestruction() {
+    if (!fight || !isSuu()) return;
+    fight.suuPurgeUntil = 0;
+    fight.suuPurgeDurationMs = 0;
+    fight.suuGauge = 0;
+    fight.suuDamageTowardCool = 0;
+    const overSec = Math.max(1, Number(suuKitCfg().gauge?.overloadSec) || 5);
+    fight.suuOverloadUntil = Date.now() + scaleDelayMs(overSec * 1000);
+    fight.suuUiBgFrame = 0;
+    fight.suuUiBg0Frame = 0;
+    hideSuuAlertFrame();
+    syncSuuGaugeHud();
+  }
+
+  function heatSuuGauge(amount) {
+    if (!fight || !isSuu() || !(amount > 0)) return;
+    // destruction 期間鎖表；overload 短暫不加過熱
+    if (suuInDestruction() || suuInOverload()) return;
+    const max = Math.max(1, Number(fight.suuGaugeMax) || 100);
+    fight.suuGauge = Math.min(max, (Number(fight.suuGauge) || 0) + amount);
+    if (fight.suuGauge >= max && !suuInDestruction()) {
+      enterSuuDestruction();
+      return;
+    }
+    syncSuuGaugeHud();
+  }
+
+  function coolSuuGaugeByDamage(appliedDmg) {
+    if (!fight || !isSuu() || !(appliedDmg > 0)) return;
+    // destruction／overload 期間不靠輸出降溫（表已鎖或清空）
+    if (suuInDestruction() || suuInOverload()) return;
+    const maxHp = Math.max(1, Number(fight.body?.maxHp) || 1);
+    const perPct = Number(suuKitCfg().gauge?.coolPerMaxHpPct);
+    const coolPer = (Number.isFinite(perPct) && perPct > 0) ? perPct : 2;
+    fight.suuDamageTowardCool = (Number(fight.suuDamageTowardCool) || 0) + appliedDmg;
+    const chunk = maxHp * 0.01;
+    if (!(chunk > 0)) return;
+    while (fight.suuDamageTowardCool >= chunk) {
+      fight.suuDamageTowardCool -= chunk;
+      fight.suuGauge = Math.max(0, (Number(fight.suuGauge) || 0) - coolPer);
+    }
+    syncSuuGaugeHud();
+  }
+
+  function applySuuShieldIncoming(raw, opts = {}) {
+    if (!fight?.suuShieldActive) return raw;
+    const commit = !!opts.commit;
+    let remain = Math.max(0, Math.floor(Number(raw) || 0));
+    if (!(remain > 0)) return 0;
+
+    const shAtStart = Math.max(0, Math.floor(Number(fight.suuShieldHp) || 0));
+    if (shAtStart > 0) {
+      const absorbed = Math.min(shAtStart, remain);
+      if (commit) {
+        fight.suuShieldHp = shAtStart - absorbed;
+        if (fight.suuShieldHp <= 0) {
+          fight.suuShieldHp = 0;
+          endSuuShield(false);
+        }
+      }
+      remain -= absorbed;
+    }
+    if (!(remain > 0)) {
+      // 全被護盾吃掉：實扣 0；預覽回 1 避免 canDeal 誤判
+      return commit ? 0 : 1;
+    }
+
+    // 護盾仍在（或預覽時開盾）→ 剩餘進本體吃減傷
+    if (fight.suuShieldActive || (!commit && shAtStart > 0)) {
+      const dr = Number(suuKitCfg().shield?.damageReduce);
+      const reduce = (Number.isFinite(dr) && dr > 0) ? Math.min(0.95, dr) : 0.9;
+      return Math.max(1, Math.floor(remain * (1 - reduce)));
+    }
+    return remain;
+  }
+
+  function clearSuuShieldLoop() {
+    const el = fight?.suuShieldLoopEl;
+    if (el) {
+      try { el.remove(); } catch (_) { /* ignore */ }
+    }
+    if (fight) fight.suuShieldLoopEl = null;
+  }
+
+  /** 腳底／王體 → field 座標（兩 stage 是兄弟，不可用 offsetParent 串） */
+  function suuFieldPointFromPlayer() {
+    const field = getBossFieldEl();
+    const playerEl = getBossPlayerEl();
+    if (!field || !playerEl) {
+      const bossPos = hooks?.getBossPos?.() || { x: 720, y: 610 };
+      return { x: bossPos.x - 160, y: bossPos.y };
+    }
+    const fr = field.getBoundingClientRect();
+    const pr = playerEl.getBoundingClientRect();
+    const feet = (typeof Paperdoll !== 'undefined'
+      && typeof Paperdoll.getHuntFeetAnchor === 'function')
+      ? Paperdoll.getHuntFeetAnchor(playerEl)
+      : null;
+    const lx = (feet && Number.isFinite(feet.x)) ? feet.x : Math.round((pr.width || 120) * 0.5);
+    const ly = (feet && Number.isFinite(feet.y)) ? feet.y : Math.round((pr.height || 160) * 0.78);
+    return {
+      x: Math.round(pr.left - fr.left + lx),
+      y: Math.round(pr.top - fr.top + ly),
+    };
+  }
+
+  function suuFieldPointFromBoss() {
+    const field = getBossFieldEl();
+    const bodyEl = slotEl('body');
+    const bossPos = hooks?.getBossPos?.() || { x: 720, y: 610 };
+    if (!field) return { x: bossPos.x, y: bossPos.y };
+    if (bodyEl) {
+      const fr = field.getBoundingClientRect();
+      const br = bodyEl.getBoundingClientRect();
+      // body 的 left/top 即 origin（腳底）；用 style 優先（與舞台同座標）
+      const sx = parseFloat(bodyEl.style.left);
+      const sy = parseFloat(bodyEl.style.top);
+      if (Number.isFinite(sx) && Number.isFinite(sy)) {
+        return { x: Math.round(sx), y: Math.round(sy) };
+      }
+      return {
+        x: Math.round(br.left - fr.left + (br.width || 0) * 0.5),
+        y: Math.round(br.top - fr.top + (br.height || 0)),
+      };
+    }
+    return { x: Math.round(bossPos.x), y: Math.round(bossPos.y) };
+  }
+
+  /** 場中央偏下（地板高度） */
+  function suuFieldPointMapCenter() {
+    const field = getBossFieldEl();
+    const W = field?.clientWidth || 1366;
+    const H = field?.clientHeight || 768;
+    return { x: Math.round(W * 0.5), y: Math.round(H * 0.78) };
+  }
+
+  /** 場上方正中央 */
+  function suuFieldPointMapTopCenter() {
+    const field = getBossFieldEl();
+    const W = field?.clientWidth || 1366;
+    const H = field?.clientHeight || 768;
+    return { x: Math.round(W * 0.5), y: Math.round(H * 0.14) };
+  }
+
+  /** P1 核心：地圖下方正中央（鋸刃 pre 等） */
+  function suuFieldPointMapCore() {
+    const cfg = suuKitCfg()?.corePos;
+    if (cfg && Number.isFinite(cfg.x) && Number.isFinite(cfg.y)) {
+      return { x: Math.round(cfg.x), y: Math.round(cfg.y) };
+    }
+    const field = getBossFieldEl();
+    const W = field?.clientWidth || 1366;
+    const H = field?.clientHeight || 768;
+    return { x: Math.round(W * 0.5), y: Math.round(H * 0.92) };
+  }
+
+  function suuResolveFxAnchor(anchorMode, opts = {}) {
+    if (anchorMode === 'boss') return suuFieldPointFromBoss();
+    if (anchorMode === 'mapCenter') return suuFieldPointMapCenter();
+    if (anchorMode === 'mapTopCenter' || anchorMode === 'topCenter') {
+      return suuFieldPointMapTopCenter();
+    }
+    if (anchorMode === 'mapCore' || anchorMode === 'core') return suuFieldPointMapCore();
+    if (anchorMode === 'map') {
+      if (Number.isFinite(opts.mapX) && Number.isFinite(opts.mapY)) {
+        return { x: opts.mapX, y: opts.mapY };
+      }
+      return suuFieldPointFromPlayer();
+    }
+    return suuFieldPointFromPlayer();
+  }
+
+  /** 只用 WZ origin；可選 clampOriginToSprite（電流 effect 等裁切過大 origin） */
+  function applySuuFxOrigin(img, origin, opts = {}) {
+    if (!img) return;
+    const ox = Number(origin?.[0]) || 0;
+    const oy = Number(origin?.[1]) || 0;
+    const paintOrigin = () => {
+      let useOy = oy;
+      const h = img.naturalHeight || 0;
+      if (opts.clampOriginToSprite && h > 0 && useOy > h) useOy = h;
+      img.style.setProperty('--ox', `${ox}px`);
+      img.style.setProperty('--oy', `${useOy}px`);
+      img.style.left = `calc(-1 * var(--ox, 0px))`;
+      img.style.top = `calc(-1 * var(--oy, 0px))`;
+    };
+    paintOrigin();
+    if (opts.clampOriginToSprite && !(img.complete && img.naturalHeight)) {
+      img.addEventListener('load', paintOrigin, { once: true });
+    }
+  }
+
+  function trySuuShield() {
+    if (!fight || !isSuu() || busy || fight.mode !== 'fight') return;
+    if ((Number(fight.bodyFormIndex) || 0) !== 0) return;
+    const cfg = suuKitCfg().shield || {};
+    const now = Date.now();
+    if (fight.suuShieldActive) {
+      if (now >= (Number(fight.suuShieldUntil) || 0)) {
+        endSuuShield(true);
+      }
+      return;
+    }
+    if (now < (Number(fight.suuNextShieldAt) || 0)) return;
+    const dur = Math.max(3, Number(cfg.durationSec) || 18);
+    fight.suuShieldActive = true;
+    fight.suuShieldUntil = now + scaleDelayMs(dur * 1000);
+    const cdBase = Math.max(dur + 5, Number(cfg.cdSec) || 40);
+    const cd = Math.max(dur + 5, cdBase * resolveSuuDiffPatternCdMult());
+    fight.suuNextShieldAt = now + scaleDelayMs(cd * 1000);
+    const hpRatio = Number(cfg.hpRatio);
+    const ratio = (Number.isFinite(hpRatio) && hpRatio > 0) ? hpRatio : 0.005;
+    const pool = Math.max(1, Math.floor((Number(fight.body?.maxHp) || 1) * ratio));
+    fight.suuShieldMax = pool;
+    fight.suuShieldHp = pool;
+    clearSuuShieldLoop();
+    // pre 詠唱 → 再掛 loop 直到破盾／逾時
+    const preMs = playSuuPatternFx('1000/006', 'pre', { anchor: 'boss' }) || 800;
+    window.setTimeout(() => {
+      if (!fight || !fight.suuShieldActive) return;
+      playSuuPatternFx('1000/006', 'loop', {
+        anchor: 'boss',
+        loop: 'shield',
+        onCreate: (el) => { if (fight) fight.suuShieldLoopEl = el; },
+      });
+    }, scaleDelayMs(Math.min(preMs, 1600)));
+    syncSuuGaugeHud();
+    syncHud();
+  }
+
+  function endSuuShield(expired) {
+    if (!fight || !isSuu()) return;
+    const was = fight.suuShieldActive;
+    const left = Math.max(0, Math.floor(Number(fight.suuShieldHp) || 0));
+    const maxSh = Math.max(1, Math.floor(Number(fight.suuShieldMax) || 0));
+    fight.suuShieldActive = false;
+    fight.suuShieldUntil = 0;
+    fight.suuShieldHp = 0;
+    fight.suuShieldMax = 0;
+    clearSuuShieldLoop();
+    if (was && expired && fight.body && fight.body.hp > 0 && left > 0) {
+      const ratio = Number(suuKitCfg().shield?.healRatioOnExpire);
+      const healR = (Number.isFinite(ratio) && ratio > 0) ? ratio : 0.04;
+      const frac = Math.min(1, left / maxSh);
+      const heal = Math.max(1, Math.floor((Number(fight.body.maxHp) || 1) * healR * frac));
+      fight.body.hp = Math.min(fight.body.maxHp, fight.body.hp + heal);
+    }
+    if (was) playSuuPatternFx('1000/006', 'end', { anchor: 'boss' });
+    syncSuuGaugeHud();
+    syncHud();
+  }
+
+  function playSuuPatternFx(assetKey, actionOrList, opts = {}) {
+    if (!assetKey) return 0;
+    const data = (typeof IDLE_BOSS_SUU_PATTERN_DATA !== 'undefined')
+      ? IDLE_BOSS_SUU_PATTERN_DATA
+      : null;
+    const entry = data?.[assetKey];
+    if (!entry || typeof entry !== 'object') return 0;
+
+    const preferred = Array.isArray(actionOrList)
+      ? actionOrList
+      : (actionOrList ? [actionOrList] : []);
+    const fallback = {
+      pre: ['pre', 'effect', 'warning', 'lockOn', 'ball', 'areaWarning', 'summon', 'regen', 'special'],
+      hit: ['hit', 'attack', 'end', 'special', 'destroyed', 'ball'],
+      end: ['end', 'hit', 'die', 'die2'],
+      loop: ['loop'],
+    };
+    const keys = preferred.length
+      ? preferred
+      : (fallback[String(actionOrList)] || ['pre', 'effect', 'hit']);
+
+    let frames = null;
+    let usedKey = null;
+    for (let i = 0; i < keys.length; i += 1) {
+      const cand = entry[keys[i]];
+      if (Array.isArray(cand) && cand.length) {
+        frames = cand;
+        usedKey = keys[i];
+        break;
+      }
+    }
+    if (!frames) return 0;
+
+    // 可選幀區間：frameStart 含、frameEnd 不含
+    const f0 = Math.max(0, Math.floor(Number(opts.frameStart) || 0));
+    const f1Raw = Number(opts.frameEnd);
+    const f1 = Number.isFinite(f1Raw)
+      ? Math.min(frames.length, Math.max(f0, Math.floor(f1Raw)))
+      : frames.length;
+    if (f0 > 0 || f1 < frames.length) {
+      frames = frames.slice(f0, f1);
+    }
+    if (!frames.length) return 0;
+
+    const anchorMode = opts.anchor || 'feet';
+    const field = getBossFieldEl();
+    const st = stage();
+    const host = field || st;
+    if (!host) return 0;
+
+    const el = document.createElement('div');
+    el.className = 'idle-boss-suu-fx-stage';
+    el.dataset.slot = `suuFx_${Date.now()}_${usedKey || 'fx'}`;
+    el.innerHTML = '<img class="idle-actor-sprite idle-boss-suu-fx-sprite" alt="" draggable="false">';
+
+    let pos = suuResolveFxAnchor(anchorMode, opts);
+    // 夾在場內，避免錨點算爆跑出 768 高
+    const maxY = field ? (field.clientHeight || 768) : 768;
+    const maxX = field ? (field.clientWidth || 1366) : 1366;
+    pos.x = Math.max(0, Math.min(maxX, Math.round(pos.x)));
+    pos.y = Math.max(0, Math.min(maxY, Math.round(pos.y)));
+    el.style.left = `${pos.x}px`;
+    el.style.top = `${pos.y}px`;
+    if (Number.isFinite(opts.rotateRad) || opts.flipX) {
+      const parts = [];
+      if (opts.flipX) parts.push('scaleX(-1)');
+      if (Number.isFinite(opts.rotateRad)) parts.push(`rotate(${opts.rotateRad}rad)`);
+      el.style.transform = parts.join(' ');
+      el.style.transformOrigin = '0 0';
+    }
+    host.appendChild(el);
+
+    if (typeof opts.onCreate === 'function') opts.onCreate(el);
+
+    const img = el.querySelector('img');
+    let fi = 0;
+    const paint = () => {
+      const fr = frames[fi];
+      if (!fr || !img) return;
+      img.src = fr.src;
+      applySuuFxOrigin(img, fr.origin, {
+        clampOriginToSprite: !!opts.clampOriginToSprite,
+      });
+    };
+    paint();
+    const keepLoop = () => !!(opts.loop && el.isConnected
+      && (opts.loop === true || (opts.loop === 'shield' && fight?.suuShieldActive)));
+    const step = () => {
+      if (!el.isConnected) return;
+      fi += 1;
+      if (fi >= frames.length) {
+        if (keepLoop()) {
+          fi = 0;
+          paint();
+          window.setTimeout(step, Math.max(30, Number(frames[0]?.delay) || 60));
+          return;
+        }
+        // WZ repeatIdx：播完後從該幀起循環（引爆預備等）
+        const ri = Number(opts.repeatIdx);
+        if (Number.isFinite(ri) && el.isConnected) {
+          fi = Math.max(0, Math.min(frames.length - 1, Math.floor(ri)));
+          paint();
+          window.setTimeout(step, Math.max(30, Number(frames[fi]?.delay) || 60));
+          return;
+        }
+        if (opts.holdLast && el.isConnected) {
+          fi = frames.length - 1;
+          paint();
+          return;
+        }
+        el.remove();
+        if (fight?.suuShieldLoopEl === el) fight.suuShieldLoopEl = null;
+        return;
+      }
+      paint();
+      window.setTimeout(step, Math.max(30, Number(frames[fi]?.delay) || 60));
+    };
+    window.setTimeout(step, Math.max(30, Number(frames[0]?.delay) || 60));
+    let est = 0;
+    for (let i = 0; i < frames.length; i += 1) est += Math.max(30, Number(frames[i]?.delay) || 60);
+    return est;
+  }
+
+  /** 同時播多層 action（各層可不同 anchor） */
+  function playSuuPatternLayers(assetKey, layers) {
+    if (!assetKey || !Array.isArray(layers) || !layers.length) return 0;
+    let maxEst = 0;
+    for (let i = 0; i < layers.length; i += 1) {
+      const layer = layers[i];
+      if (!layer?.action) continue;
+      const est = playSuuPatternFx(assetKey, layer.action, {
+        anchor: layer.anchor || 'feet',
+        mapX: layer.mapX,
+        mapY: layer.mapY,
+      });
+      if (est > maxEst) maxEst = est;
+    }
+    return maxEst;
+  }
+
+  function normalizeSuuFxLayers(row, which) {
+    const layers = row?.[which];
+    if (Array.isArray(layers) && layers.length && typeof layers[0] === 'object') {
+      return layers;
+    }
+    // 舊欄位相容
+    const legacy = which === 'fxHitLayers' ? row?.fxHit : row?.fxPre;
+    const anchor = row?.anchor || 'feet';
+    if (Array.isArray(legacy) && legacy.length) {
+      return legacy.map((action) => ({ action, anchor }));
+    }
+    return null;
+  }
+
+  /** 依目前階解析 pattern 資產；支援 assetKeyByPhase */
+  function resolveSuuPatternAsset(row) {
+    if (!row) return null;
+    const phase = Math.max(1, Math.floor(Number(fight?.phase) || 1));
+    const by = row.assetKeyByPhase;
+    if (by && typeof by === 'object') {
+      const k = by[phase] || by[String(phase)];
+      if (k) return String(k);
+    }
+    return row.assetKey ? String(row.assetKey) : null;
+  }
+
+  function resolveSuuPatternHitCount(row) {
+    const phase = Math.max(1, Math.floor(Number(fight?.phase) || 1));
+    const by = row?.hitCountByPhase;
+    if (by && typeof by === 'object') {
+      const n = Number(by[phase] || by[String(phase)]);
+      if (n > 0) return Math.floor(n);
+    }
+    const n = Number(row?.hitCount);
+    return n > 0 ? Math.floor(n) : 1;
+  }
+
+  function resolveSuuPatternHitGapMs(row) {
+    const phase = Math.max(1, Math.floor(Number(fight?.phase) || 1));
+    const by = row?.hitGapMsByPhase;
+    if (by && typeof by === 'object') {
+      const n = Number(by[phase] || by[String(phase)]);
+      if (n > 0) return n;
+    }
+    const n = Number(row?.hitGapMs);
+    return n > 0 ? n : 350;
+  }
+
+  /** 難度 CD 倍率：difficulty.patternCdMult（Hard＝1）；可選 kit.patternCdMultByDiff 後備 */
+  function resolveSuuDiffPatternCdMult() {
+    const fromDiff = Number(activeDiff?.patternCdMult);
+    if (fromDiff > 0) return fromDiff;
+    const map = suuKitCfg()?.patternCdMultByDiff;
+    if (map && typeof map === 'object') {
+      const diffId = String(activeDiff?.id || fight?.difficultyId || 'hard');
+      const fromKit = Number(map[diffId] ?? map.hard);
+      if (fromKit > 0) return fromKit;
+    }
+    return 1;
+  }
+
+  /** Pattern CD：cdSecByPhase／cdSec（Hard 基準）× 難度 patternCdMult；單招可另設 cdMultByDiff */
+  function resolveSuuPatternCdSec(row) {
+    if (!row) return 8;
+    const phase = Math.max(1, Math.floor(Number(fight?.phase) || 1));
+    let base = Number(row.cdSec) || 8;
+    const byPhase = row.cdSecByPhase;
+    if (byPhase && typeof byPhase === 'object') {
+      const n = Number(byPhase[phase] || byPhase[String(phase)]);
+      if (n > 0) base = n;
+    }
+    let mult = resolveSuuDiffPatternCdMult();
+    const rowMult = row.cdMultByDiff;
+    if (rowMult && typeof rowMult === 'object') {
+      const diffId = String(activeDiff?.id || fight?.difficultyId || 'hard');
+      const m = Number(rowMult[diffId]);
+      if (m > 0) mult = m;
+    }
+    return Math.max(2, base * mult);
+  }
+
+  function buildSuuAttacks(listId, mobId) {
+    const id = pad(mobId);
+    const pkit = suuKitCfg().phaseKits?.[id] || {};
+    const exclude = new Set((pkit.excludeActions || []).map(String));
+    const ratioMap = pkit.attackHpRatio || {};
+    const cdMap = pkit.attackCdSec || {};
+    const heatMap = pkit.heatOnHit || {};
+    const part = wzPart(listId, id);
+    const basePa = Math.max(0, Number(part?.PADamage) || Number(part?.MADamage) || 22000);
+    const out = [];
+    const seen = new Set();
+    const push = (row) => {
+      if (!row?.actionKey || seen.has(row.actionKey) || exclude.has(row.actionKey)) return;
+      seen.add(row.actionKey);
+      out.push(row);
+    };
+    Object.keys(ratioMap).forEach((actionKey) => {
+      if (exclude.has(actionKey)) return;
+      if (typeof IdleMobAnim !== 'undefined' && !IdleMobAnim.resolveAction?.(id, actionKey)) return;
+      const ratio = Number(ratioMap[actionKey]);
+      const dmg = scaleWzByHpRatio(basePa, ratio, 1);
+      const cdSec = Number(cdMap[actionKey]);
+      const animMs = Math.max(
+        mobAnimMs(id, actionKey, 1600),
+        (cdSec > 0 ? cdSec * 1000 : 0),
+      );
+      push({
+        actionKey,
+        dmg,
+        animMs,
+        magic: /^skill/i.test(actionKey),
+        heatOnHit: Number(heatMap[actionKey]) || 6,
+      });
+    });
+    return out;
+  }
+
+  function suuPatternDmg(row) {
+    const part = wzPart(fight.listId, fight.body.visualId);
+    const basePa = Math.max(0, Number(part?.PADamage) || 22000);
+    const ratio = Number(row.attackHpRatio);
+    return Math.max(1, Math.floor(
+      scaleWzByHpRatio(basePa, Number.isFinite(ratio) && ratio > 0 ? ratio : 1, 1)
+      * dmgMult(fight.listId),
+    ));
+  }
+
+  /** 追蹤雷射砲口：左上／右上（三階再加正上） */
+  function suuLaserCorners(count) {
+    const field = getBossFieldEl();
+    const W = field?.clientWidth || 1366;
+    const corners = [
+      { x: 36, y: 28 },
+      { x: W - 36, y: 28 },
+    ];
+    if (count >= 3) corners.push({ x: Math.round(W * 0.5), y: 16 });
+    return corners.slice(0, Math.max(1, count));
+  }
+
+  function suuLaserRotateRad(corner, impact) {
+    const dx = corner.x - impact.x;
+    const dy = corner.y - impact.y;
+    return Math.atan2(dy, dx) - Math.PI;
+  }
+
+  /**
+   * 雷射圖預設沿 -X（origin 在命中端、長條往左）。
+   * stage 放在落點，旋轉使 -X 指向場上砲口 → 斜向射入。
+   */
+  function playSuuLaserBeam(assetKey, action, corner, impact, extra = {}) {
+    if (!assetKey || !corner || !impact) return 0;
+    return playSuuPatternFx(assetKey, action, {
+      anchor: 'map',
+      mapX: impact.x,
+      mapY: impact.y,
+      rotateRad: suuLaserRotateRad(corner, impact),
+      noOriginBias: true,
+      ...extra,
+    });
+  }
+
+  function updateSuuLaserBeamEl(el, corner, impact) {
+    if (!el || !corner || !impact) return;
+    el.style.left = `${Math.round(impact.x)}px`;
+    el.style.top = `${Math.round(impact.y)}px`;
+    el.style.transform = `rotate(${suuLaserRotateRad(corner, impact)}rad)`;
+    el.style.transformOrigin = '0 0';
+  }
+
+  function suuHasPatternAction(assetKey, action) {
+    const data = (typeof IDLE_BOSS_SUU_PATTERN_DATA !== 'undefined')
+      ? IDLE_BOSS_SUU_PATTERN_DATA
+      : null;
+    const frames = data?.[assetKey]?.[action];
+    return Array.isArray(frames) && frames.length > 0;
+  }
+
+  function suuApplyPatternHit(dmg, heat) {
+    if (!fight || fight.mode !== 'fight') return;
+    const playerEl = getBossPlayerEl();
+    if (playerEl && typeof IdleMobAnim !== 'undefined') {
+      IdleMobAnim.playPlayerHit?.(playerEl, pad(fight.body.visualId), 'stand', { immediate: true });
+    }
+    hurtPlayerFromBoss('body', dmg, { heatOnHit: heat });
+    hooks?.syncPlayerHp?.();
+  }
+
+  /**
+   * 나무위키：1·2階追蹤 1s／3階 1.42s → 鎖定後再隔 1s 開火。
+   * 左上＋右上斜射（3階＋正上）；special＝交叉、hit＝命中。
+   */
+  async function fireSuuTrackingLaser(row, assetKey) {
+    if (!fight || !isSuu() || !row || !assetKey) return;
+    const phase = Math.max(1, Math.floor(Number(fight.phase) || 1));
+    const by = row.beamCountByPhase;
+    let beams = phase >= 3 ? 3 : 2;
+    if (by && typeof by === 'object') {
+      const n = Number(by[phase] || by[String(phase)]);
+      if (n > 0) beams = Math.floor(n);
+    }
+    const corners = suuLaserCorners(beams);
+    const trackBy = row.trackMsByPhase;
+    let trackMs = phase >= 3 ? 1420 : 1000;
+    if (trackBy && typeof trackBy === 'object') {
+      const n = Number(trackBy[phase] || trackBy[String(phase)]);
+      if (n > 0) trackMs = n;
+    }
+    trackMs = scaleDelayMs(trackMs);
+    const lockMs = scaleDelayMs(Math.max(200, Number(row.lockMs) || 1000));
+    const hitDmg = suuPatternDmg(row);
+    const heat = Number(row.heatOnHit) || 10;
+    const beamEls = [];
+
+    let impact = suuFieldPointFromPlayer();
+    for (let i = 0; i < corners.length; i += 1) {
+      // holdLast：追蹤期間停在最後一幀，避免 pre loop 從頭重播抽搐
+      playSuuLaserBeam(assetKey, 'pre', corners[i], impact, {
+        holdLast: true,
+        onCreate: (el) => { beamEls.push(el); },
+      });
+    }
+
+    const tTrack = Date.now();
+    while (Date.now() - tTrack < trackMs) {
+      if (!fight || fight.mode !== 'fight') {
+        beamEls.forEach((el) => { try { el.remove(); } catch (_) { /* */ } });
+        return;
+      }
+      impact = suuFieldPointFromPlayer();
+      for (let i = 0; i < beamEls.length; i += 1) {
+        updateSuuLaserBeamEl(beamEls[i], corners[i], impact);
+      }
+      await sleep(TICK_MS);
+    }
+    if (!fight || fight.mode !== 'fight') {
+      beamEls.forEach((el) => { try { el.remove(); } catch (_) { /* */ } });
+      return;
+    }
+
+    // 鎖定：預告線停在最後落點
+    const locked = { ...impact };
+    for (let i = 0; i < beamEls.length; i += 1) {
+      updateSuuLaserBeamEl(beamEls[i], corners[i], locked);
+    }
+    const tLock = Date.now();
+    while (Date.now() - tLock < lockMs) {
+      if (!fight || fight.mode !== 'fight') {
+        beamEls.forEach((el) => { try { el.remove(); } catch (_) { /* */ } });
+        return;
+      }
+      await sleep(TICK_MS);
+    }
+    beamEls.forEach((el) => { try { el.remove(); } catch (_) { /* */ } });
+    if (!fight || fight.mode !== 'fight') return;
+
+    for (let i = 0; i < corners.length; i += 1) {
+      playSuuLaserBeam(assetKey, 'end', corners[i], locked);
+    }
+    playSuuPatternFx(assetKey, 'special', {
+      anchor: 'map',
+      mapX: locked.x,
+      mapY: locked.y,
+      noOriginBias: true,
+    });
+    playSuuPatternFx(assetKey, 'hit', {
+      anchor: 'map',
+      mapX: locked.x,
+      mapY: locked.y,
+    });
+    suuApplyPatternHit(hitDmg, heat);
+  }
+
+  /**
+   * 大型機械臂組成（正服截圖確認）：
+   * ball2＝頭（落點）；ball3＝身體段，沿臂軸往上重複堆疊；ball＝插下動畫
+   * 靜態段 holdLast，撐到 ball 播完再清
+   */
+  function playSuuLargeArmCompose(assetKey, impact, tilt, row) {
+    if (!assetKey || !impact) return 0;
+    const segEls = [];
+    const trackSeg = (el) => { if (el) segEls.push(el); };
+    const b2 = suuPatternFrames(assetKey, 'ball2')?.[0];
+    const b3 = suuPatternFrames(assetKey, 'ball3')?.[0];
+    const headLen = Math.max(100, Number(b2?.origin?.[1]) || 280);
+    const step = Math.max(
+      70,
+      Number(row?.largeArmBodyStepPx) || Math.round((Number(b3?.origin?.[1]) || 127) * 0.92),
+    );
+    const field = getBossFieldEl();
+    const fieldH = field?.clientHeight || 768;
+    // 從落點往螢幕上方能鋪的距離
+    const reach = Math.max(220, Math.min(impact.y + 80, fieldH));
+    let bodyCount = Math.floor(Number(row?.largeArmBodyCount) || 0);
+    if (!(bodyCount > 0)) {
+      bodyCount = Math.max(3, Math.min(14, Math.ceil((reach - headLen * 0.4) / step)));
+    }
+    // 身體段：遠→近（先畫遠的），距離＝頭頂附近起算
+    if (suuHasPatternAction(assetKey, 'ball3')) {
+      for (let n = bodyCount; n >= 1; n -= 1) {
+        const dist = headLen * 0.55 + (n - 1) * step;
+        const x = impact.x + dist * Math.sin(tilt);
+        const y = impact.y - dist * Math.cos(tilt);
+        playSuuPatternFx(assetKey, 'ball3', {
+          anchor: 'map',
+          mapX: x,
+          mapY: y,
+          rotateRad: tilt,
+          holdLast: true,
+          onCreate: trackSeg,
+        });
+      }
+    }
+    // 頭在落點
+    if (suuHasPatternAction(assetKey, 'ball2')) {
+      playSuuPatternFx(assetKey, 'ball2', {
+        anchor: 'map',
+        mapX: impact.x,
+        mapY: impact.y,
+        rotateRad: tilt,
+        holdLast: true,
+        onCreate: trackSeg,
+      });
+    }
+    const ballMs = suuHasPatternAction(assetKey, 'ball')
+      ? (playSuuPatternFx(assetKey, 'ball', {
+        anchor: 'map',
+        mapX: impact.x,
+        mapY: impact.y,
+        rotateRad: tilt,
+      }) || 960)
+      : 960;
+    window.setTimeout(() => {
+      segEls.forEach((el) => { try { el.remove(); } catch (_) { /* */ } });
+    }, Math.max(200, ballMs));
+    return ballMs;
+  }
+
+  /**
+   * 소형／대형 기계팔（1001/001 系）
+   * pre／pre2＝瞄準；end＝小臂（隨機傾角）；special＝hit
+   * 大型（僅 Extreme）：소형 N → 大臂 1（ball+ball2+ball3）→ 소형 M
+   */
+  function isSuuExtremeDiff() {
+    return String(activeDiff?.id || fight?.difficultyId || '') === 'extreme';
+  }
+
+  async function fireSuuArmSlam(row, assetKey) {
+    if (!fight || !isSuu() || !row || !assetKey) return;
+    const extreme = isSuuExtremeDiff() && row.largeArmExtreme !== false;
+    const smallBefore = Math.max(0, Math.floor(Number(row.largeArmAfterSmall) || 10));
+    const smallAfter = Math.max(0, Math.floor(Number(row.largeArmThenSmall) || 2));
+    let hits = resolveSuuPatternHitCount(row);
+    if (extreme) {
+      const extN = Number(row.hitCountExtreme);
+      hits = extN > 0 ? Math.floor(extN) : (smallBefore + 1 + smallAfter);
+    }
+    const aimMs = scaleDelayMs(Math.max(200, Number(row.aimMs) || 540));
+    const largeAimMs = scaleDelayMs(Math.max(aimMs, Number(row.largeAimMs) || 1140));
+    const gapMs = scaleDelayMs(Math.max(aimMs, resolveSuuPatternHitGapMs(row) || 800));
+    const hitDmg = suuPatternDmg(row);
+    const largeRatio = Number(row.largeAttackHpRatio);
+    const largeDmg = (Number.isFinite(largeRatio) && largeRatio > 0)
+      ? Math.max(1, Math.floor(suuPatternDmg({ ...row, attackHpRatio: largeRatio })))
+      : hitDmg;
+    const heat = Number(row.heatOnHit) || 8;
+    const largeHeat = Number(row.largeHeatOnHit) || heat;
+    const hasPre2 = suuHasPatternAction(assetKey, 'pre2');
+    const maxTilt = Number.isFinite(Number(row.armMaxTiltRad))
+      ? Number(row.armMaxTiltRad)
+      : 0.7; // ≈40°
+
+    for (let i = 0; i < hits; i += 1) {
+      if (!fight || fight.mode !== 'fight') return;
+      const useLarge = extreme
+        && i === smallBefore
+        && suuHasPatternAction(assetKey, 'ball');
+      const thisAim = useLarge ? largeAimMs : aimMs;
+
+      playSuuPatternFx(assetKey, 'pre', { anchor: 'feet' });
+      if (hasPre2) {
+        await sleep(Math.max(80, Math.floor(thisAim * 0.35)));
+        if (!fight || fight.mode !== 'fight') return;
+        playSuuPatternFx(assetKey, 'pre2', { anchor: 'feet' });
+        await sleep(Math.max(80, thisAim - Math.floor(thisAim * 0.35)));
+      } else {
+        await sleep(thisAim);
+      }
+      if (!fight || fight.mode !== 'fight') return;
+
+      const impact = suuFieldPointFromPlayer();
+      const tilt = (Math.random() * 2 - 1) * maxTilt;
+
+      if (useLarge) {
+        playSuuLargeArmCompose(assetKey, impact, tilt, row);
+      } else if (suuHasPatternAction(assetKey, 'end')) {
+        playSuuPatternFx(assetKey, 'end', {
+          anchor: 'map',
+          mapX: impact.x,
+          mapY: impact.y,
+          rotateRad: tilt,
+        });
+      }
+
+      // special 當 hit；沒有 special 才用 hit
+      if (suuHasPatternAction(assetKey, 'special')) {
+        playSuuPatternFx(assetKey, 'special', {
+          anchor: 'map',
+          mapX: impact.x,
+          mapY: impact.y,
+        });
+      } else {
+        playSuuPatternFx(assetKey, 'hit', {
+          anchor: 'map',
+          mapX: impact.x,
+          mapY: impact.y,
+        });
+      }
+      suuApplyPatternHit(useLarge ? largeDmg : hitDmg, useLarge ? largeHeat : heat);
+      if (i < hits - 1) await sleep(Math.max(80, gapMs - Math.min(gapMs, thisAim)));
+    }
+  }
+
+  /** 以中心 X 左右錯開多點；dmgIdx＝中間那顆（玩家身上） */
+  function suuResolveVisualSpread(row, centerX, maxX) {
+    const n = Math.max(
+      1,
+      Math.floor(Number(row.visualCount) || Number(row.hitCount) || 1),
+    );
+    const spread = Math.max(40, Number(row.spreadPx) || 170);
+    const xs = [];
+    for (let i = 0; i < n; i += 1) {
+      const offset = (i - (n - 1) / 2) * spread;
+      xs.push(Math.max(40, Math.min(maxX - 40, Math.round(centerX + offset))));
+    }
+    return { xs, dmgIdx: Math.floor((n - 1) / 2), count: n };
+  }
+
+  /**
+   * 폭발물 낙하（1007/000）使用者確認：
+   * regen 空中出現 → stand 從空中落到地上 → pre 地上引爆預備（repeatIdx 6）→ end 爆炸
+   * 左右多顆僅視覺；傷害只算玩家身上那顆
+   */
+  async function fireSuuDropExplode(row, assetKey) {
+    if (!fight || !isSuu() || !row || !assetKey) return;
+    const fuseMs = scaleDelayMs(Math.max(800, Number(row.fuseMs) || 3000));
+    const fallMs = scaleDelayMs(Math.max(200, Number(row.fallMs) || 420));
+    const airPx = Math.max(80, Number(row.fallAirPx) || 280);
+    const repeatIdx = Number.isFinite(Number(row.preRepeatIdx))
+      ? Math.floor(Number(row.preRepeatIdx))
+      : 6;
+    const hitDmg = suuPatternDmg(row);
+    const heat = Number(row.heatOnHit) || 8;
+    const field = getBossFieldEl();
+    const maxX = field?.clientWidth || 1366;
+    const maxY = field?.clientHeight || 768;
+    const floor = suuFieldPointFromPlayer();
+    const airY = Math.max(40, floor.y - airPx);
+    const { xs } = suuResolveVisualSpread(row, floor.x, maxX);
+    const liveEls = [];
+    const standByX = [];
+
+    const clearLive = () => {
+      liveEls.forEach((el) => { try { el.remove(); } catch (_) { /* */ } });
+      liveEls.length = 0;
+    };
+
+    // 1) regen：左右多顆空中出現（僅視覺）
+    let regenMs = 0;
+    for (let i = 0; i < xs.length; i += 1) {
+      const ms = playSuuPatternFx(assetKey, 'regen', {
+        anchor: 'map',
+        mapX: xs[i],
+        mapY: airY,
+      }) || 0;
+      if (ms > regenMs) regenMs = ms;
+    }
+    await sleep(regenMs || scaleDelayMs(360));
+    if (!fight || fight.mode !== 'fight') return;
+
+    // 2) stand：同視覺從空中落到地上
+    for (let i = 0; i < xs.length; i += 1) {
+      const xi = xs[i];
+      playSuuPatternFx(assetKey, 'stand', {
+        anchor: 'map',
+        mapX: xi,
+        mapY: airY,
+        loop: true,
+        onCreate: (el) => {
+          liveEls.push(el);
+          standByX.push({ el, x: xi });
+        },
+      });
+    }
+    const tFall = Date.now();
+    while (Date.now() - tFall < fallMs) {
+      if (!fight || fight.mode !== 'fight') {
+        clearLive();
+        return;
+      }
+      const t = Math.min(1, (Date.now() - tFall) / fallMs);
+      const y = Math.round(airY + (floor.y - airY) * t);
+      for (let i = 0; i < standByX.length; i += 1) {
+        const rowEl = standByX[i];
+        if (!rowEl.el?.isConnected) continue;
+        rowEl.el.style.top = `${Math.min(maxY - 8, y)}px`;
+        rowEl.el.style.left = `${rowEl.x}px`;
+      }
+      await sleep(TICK_MS);
+    }
+    clearLive();
+    standByX.length = 0;
+    if (!fight || fight.mode !== 'fight') return;
+
+    // 3) pre：地上引爆預備；WZ repeatIdx=6
+    for (let i = 0; i < xs.length; i += 1) {
+      playSuuPatternFx(assetKey, 'pre', {
+        anchor: 'map',
+        mapX: xs[i],
+        mapY: floor.y,
+        repeatIdx,
+        onCreate: (el) => { liveEls.push(el); },
+      });
+    }
+    const tFuse = Date.now();
+    while (Date.now() - tFuse < fuseMs) {
+      if (!fight || fight.mode !== 'fight') {
+        clearLive();
+        return;
+      }
+      await sleep(TICK_MS);
+    }
+    clearLive();
+    if (!fight || fight.mode !== 'fight') return;
+
+    // 4) end 全數爆炸；hit／傷害只算玩家那顆
+    for (let i = 0; i < xs.length; i += 1) {
+      playSuuPatternFx(assetKey, 'end', {
+        anchor: 'map',
+        mapX: xs[i],
+        mapY: floor.y,
+        clampOriginToSprite: true,
+      });
+    }
+    playSuuPatternFx(assetKey, 'hit', { anchor: 'feet' });
+    suuApplyPatternHit(hitDmg, heat);
+  }
+
+  /**
+   * 칼날 톱니：pre 核心預警 → 1.32s 後鋸刃從地板升起。
+   * 左右多顆僅視覺；傷害只算玩家身上那顆（升起後才出傷）
+   */
+  async function fireSuuSawRise(row, assetKey) {
+    if (!fight || !isSuu() || !row || !assetKey) return;
+    const warnMs = scaleDelayMs(Math.max(400, Number(row.warningMs) || 1320));
+    const riseMs = scaleDelayMs(Math.max(120, Number(row.riseMs) || 480));
+    const hitDmg = suuPatternDmg(row);
+    const heat = Number(row.heatOnHit) || 5;
+    const preEls = [];
+
+    // 不 holdLast：播完自動移除，避免透明殘留；錨在核心
+    playSuuPatternFx(assetKey, 'pre', {
+      anchor: 'mapCore',
+      onCreate: (el) => { preEls.push(el); },
+    });
+    const tWarn = Date.now();
+    while (Date.now() - tWarn < warnMs) {
+      if (!fight || fight.mode !== 'fight') {
+        preEls.forEach((el) => { try { el.remove(); } catch (_) { /* */ } });
+        return;
+      }
+      await sleep(TICK_MS);
+    }
+    preEls.forEach((el) => { try { el.remove(); } catch (_) { /* */ } });
+    if (!fight || fight.mode !== 'fight') return;
+
+    const base = suuFieldPointFromPlayer();
+    const field = getBossFieldEl();
+    const maxX = field?.clientWidth || 1366;
+    const maxY = field?.clientHeight || 768;
+    const { xs } = suuResolveVisualSpread(row, base.x, maxX);
+    // effect 整體偏高：相對腳底再下移（pre 仍用 mapCore）
+    const y = Math.max(40, Math.min(maxY - 8, Math.round(base.y + 15)));
+
+    for (let i = 0; i < xs.length; i += 1) {
+      if (!fight || fight.mode !== 'fight') return;
+      playSuuPatternFx(assetKey, 'effect', {
+        anchor: 'map',
+        mapX: xs[i],
+        mapY: y,
+      });
+    }
+
+    const hitAt = Date.now() + riseMs;
+    while (Date.now() < hitAt) {
+      if (!fight || fight.mode !== 'fight') return;
+      await sleep(TICK_MS);
+    }
+    if (!fight || fight.mode !== 'fight') return;
+    // 傷害只算玩家那顆（中間視覺對齊玩家）
+    playSuuPatternFx(assetKey, 'hit', { anchor: 'feet' });
+    suuApplyPatternHit(hitDmg, heat);
+  }
+
+  /**
+   * 전류 방출（1007/001）依幀讀圖：
+   * pre／special3 錨點同鋸刃＝mapCore（suuKit.corePos）；勿用 mapCenter（會偏高）
+   * effect＝錨同一地板高度一次播完（早期超大 oy 把槍抬高；28+ 雷柱）
+   * special3＝發射瞬間橫向電弧（ox=0），單層鋪地板（不用 special／special2 避免重疊）
+   * hit＝單發命中
+   */
+  async function fireSuuFloorCurrent(row, assetKey) {
+    if (!fight || !isSuu() || !row || !assetKey) return;
+    const hitDmg = suuPatternDmg(row);
+    const heat = Number(row.heatOnHit) || 12;
+    // 與鋸刃 pre 同一地板高度（corePos）；可選 floorYBias 再微調
+    const core = suuFieldPointMapCore();
+    const yBias = Math.floor(Number(row.floorYBias) || 0);
+    const floorY = Math.round(core.y + yBias);
+    const field = getBossFieldEl();
+    const W = field?.clientWidth || 1366;
+    // 나무 1.74s；effect 0~27 ≈ 28×60ms
+    const warnMs = scaleDelayMs(Math.max(400, Number(row.warningMs) || 1740));
+    // WZ pre 無 repeatIdx；預設從 0 循環（整段脈衝），避免 holdLast 凍在最後一幀
+    const preRepeat = Number.isFinite(Number(row.preRepeatIdx))
+      ? Number(row.preRepeatIdx)
+      : 0;
+    const preEls = [];
+
+    // 1) 地板預警（寬條）— 循環播；Y＝corePos（同鋸刃）
+    playSuuPatternFx(assetKey, 'pre', {
+      anchor: 'map',
+      mapX: core.x,
+      mapY: floorY,
+      repeatIdx: preRepeat,
+      onCreate: (el) => { preEls.push(el); },
+    });
+
+    // 2) effect 一次播完：同地板高度、保留 WZ 超大 oy
+    playSuuPatternFx(assetKey, 'effect', {
+      anchor: 'map',
+      mapX: core.x,
+      mapY: floorY,
+    });
+
+    const t0 = Date.now();
+    while (Date.now() - t0 < warnMs) {
+      if (!fight || fight.mode !== 'fight') {
+        preEls.forEach((el) => { try { el.remove(); } catch (_) { /* */ } });
+        return;
+      }
+      await sleep(TICK_MS);
+    }
+    if (!fight || fight.mode !== 'fight') {
+      preEls.forEach((el) => { try { el.remove(); } catch (_) { /* */ } });
+      return;
+    }
+    preEls.forEach((el) => { try { el.remove(); } catch (_) { /* */ } });
+
+    // 3) 只用 special3 橫向鋪地板（ox=0 往右；Y＝mapCore）
+    const prefer = Array.isArray(row.specialActions) && row.specialActions.length
+      ? row.specialActions.map(String)
+      : ['special3'];
+    const ballActions = prefer.filter((a) => suuHasPatternAction(assetKey, a));
+    const step = Math.max(
+      40,
+      Math.floor(Number(row.specialStepPx) || 80),
+    );
+    const lineCount = Math.max(
+      3,
+      Math.floor(Number(row.specialLineCount) || 0) || (Math.ceil(W / step) + 1),
+    );
+    const action = ballActions[0] || null;
+    if (action) {
+      for (let i = 0; i < lineCount; i += 1) {
+        const x = Math.round(i * step);
+        if (x > W + step) break;
+        playSuuPatternFx(assetKey, action, {
+          anchor: 'map',
+          mapX: x,
+          mapY: floorY,
+        });
+      }
+    }
+
+    playSuuPatternFx(assetKey, 'hit', { anchor: 'feet' });
+    suuApplyPatternHit(hitDmg, heat);
+  }
+
+  /** 상단 포격：每次重新鎖玩家 → pre → 開火 */
+  async function fireSuuPinpointVolley(row, assetKey) {
+    if (!fight || !isSuu() || !row || !assetKey) return;
+    const hits = resolveSuuPatternHitCount(row);
+    const warnMs = scaleDelayMs(Math.max(300, Number(row.warningMs) || 1000));
+    const gapMs = scaleDelayMs(Math.max(400, resolveSuuPatternHitGapMs(row) || 1700));
+    const hitDmg = suuPatternDmg(row);
+    const heat = Number(row.heatOnHit) || 12;
+
+    for (let i = 0; i < hits; i += 1) {
+      if (!fight || fight.mode !== 'fight') return;
+      const pos = suuFieldPointFromPlayer();
+      playSuuPatternFx(assetKey, 'pre', {
+        anchor: 'map',
+        mapX: pos.x,
+        mapY: pos.y,
+        noOriginBias: true,
+      });
+      const t0 = Date.now();
+      while (Date.now() - t0 < warnMs) {
+        if (!fight || fight.mode !== 'fight') return;
+        await sleep(TICK_MS);
+      }
+      if (!fight || fight.mode !== 'fight') return;
+      const impact = suuFieldPointFromPlayer();
+      playSuuPatternFx(assetKey, 'end', {
+        anchor: 'map',
+        mapX: impact.x,
+        mapY: impact.y,
+        noOriginBias: true,
+      });
+      playSuuPatternFx(assetKey, 'hit', {
+        anchor: 'map',
+        mapX: impact.x,
+        mapY: impact.y,
+      });
+      suuApplyPatternHit(hitDmg, heat);
+      if (i < hits - 1) await sleep(gapMs);
+    }
+  }
+
+  /**
+   * 가로 포격（1008/000・1009/000；僅 P2／P3）
+   * 0＝發射器 attack(repeatIdx13)→loop→end
+   * 1＝光波 pre→loop＋special(repeatIdx4)→special2→end＋hit
+   * 預設光波往右；玩家在左半場則 flipX 朝左
+   */
+  async function fireSuuHorizontalBarrage(row, baseKey) {
+    if (!fight || !isSuu() || !row || !baseKey) return;
+    const gunKey = `${baseKey}/0`;
+    const waveKey = `${baseKey}/1`;
+    const warnMs = scaleDelayMs(Math.max(400, Number(row.warningMs) || 1500));
+    const fireMs = scaleDelayMs(Math.max(800, Number(row.fireMs) || 3000));
+    const tickMs = scaleDelayMs(Math.max(200, Number(row.tickMs) || 500));
+    const hitDmg = suuPatternDmg(row);
+    const heat = Number(row.heatOnHit) || 16;
+    const field = getBossFieldEl();
+    const W = field?.clientWidth || 1366;
+    const player = suuFieldPointFromPlayer();
+    // 預設資產往右射；玩家在左 → 鏡射朝左
+    const flipX = player.x < W * 0.5;
+    const attackRepeat = Number.isFinite(Number(row.gunAttackRepeatIdx))
+      ? Number(row.gunAttackRepeatIdx)
+      : 13;
+    const specialRepeat = Number.isFinite(Number(row.waveSpecialRepeatIdx))
+      ? Number(row.waveSpecialRepeatIdx)
+      : 4;
+
+    const warnLive = [];
+    const fireLive = [];
+    const trackWarn = (el) => { if (el) warnLive.push(el); };
+    const trackFire = (el) => { if (el) fireLive.push(el); };
+    const clear = (arr) => {
+      arr.forEach((el) => { try { el.remove(); } catch (_) { /* */ } });
+      arr.length = 0;
+    };
+
+    const fxBase = { anchor: 'mapCenter', flipX };
+
+    // 預警：attack 用 WZ repeatIdx 撐住，避免播完消失再切 loop 閃爍
+    if (suuHasPatternAction(gunKey, 'attack')) {
+      playSuuPatternFx(gunKey, 'attack', {
+        ...fxBase,
+        repeatIdx: attackRepeat,
+        onCreate: trackWarn,
+      });
+    }
+    if (suuHasPatternAction(waveKey, 'pre')) {
+      playSuuPatternFx(waveKey, 'pre', {
+        ...fxBase,
+        holdLast: true,
+        onCreate: trackWarn,
+      });
+    }
+    await sleep(warnMs);
+    if (!fight || fight.mode !== 'fight') {
+      clear(warnLive);
+      return;
+    }
+
+    // 先掛上發射 loop，再撤預警層，減少空窗閃爍
+    if (suuHasPatternAction(gunKey, 'loop')) {
+      playSuuPatternFx(gunKey, 'loop', {
+        ...fxBase,
+        loop: true,
+        onCreate: trackFire,
+      });
+    }
+    if (suuHasPatternAction(waveKey, 'loop')) {
+      playSuuPatternFx(waveKey, 'loop', {
+        ...fxBase,
+        loop: true,
+        onCreate: trackFire,
+      });
+    }
+    if (suuHasPatternAction(waveKey, 'special')) {
+      playSuuPatternFx(waveKey, 'special', {
+        ...fxBase,
+        repeatIdx: specialRepeat,
+        onCreate: trackFire,
+      });
+    }
+    clear(warnLive);
+
+    const t0 = Date.now();
+    let nextTick = t0;
+    while (Date.now() - t0 < fireMs) {
+      if (!fight || fight.mode !== 'fight') {
+        clear(fireLive);
+        return;
+      }
+      if (Date.now() >= nextTick) {
+        playSuuPatternFx(waveKey, 'hit', { anchor: 'feet', flipX });
+        suuApplyPatternHit(hitDmg, heat);
+        nextTick += tickMs;
+      }
+      await sleep(TICK_MS);
+    }
+    clear(fireLive);
+    if (!fight || fight.mode !== 'fight') return;
+
+    if (suuHasPatternAction(waveKey, 'special2')) {
+      playSuuPatternFx(waveKey, 'special2', { ...fxBase });
+    }
+    if (suuHasPatternAction(waveKey, 'end')) {
+      playSuuPatternFx(waveKey, 'end', { ...fxBase });
+    }
+    if (suuHasPatternAction(gunKey, 'end')) {
+      playSuuPatternFx(gunKey, 'end', { ...fxBase });
+    }
+  }
+
+  /**
+   * 전기장 드론（1006/002 系）
+   * 0＝追蹤 pre→loop；1＝電場 pre→loop→end；hit＝tick
+   */
+  async function fireSuuFieldDrone(row, baseKey) {
+    if (!fight || !isSuu() || !row || !baseKey) return;
+    const chaseKey = `${baseKey}/0`;
+    const fieldKey = `${baseKey}/1`;
+    const chaseMs = scaleDelayMs(Math.max(600, Number(row.chaseMs) || Number(row.warningMs) || 3000));
+    const phase = Math.max(1, Math.floor(Number(fight.phase) || 1));
+    const fieldDefault = phase <= 1 ? 4000 : 3000;
+    const fieldMs = scaleDelayMs(Math.max(600, Number(row.fieldMs) || fieldDefault));
+    const tickMs = scaleDelayMs(Math.max(200, Number(row.hitGapMs) || 360));
+    const hitDmg = suuPatternDmg(row);
+    const heat = Number(row.heatOnHit) || 4;
+    const live = [];
+    const track = (el) => { if (el) live.push(el); };
+    const clearLive = () => {
+      live.forEach((el) => { try { el.remove(); } catch (_) { /* */ } });
+      live.length = 0;
+    };
+    const pinToPlayer = () => {
+      const p = suuFieldPointFromPlayer();
+      for (let i = 0; i < live.length; i += 1) {
+        const el = live[i];
+        if (!el?.isConnected) continue;
+        el.style.left = `${p.x}px`;
+        el.style.top = `${p.y}px`;
+      }
+    };
+
+    if (suuHasPatternAction(chaseKey, 'pre')) {
+      playSuuPatternFx(chaseKey, 'pre', { anchor: 'feet', onCreate: track });
+    }
+    await sleep(Math.min(chaseMs, scaleDelayMs(400)));
+    if (!fight || fight.mode !== 'fight') {
+      clearLive();
+      return;
+    }
+    clearLive();
+    if (suuHasPatternAction(chaseKey, 'loop')) {
+      playSuuPatternFx(chaseKey, 'loop', { anchor: 'feet', loop: true, onCreate: track });
+    }
+    const tChase = Date.now();
+    while (Date.now() - tChase < chaseMs) {
+      if (!fight || fight.mode !== 'fight') {
+        clearLive();
+        return;
+      }
+      pinToPlayer();
+      await sleep(TICK_MS);
+    }
+    clearLive();
+    if (!fight || fight.mode !== 'fight') return;
+
+    const lock = suuFieldPointFromPlayer();
+    if (suuHasPatternAction(fieldKey, 'pre')) {
+      playSuuPatternFx(fieldKey, 'pre', {
+        anchor: 'map',
+        mapX: lock.x,
+        mapY: lock.y,
+        onCreate: track,
+      });
+    }
+    await sleep(scaleDelayMs(360));
+    if (!fight || fight.mode !== 'fight') {
+      clearLive();
+      return;
+    }
+    clearLive();
+    if (suuHasPatternAction(fieldKey, 'loop')) {
+      playSuuPatternFx(fieldKey, 'loop', {
+        anchor: 'map',
+        mapX: lock.x,
+        mapY: lock.y,
+        loop: true,
+        onCreate: track,
+      });
+    }
+
+    const tField = Date.now();
+    let nextTick = tField;
+    while (Date.now() - tField < fieldMs) {
+      if (!fight || fight.mode !== 'fight') {
+        clearLive();
+        return;
+      }
+      if (Date.now() >= nextTick) {
+        playSuuPatternFx(baseKey, 'hit', {
+          anchor: 'map',
+          mapX: lock.x,
+          mapY: lock.y,
+        });
+        suuApplyPatternHit(hitDmg, heat);
+        nextTick += tickMs;
+      }
+      await sleep(TICK_MS);
+    }
+    clearLive();
+    if (!fight || fight.mode !== 'fight') return;
+    if (suuHasPatternAction(fieldKey, 'end')) {
+      playSuuPatternFx(fieldKey, 'end', {
+        anchor: 'map',
+        mapX: lock.x,
+        mapY: lock.y,
+      });
+    }
+  }
+
+  function fireSuuPattern(row) {
+    if (!fight || !isSuu() || !row) return;
+    const assetKey = resolveSuuPatternAsset(row);
+    if (row.castMode === 'trackingLaser' && assetKey) {
+      void fireSuuTrackingLaser(row, assetKey);
+      return;
+    }
+    if (row.castMode === 'armSlam' && assetKey) {
+      void fireSuuArmSlam(row, assetKey);
+      return;
+    }
+    if (row.castMode === 'dropExplode' && assetKey) {
+      void fireSuuDropExplode(row, assetKey);
+      return;
+    }
+    if (row.castMode === 'sawRise' && assetKey) {
+      void fireSuuSawRise(row, assetKey);
+      return;
+    }
+    if (row.castMode === 'floorCurrent' && assetKey) {
+      void fireSuuFloorCurrent(row, assetKey);
+      return;
+    }
+    if (row.castMode === 'pinpointVolley' && assetKey) {
+      void fireSuuPinpointVolley(row, assetKey);
+      return;
+    }
+    if (row.castMode === 'horizontalBarrage' && assetKey) {
+      void fireSuuHorizontalBarrage(row, assetKey);
+      return;
+    }
+    if (row.castMode === 'fieldDrone' && assetKey) {
+      void fireSuuFieldDrone(row, assetKey);
+      return;
+    }
+    const playerEl = getBossPlayerEl();
+    const hitDmg = suuPatternDmg(row);
+    const heat = Number(row.heatOnHit) || 8;
+    const warnMs = scaleDelayMs(Math.max(400, Number(row.warningMs) || 1000));
+    const aimMs = scaleDelayMs(Math.max(0, Number(row.aimMs) || 0));
+    const hit2Ms = scaleDelayMs(Math.max(0, Number(row.hit2Ms) || 0));
+    const warnLayers = normalizeSuuFxLayers(row, 'fxWarnLayers');
+    const aimLayers = normalizeSuuFxLayers(row, 'fxAimLayers');
+    const hitLayers = normalizeSuuFxLayers(row, 'fxHitLayers');
+    const hit2Layers = normalizeSuuFxLayers(row, 'fxHit2Layers');
+    const hits = resolveSuuPatternHitCount(row);
+    const gapMs = scaleDelayMs(Math.max(120, resolveSuuPatternHitGapMs(row)));
+    const hit2Ratio = Number(row.hit2Ratio);
+    const hit2Dmg = (Number.isFinite(hit2Ratio) && hit2Ratio > 0)
+      ? Math.max(1, Math.floor(hitDmg * hit2Ratio))
+      : hitDmg;
+
+    const applyOne = (layers, dmg) => {
+      if (!fight || fight.mode !== 'fight') return;
+      if (playerEl && typeof IdleMobAnim !== 'undefined') {
+        IdleMobAnim.playPlayerHit?.(playerEl, pad(fight.body.visualId), 'stand', { immediate: true });
+      }
+      if (assetKey) {
+        if (layers) playSuuPatternLayers(assetKey, layers);
+        else playSuuPatternFx(assetKey, 'hit', { anchor: row.anchor || 'feet' });
+      }
+      hurtPlayerFromBoss('body', dmg, { heatOnHit: heat });
+      hooks?.syncPlayerHp?.();
+    };
+
+    const runHits = async () => {
+      for (let i = 0; i < hits; i += 1) {
+        if (!fight || fight.mode !== 'fight') return;
+        applyOne(hitLayers, hitDmg);
+        if (i < hits - 1) await sleep(gapMs);
+      }
+      if (hit2Ms > 0) {
+        const t1 = Date.now();
+        while (Date.now() - t1 < hit2Ms) {
+          if (!fight || fight.mode !== 'fight') return;
+          await sleep(TICK_MS);
+        }
+        applyOne(hit2Layers || hitLayers, hit2Dmg);
+      }
+    };
+
+    const start = async () => {
+      if (assetKey && warnLayers) playSuuPatternLayers(assetKey, warnLayers);
+      else if (assetKey) playSuuPatternFx(assetKey, 'pre', { anchor: row.anchor || 'feet' });
+
+      if (aimMs > 0 && assetKey && aimLayers) {
+        const t0 = Date.now();
+        while (Date.now() - t0 < aimMs) {
+          if (!fight || fight.mode !== 'fight') return;
+          await sleep(TICK_MS);
+        }
+        playSuuPatternLayers(assetKey, aimLayers);
+      }
+
+      const started = Date.now();
+      while (Date.now() - started < warnMs) {
+        if (!fight || fight.mode !== 'fight') return;
+        await sleep(TICK_MS);
+      }
+      await runHits();
+    };
+    void start();
+  }
+
+  /**
+   * 史烏無施法動作：各招獨立 CD，動畫可同時在場重疊。
+   * 開招之間另有 patternCastGapSec 全域間隔（預設 1s）。
+   */
+  function tickSuuPatterns(dt) {
+    if (!fight || !isSuu() || busy || fight.mode !== 'fight') return;
+    const kit = suuKitCfg();
+    const patterns = Array.isArray(kit.patterns) ? kit.patterns : [];
+    const phase = Math.max(1, Math.floor(Number(fight.phase) || 1));
+    const purge = suuInPurge();
+    if (!fight.suuPatternAcc) fight.suuPatternAcc = Object.create(null);
+    const acc = fight.suuPatternAcc;
+
+    const collectReady = () => {
+      const readyList = [];
+      for (let i = 0; i < patterns.length; i += 1) {
+        const row = patterns[i];
+        if (!row?.id) continue;
+        const phases = Array.isArray(row.phases) ? row.phases : [1, 2, 3];
+        if (!phases.includes(phase)) continue;
+        if (row.requiresPurge && !purge) continue;
+        const cdMul = (purge && !row.requiresPurge) ? 1.35 : 1;
+        const cd = Math.max(2, resolveSuuPatternCdSec(row)) * cdMul;
+        if ((Number(acc[row.id]) || 0) < cd) continue;
+        readyList.push(row);
+      }
+      if (!readyList.length) return [];
+      if (purge) {
+        const purgeOnly = readyList.filter((r) => r.requiresPurge);
+        if (purgeOnly.length) return purgeOnly;
+      }
+      return readyList;
+    };
+
+    for (let i = 0; i < patterns.length; i += 1) {
+      const row = patterns[i];
+      if (!row?.id) continue;
+      const phases = Array.isArray(row.phases) ? row.phases : [1, 2, 3];
+      if (!phases.includes(phase)) continue;
+      if (row.requiresPurge && !purge) continue;
+      acc[row.id] = (Number(acc[row.id]) || 0) + Math.max(0, Number(dt) || 0);
+    }
+
+    const gapSec = Number(kit.patternCastGapSec);
+    const gapMs = scaleDelayMs(Math.max(0, Number.isFinite(gapSec) ? gapSec : 1) * 1000);
+    if (Date.now() < (Number(fight.suuNextPatternAt) || 0)) return;
+
+    const pool = collectReady();
+    if (!pool.length) return;
+    const ready = pool[Math.floor(Math.random() * pool.length)];
+    acc[ready.id] = 0;
+    fight.suuNextPatternAt = Date.now() + gapMs;
+    fireSuuPattern(ready);
+  }
+
+  function applySuuMapArt(form) {
+    const art = form?.mapArt;
+    if (art && typeof hooks?.setMapArt === 'function') {
+      hooks.setMapArt(String(art));
+    }
+  }
+
+  async function enterSuuPhase(formIndex) {
+    if (!fight || !isSuu()) return;
+    const forms = fight.script.bodyForms || [];
+    if (formIndex < 0 || formIndex >= forms.length) return;
+    busy = true;
+    clearSuuPatternsRuntime();
+    fight.bodyFormIndex = formIndex;
+    fight.phase = 1 + formIndex;
+    hooks?.onPhase?.(fight.phase);
+    const form = forms[formIndex];
+    const visualId = pad(form.visualMob || form.statMob);
+    fight.body.visualId = visualId;
+    fight.body.maxHp = maxHpOfBodyForm(fight.listId, form);
+    fight.body.hp = fight.body.maxHp;
+    fight.body.invincible = false;
+    fight.body.targetable = true;
+    fight.body.dead = false;
+    fight.suuShieldActive = false;
+    fight.suuShieldUntil = 0;
+    fight.suuShieldHp = 0;
+    fight.suuShieldMax = 0;
+    fight.suuNextShieldAt = Date.now() + scaleDelayMs(8000);
+    fight.suuPurgeUntil = 0;
+    fight.suuPurgeDurationMs = 0;
+    fight.suuOverloadUntil = 0;
+    fight.suuDamageTowardCool = 0;
+    fight.suuPatternAcc = Object.create(null);
+    fight.suuUiBgFrame = 0;
+    fight.suuUiBg0Frame = 0;
+    fight.suuUiAnimAcc = 0;
+    hideSuuAlertFrame();
+    if (formIndex >= 2) {
+      const startG = Number(suuKitCfg().gauge?.p3Start);
+      fight.suuGauge = Math.max(0, Number.isFinite(startG) ? startG : 55);
+    } else {
+      fight.suuGauge = Math.min(Number(fight.suuGauge) || 0, 40);
+    }
+    applySuuMapArt(form);
+    let bossPos = hooks?.getBossPos?.() || { x: 720, y: 610 };
+    if (form.bossPos || form.playerPos) {
+      bossPos = applyHorntailStageLayout(form, bossPos);
+    }
+    const el = slotEl('body');
+    if (!el) mountInitialActors(bossPos);
+    else applyActorLayout(bossPos);
+    bindVisual('body', visualId, 'stand');
+    busy = false;
+    syncSuuGaugeHud();
+    syncHud();
+  }
+
+  async function onSuuPhaseDown() {
+    if (!fight || !isSuu() || busy || fight.mode !== 'fight') return;
+    if (!(fight.body.hp <= 0)) return;
+    const forms = fight.script.bodyForms || [];
+    const next = (Number(fight.bodyFormIndex) || 0) + 1;
+    busy = true;
+    stopSustainCombat();
+    clearSuuPatternsRuntime();
+    atkFxSeq += 1;
+    if (next < forms.length) {
+      clearUnitDebuff('body');
+      await playAnim('body', fight.body.visualId, 'die1');
+      if (!fight) return;
+      await enterSuuPhase(next);
+      return;
+    }
+    busy = false;
+    await onBodyDead();
+  }
+
+  function clearSuuPatternsRuntime() {
+    if (!fight) return;
+    fight.suuPatternBusyUntil = 0;
+    fight.suuNextPatternAt = 0;
+    clearSuuShieldLoop();
+    const field = getBossFieldEl();
+    field?.querySelectorAll?.('.idle-boss-suu-fx-stage, .idle-boss-suu-fx').forEach((n) => n.remove());
+    stage()?.querySelectorAll('.idle-boss-suu-fx-stage, .idle-boss-suu-fx').forEach((n) => n.remove());
+    getBossPlayerEl()?.querySelectorAll?.('.idle-boss-suu-fx-stage').forEach((n) => n.remove());
+  }
+
+  async function playSuuIntro() {
+    if (!fight || !isSuu()) return;
+    const seq = atkFxSeq;
+    const form = (fight.script.bodyForms || [])[0];
+    const id = pad(form?.visualMob || form?.statMob || '8881100');
+    busy = true;
+    applySuuMapArt(form);
+    fight.suuNextShieldAt = Date.now() + scaleDelayMs(10000);
+    const el = slotEl('body');
+    if (el) {
+      el.classList.remove('is-hidden-slot');
+      el.style.display = '';
+      bindVisual('body', id, 'stand');
+    }
+    await sleep(scaleDelayMs(400));
+    if (seq !== atkFxSeq || !fight) return;
+    fight.body.invincible = false;
+    fight.body.targetable = true;
+    busy = false;
+    hooks?.onPhase?.(1);
+    syncSuuGaugeHud();
+    syncHud();
+  }
+
+  function tickSuu(dt) {
+    if (!fight || !isSuu() || busy || fight.mode !== 'fight') return;
+    trySuuShield();
+    // destruction → overload → default
+    if ((Number(fight.suuPurgeUntil) || 0) > 0 && Date.now() >= fight.suuPurgeUntil) {
+      endSuuDestruction();
+    } else if ((Number(fight.suuOverloadUntil) || 0) > 0 && Date.now() >= fight.suuOverloadUntil) {
+      fight.suuOverloadUntil = 0;
+      syncSuuGaugeHud();
+    }
+    tickSuuGaugeUiAnim(dt);
+    tickSuuAlertFrame(dt);
+    if (suuInDestruction()) syncSuuGaugeHud();
+    tickSuuPatterns(dt);
+    fight.body.active = true;
+    const attacks = unitAttacks(fight.listId, fight.body.visualId);
+    tickUnitAttack('body', fight.body, attacks, dt);
+  }
+
   /** 血腥女皇進場：固定 8920000 regen，之後開始切臉計時 */
   async function playBloodyQueenIntro() {
     if (!fight || !isBloodyQueen()) return;
@@ -6750,6 +8826,49 @@ const IdleBossFight = (() => {
       return true;
     }
 
+    if (isSuu()) {
+      fight.bodyFormIndex = 0;
+      fight.phase = 1;
+      const form = (fight.script.bodyForms || [])[0];
+      const visualId = pad(form?.visualMob || form?.statMob || '8881100');
+      const kit = suuKitCfg();
+      fight.body.visualId = visualId;
+      fight.body.maxHp = maxHpOfBodyForm(fight.listId, form);
+      fight.body.hp = fight.body.maxHp;
+      fight.body.invincible = false;
+      fight.body.targetable = true;
+      fight.body.dead = false;
+      fight.suuGauge = 0;
+      fight.suuGaugeMax = Math.max(1, Number(kit.gauge?.max) || 100);
+      fight.suuPurgeUntil = 0;
+      fight.suuPurgeDurationMs = 0;
+      fight.suuOverloadUntil = 0;
+      fight.suuShieldUntil = 0;
+      fight.suuNextShieldAt = 0;
+      fight.suuShieldActive = false;
+      fight.suuShieldHp = 0;
+      fight.suuShieldMax = 0;
+      fight.suuPatternAcc = Object.create(null);
+      fight.suuPatternBusyUntil = 0;
+      fight.suuNextPatternAt = 0;
+      fight.suuDamageTowardCool = 0;
+      fight.suuAlertFrame = 0;
+      fight.suuAlertAcc = 0;
+      fight.suuUiBgFrame = 0;
+      fight.suuUiBg0Frame = 0;
+      fight.suuUiAnimAcc = 0;
+      clearSuuPatternsRuntime();
+      if (opts.playIntro) {
+        mountInitialActors(bossPos, { skipBind: true });
+        syncHud();
+        playSuuIntro();
+      } else {
+        stage()?.querySelectorAll('.idle-boss-part').forEach((n) => n.remove());
+        syncHud();
+      }
+      return true;
+    }
+
     if (isSimple()) {
       fight.phase = 1;
       const statId = pad(fight.script.bodyStatMob);
@@ -6907,6 +9026,22 @@ const IdleBossFight = (() => {
       }
       if (isVellum()) {
         retractVellumTail({ force: true });
+      }
+      if (isSuu()) {
+        clearSuuPatternsRuntime();
+        clearSuuGaugeHud();
+        fight.suuPurgeUntil = 0;
+        fight.suuPurgeDurationMs = 0;
+        fight.suuOverloadUntil = 0;
+        fight.suuShieldActive = false;
+        fight.suuShieldUntil = 0;
+        fight.suuShieldHp = 0;
+        fight.suuShieldMax = 0;
+        fight.suuGauge = 0;
+        fight.suuPatternAcc = Object.create(null);
+        fight.suuPatternBusyUntil = 0;
+        fight.suuNextPatternAt = 0;
+        fight.suuDamageTowardCool = 0;
       }
     }
     hooks?.syncChallengeHud?.({ hide: true });

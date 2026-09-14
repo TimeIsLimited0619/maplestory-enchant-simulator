@@ -731,6 +731,7 @@ const IdleBoss = (() => {
                 <img id="idleBossIcon" class="idle-boss-icon" alt="" draggable="false">
                 <div class="idle-boss-hp" id="idleBossHpBar" aria-label="BOSS HP">
                   <div class="idle-boss-hp__fill" id="idleBossHpFill"></div>
+                  <div class="idle-boss-hp__shield" id="idleBossHpShield" hidden></div>
                   <span class="idle-boss-hp__pct" id="idleBossHpPct">100%</span>
                   <div class="idle-boss-hp__text">
                     <span id="idleBossHpName">BOSS</span>
@@ -1194,6 +1195,7 @@ const IdleBoss = (() => {
 
   function syncBossHpHud(boss) {
     const fill = $('idleBossHpFill');
+    const shieldEl = $('idleBossHpShield');
     const text = $('idleBossHpText');
     const pctEl = $('idleBossHpPct');
     const icon = $('idleBossIcon');
@@ -1206,12 +1208,34 @@ const IdleBoss = (() => {
     if (usesPhaseFight(boss?.id || arenaBossId) && typeof IdleBossFight !== 'undefined') {
       const body = IdleBossFight.getBodyHp?.();
       if (body) {
-        const pct = Math.max(0, Math.min(100, (body.hp / Math.max(1, body.maxHp)) * 100));
+        const maxHp = Math.max(1, Number(body.maxHp) || 1);
+        const hp = Math.max(0, Number(body.hp) || 0);
+        const pct = Math.max(0, Math.min(100, (hp / maxHp) * 100));
         if (fill) fill.style.width = `${pct}%`;
-        if (text) text.textContent = formatHp(body.hp, body.maxHp);
-        if (pctEl) pctEl.textContent = formatHpPct(body.hp, body.maxHp);
+        if (text) text.textContent = formatHp(hp, maxHp);
+        if (pctEl) pctEl.textContent = formatHpPct(hp, maxHp);
+        const shHp = Math.max(0, Number(body.shieldHp) || 0);
+        const shMax = Math.max(0, Number(body.shieldMax) || 0);
+        if (shieldEl) {
+          if (body.shieldActive && shMax > 0 && shHp > 0) {
+            // 池＝maxHp×0.5%；白條寬＝剩餘護盾比例（才看得清包覆層）
+            const shPct = Math.max(0, Math.min(100, (shHp / shMax) * 100));
+            shieldEl.hidden = false;
+            shieldEl.style.width = `${shPct}%`;
+            shieldEl.setAttribute('aria-valuenow', String(Math.round(shPct)));
+            shieldEl.title = `護盾 ${formatHp(shHp, shMax)}`;
+          } else {
+            shieldEl.hidden = true;
+            shieldEl.style.width = '0%';
+            shieldEl.removeAttribute('title');
+          }
+        }
         return;
       }
+    }
+    if (shieldEl) {
+      shieldEl.hidden = true;
+      shieldEl.style.width = '0%';
     }
     const body = bodyPartState();
     if (body) {

@@ -16,7 +16,7 @@ const TrunkModule = {
   SLOT_SIZE: 42,
   GAP: 4,
   VISIBLE_ROWS_STORAGE: 8,
-  VISIBLE_ROWS_BAG: 5,
+  VISIBLE_ROWS_BAG: 8,
 
   init() {
     if (this._bound) return;

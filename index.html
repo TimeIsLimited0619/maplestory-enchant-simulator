@@ -61,13 +61,13 @@
   <link rel="stylesheet" href="css/modules/36-idle-potion.css?v=20260904uipotion4">
   <link rel="stylesheet" href="css/modules/27-idle-gm-drops.css?v=20260903dgDiffRw1">
   <link rel="stylesheet" href="css/modules/28-idle-dungeon.css?v=20260913bossTopHp1">
-  <link rel="stylesheet" href="css/modules/40-idle-boss.css?v=20260914pagesWarm1">
+  <link rel="stylesheet" href="css/modules/40-idle-boss.css?v=20260914suu20">
   <link rel="stylesheet" href="css/modules/41-idle-ui-timer.css?v=20260904bossTimer2">
   <link rel="stylesheet" href="css/modules/42-idle-player-death.css?v=20260905deathFx2">
-  <link rel="stylesheet" href="css/modules/43-trunk.css?v=20260908trunk2">
+  <link rel="stylesheet" href="css/modules/43-trunk.css?v=20260914trunk8">
   <link rel="stylesheet" href="css/modules/44-job-change.css?v=20260911starter1">
   <link rel="stylesheet" href="css/modules/45-save-backup.css?v=20260912save1">
-  <link rel="stylesheet" href="css/modules/46-game-settings.css?v=20260913cdEnter2">
+  <link rel="stylesheet" href="css/modules/46-game-settings.css?v=20260914hotkey2">
   <link rel="stylesheet" href="css/modules/29-npcshop.css?v=20260829shop5">
   <link rel="stylesheet" href="css/modules/30-toads-hammer.css?v=20260828th4">
   <link rel="stylesheet" href="css/modules/31-catvalley.css?v=20260829cv4">
@@ -1214,14 +1214,12 @@
           <button type="button" class="inv-tab inv-tab-5" data-tab="coin" data-tab-idx="5" data-stub="1" aria-label="特殊" title="功能待實作"></button>
         </div>
 
-        <!-- 工具列：sort / slotLock / itemLock / filter -->
+        <!-- 工具列：sort / slotLock / itemLock -->
         <button type="button" class="inv-tool-btn inv-btn-sort" id="invBtnSortEquip" aria-label="整理背包" title="依編號由小到大自動排序道具。"></button>
         <button type="button" class="inv-tool-btn inv-btn-slot-lock" id="invBtnSlotLock" aria-label="固定道具位置" title="可固定道具位置。"></button>
         <button type="button" class="inv-tool-btn inv-btn-slot-lock-active hidden" id="invBtnSlotLockActive" aria-label="結束位置固定" title="結束道具位置固定模式。"></button>
         <button type="button" class="inv-tool-btn inv-btn-item-lock" id="invBtnItemLock" aria-label="便利鎖定" title="(便利鎖定)保護裝備及飛鏢、子彈，使其無法販售、強化、丟棄。"></button>
         <button type="button" class="inv-tool-btn inv-btn-item-lock-active hidden" id="invBtnItemLockActive" aria-label="結束便利鎖定" title="結束便利鎖定模式。"></button>
-        <button type="button" class="inv-tool-btn inv-btn-filter" id="invBtnFilter" aria-label="裝扮篩選" title="可依種類或等級分類查看裝飾道具。"></button>
-        <button type="button" class="inv-tool-btn inv-btn-filter-applied hidden" id="invBtnFilterApplied" aria-label="篩選啟用中" title="裝扮分頁篩選器啟用中。"></button>
 
         <div class="inv-slot-count inv-slot-count-equip" id="invSlotCountEquip">
           <span id="invSlotCountEquipCurrent">0</span>
@@ -1248,7 +1246,7 @@
         </div>
 
         <!-- 動作列 -->
-        <button type="button" class="inv-action-btn inv-btn-alchemy" id="invBtnItemAlchemy" aria-label="道具分解合成" title="可合成或分解裝備道具。"></button>
+        <button type="button" class="inv-action-btn inv-btn-alchemy" id="invBtnItemAlchemy" aria-label="裝備加工" title="開啟裝備加工（製作／分解／恢復）。"></button>
         <button type="button" class="inv-action-btn inv-btn-succession" id="invBtnSuccession" aria-label="裝備繼承" title="部分裝備強化選項可繼承至下一階裝備。"></button>
         <button type="button" class="inv-action-btn inv-btn-upgrade" id="invBtnUpgrade" aria-label="裝備強化" title="可強化裝備。"></button>
 
@@ -1260,7 +1258,7 @@
         <button type="button" class="inv-footer-btn inv-btn-equip" id="invBtnEquip" aria-label="開啟裝備" title="開啟裝備UI。"></button>
         <button type="button" class="inv-footer-btn inv-btn-shop" id="invBtnShop" aria-label="機器人商店" title="開啟機器人商店UI。"></button>
         <button type="button" class="inv-footer-btn inv-btn-trunk" id="invBtnTrunk" aria-label="倉庫" title="開啟倉庫UI。"></button>
-        <button type="button" class="inv-footer-btn inv-btn-bossreward" id="invBtnBossReward" aria-label="Boss獎勵保管箱" title="開啟Boss獎勵保管箱。"></button>
+        <button type="button" class="inv-footer-btn inv-btn-bossreward" id="invBtnBossReward" aria-label="BOSS 列表" title="開啟 BOSS 列表。"></button>
         <button type="button" class="inv-footer-btn inv-btn-bag" id="invBtnBag" aria-label="整合背包" title="開啟整合背包UI。"></button>
 
         <!-- Full：搜尋 -->
@@ -2103,7 +2101,7 @@
   </div>
 
   <!-- JavaScript 載入 (順序：資料庫 -> 數據配置 -> 互動邏輯) -->
-  <script src="js/appNavSidebar.js?v=20260913logIdle1"></script>
+  <script src="js/appNavSidebar.js?v=20260914hotkey1"></script>
   <script src="js/starforceSuperiorData.js?v=20260824sfLv1"></script>
   <script src="js/starforceRules.js?v=20260824sfLv1"></script>
   <script src="js/item.js?v=20260913sfBreak1"></script>
@@ -2111,16 +2109,17 @@
   <script src="js/wzImportedEquips.js?v=20260912rmWarArmor1"></script>
   <script src="js/paperdollItems.js?v=20260912rmWarArmor1"></script>
   <script src="js/generatedEquipLoader.js?v=20260825doll1"></script>
-  <script src="js/trunkData.js?v=20260912strip1"></script>
-  <script src="js/sessionPersistence.js?v=20260914importCd1"></script>
+  <script src="js/trunkData.js?v=20260914itemStore1"></script>
+  <script src="js/itemStore.js?v=20260914itemStore1"></script>
+  <script src="js/sessionPersistence.js?v=20260914fullBackup1"></script>
   <script src="js/equipTooltipData.js?v=20260820tools1"></script>
   <script src="js/wzImportedSetItems.js?v=20260907set1"></script>
   <script src="js/equipSetData.js?v=20260907set1"></script>
   <script src="js/hoverTooltipGuard.js?v=20260912tipRight2"></script>
-  <script src="js/inventory.js?v=20260912tipRight2"></script>
-  <script src="js/trunk.js?v=20260911nl4"></script>
+  <script src="js/inventory.js?v=20260914invBoss1"></script>
+  <script src="js/trunk.js?v=20260914trunk8"></script>
   <script src="js/itemRequestPanel.js?v=20260824req2"></script>
-  <script src="js/uiEquip.js?v=20260913equipSafe1"></script>
+  <script src="js/uiEquip.js?v=20260914itemStore1"></script>
   <script src="js/paperdollData.js?v=20260912rmWarArmor1"></script>
   <script src="js/paperdollActionInstructions.js?v=20260829instr1"></script>
   <script src="js/paperdoll.js?v=20260911nl5"></script>
@@ -2134,7 +2133,7 @@
   <script src="js/starforceEffect.js?v=20260820destroy1"></script>
   <script src="js/starforceScrollData.js?v=20260911nl4"></script>
   <script src="js/potentialScrollData.js?v=20260824idlePot1"></script>
-  <script src="js/starforce.js?v=20260913sfOfficial1"></script>
+  <script src="js/starforce.js?v=20260914itemStore1"></script>
   <script src="js/autoEnchantData.js?v=20260911aeDelay1"></script>
   <script src="js/autoEnchantStarForce.js?v=20260913sfProtectClick2"></script>
   <script src="js/scroll.js?v=20260912tipRight2"></script>
@@ -2152,9 +2151,9 @@
   <script src="js/catValleyEnhanceData.js?v=20260913catSafe1"></script>
   <script src="js/equipCraftData.js?v=20260913recover22"></script>
   <script src="js/equipCraftPanel.js?v=20260913recover22"></script>
-  <script src="js/disassembleData.js?v=20260913catSafe1"></script>
-  <script src="js/disassemblePanel.js?v=20260913process1"></script>
-  <script src="js/catValleyEnhance.js?v=20260913catSafe1"></script>
+  <script src="js/disassembleData.js?v=20260914disConfirm1"></script>
+  <script src="js/disassemblePanel.js?v=20260914disConfirm1"></script>
+  <script src="js/catValleyEnhance.js?v=20260914itemStore1"></script>
   <script src="js/cubeRates/event8421.js"></script>
   <script src="js/cubeRates/event8422.js"></script>
   <script src="js/cubeRates/event8630.js"></script>
@@ -2365,7 +2364,7 @@
   <script src="js/skillPoints.js?v=20260901hyperSp2"></script>
   <script src="js/characterSkills.js?v=20260913jobWep1"></script>
   <script src="js/jobChangePanel.js?v=20260912ab1"></script>
-  <script src="js/saveBackupPanel.js?v=20260914importCd1"></script>
+  <script src="js/saveBackupPanel.js?v=20260914fullBackup1"></script>
   <script src="js/skillModifiers.js?v=20260914buffRefresh1"></script>
   <script src="js/skillComboOrbs.js?v=20260911bal3"></script>
   <script src="js/skillBuffRuntime.js?v=20260913ab16"></script>
@@ -2390,17 +2389,19 @@
   <script src="js/idleUiTimer.js?v=20260904timerPos1"></script>
   <script src="js/idlePlayerDeathFlow.js?v=20260905deathOpt1"></script>
   <script src="js/idlePlayerDeathFx.js?v=20260905deathOpt1"></script>
-  <script src="js/idleHunt.js?v=20260913bossTopHp1"></script>
+  <script src="js/idleHunt.js?v=20260914suu20"></script>
   <script src="js/idleDungeonListData.js?v=20260912dgTimer1m"></script>
   <script src="js/idleDungeonData.js?v=20260912goldDmg2"></script>
   <script src="js/idleDungeon.js?v=20260913dgHudOut1"></script>
-  <script src="js/idleBossListData.js?v=20260910vellum1"></script>
-  <script src="js/idleBossWzData.js?v=20260910vellum1"></script>
-  <script src="js/idleBossMobData.js?v=20260910vellum1"></script>
-  <script src="js/idleBossPhaseData.js?v=20260910vellum3"></script>
-  <script src="js/idleBossFight.js?v=20260914pagesWarm1"></script>
-  <script src="js/idleBoss.js?v=20260914pagesWarm1"></script>
-  <script src="js/idleSessionRefresh.js?v=20260913cdEnter2"></script>
+  <script src="js/idleBossListData.js?v=20260914suu20"></script>
+  <script src="js/idleBossWzData.js?v=20260914suu20"></script>
+  <script src="js/idleBossMobData.js?v=20260914suu20"></script>
+  <script src="js/idleBossSuuPatternData.js?v=20260914suu20"></script>
+  <script src="js/idleBossPhaseData.js?v=20260914suu36"></script>
+  <script src="js/idleBossFight.js?v=20260914suu35"></script>
+  <script src="js/idleBoss.js?v=20260914suu20"></script>
+  <script src="js/appHotkeys.js?v=20260914hotkey2"></script>
+  <script src="js/idleSessionRefresh.js?v=20260914hotkey2"></script>
   <script src="js/idleNpcShopData.js?v=20260911starShop1"></script>
   <script src="js/uiNpcShop.js?v=20260912shopEnter1"></script>
   <script src="js/uiToadsHammer.js?v=20260913equipSafe1"></script>
@@ -2411,6 +2412,6 @@
   <script src="js/expectedCostCalc.js?v=20260913sfOfficial1"></script>
   <script src="js/shareCode.js?v=20260820tools1"></script>
   <script src="js/enchantToolsPanel.js?v=20260821expect2"></script>
-  <script src="js/main.js?v=20260913catSafe1"></script>
+  <script src="js/main.js?v=20260914itemStore1"></script>
 </body>
 </html>

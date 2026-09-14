@@ -20045,7 +20045,14 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "killGold": 10,
     "bossKillExp": 4460,
     "bossKillGold": 892,
-    "mobDrops": [],
+    "mobDrops": [
+      {
+        "kind": "equip",
+        "itemId": "01003800",
+        "chance": 100,
+        "amount": 1
+      }
+    ],
     "bossDrops": [],
     "drops": [],
     "custom": true,

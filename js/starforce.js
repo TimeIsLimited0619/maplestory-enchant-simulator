@@ -1090,7 +1090,7 @@ const StarForceModule = {
     };
   },
 
-  /** 星力破壞：標記已損壞並卸回背包 */
+  /** 星力破壞：標記已損壞並清除強化焦點（物品仍在原背包／穿著位置） */
   applyStarforceDestroy(options = {}) {
     const silent = options.silent === true;
     const item = this.itemData || (typeof currentEnchantItem !== 'undefined' ? currentEnchantItem : null);
@@ -1113,10 +1113,7 @@ const StarForceModule = {
     this.afterEnhanceUpdate();
 
     if (typeof unloadEquipFromSlot === 'function' && typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
-      const ok = unloadEquipFromSlot({ silent: true });
-      if (!ok && !silent) {
-        addLog('⚠️ 背包已滿，已損壞裝備暫留強化槽；請清出空位後卸下。', 'log-fail');
-      }
+      unloadEquipFromSlot({ silent: true });
     }
   },
 

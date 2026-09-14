@@ -44,6 +44,46 @@
   min-width: 0;
 }
 
+.game-settings-back.hidden {
+  display: none;
+}
+
+.game-settings-subnav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 12px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.game-settings-subnav:hover {
+  background: #2D2F39;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.game-settings-subnav-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.game-settings-subnav-chevron {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 18px;
+  line-height: 1;
+}
+
 .game-settings-nav {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
@@ -144,4 +184,100 @@
 .game-settings-field input[type="number"]:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* 自訂快捷鍵 */
+.game-settings-hotkey-group {
+  margin: 12px 0 6px;
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.game-settings-hotkey-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.game-settings-hotkey-row {
+  display: grid;
+  grid-template-columns: 1fr minmax(88px, auto) 28px;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.game-settings-hotkey-name {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-settings-hotkey-bind {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  background: #0f131a;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 5px 8px;
+  cursor: pointer;
+  min-width: 88px;
+  text-align: center;
+}
+
+.game-settings-hotkey-bind.has-binding {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.game-settings-hotkey-bind.is-capturing {
+  border-color: #6b8cff;
+  color: #9eb6ff;
+  animation: game-settings-hotkey-pulse 1s ease infinite;
+}
+
+.game-settings-hotkey-bind:hover {
+  background: #171c26;
+}
+
+.game-settings-hotkey-clear {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.game-settings-hotkey-clear:hover:not(:disabled) {
+  background: #2D2F39;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.game-settings-hotkey-clear:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.game-settings-hotkey-footer {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+@keyframes game-settings-hotkey-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
 }

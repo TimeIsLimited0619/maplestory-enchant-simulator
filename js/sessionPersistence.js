@@ -4,7 +4,9 @@
  */
 const SESSION_PERSISTENCE_KEY = 'mss-session-v1';
 const MSS_LOCAL_SAVE_KEY = 'mss-save-local-v1';
-const SESSION_PERSISTENCE_VERSION = 1;
+/** session 本體版本：2 = ItemStore（items + bagSlots + enchantFocus） */
+const SESSION_PERSISTENCE_VERSION = 2;
+const SESSION_PERSISTENCE_VERSION_LEGACY = 1;
 const MSS_SAVE_FORMAT = 'mss-save';
 const MSS_SAVE_FILE_VERSION = 1;
 const MSS_BACKUP_DB_NAME = 'mss-file-backup-v1';
@@ -119,11 +121,15 @@ const SessionPersistenceModule = {
   syncCurrentEnchantToInventory() {
     if (typeof currentEnchantItem === 'undefined' || !currentEnchantItem) return;
 
+    if (typeof writeBackEnchantProgress === 'function') {
+      writeBackEnchantProgress(currentEnchantItem);
+      return;
+    }
+
     if (typeof syncEnchantStateFromModules === 'function') {
       syncEnchantStateFromModules(currentEnchantItem);
     }
 
-    // 已移出背包時，進度只存在 currentEnchantItem → equippedItem 快照
     if (!Number.isInteger(currentEnchantItem.slotIndex) || currentEnchantItem.slotIndex < 0) {
       return;
     }
@@ -134,59 +140,118 @@ const SessionPersistenceModule = {
     if (snapshot) playerInventoryState[currentEnchantItem.slotIndex] = snapshot;
   },
 
+  isCompatibleSessionVersion(version) {
+    const v = Number(version);
+    return v === SESSION_PERSISTENCE_VERSION || v === SESSION_PERSISTENCE_VERSION_LEGACY;
+  },
+
+  /**
+   * 以 ItemStore 重建裝備圖，產出 v2 session 欄位。
+   * 失敗時回傳 null（呼叫端不得覆寫存檔）。
+   */
+  buildEquipV2Fields() {
+    if (typeof ItemStore === 'undefined') return null;
+
+    let focusUid = null;
+    let focusBagIndex = null;
+    let focusWear = null;
+    if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
+      focusUid = currentEnchantItem.instanceUid || null;
+      if (Number.isInteger(currentEnchantItem.slotIndex) && currentEnchantItem.slotIndex >= 0) {
+        focusBagIndex = currentEnchantItem.slotIndex;
+      }
+      if (currentEnchantItem.wearSlotId && typeof UiEquipModule !== 'undefined') {
+        focusWear = {
+          preset: UiEquipModule.getActivePreset?.() || 1,
+          slot: String(currentEnchantItem.wearSlotId),
+        };
+      }
+    }
+
+    let bodyWearByPreset = null;
+    if (typeof UiEquipModule !== 'undefined' && typeof UiEquipModule.exportState === 'function') {
+      bodyWearByPreset = UiEquipModule.exportState().bodyWearByPreset;
+    }
+
+    const inv = ItemStore.rebuildFromRuntime({
+      inventoryEquip: playerInventoryEquip,
+      inventoryState: playerInventoryState,
+      bodyWearByPreset,
+      trunkSlots: typeof playerTrunkSlots !== 'undefined' ? playerTrunkSlots : null,
+      enchantFocus: focusUid,
+      focusBagIndex,
+      focusWear,
+    });
+    if (!inv.ok) {
+      console.warn('[SessionPersistence] ItemStore invariants failed:', inv.errors);
+      if (typeof addLog === 'function') {
+        addLog('[存檔] 裝備實體不變量檢查失敗，已略過本次寫入以防毀檔。', 'log-fail');
+      }
+      return null;
+    }
+
+    const snap = ItemStore.exportEquipSnapshot();
+    return {
+      version: SESSION_PERSISTENCE_VERSION,
+      items: snap.items,
+      bagSlots: snap.bagSlots,
+      enchantFocus: snap.enchantFocus,
+      orphanBenchUids: snap.orphanBenchUids,
+      bodyWearUidByPreset: snap.bodyWearByPreset,
+      bodyWearByPreset: snap.bodyWearExpanded,
+      bodyWearActive: snap.bodyWearExpanded[
+        (typeof UiEquipModule !== 'undefined' && UiEquipModule.getActivePreset?.()) || 1
+      ] || {},
+      inventoryEquip: playerInventoryEquip.slice(),
+      inventoryState: playerInventoryState.slice(),
+      equippedItem: null,
+      equippedSlotIndex: null,
+      trunkSlots: ItemStore.exportTrunkSlotsMerged(
+        typeof playerTrunkSlots !== 'undefined' ? playerTrunkSlots : []
+      ),
+    };
+  },
+
   collectSnapshot() {
     this.syncCurrentEnchantToInventory();
 
-    let equippedItem = null;
-    if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
-      // 強化槽持有裝：強制正規化 ID／slot，避免貓谷強化後寫出空 equippedItem
-      let itemId = this.resolveItemId(currentEnchantItem);
-      if (!itemId) {
-        itemId = currentEnchantItem.itemId || currentEnchantItem.id || null;
-      }
-      if (itemId) {
-        currentEnchantItem.itemId = itemId;
-        currentEnchantItem.id = itemId;
-      }
-      if (!Number.isInteger(currentEnchantItem.slotIndex) || currentEnchantItem.slotIndex < 0) {
-        currentEnchantItem.slotIndex = -1;
-      }
-      const state = this.stampState(currentEnchantItem, itemId);
-      if (itemId && state) {
-        equippedItem = { itemId, state };
-      } else if (typeof addLog === 'function') {
-        addLog('[存檔] 警告：強化槽裝備無法寫入存檔快照，請立即匯出並回報。', 'log-fail');
-      }
+    const equipV2 = this.buildEquipV2Fields();
+    if (!equipV2) {
+      // 不變量失敗：回傳 null 讓 saveToStorage 中止
+      return null;
     }
 
     const snap = {
-      version: SESSION_PERSISTENCE_VERSION,
-      inventoryEquip: playerInventoryEquip.slice(),
+      ...equipV2,
       inventoryConsume: playerInventoryConsume.slice(),
       inventoryEtc: (typeof playerInventoryEtc !== 'undefined' ? playerInventoryEtc.slice() : []),
-      inventoryState: playerInventoryState.slice(),
-      // 新格式：強化槽實體；舊 equippedSlotIndex 保留相容（通常為 -1 / null）
-      equippedItem,
-      equippedSlotIndex: null,
     };
 
-    if (typeof TrunkData !== 'undefined' && typeof TrunkData.exportSnapshot === 'function') {
-      Object.assign(snap, TrunkData.exportSnapshot());
+    if (typeof TrunkData !== 'undefined' && typeof TrunkData.getMeso === 'function') {
+      snap.trunkMeso = TrunkData.getMeso();
+    } else if (typeof playerTrunkMeso !== 'undefined') {
+      snap.trunkMeso = playerTrunkMeso;
     }
 
     if (typeof UiEquipModule !== 'undefined' && typeof UiEquipModule.exportState === 'function') {
-      Object.assign(snap, UiEquipModule.exportState());
+      const ui = UiEquipModule.exportState();
+      snap.activeEquipPreset = ui.activeEquipPreset;
+      snap.pendingEquipPreset = ui.pendingEquipPreset;
     }
 
     return snap;
   },
 
   buildExportPayload() {
+    const session = this.collectSnapshot();
+    if (!session) {
+      throw new Error('equip snapshot invariants failed');
+    }
     const payload = {
       format: MSS_SAVE_FORMAT,
       version: MSS_SAVE_FILE_VERSION,
       exportedAt: new Date().toISOString(),
-      session: this.collectSnapshot(),
+      session,
       migrations: {
         ...(this._migrations && typeof this._migrations === 'object' ? this._migrations : {}),
         [SESSION_MIGRATION_STARFORCE_REMAP]: true,
@@ -258,7 +323,14 @@ const SessionPersistenceModule = {
       if (!this.loadedFromStorage) return;
       // 套用世界中途禁止寫入，避免空穿著／空強化槽覆寫
       if (this._applyingWorld) return;
-      const payload = this.buildExportPayload();
+      let payload;
+      try {
+        payload = this.buildExportPayload();
+      } catch (buildErr) {
+        console.warn('[SessionPersistence] 建立快照失敗，保留原存檔:', buildErr);
+        return;
+      }
+      if (!payload?.session) return;
       if (this.activeProfile === 'idle') {
         delete payload.costTracker;
       }
@@ -439,96 +511,14 @@ const SessionPersistenceModule = {
   },
 
   async serializePayloadForFile(payload) {
-    const forFile = this.stripFileExportRestricted(payload);
+    // 完整 payload 寫入檔案（楓幣／消耗欄一併保留；S/L 改由匯入冷卻抑制）
     if (globalThis.crypto?.subtle) {
-      const wrapped = await this.encryptPayloadForFile(forFile);
+      const wrapped = await this.encryptPayloadForFile(payload);
       return `${JSON.stringify(wrapped)}\n`;
     }
     // 非安全內容（如 http）無法用 SubtleCrypto → 退回明文
     console.warn('[SessionPersistence] Web Crypto 不可用，檔案改存明文');
-    return `${JSON.stringify(forFile, null, 2)}\n`;
-  },
-
-  isPotionConsumeEntry(entry) {
-    if (!entry || typeof entry !== 'object') return false;
-    const T = typeof CONSUME_ITEM_TYPE !== 'undefined' ? CONSUME_ITEM_TYPE : {};
-    const potionType = T.POTION || 'potion';
-    if (entry.type === potionType || entry.type === 'potion') return true;
-    if (entry.kind === 'consume' && (entry.type === potionType || entry.type === 'potion')) return true;
-    return false;
-  },
-
-  /**
-   * 匯出／本機備份檔專用：不含楓幣、不含消耗欄藥水以外物品。
-   * localStorage 主存仍用完整 buildExportPayload。
-   */
-  stripFileExportRestricted(payload) {
-    if (!payload || typeof payload !== 'object') return payload;
-    let clone;
-    try {
-      clone = JSON.parse(JSON.stringify(payload));
-    } catch (_) {
-      return payload;
-    }
-
-    // 楓幣：放置持有、倉庫（寫 0，讀檔時才會覆寫；勿只 delete）
-    if (clone.idleHunt && typeof clone.idleHunt === 'object') {
-      clone.idleHunt.gold = 0;
-    }
-    if (clone.session && typeof clone.session === 'object') {
-      clone.session.trunkMeso = 0;
-      if (Array.isArray(clone.session.inventoryConsume)) {
-        clone.session.inventoryConsume = clone.session.inventoryConsume.map((entry) => (
-          this.isPotionConsumeEntry(entry) ? entry : null
-        ));
-      }
-      // 倉庫內非藥水消耗也不帶走
-      if (Array.isArray(clone.session.trunkSlots)) {
-        clone.session.trunkSlots = clone.session.trunkSlots.map((entry) => {
-          if (!entry || entry.kind !== 'consume') return entry;
-          return this.isPotionConsumeEntry(entry) ? entry : null;
-        });
-      }
-    }
-
-    // 消耗數量表：只留藥水
-    clone.playerCubeCounts = {};
-    clone.playerAddPotCubeCounts = {};
-    clone.playerStarForceScrollInventory = {};
-    clone.playerPotentialScrollInventory = {};
-    clone.playerHammerInventory = {};
-    clone.playerGloryScrollInventory = {};
-    clone.playerRecoveryCardCount = 0;
-    clone.playerThrowingStarCounts = {};
-    clone.playerBonusStatItemCounts = {};
-    clone.playerExceptionalHammerCounts = {};
-    clone.playerSoulMaterialCounts = {};
-    // playerPotionCounts 保留
-
-    if (Array.isArray(clone.npcShopRepurchase)) {
-      clone.npcShopRepurchase = clone.npcShopRepurchase.filter((entry) => {
-        if (!entry) return false;
-        if (entry.kind === 'equip' || entry.kind === 'etc') return true;
-        if (entry.kind === 'potion' || this.isPotionConsumeEntry(entry)) return true;
-        if (entry.kind === 'consume'
-          || entry.kind === 'throwing_star'
-          || entry.kind === 'glory_scroll') {
-          return false;
-        }
-        if (entry.type) {
-          const T = typeof CONSUME_ITEM_TYPE !== 'undefined' ? CONSUME_ITEM_TYPE : {};
-          if (entry.type === (T.POTION || 'potion')) return true;
-          if (Object.values(T).includes(entry.type)) return false;
-        }
-        return true;
-      });
-    }
-
-    clone.fileExportStripped = {
-      meso: true,
-      nonPotionConsume: true,
-    };
-    return clone;
+    return `${JSON.stringify(payload, null, 2)}\n`;
   },
 
   async parseSaveFileText(text) {
@@ -766,14 +756,14 @@ const SessionPersistenceModule = {
         const data = JSON.parse(fullRaw);
         if (data?.format === MSS_SAVE_FORMAT
           && data.version === MSS_SAVE_FILE_VERSION
-          && data.session?.version === SESSION_PERSISTENCE_VERSION) {
+          && this.isCompatibleSessionVersion(data.session?.version)) {
           return data;
         }
       }
       const legacyRaw = localStorage.getItem(keys.session);
       if (!legacyRaw) return null;
       const session = JSON.parse(legacyRaw);
-      if (!session || session.version !== SESSION_PERSISTENCE_VERSION) return null;
+      if (!session || !this.isCompatibleSessionVersion(session.version)) return null;
       return { session };
     } catch (_) {
       return null;
@@ -812,7 +802,7 @@ const SessionPersistenceModule = {
     return changed;
   },
 
-  /** 對 session 內背包／穿著／強化槽／倉庫裝備套用分段退星 */
+  /** 對 session 內背包／穿著／強化槽／倉庫裝備／items 套用分段退星 */
   remapSessionStarForce(session) {
     if (!session || typeof session !== 'object') return false;
     let changed = false;
@@ -823,6 +813,12 @@ const SessionPersistenceModule = {
     }
     if (session.equippedItem?.state && this.remapEnchantStateStar(session.equippedItem.state)) {
       changed = true;
+    }
+    if (session.items && typeof session.items === 'object') {
+      Object.keys(session.items).forEach((uid) => {
+        const inst = session.items[uid];
+        if (inst?.state && this.remapEnchantStateStar(inst.state)) changed = true;
+      });
     }
     if (this.remapWearMapStarForce(session.bodyWearActive)) changed = true;
     if (session.bodyWearByPreset && typeof session.bodyWearByPreset === 'object') {
@@ -897,6 +893,11 @@ const SessionPersistenceModule = {
     const trunkCount = typeof TRUNK_SLOT_COUNT !== 'undefined' ? TRUNK_SLOT_COUNT : count;
     return {
       version: SESSION_PERSISTENCE_VERSION,
+      items: {},
+      bagSlots: new Array(count).fill(null),
+      enchantFocus: null,
+      orphanBenchUids: [],
+      bodyWearUidByPreset: { 1: {}, 2: {}, 3: {} },
       inventoryEquip: new Array(count).fill(null),
       inventoryConsume: new Array(count).fill(null),
       inventoryEtc: new Array(count).fill(null),
@@ -948,7 +949,15 @@ const SessionPersistenceModule = {
       } catch (err) {
         console.warn('[SessionPersistence] 清裝備欄失敗', err);
       }
-      this.applySessionSnapshot(session || this.emptySessionSnapshot());
+      try {
+        this.applySessionSnapshot(session || this.emptySessionSnapshot());
+      } catch (err) {
+        console.error('[SessionPersistence] 套用 session 失敗（保留原存檔不覆寫）:', err);
+        if (typeof addLog === 'function') {
+          addLog('[存檔] 套用失敗，已中止（未覆寫本機存檔）。', 'log-fail');
+        }
+        return;
+      }
       try {
         this.applyExtraPayload({ ...this.emptyExtraPayload(), ...(extra || {}) });
       } catch (err) {
@@ -1168,7 +1177,13 @@ const SessionPersistenceModule = {
           ...(data.migrations && typeof data.migrations === 'object' ? data.migrations : {}),
         };
         this.markStarForceRemapMigrated();
-        this.applySessionSnapshot(data.session);
+        try {
+          this.applySessionSnapshot(data.session);
+        } catch (err) {
+          console.error('[SessionPersistence] 載入存檔失敗（保留原文）:', err);
+          this.loadedFromStorage = false;
+          return false;
+        }
         this._deferredPayload = data.format ? data : null;
         this.loadedFromStorage = true;
         return true;
@@ -1366,14 +1381,12 @@ const SessionPersistenceModule = {
     this.assertImportCooldownClear();
 
     const session = data.session;
-    if (!session || session.version !== SESSION_PERSISTENCE_VERSION) {
+    if (!session || !this.isCompatibleSessionVersion(session.version)) {
       throw new Error('存檔版本不相容');
     }
 
-    // 讀取檔案存檔：楓幣一律清空（與匯出 strip 對齊；舊檔若仍帶 gold 也清）
+    // 檔案匯入：完整套用（含楓幣／消耗欄）；S/L 由匯入冷卻抑制
     if (!data.idleHunt || typeof data.idleHunt !== 'object') data.idleHunt = {};
-    data.idleHunt.gold = 0;
-    session.trunkMeso = 0;
 
     this.migrateStarForceRemapPayload(data);
     this._migrations = {
@@ -1388,15 +1401,6 @@ const SessionPersistenceModule = {
     this.applySessionSnapshot(session);
     this.applyExtraPayload(data);
 
-    // 保險：apply 後再強制歸零（避免 idleHunt 缺欄時沿用記憶體舊值）
-    try {
-      if (typeof IdleHunt !== 'undefined') {
-        IdleHunt.applySavePayload?.({ gold: 0 });
-      }
-    } catch (_) { /* ignore */ }
-    try {
-      if (typeof TrunkData !== 'undefined') TrunkData.setMeso?.(0);
-    } catch (_) { /* ignore */ }
     try {
       if (typeof TrunkModule !== 'undefined') TrunkModule.updateMesoDisplay?.();
     } catch (_) { /* ignore */ }
@@ -1433,7 +1437,10 @@ const SessionPersistenceModule = {
   },
 
   clearEquipSlotSilent() {
-    if (typeof currentEnchantItem === 'undefined' || !currentEnchantItem) return;
+    if (typeof currentEnchantItem === 'undefined' || !currentEnchantItem) {
+      if (typeof ItemStore !== 'undefined') ItemStore.clearEnchantFocus?.();
+      return;
+    }
 
     const dropZone = document.getElementById('equipDropZone');
     if (dropZone) dropZone.innerHTML = '';
@@ -1442,6 +1449,7 @@ const SessionPersistenceModule = {
     if (sfItemName) sfItemName.innerText = '請放置裝備';
 
     currentEnchantItem = null;
+    if (typeof ItemStore !== 'undefined') ItemStore.clearEnchantFocus?.();
 
     if (typeof StarForceModule !== 'undefined') StarForceModule.clearEquipState?.();
     if (typeof HammerModule !== 'undefined') HammerModule.resetState();
@@ -1600,63 +1608,115 @@ const SessionPersistenceModule = {
   },
 
   applySessionSnapshot(data) {
-    const equip = this.sanitizeEquipArray(data.inventoryEquip);
-    playerInventoryEquip.splice(0, playerInventoryEquip.length, ...equip);
+    let session = data || {};
+
+    // v1 → v2：純函數遷移；失敗則丟錯，呼叫端不得覆寫 localStorage
+    if (typeof ItemStore !== 'undefined') {
+      const needsMigrate = Number(session.version) === SESSION_PERSISTENCE_VERSION_LEGACY
+        || !session.items
+        || !Array.isArray(session.bagSlots);
+      if (needsMigrate) {
+        const migrated = ItemStore.migrateSessionV1toV2(session);
+        if (!migrated.ok || !migrated.v2) {
+          const msg = (migrated.errors || []).join('; ') || 'equip migrate failed';
+          console.error('[SessionPersistence] v1→v2 migrate failed:', msg);
+          if (typeof addLog === 'function') {
+            addLog('[存檔] 裝備遷移失敗，已中止套用（保留原存檔）。', 'log-fail');
+          }
+          throw new Error(`裝備存檔遷移失敗: ${msg}`);
+        }
+        session = migrated.v2;
+        if (typeof addLog === 'function') {
+          const r = migrated.report || {};
+          addLog(
+            `[存檔] 裝備實體遷移：背包 ${r.bag || 0}、穿著 ${r.body || 0}、倉庫 ${r.trunk || 0}`
+              + (r.benchPlaced ? '、強化槽已歸位' : '')
+              + (r.benchOrphan ? '、強化槽待安置' : ''),
+            'log-info'
+          );
+        }
+      }
+
+      const imported = ItemStore.importSnapshot(session);
+      if (!imported.ok) {
+        const msg = (imported.errors || []).join('; ') || 'import failed';
+        console.error('[SessionPersistence] ItemStore import failed:', msg);
+        if (typeof addLog === 'function') {
+          addLog('[存檔] 裝備實體載入失敗，已中止套用。', 'log-fail');
+        }
+        throw new Error(`裝備存檔載入失敗: ${msg}`);
+      }
+
+      // ItemStore 已投影 inventoryEquip/State
+      if (imported.trunkSlots && typeof TrunkData !== 'undefined') {
+        TrunkData.applySnapshot({
+          trunkSlots: imported.trunkSlots,
+          trunkMeso: session.trunkMeso,
+        });
+      } else if (typeof TrunkData !== 'undefined' && typeof TrunkData.applySnapshot === 'function') {
+        TrunkData.applySnapshot(session);
+      }
+
+      this._pendingEnchantFocus = imported.enchantFocus || null;
+      this._pendingOrphanBench = imported.orphanBenchUids || [];
+      this._pendingEquippedItem = null;
+      this.equippedSlotIndex = null;
+
+      this._pendingUiEquipState = {
+        bodyWearActive: null,
+        bodyWearByPreset: imported.bodyWearExpanded || session.bodyWearByPreset || null,
+        activeEquipPreset: session.activeEquipPreset,
+        pendingEquipPreset: session.pendingEquipPreset,
+      };
+    } else {
+      // 無 ItemStore 時退回舊路徑（理論上不應發生）
+      const equip = this.sanitizeEquipArray(session.inventoryEquip);
+      playerInventoryEquip.splice(0, playerInventoryEquip.length, ...equip);
+      const state = this.sanitizeStateArray(session.inventoryState, equip);
+      playerInventoryState.splice(0, playerInventoryState.length, ...state);
+      this._pendingEquippedItem = null;
+      const pendingId = this.resolveItemId(session.equippedItem?.itemId);
+      if (pendingId && this.isValidItemId(pendingId)) {
+        this._pendingEquippedItem = {
+          itemId: pendingId,
+          state: this.stampState(session.equippedItem.state || {}, pendingId),
+        };
+      }
+      if (typeof TrunkData !== 'undefined' && typeof TrunkData.applySnapshot === 'function') {
+        TrunkData.applySnapshot(session);
+      }
+      this._pendingUiEquipState = {
+        bodyWearActive: session.bodyWearActive || null,
+        bodyWearByPreset: session.bodyWearByPreset || null,
+        activeEquipPreset: session.activeEquipPreset,
+        pendingEquipPreset: session.pendingEquipPreset,
+      };
+    }
 
     const consumeCount = typeof INVENTORY_SLOT_COUNT !== 'undefined' ? INVENTORY_SLOT_COUNT : 128;
-    const consume = Array.isArray(data.inventoryConsume)
-      ? data.inventoryConsume.slice(0, consumeCount)
+    const consume = Array.isArray(session.inventoryConsume)
+      ? session.inventoryConsume.slice(0, consumeCount)
       : new Array(consumeCount).fill(null);
     while (consume.length < consumeCount) consume.push(null);
     playerInventoryConsume.splice(0, playerInventoryConsume.length, ...consume);
 
-    const etc = this.sanitizeEtcArray(data.inventoryEtc);
+    const etc = this.sanitizeEtcArray(session.inventoryEtc);
     if (typeof playerInventoryEtc !== 'undefined') {
       playerInventoryEtc.splice(0, playerInventoryEtc.length, ...etc);
     }
     this.migrateEtcPotionsToConsume();
 
-    const state = this.sanitizeStateArray(data.inventoryState, equip);
-    playerInventoryState.splice(0, playerInventoryState.length, ...state);
-
-    this.migrateLegacySlotLockArrays(data, equip);
-
-    const slot = data.equippedSlotIndex;
-    this.equippedSlotIndex = Number.isInteger(slot) && slot >= 0 && slot < consumeCount && equip[slot]
-      ? slot
-      : null;
-
-    // 新格式強化槽實體（物品已不在背包）
-    this._pendingEquippedItem = null;
-    const pendingId = this.resolveItemId(data.equippedItem?.itemId);
-    if (pendingId && this.isValidItemId(pendingId)) {
-      this._pendingEquippedItem = {
-        itemId: pendingId,
-        state: this.stampState(data.equippedItem.state || {}, pendingId),
-      };
-      this.equippedSlotIndex = null;
-    }
+    this.migrateLegacySlotLockArrays(session, playerInventoryEquip);
 
     this.mergeDefaultEquipInventory();
     if (typeof ensurePotentialScrollConsumeInventory === 'function') {
       ensurePotentialScrollConsumeInventory();
-    }
-    if (typeof TrunkData !== 'undefined' && typeof TrunkData.applySnapshot === 'function') {
-      TrunkData.applySnapshot(data || {});
     }
     if (this.activeProfile !== 'idle') {
       if (typeof stripLegacyStarterPotentialsFromInventory === 'function') {
         stripLegacyStarterPotentialsFromInventory();
       }
     }
-
-    // UiEquip 模組可能尚未載入：延後到 restoreUiEquipState
-    this._pendingUiEquipState = {
-      bodyWearActive: data.bodyWearActive || null,
-      bodyWearByPreset: data.bodyWearByPreset || null,
-      activeEquipPreset: data.activeEquipPreset,
-      pendingEquipPreset: data.pendingEquipPreset,
-    };
   },
 
   restoreUiEquipState() {
@@ -1692,20 +1752,70 @@ const SessionPersistenceModule = {
   },
 
   restoreEquippedItem() {
+    // v2：enchantFocus 指向 bag/body uid
+    const focusUid = this._pendingEnchantFocus;
+    this._pendingEnchantFocus = null;
+    if (focusUid && typeof ItemStore !== 'undefined') {
+      const inst = ItemStore.get(focusUid);
+      if (inst) {
+        const bagIndex = ItemStore.findBagIndex(focusUid);
+        const bodyLoc = ItemStore.findBodyLoc(focusUid);
+        let ok = false;
+        if (bagIndex >= 0) {
+          if (typeof loadEquipToSlot === 'function') {
+            loadEquipToSlot(inst.baseId, bagIndex);
+            ok = !!currentEnchantItem;
+          }
+        } else if (bodyLoc && typeof loadEquipFromWearEntry === 'function') {
+          const entry = {
+            itemId: inst.baseId,
+            state: inst.state,
+            instanceUid: focusUid,
+          };
+          ok = !!loadEquipFromWearEntry(entry, bodyLoc.slot);
+        } else if (typeof loadEnchantItemHeld === 'function') {
+          ok = !!loadEnchantItemHeld(inst.baseId, inst.state, { uid: focusUid });
+        }
+        if (ok) {
+          this._pendingEquippedItem = null;
+        } else if (typeof addLog === 'function') {
+          addLog('[存檔] 強化焦點還原失敗。', 'log-fail');
+        }
+      }
+    }
+
+    const orphans = this._pendingOrphanBench || [];
+    this._pendingOrphanBench = null;
+    if (orphans.length && typeof ItemStore !== 'undefined') {
+      const left = ItemStore.tryPlaceOrphansIntoBag();
+      if (typeof addLog === 'function') {
+        if (left === 0) {
+          addLog('[存檔] 待安置的強化中裝備已放入背包。', 'log-info');
+        } else {
+          addLog(`[存檔] 仍有 ${left} 件強化中裝備待安置（背包已滿）。`, 'log-fail');
+        }
+      }
+      if (typeof InventoryModule !== 'undefined') {
+        InventoryModule.render?.();
+        InventoryModule.updateSlotCount?.();
+      }
+    }
+
     if (this._pendingEquippedItem?.itemId) {
       const held = this._pendingEquippedItem;
       let recovered = false;
 
-      if (typeof loadEnchantItemHeld === 'function') {
-        recovered = !!loadEnchantItemHeld(held.itemId, held.state);
-      }
-
-      if (!recovered && typeof UiEquipModule !== 'undefined'
+      // 舊 v1 持有實體：歸位背包後設焦點（禁止用 itemId 從背包抽）
+      if (typeof UiEquipModule !== 'undefined'
         && typeof UiEquipModule.putEntryToBag === 'function') {
-        if (UiEquipModule.putEntryToBag({ itemId: held.itemId, state: held.state }) >= 0) {
+        const bagIndex = UiEquipModule.putEntryToBag({ itemId: held.itemId, state: held.state });
+        if (bagIndex >= 0) {
           recovered = true;
+          if (typeof loadEquipToSlot === 'function') {
+            loadEquipToSlot(held.itemId, bagIndex);
+          }
           if (typeof addLog === 'function') {
-            addLog('[存檔] 強化槽裝備無法直接還原，已放回背包。', 'log-fail');
+            addLog('[存檔] 舊強化槽裝備已歸位背包並設為焦點。', 'log-info');
           }
           if (typeof InventoryModule !== 'undefined') {
             InventoryModule.render?.();
@@ -1721,15 +1831,18 @@ const SessionPersistenceModule = {
           ? resolveEquipItemId(held.itemId)
           : held.itemId) || held.itemId;
         const itemData = ITEM_DATABASE[resolvedId];
-        if (itemData) {
-          // 緊急：直接掛回強化槽，避免實體消失
+        if (itemData && typeof ItemStore !== 'undefined') {
+          const uid = ItemStore.createInstance(resolvedId, held.state);
+          ItemStore.move(uid, { type: 'orphan' });
+          ItemStore.setEnchantFocus(uid);
           currentEnchantItem = mergeEnchantFromSaved(itemData, held.state, -1);
+          currentEnchantItem.instanceUid = uid;
           if (typeof afterEnchantEquipLoaded === 'function') {
             afterEnchantEquipLoaded(itemData, { log: false });
           }
           recovered = true;
           if (typeof addLog === 'function') {
-            addLog('[存檔] 強化槽裝備以緊急方式還原。', 'log-fail');
+            addLog('[存檔] 強化槽裝備暫存待安置並設為焦點。', 'log-fail');
           }
         }
       }
@@ -1742,6 +1855,7 @@ const SessionPersistenceModule = {
       return;
     }
 
+    // 極舊 equippedSlotIndex：背包格仍在，只設焦點
     if (this.equippedSlotIndex == null) return;
     const itemId = playerInventoryEquip[this.equippedSlotIndex];
     if (!this.isValidItemId(itemId)) {

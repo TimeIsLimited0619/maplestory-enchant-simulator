@@ -326,10 +326,43 @@ const DisassemblePanel = (() => {
     return 1;
   }
 
-  function tryBreak(kind, slotIndex, event) {
+  let breakConfirmPending = false;
+
+  async function confirmEnhancedEquipBreak(slotIndex) {
+    const state = typeof playerInventoryState !== 'undefined' ? playerInventoryState[slotIndex] : null;
+    if (typeof DisassembleStore === 'undefined' || !DisassembleStore.isEquipEnhanced?.(state)) {
+      return true;
+    }
+    const itemId = typeof playerInventoryEquip !== 'undefined' ? playerInventoryEquip[slotIndex] : null;
+    const name = (typeof DisassembleStore.equipName === 'function' && itemId)
+      ? DisassembleStore.equipName(itemId)
+      : '此裝備';
+    const confirmFn = typeof showAppConfirm === 'function'
+      ? showAppConfirm
+      : ({ message }) => Promise.resolve(window.confirm(message));
+    return confirmFn({
+      title: '分解確認',
+      message: `【${name}】已強化過（卷軸／白槌／星力／星火）。是否確定分解已強化過的裝備？`,
+      confirmText: '確定分解',
+      cancelText: '取消',
+    });
+  }
+
+  async function tryBreak(kind, slotIndex, event) {
     const s = store();
     if (!s) return false;
+    if (breakConfirmPending) return false;
     const idx = Number(slotIndex);
+    if (kind !== 'scroll') {
+      breakConfirmPending = true;
+      let allowed = false;
+      try {
+        allowed = await confirmEnhancedEquipBreak(idx);
+      } finally {
+        breakConfirmPending = false;
+      }
+      if (!allowed) return false;
+    }
     const ok = kind === 'scroll'
       ? s.disassembleScroll(idx, scrollAmountFromEvent(event))
       : s.disassembleEquip(idx);

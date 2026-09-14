@@ -95,6 +95,14 @@ const InventoryModule = {
       if (typeof UiToadsHammer !== 'undefined') UiToadsHammer.toggle?.();
       else if (typeof addLog === 'function') addLog('[背包] 裝備繼承尚未載入。', 'log-fail');
     });
+    document.getElementById('invBtnItemAlchemy')?.addEventListener('click', () => {
+      if (typeof EquipCraftPanel !== 'undefined') EquipCraftPanel.toggle?.();
+      else if (typeof addLog === 'function') addLog('[背包] 裝備加工尚未載入。', 'log-fail');
+    });
+    document.getElementById('invBtnBossReward')?.addEventListener('click', () => {
+      if (typeof IdleBoss !== 'undefined') IdleBoss.toggle?.();
+      else if (typeof addLog === 'function') addLog('[背包] BOSS 列表尚未載入。', 'log-fail');
+    });
 
     document.getElementById('invBtnTrunk')?.addEventListener('click', () => {
       if (typeof TrunkModule !== 'undefined') TrunkModule.toggle();
@@ -103,10 +111,8 @@ const InventoryModule = {
 
     // AutoBuild 其餘按鈕：版面已上，功能待實作
     const stubIds = [
-      'invBtnFilter', 'invBtnFilterApplied',
       'invBtnMeso',
-      'invBtnItemAlchemy',
-      'invBtnHelp', 'invBtnBossReward', 'invBtnBag',
+      'invBtnHelp', 'invBtnBag',
       'invBtnSearch', 'invBtnSearchCancel',
     ];
     stubIds.forEach((id) => {
@@ -2259,6 +2265,10 @@ const InventoryModule = {
 
     playerInventoryEquip[idx] = itemId;
     playerInventoryState[idx] = null;
+    if (typeof ItemStore !== 'undefined') {
+      const uid = ItemStore.createInstance(itemId, null);
+      if (uid) ItemStore.move(uid, { type: 'bag', index: idx });
+    }
     if (typeof playerInventory !== 'undefined' && Array.isArray(playerInventory)) {
       playerInventory.splice(0, playerInventory.length, ...playerInventoryEquip);
     }
@@ -2568,6 +2578,16 @@ const InventoryModule = {
     if (!itemId) return false;
 
     const name = (typeof ITEM_DATABASE !== 'undefined' && ITEM_DATABASE[itemId]?.name) || itemId;
+    if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem
+      && currentEnchantItem.slotIndex === slotIndex
+      && typeof unloadEquipFromSlot === 'function') {
+      unloadEquipFromSlot({ silent: true });
+    }
+    if (typeof ItemStore !== 'undefined') {
+      const bags = ItemStore.getBagSlots?.() || [];
+      const uid = bags[slotIndex];
+      if (uid) ItemStore.destroy(uid);
+    }
     playerInventoryEquip[slotIndex] = null;
     playerInventoryState[slotIndex] = null;
     if (typeof playerInventory !== 'undefined' && Array.isArray(playerInventory)) {

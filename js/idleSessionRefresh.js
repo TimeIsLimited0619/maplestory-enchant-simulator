@@ -16,6 +16,8 @@ const IdleSessionRefresh = (() => {
 
   let inited = false;
   let panelOpen = false;
+  /** home | hotkeys */
+  let panelView = 'home';
   let refreshing = false;
   let timer = null;
   let armedAt = 0;
@@ -272,6 +274,7 @@ const IdleSessionRefresh = (() => {
   function panelMarkup() {
     return `<div id="gameSettingsPanel" class="game-settings-panel" role="dialog" aria-labelledby="gameSettingsTitle" aria-hidden="true">
       <div class="game-settings-head">
+        <button type="button" id="gameSettingsBack" class="game-settings-nav game-settings-back hidden" aria-label="返回">返回</button>
         <span id="gameSettingsTitle">設定</span>
         <button type="button" id="gameSettingsClose" class="game-settings-nav">關閉</button>
       </div>
@@ -286,6 +289,15 @@ const IdleSessionRefresh = (() => {
       if (nav) nav.insertAdjacentHTML('afterend', panelMarkup());
       else document.body.insertAdjacentHTML('beforeend', panelMarkup());
       panel = $('gameSettingsPanel');
+    } else if (!$('gameSettingsBack')) {
+      const head = panel.querySelector('.game-settings-head');
+      const title = $('gameSettingsTitle');
+      if (head && title) {
+        title.insertAdjacentHTML(
+          'beforebegin',
+          '<button type="button" id="gameSettingsBack" class="game-settings-nav game-settings-back hidden" aria-label="返回">返回</button>'
+        );
+      }
     }
     return panel;
   }
@@ -295,9 +307,14 @@ const IdleSessionRefresh = (() => {
     panel?.classList.toggle('is-open', panelOpen);
     panel?.setAttribute('aria-hidden', panelOpen ? 'false' : 'true');
     $('btnViewGameSettings')?.classList.toggle('is-active', panelOpen);
+    const back = $('gameSettingsBack');
+    const title = $('gameSettingsTitle');
+    const onSub = panelView === 'hotkeys';
+    back?.classList.toggle('hidden', !onSub);
+    if (title) title.textContent = onSub ? '自訂快捷鍵' : '設定';
   }
 
-  function bodyMarkup() {
+  function homeBodyMarkup() {
     const s = settings;
     const checked = s.enabled ? ' checked' : '';
     const hideDmg = typeof DamageNumber !== 'undefined' && !!DamageNumber.getHideDamageNumbers?.();
@@ -323,7 +340,37 @@ const IdleSessionRefresh = (() => {
           <input type="number" id="gameSettingsMinutes" min="${MIN_MINUTES}" max="${MAX_MINUTES}" step="1" value="${s.minutes}" ${s.enabled ? '' : 'disabled'}>
         </label>
         <p class="game-settings-hint">建議 ${DEFAULT_MINUTES}～10 分鐘。可填 ${MIN_MINUTES}～${MAX_MINUTES}。</p>
+      </section>
+      <section class="game-settings-section" aria-label="快捷鍵">
+        <h3 class="game-settings-section-title">操作</h3>
+        <button type="button" class="game-settings-subnav" data-settings-nav="hotkeys">
+          <span class="game-settings-subnav-label">自訂快捷鍵</span>
+          <span class="game-settings-subnav-chevron" aria-hidden="true">›</span>
+        </button>
+        <p class="game-settings-hint">為左側選單各功能綁定鍵盤快捷鍵。</p>
       </section>`;
+  }
+
+  function bodyMarkup() {
+    if (panelView === 'hotkeys'
+      && typeof AppHotkeys !== 'undefined'
+      && typeof AppHotkeys.settingsSectionHtml === 'function') {
+      return AppHotkeys.settingsSectionHtml();
+    }
+    return homeBodyMarkup();
+  }
+
+  function setPanelView(next) {
+    const view = next === 'hotkeys' ? 'hotkeys' : 'home';
+    if (panelView === view) {
+      renderPanel();
+      return;
+    }
+    if (panelView === 'hotkeys' && view === 'home' && typeof AppHotkeys !== 'undefined') {
+      AppHotkeys.stopCapture?.();
+    }
+    panelView = view;
+    renderPanel();
   }
 
   function renderPanel() {
@@ -361,6 +408,10 @@ const IdleSessionRefresh = (() => {
       if (typeof IdleDungeon !== 'undefined') IdleDungeon.setOpen?.(false);
       if (typeof IdleBoss !== 'undefined') IdleBoss.closeAll?.();
       settings = readSettings();
+      panelView = 'home';
+    } else {
+      panelView = 'home';
+      if (typeof AppHotkeys !== 'undefined') AppHotkeys.stopCapture?.();
     }
     renderPanel();
   }
@@ -373,6 +424,19 @@ const IdleSessionRefresh = (() => {
     $('gameSettingsClose')?.addEventListener('click', (e) => {
       e.preventDefault();
       setPanelOpen(false);
+    });
+    $('gameSettingsBack')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      setPanelView('home');
+    });
+    $('gameSettingsBody')?.addEventListener('click', (e) => {
+      const navBtn = e.target?.closest?.('[data-settings-nav]');
+      if (navBtn) {
+        e.preventDefault();
+        setPanelView(navBtn.getAttribute('data-settings-nav') || 'home');
+        return;
+      }
+      if (typeof AppHotkeys !== 'undefined') AppHotkeys.onSettingsClick?.(e);
     });
     $('gameSettingsBody')?.addEventListener('change', (e) => {
       const t = e.target;
@@ -397,6 +461,7 @@ const IdleSessionRefresh = (() => {
     ensureDom();
     bindPanelEvents();
     syncChrome();
+    if (typeof AppHotkeys !== 'undefined') AppHotkeys.init?.();
 
     const pending = consumeTicket();
     if (pending) {

@@ -320,24 +320,49 @@ function refreshEquippedItemUI() {
   syncInspectModules();
 }
 
-function saveInventoryItemState(slotIndex, state) {
-  // 強化槽持有中（已移出背包）：只同步記憶體並排程存檔
-  // 若誤帶正整數 slot 但該背包格已空／不是同件，視為持有裝，勿寫孤兒 state
-  let slot = slotIndex;
-  if (state && typeof currentEnchantItem !== 'undefined' && state === currentEnchantItem) {
-    const bagHasSame = Number.isInteger(slot)
-      && slot >= 0
-      && typeof playerInventoryEquip !== 'undefined'
-      && playerInventoryEquip[slot]
-      && (
-        resolveEquipItemId(playerInventoryEquip[slot]) === resolveEquipItemId(state)
-      );
-    if (!bagHasSame) {
-      slot = -1;
-      state.slotIndex = -1;
+/** 將強化中裝備進度寫回背包格／穿著槽／ItemStore（焦點模式，不搬移實體） */
+function writeBackEnchantProgress(item) {
+  if (!item) return;
+  if (typeof syncEnchantStateFromModules === 'function') {
+    syncEnchantStateFromModules(item);
+  }
+  const itemId = resolveEquipItemId(item) || item.itemId || item.id;
+  if (!itemId) return;
+  item.itemId = itemId;
+  item.id = itemId;
+  const snapshot = stampEnchantItemId(cloneEnchantState(item) || {}, itemId);
+
+  if (item.instanceUid && typeof ItemStore !== 'undefined') {
+    ItemStore.replaceState(item.instanceUid, snapshot);
+  }
+
+  if (Number.isInteger(item.slotIndex) && item.slotIndex >= 0
+    && typeof playerInventoryEquip !== 'undefined'
+    && playerInventoryEquip[item.slotIndex]
+    && resolveEquipItemId(playerInventoryEquip[item.slotIndex]) === resolveEquipItemId(itemId)) {
+    playerInventoryState[item.slotIndex] = snapshot;
+    if (typeof snapshot === 'object' && item.instanceUid) {
+      snapshot.instanceUid = item.instanceUid;
     }
   }
 
+  if (item.wearSlotId && typeof UiEquipModule !== 'undefined'
+    && typeof UiEquipModule.patchActiveWearState === 'function') {
+    UiEquipModule.patchActiveWearState(item.wearSlotId, snapshot, item.instanceUid);
+  }
+}
+
+function saveInventoryItemState(slotIndex, state) {
+  // 強化焦點寫回：依 slotIndex／wearSlotId／uid 寫回原位置（不再當成「持有實體」）
+  if (state && typeof currentEnchantItem !== 'undefined' && state === currentEnchantItem) {
+    writeBackEnchantProgress(state);
+    if (typeof SessionPersistenceModule !== 'undefined') {
+      SessionPersistenceModule.scheduleSave();
+    }
+    return;
+  }
+
+  let slot = slotIndex;
   if (!Number.isInteger(slot) || slot < 0) {
     if (state && typeof syncEnchantStateFromModules === 'function') {
       syncEnchantStateFromModules(state);
@@ -361,6 +386,10 @@ function saveInventoryItemState(slotIndex, state) {
     resolveEquipItemId(state) || playerInventoryEquip[slot]
   );
   playerInventoryState[slot] = snapshot;
+  if (typeof ItemStore !== 'undefined') {
+    const uid = ItemStore.ensureBagUid(slot);
+    if (uid) ItemStore.replaceState(uid, snapshot);
+  }
   if (typeof SessionPersistenceModule !== 'undefined') {
     SessionPersistenceModule.scheduleSave();
   }
@@ -831,8 +860,8 @@ function afterEnchantEquipLoaded(itemData, { log = true } = {}) {
       currentEnchantItem.itemId = id;
       currentEnchantItem.id = id;
     }
-    // 放入強化槽後一律視為持有實體（不在背包）
-    currentEnchantItem.slotIndex = -1;
+    // 強化槽為焦點引用：保留原 slotIndex／wearSlotId，不強制改成持有實體
+    writeBackEnchantProgress(currentEnchantItem);
   }
   presentEnchantedEquip(itemData);
   if (log) {
@@ -902,7 +931,6 @@ function loadEquipToSlot(itemId, slotIndex) {
     if (!unloadEquipFromSlot()) return;
   }
 
-  // 裝備欄穿著為獨立實體（itemId+state），與背包同 ID 的另一件無關，不可卸下
   itemId = resolveEquipItemId(itemId) || itemId;
   const itemData = ITEM_DATABASE[itemId];
   if (!itemData) return;
@@ -921,16 +949,26 @@ function loadEquipToSlot(itemId, slotIndex) {
   currentEnchantItem = loadEnchantStateForSlot(itemId, slotIndex);
   if (!currentEnchantItem) return;
 
-  playerInventoryEquip[slotIndex] = null;
-  playerInventoryState[slotIndex] = null;
-  syncPlayerInventoryAlias();
-  currentEnchantItem.slotIndex = -1;
+  // 正服式焦點：物品仍留在背包格，不搬出
+  currentEnchantItem.slotIndex = slotIndex;
+  currentEnchantItem.wearSlotId = null;
+  if (typeof ItemStore !== 'undefined') {
+    const uid = ItemStore.ensureBagUid(slotIndex);
+    if (uid) {
+      currentEnchantItem.instanceUid = uid;
+      ItemStore.setEnchantFocus(uid);
+    }
+  }
 
   afterEnchantEquipLoaded(itemData);
 }
 
-/** 從裝備欄身體槽放入強化台（呼叫端已清空該槽；強化槽應已空） */
-function loadEquipFromWearEntry(entry) {
+/**
+ * 從裝備欄身體槽設為強化焦點（不脫裝）。
+ * @param {{ itemId: string, state?: object, instanceUid?: string }} entry
+ * @param {string} [wearSlotId]
+ */
+function loadEquipFromWearEntry(entry, wearSlotId) {
   if (!entry?.itemId) return false;
   if (entry.state?.itemLocked || entry.itemLocked) {
     if (typeof addLog === 'function') {
@@ -944,20 +982,32 @@ function loadEquipFromWearEntry(entry) {
   if (currentEnchantItem) {
     if (!unloadEquipFromSlot()) return false;
   }
-  const itemData = ITEM_DATABASE[entry.itemId];
+  const resolvedId = resolveEquipItemId(entry.itemId) || entry.itemId;
+  const itemData = ITEM_DATABASE[resolvedId];
   if (!itemData) return false;
 
   currentEnchantItem = mergeEnchantFromSaved(itemData, entry.state, -1);
+  currentEnchantItem.wearSlotId = wearSlotId ? String(wearSlotId) : null;
+  currentEnchantItem.slotIndex = -1;
+  if (typeof ItemStore !== 'undefined' && wearSlotId && typeof UiEquipModule !== 'undefined') {
+    const preset = UiEquipModule.getActivePreset?.() || 1;
+    const uid = entry.instanceUid && ItemStore.get(entry.instanceUid)
+      ? entry.instanceUid
+      : ItemStore.ensureBodyUid(preset, wearSlotId, entry);
+    if (uid) {
+      currentEnchantItem.instanceUid = uid;
+      ItemStore.setEnchantFocus(uid);
+    }
+  }
   afterEnchantEquipLoaded(itemData);
   return true;
 }
 
 /**
- * 還原／匯入強化槽實體。
- * 新存檔的 equippedItem 已不在背包；不可再用 itemId 從背包抽，
- * 否則同 ID 的另一件會在重新整理後消失。
+ * 還原強化焦點：優先以 uid／背包格，不再建立「持有實體」。
+ * 舊 API 名稱保留相容。
  */
-function loadEnchantItemHeld(itemId, savedState = null) {
+function loadEnchantItemHeld(itemId, savedState = null, opts = {}) {
   if (currentEnchantItem) {
     if (!unloadEquipFromSlot()) return false;
   }
@@ -965,7 +1015,45 @@ function loadEnchantItemHeld(itemId, savedState = null) {
   const itemData = resolvedId ? ITEM_DATABASE[resolvedId] : null;
   if (!itemData) return false;
 
-  currentEnchantItem = mergeEnchantFromSaved(itemData, savedState, -1);
+  const bagIndex = Number.isInteger(opts.bagIndex) ? opts.bagIndex : -1;
+  const wearSlotId = opts.wearSlotId || null;
+  let uid = opts.uid || null;
+
+  if (bagIndex >= 0 && playerInventoryEquip[bagIndex]) {
+    loadEquipToSlot(playerInventoryEquip[bagIndex], bagIndex);
+    return !!currentEnchantItem;
+  }
+
+  // 分享碼／緊急還原：優先放入背包再設焦點；背包滿則 orphan + focus
+  if (!uid && !wearSlotId && bagIndex < 0) {
+    const empty = findEmptyEquipBagSlot();
+    if (empty >= 0) {
+      const snapshot = stampEnchantItemId(cloneEnchantState(savedState) || {}, resolvedId);
+      playerInventoryEquip[empty] = resolvedId;
+      playerInventoryState[empty] = snapshot;
+      syncPlayerInventoryAlias();
+      if (typeof ItemStore !== 'undefined') {
+        uid = ItemStore.createInstance(resolvedId, snapshot);
+        if (uid) ItemStore.move(uid, { type: 'bag', index: empty });
+      }
+      loadEquipToSlot(resolvedId, empty);
+      return !!currentEnchantItem;
+    }
+    if (typeof ItemStore !== 'undefined') {
+      uid = ItemStore.createInstance(resolvedId, savedState);
+      if (uid) {
+        ItemStore.move(uid, { type: 'orphan' });
+        ItemStore.setEnchantFocus(uid);
+      }
+    }
+  }
+
+  currentEnchantItem = mergeEnchantFromSaved(itemData, savedState, bagIndex >= 0 ? bagIndex : -1);
+  currentEnchantItem.wearSlotId = wearSlotId;
+  if (uid) currentEnchantItem.instanceUid = uid;
+  if (uid && typeof ItemStore !== 'undefined') {
+    ItemStore.setEnchantFocus(uid);
+  }
   afterEnchantEquipLoaded(itemData, { log: false });
   return true;
 }
@@ -983,18 +1071,11 @@ function unloadEquipFromSlot(options = {}) {
     return false;
   }
 
-  syncEnchantStateFromModules(currentEnchantItem);
-  const snapshot = stampEnchantItemId(cloneEnchantState(currentEnchantItem) || {}, itemId);
-
-  const bagIndex = findEmptyEquipBagSlot();
-  if (bagIndex < 0) {
-    addLog('[系統] 背包已滿，無法卸下強化中的裝備。', 'log-fail');
-    return false;
+  // 焦點模式：進度寫回原格／原穿著，不需空背包格
+  writeBackEnchantProgress(currentEnchantItem);
+  if (typeof ItemStore !== 'undefined') {
+    ItemStore.clearEnchantFocus();
   }
-
-  playerInventoryEquip[bagIndex] = itemId;
-  playerInventoryState[bagIndex] = snapshot;
-  syncPlayerInventoryAlias();
 
   const dropZone = document.getElementById('equipDropZone');
   if (dropZone) dropZone.innerHTML = '';
@@ -1003,7 +1084,7 @@ function unloadEquipFromSlot(options = {}) {
   if (sfItemName) sfItemName.innerText = '請放置裝備';
 
   if (!silent) {
-    addLog(`[系統] 已將【${itemName}】放回背包（強化進度已保留）。`, 'log-fail');
+    addLog(`[系統] 已結束強化【${itemName}】（進度已保留於原位置）。`, 'log-fail');
   }
   currentEnchantItem = null;
 

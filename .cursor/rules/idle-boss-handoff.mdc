@@ -100,6 +100,7 @@ alwaysApply: false
 | `pierre` | `4` | 0000 打到 50% 分裂 0001＋0002 **共血雙體**；0002 `move` 貼近接觸傷 |
 | `banban` | `5` | skill1 召喚香蕉 → skillAfter1 窗 60s；擊殺→弱化／逾時→強化 |
 | `vellum` | `7` | 本體＋尾巴**共血**；尾巴每 7s 竄出 2s（隨機左右） |
+| `suu` | `13` | 三階**分血**原地；過熱 destruction／overload；BossPattern 大集合＋本體 skill 動畫 |
 
 **重要：** `forms`／papulatus／zakum bodyForms = 打死換型＋**新血條**。  
 若要「戰鬥中切視覺／招式但共用同一條血」，必須像血腥女皇另做 kind（或等價共血狀態），**不要**用 `onZakumBodyFormDown`。
@@ -177,6 +178,17 @@ alwaysApply: false
 - 本體：三條 `damageChains`（WZ afterAttack）＋ attack1／7／8；排除 skill1／連鎖非 opener。
 - 出傷：`WZ基傷 × attackHpRatio(conDamR) × dmgMult`；尾巴同公式（`tailAttackHpRatio`）。
 - v1 不做 skill1 隱身、disease、callSkill 彈體。
+
+## 史烏（`13` / `suu`）摘要
+
+- 三階本體 `8881100`→`8881101`→`8881102` **分血**（打死換型＋新血）；三階皆**原地**；清場核 `8881103`。
+- 血量（Normal）：5000億／5000億／7500億（`formHpMult` 對 WZ 21億）；Hard／極限 formHpMult 已內建 ×20／×1000。
+- 出傷（本體招／pattern）：`PA × attackHpRatio × dmgMult`（深淵公式；不用玩家 maxHP%）。
+- 過熱：被打升溫、對王累積傷降溫；滿表 **destruction**（下砸雷射／無人機／殲滅常規優先）；結束後短暫 **overload**。P3 進場偏熱。
+- UI：過熱容器常駐最左；`backgrnd`→`backgrnd0`。`alertFrameEffect/1366` 需 AzmothCanyon Canvas。
+- Pattern：依 [나무위키](https://namu.wiki/w/%EC%8A%A4%EC%9A%B0/%EB%B3%B4%EC%8A%A4%20%EB%AA%AC%EC%8A%A4%ED%84%B0/%EA%B3%B5%EA%B2%A9%20%ED%8C%A8%ED%84%B4) 節奏＋正服分層；`castMode`：`trackingLaser`／`armSlam`／`dropExplode`／`sawRise`／`floorCurrent`／`pinpointVolley`；錨點含 `mapCore`／`mapCenter`。筆記 `scripts/_suu-pattern-fx-notes.mjs`。
+- P3：機械臂視覺 `1005/002`、誘導彈 `1005/001`（與나무資料夾對調，依實際幀層）。
+- 缺：`1000/005` 機器人、`1002/000` 電絲推、`1006` 가로포격／전기장遮罩（drone／purgeRoutine 暫佔位）。
 
 ## 濃姬（`18` / `forms` + `nohimeKit`）摘要
 

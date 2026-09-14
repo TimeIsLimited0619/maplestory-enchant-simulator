@@ -271,12 +271,12 @@
   height: 364px;
 }
 
-/* 背包鏡像：4 欄；+10px 修正左偏；捲軸 lt≈641 */
+/* 背包鏡像：4 欄；可見 8 排（與左側倉庫同高） */
 .trunk-pane-bag {
   left: 455px;
   top: 78px;
   width: 203px;
-  height: 242px;
+  height: 364px;
 }
 
 /* 對齊 inventory：viewport right:10px；scrollbar top:-8 / right:9 */
@@ -315,7 +315,7 @@
 }
 
 .trunk-pane-bag .trunk-scrollbar {
-  height: 242px;
+  height: 364px;
 }
 
 .trunk-scroll-track {

@@ -320,7 +320,7 @@ const IdleHunt = (() => {
     }
     if (typeof IdleBossFight !== 'undefined' && IdleBossFight.capIncomingDamage
       && typeof IdleBoss !== 'undefined' && IdleBoss.isRunning?.()) {
-      base = IdleBossFight.capIncomingDamage(mob, base);
+      base = IdleBossFight.capIncomingDamage(mob, base, { commit: true });
     }
     return Math.max(0, Math.floor(base));
   }

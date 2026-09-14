@@ -261,6 +261,20 @@ const TrunkData = {
       itemId,
       state: trunkCloneJson(state),
     };
+    if (typeof ItemStore !== 'undefined') {
+      const bags = ItemStore.getBagSlots?.() || [];
+      let uid = bags[bagIndex] || state?.instanceUid || null;
+      if (uid && ItemStore.get(uid)) {
+        ItemStore.move(uid, { type: 'trunk', index: ti });
+        playerTrunkSlots[ti].uid = uid;
+      } else {
+        uid = ItemStore.createInstance(itemId, state);
+        if (uid) {
+          ItemStore.move(uid, { type: 'trunk', index: ti });
+          playerTrunkSlots[ti].uid = uid;
+        }
+      }
+    }
     playerInventoryEquip[bagIndex] = null;
     playerInventoryState[bagIndex] = null;
     trunkNotifyPersist();
@@ -392,6 +406,19 @@ const TrunkData = {
 
     playerInventoryEquip[bi] = entry.itemId;
     playerInventoryState[bi] = trunkCloneJson(entry.state);
+    if (typeof ItemStore !== 'undefined') {
+      let uid = entry.uid || null;
+      if (uid && ItemStore.get(uid)) {
+        ItemStore.replaceState(uid, entry.state);
+        ItemStore.move(uid, { type: 'bag', index: bi });
+      } else {
+        uid = ItemStore.createInstance(entry.itemId, entry.state);
+        if (uid) ItemStore.move(uid, { type: 'bag', index: bi });
+      }
+      if (uid && playerInventoryState[bi] && typeof playerInventoryState[bi] === 'object') {
+        playerInventoryState[bi].instanceUid = uid;
+      }
+    }
     playerTrunkSlots[trunkIndex] = null;
     if (typeof InventoryModule !== 'undefined' && InventoryModule.tab !== 'equip') {
       InventoryModule.setTab?.('equip');

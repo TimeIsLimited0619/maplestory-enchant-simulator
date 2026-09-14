@@ -235,11 +235,11 @@ const UiEquipModule = (() => {
     }
   }
 
-  /** 若該背包格正在強化，先卸回背包（保留在原格） */
+  /** 若該背包格正在強化焦點，先清焦點（物品仍在格內） */
   function ensureEnchantUnloadedForBag(bagIndex) {
     if (typeof currentEnchantItem === 'undefined' || !currentEnchantItem) return;
     if (currentEnchantItem.slotIndex !== bagIndex) return;
-    if (typeof unloadEquipFromSlot === 'function') unloadEquipFromSlot();
+    if (typeof unloadEquipFromSlot === 'function') unloadEquipFromSlot({ silent: true });
   }
 
   function ensureEnchantUnloadedForItemId(itemId) {
@@ -251,7 +251,33 @@ const UiEquipModule = (() => {
       ? resolveEquipItemId(itemId)
       : itemId;
     if (!curId || curId !== wantId) return;
-    if (typeof unloadEquipFromSlot === 'function') unloadEquipFromSlot();
+    if (typeof unloadEquipFromSlot === 'function') unloadEquipFromSlot({ silent: true });
+  }
+
+  /** 寫回目前 preset 穿著槽 state（強化焦點用） */
+  function patchActiveWearState(uiSlotId, state, instanceUid) {
+    const id = String(uiSlotId);
+    const entry = activeWear[id];
+    if (!entry?.itemId) return false;
+    const itemId = (typeof resolveEquipItemId === 'function'
+      ? resolveEquipItemId(entry.itemId)
+      : entry.itemId) || entry.itemId;
+    let next = cloneState(state);
+    if (next && typeof next === 'object') {
+      if (typeof stampEnchantItemId === 'function') stampEnchantItemId(next, itemId);
+      else {
+        next.itemId = itemId;
+        next.id = itemId;
+      }
+      if (instanceUid) next.instanceUid = instanceUid;
+    }
+    activeWear[id] = {
+      itemId,
+      state: next,
+      instanceUid: instanceUid || entry.instanceUid || null,
+    };
+    scheduleSave();
+    return true;
   }
 
   /** 從背包取出實體 */
@@ -261,10 +287,19 @@ const UiEquipModule = (() => {
     const itemId = playerInventoryEquip[bagIndex];
     if (!itemId) return null;
     const state = cloneState(playerInventoryState[bagIndex] ?? null);
+    let instanceUid = state?.instanceUid || null;
+    if (typeof ItemStore !== 'undefined') {
+      const bags = ItemStore.getBagSlots?.() || [];
+      instanceUid = bags[bagIndex] || instanceUid;
+      if (instanceUid && ItemStore.get(instanceUid)) {
+        // 暫放 orphan，穿上後 move 到 body
+        ItemStore.move(instanceUid, { type: 'orphan' });
+      }
+    }
     playerInventoryEquip[bagIndex] = null;
     playerInventoryState[bagIndex] = null;
     syncBagAlias();
-    return { itemId, state };
+    return { itemId, state, instanceUid };
   }
 
   /** 放回背包；成功回傳 bagIndex，失敗回傳 -1 並還原呼叫端需自行處理 */
@@ -285,6 +320,21 @@ const UiEquipModule = (() => {
       }
     } else {
       state = { itemId, id: itemId };
+    }
+    let uid = entry.instanceUid || null;
+    if (typeof ItemStore !== 'undefined') {
+      if (uid && ItemStore.get(uid)) {
+        ItemStore.replaceState(uid, state);
+        if (!ItemStore.move(uid, { type: 'bag', index: idx })) {
+          // 若 move 失敗則新建
+          uid = ItemStore.createInstance(itemId, state);
+          ItemStore.move(uid, { type: 'bag', index: idx });
+        }
+      } else {
+        uid = ItemStore.createInstance(itemId, state);
+        ItemStore.move(uid, { type: 'bag', index: idx });
+      }
+      if (uid && state && typeof state === 'object') state.instanceUid = uid;
     }
     playerInventoryEquip[idx] = itemId;
     playerInventoryState[idx] = state;
@@ -501,6 +551,9 @@ const UiEquipModule = (() => {
     }
 
     activeWear[target] = entry;
+    if (typeof ItemStore !== 'undefined' && entry.instanceUid && ItemStore.get(entry.instanceUid)) {
+      ItemStore.move(entry.instanceUid, { type: 'body', preset: activePreset, slot: String(target) });
+    }
 
     if (TOTEM_SLOTS.includes(String(target))) {
       setTotemPanelOpen(true);
@@ -526,6 +579,12 @@ const UiEquipModule = (() => {
     const id = String(uiSlotId);
     const entry = activeWear[id];
     if (!entry) return false;
+
+    if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem
+      && String(currentEnchantItem.wearSlotId) === id
+      && typeof unloadEquipFromSlot === 'function') {
+      unloadEquipFromSlot({ silent: true });
+    }
 
     if (!returnEntryToBagOrWarn(entry)) return false;
     activeWear[id] = null;
@@ -568,20 +627,19 @@ const UiEquipModule = (() => {
     return true;
   }
 
-  /** 身上該槽直接送進強化台（強化槽已有裝則先卸回物品欄） */
+  /** 身上該槽設為強化焦點（不脫裝；強化槽已有焦點則先清除） */
   function moveWornSlotToEnchant(uiSlotId) {
     const id = String(uiSlotId);
     const entry = activeWear[id];
     if (!entry?.itemId) return false;
     if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
-      if (typeof unloadEquipFromSlot !== 'function' || !unloadEquipFromSlot()) {
+      if (typeof unloadEquipFromSlot !== 'function' || !unloadEquipFromSlot({ silent: true })) {
         return false;
       }
     }
-    activeWear[id] = null;
-    const ok = typeof loadEquipFromWearEntry === 'function' && loadEquipFromWearEntry(entry);
+    // 正服式：穿著保留，僅設強化焦點
+    const ok = typeof loadEquipFromWearEntry === 'function' && loadEquipFromWearEntry(entry, id);
     if (!ok) {
-      activeWear[id] = entry;
       if (typeof addLog === 'function') {
         addLog('[裝備欄] 無法放入強化槽。', 'log-fail');
       }
@@ -954,10 +1012,10 @@ const UiEquipModule = (() => {
 
   function setEnchantOpen(next) {
     const wantOpen = !!next;
-    // 關閉強化頁時自動卸下強化槽裝備（進度寫回背包）
+    // 關閉強化頁時清除強化焦點（進度已寫回原位置，不需空背包）
     if (enchantOpen && !wantOpen && typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
-      if (typeof unloadEquipFromSlot !== 'function' || !unloadEquipFromSlot({ silent: true })) {
-        return false;
+      if (typeof unloadEquipFromSlot === 'function') {
+        unloadEquipFromSlot({ silent: true });
       }
     }
     enchantOpen = wantOpen;
@@ -1112,7 +1170,11 @@ const UiEquipModule = (() => {
           state.id = itemId;
         }
       }
-      out[id] = { itemId, state };
+      out[id] = {
+        itemId,
+        state,
+        ...(entry.instanceUid ? { instanceUid: entry.instanceUid } : {}),
+      };
     });
     return out;
   }
@@ -1315,6 +1377,7 @@ const UiEquipModule = (() => {
     isEquipView,
     wearFromBag,
     moveWornSlotToEnchant,
+    patchActiveWearState,
     unequipSlot,
     unequipItemId,
     unequipIncompatibleWeapons,

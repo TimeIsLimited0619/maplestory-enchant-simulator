@@ -10,6 +10,7 @@
     "import:gear": "node scripts/import-wz-xml.mjs && node scripts/import-paperdoll-wz.mjs",
     "import:mob": "node scripts/import-mob-wz.mjs",
     "import:boss": "node scripts/import-boss-wz.mjs",
+    "import:boss:suu-pattern": "node scripts/import-boss-pattern-suu.mjs",
     "import:npcshop": "node scripts/import-npcshop-ui.mjs",
     "import:levelup": "node scripts/import-basic-eff-levelup.mjs",
     "import:skill": "node scripts/import-skill-wz.mjs",
