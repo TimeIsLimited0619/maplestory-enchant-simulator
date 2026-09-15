@@ -24,6 +24,8 @@ const MSS_FILE_ENC_VERSION = 1;
 const MSS_FILE_ENC_SECRET = 'mss-file-obf-v1|maplestory-enchant-simulator|tw-zh';
 
 const SESSION_MIGRATION_STARFORCE_REMAP = 'starForceRemap20_23Once';
+/** 依 starTier 重算星火數值（V2：顯示改查表後強制再寫回一次） */
+const SESSION_MIGRATION_BONUS_STAT_VALUES = 'bonusStatValueRematerializeV2';
 
 const SessionPersistenceModule = {
   loadedFromStorage: false,
@@ -255,6 +257,7 @@ const SessionPersistenceModule = {
       migrations: {
         ...(this._migrations && typeof this._migrations === 'object' ? this._migrations : {}),
         [SESSION_MIGRATION_STARFORCE_REMAP]: true,
+        [SESSION_MIGRATION_BONUS_STAT_VALUES]: true,
       },
     };
 
@@ -837,6 +840,60 @@ const SessionPersistenceModule = {
     return changed;
   },
 
+  rematerializeEnchantBonusStatState(state) {
+    if (typeof rematerializeEnchantBonusStat === 'function') {
+      return rematerializeEnchantBonusStat(state);
+    }
+    return false;
+  },
+
+  rematerializeWearMapBonusStat(wearMap) {
+    if (!wearMap || typeof wearMap !== 'object') return false;
+    let changed = false;
+    Object.keys(wearMap).forEach((slot) => {
+      const entry = wearMap[slot];
+      if (!entry || typeof entry !== 'object') return;
+      if (entry.state && this.rematerializeEnchantBonusStatState(entry.state)) changed = true;
+    });
+    return changed;
+  },
+
+  /** 依 starTier 重算 session 內星火數值 */
+  rematerializeSessionBonusStatValues(session) {
+    if (!session || typeof session !== 'object') return false;
+    let changed = false;
+    if (Array.isArray(session.inventoryState)) {
+      session.inventoryState.forEach((st) => {
+        if (this.rematerializeEnchantBonusStatState(st)) changed = true;
+      });
+    }
+    if (session.equippedItem?.state
+      && this.rematerializeEnchantBonusStatState(session.equippedItem.state)) {
+      changed = true;
+    }
+    if (session.items && typeof session.items === 'object') {
+      Object.keys(session.items).forEach((uid) => {
+        const inst = session.items[uid];
+        if (inst?.state && this.rematerializeEnchantBonusStatState(inst.state)) changed = true;
+      });
+    }
+    if (this.rematerializeWearMapBonusStat(session.bodyWearActive)) changed = true;
+    if (session.bodyWearByPreset && typeof session.bodyWearByPreset === 'object') {
+      Object.keys(session.bodyWearByPreset).forEach((key) => {
+        if (this.rematerializeWearMapBonusStat(session.bodyWearByPreset[key])) changed = true;
+      });
+    }
+    if (Array.isArray(session.trunkSlots)) {
+      session.trunkSlots.forEach((entry) => {
+        if (entry?.kind === 'equip' && entry.state
+          && this.rematerializeEnchantBonusStatState(entry.state)) {
+          changed = true;
+        }
+      });
+    }
+    return changed;
+  },
+
   /**
    * 一次性遷移：20～24→20、25～30→23；標記 migrations.starForceRemap20_23Once。
    * 已標記者不再退星（之後可再衝高）。
@@ -849,6 +906,22 @@ const SessionPersistenceModule = {
     if (payload.migrations[SESSION_MIGRATION_STARFORCE_REMAP]) return false;
     if (payload.session) this.remapSessionStarForce(payload.session);
     payload.migrations[SESSION_MIGRATION_STARFORCE_REMAP] = true;
+    return true;
+  },
+
+  /**
+   * 一次性遷移：依 starTier 重算星火數值（修 160↓ 誤用最高檔）。
+   * rematerializeEnchantBonusStat 未就緒時不標記，稍後再跑。
+   */
+  migrateBonusStatValuesPayload(payload) {
+    if (!payload || typeof payload !== 'object') return false;
+    if (typeof rematerializeEnchantBonusStat !== 'function') return false;
+    if (!payload.migrations || typeof payload.migrations !== 'object') {
+      payload.migrations = {};
+    }
+    if (payload.migrations[SESSION_MIGRATION_BONUS_STAT_VALUES]) return false;
+    if (payload.session) this.rematerializeSessionBonusStatValues(payload.session);
+    payload.migrations[SESSION_MIGRATION_BONUS_STAT_VALUES] = true;
     return true;
   },
 
@@ -881,11 +954,127 @@ const SessionPersistenceModule = {
     });
   },
 
+  /** 模擬器／放置兩份 localStorage 各跑一次星火數值重算 */
+  migrateBonusStatValuesInLocalStorage() {
+    ['sim', 'idle'].forEach((profile) => {
+      const data = this.readPayloadFor(profile);
+      if (!data?.session) return;
+      const payload = (data.format === MSS_SAVE_FORMAT)
+        ? data
+        : {
+          format: MSS_SAVE_FORMAT,
+          version: MSS_SAVE_FILE_VERSION,
+          session: data.session,
+          migrations: data.migrations || {},
+        };
+      if (!this.migrateBonusStatValuesPayload(payload)) return;
+      try {
+        this.writePayloadFor(profile, payload);
+      } catch (err) {
+        console.warn('[SessionPersistence] bonusStatValues 遷移寫回失敗:', profile, err);
+      }
+    });
+  },
+
   markStarForceRemapMigrated() {
     if (!this._migrations || typeof this._migrations !== 'object') {
       this._migrations = {};
     }
     this._migrations[SESSION_MIGRATION_STARFORCE_REMAP] = true;
+  },
+
+  markBonusStatValuesMigrated() {
+    if (!this._migrations || typeof this._migrations !== 'object') {
+      this._migrations = {};
+    }
+    this._migrations[SESSION_MIGRATION_BONUS_STAT_VALUES] = true;
+  },
+
+  /** 對目前記憶體中的裝備重算星火（localStorage 遷移後補跑） */
+  rematerializeLiveBonusStatValues() {
+    if (typeof rematerializeEnchantBonusStat !== 'function') return false;
+    let changed = false;
+    const touchState = (st) => {
+      if (this.rematerializeEnchantBonusStatState(st)) changed = true;
+    };
+    if (typeof playerInventoryState !== 'undefined' && Array.isArray(playerInventoryState)) {
+      playerInventoryState.forEach(touchState);
+    }
+    if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
+      touchState(currentEnchantItem);
+    }
+    if (typeof ItemStore !== 'undefined' && typeof ItemStore.get === 'function') {
+      const seen = new Set();
+      const touchUid = (uid) => {
+        if (!uid || seen.has(uid)) return;
+        seen.add(uid);
+        const inst = ItemStore.get(uid);
+        if (inst?.state) touchState(inst.state);
+      };
+      (ItemStore.getBagSlots?.() || []).forEach(touchUid);
+      const bodies = ItemStore.getBodyByPreset?.() || {};
+      Object.keys(bodies).forEach((preset) => {
+        const wear = bodies[preset] || {};
+        Object.keys(wear).forEach((slot) => touchUid(wear[slot]));
+      });
+      (ItemStore.getOrphanBenchUids?.() || []).forEach(touchUid);
+    }
+    if (typeof UiEquipModule !== 'undefined') {
+      const wear = UiEquipModule.getActiveWearMap?.() || UiEquipModule.bodyWearActive;
+      if (this.rematerializeWearMapBonusStat(wear)) changed = true;
+      const byPreset = UiEquipModule.bodyWearByPreset;
+      if (byPreset && typeof byPreset === 'object') {
+        Object.keys(byPreset).forEach((key) => {
+          if (this.rematerializeWearMapBonusStat(byPreset[key])) changed = true;
+        });
+      }
+    }
+    if (typeof playerTrunkSlots !== 'undefined' && Array.isArray(playerTrunkSlots)) {
+      playerTrunkSlots.forEach((entry) => {
+        if (entry?.kind === 'equip' && entry.state) touchState(entry.state);
+      });
+    }
+    return changed;
+  },
+
+  /**
+   * bonusStatValues.js 載入後呼叫：寫回 localStorage，並修正已載入的記憶體狀態。
+   */
+  runBonusStatValueMigrationWhenReady() {
+    if (typeof rematerializeEnchantBonusStat !== 'function') return;
+    const hadFlag = !!(this._migrations && this._migrations[SESSION_MIGRATION_BONUS_STAT_VALUES]);
+    this.migrateBonusStatValuesInLocalStorage();
+    const data = this.readPayloadFor(this.activeProfile);
+    if (data?.migrations?.[SESSION_MIGRATION_BONUS_STAT_VALUES]) {
+      this.markBonusStatValuesMigrated();
+    }
+    // 首次 V2：即使 LS 已寫，記憶體可能仍是舊 value，一律補修
+    if (!hadFlag) {
+      const liveChanged = this.rematerializeLiveBonusStatValues();
+      this.markBonusStatValuesMigrated();
+      if (liveChanged) {
+        try {
+          this.saveToStorage?.();
+        } catch (err) {
+          console.warn('[SessionPersistence] bonusStat live 寫回失敗:', err);
+        }
+      }
+      try {
+        if (typeof updateStatusPanel === 'function') updateStatusPanel();
+      } catch (_) { /* ignore */ }
+      try {
+        if (typeof BonusStatModule !== 'undefined') BonusStatModule.updateUI?.();
+      } catch (_) { /* ignore */ }
+      try {
+        if (typeof InventoryModule !== 'undefined') {
+          InventoryModule.render?.();
+          InventoryModule.updateSlotCount?.();
+        }
+      } catch (_) { /* ignore */ }
+      try {
+        if (typeof UiEquipModule !== 'undefined') UiEquipModule.render?.();
+      } catch (_) { /* ignore */ }
+    }
   },
 
   emptySessionSnapshot() {
@@ -1141,6 +1330,7 @@ const SessionPersistenceModule = {
     this.saveToStorage();
     this.activeProfile = want;
     this.migrateStarForceRemapInLocalStorage();
+    this.migrateBonusStatValuesInLocalStorage();
     const data = this.readPayloadFor(want);
     this._migrations = {
       ...(data?.migrations && typeof data.migrations === 'object' ? data.migrations : {}),
@@ -1162,6 +1352,7 @@ const SessionPersistenceModule = {
     this.activeProfile = 'idle';
     this._needIdleStarter = true;
     this.markStarForceRemapMigrated();
+    this.markBonusStatValuesMigrated();
     this.applyWorld(this.emptySessionSnapshot(), this.emptyExtraPayload());
     this.saveToStorage();
     return true;
@@ -1171,6 +1362,7 @@ const SessionPersistenceModule = {
     this.activeProfile = this.profileFromStorage();
     try {
       this.migrateStarForceRemapInLocalStorage();
+      this.migrateBonusStatValuesInLocalStorage();
       const data = this.readPayloadFor(this.activeProfile);
       if (data?.session) {
         this._migrations = {
@@ -1389,6 +1581,7 @@ const SessionPersistenceModule = {
     if (!data.idleHunt || typeof data.idleHunt !== 'object') data.idleHunt = {};
 
     this.migrateStarForceRemapPayload(data);
+    this.migrateBonusStatValuesPayload(data);
     this._migrations = {
       ...(data.migrations && typeof data.migrations === 'object' ? data.migrations : {}),
     };

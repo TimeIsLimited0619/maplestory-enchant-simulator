@@ -35,7 +35,7 @@ const IdleBoss = (() => {
   let playerAtkAcc = 0;
   /** @type {Record<string, Record<string, number>>} */
   let partAtkAcc = Object.create(null);
-  const ARENA_UI_VER = '17';
+  const ARENA_UI_VER = '18';
   let exitConfirmPending = false;
   /** 死亡失敗彈窗（你已死亡／挑戰失敗） */
   let failModalOpen = false;
@@ -193,6 +193,26 @@ const IdleBoss = (() => {
     if (repeatTotal <= 1) return '';
     const curIdx = Math.max(1, repeatTotal - repeatLeft);
     return `自動 ${curIdx}/${repeatTotal}`;
+  }
+
+  /** 標題本體與自動場次分開，避免長 BOSS 名把「自動 n/m」擠掉 */
+  function setArenaTitleText(mainText) {
+    const title = $('idleBossArenaTitle');
+    if (title) title.textContent = String(mainText || '');
+    syncArenaAutoTag();
+  }
+
+  function syncArenaAutoTag() {
+    const el = $('idleBossArenaAuto');
+    if (!el) return;
+    const auto = repeatHudTag();
+    if (auto) {
+      el.textContent = auto;
+      el.hidden = false;
+    } else {
+      el.textContent = '';
+      el.hidden = true;
+    }
   }
 
   function shouldAutoContinue() {
@@ -401,6 +421,7 @@ const IdleBoss = (() => {
     }
     syncChallengeBtn();
     syncRepeatInput();
+    syncArenaAutoTag();
     return true;
   }
 
@@ -558,27 +579,23 @@ const IdleBoss = (() => {
       },
       setStageLayout: (layout) => setArenaStageLayout(layout || {}),
       onPhase: (p) => {
-        const title = $('idleBossArenaTitle');
         const boss = getBoss(arenaBossId);
-        if (title && boss) {
+        if (boss) {
           const diffName = (typeof IdleBossDiff !== 'undefined' && IdleBossDiff.meta)
             ? IdleBossDiff.meta(arenaDiffId).name
             : '';
           const tag = diffName ? `${diffName}｜` : '';
-          if (p === 'clear') title.textContent = `${boss.name}｜${tag}清場`;
-          else title.textContent = `${boss.name}｜${tag}階段 ${p}`;
+          if (p === 'clear') setArenaTitleText(`${boss.name}｜${tag}清場`);
+          else setArenaTitleText(`${boss.name}｜${tag}階段 ${p}`);
         }
       },
       onTitle: (msg) => {
-        const title = $('idleBossArenaTitle');
         const boss = getBoss(arenaBossId);
-        if (title) {
-          const diffName = (typeof IdleBossDiff !== 'undefined' && IdleBossDiff.meta)
-            ? IdleBossDiff.meta(arenaDiffId).name
-            : '';
-          const tag = diffName ? `${diffName}｜` : '';
-          title.textContent = boss ? `${boss.name}｜${tag}${msg}` : String(msg || '');
-        }
+        const diffName = (typeof IdleBossDiff !== 'undefined' && IdleBossDiff.meta)
+          ? IdleBossDiff.meta(arenaDiffId).name
+          : '';
+        const tag = diffName ? `${diffName}｜` : '';
+        setArenaTitleText(boss ? `${boss.name}｜${tag}${msg}` : String(msg || ''));
       },
       syncChallengeHud: (state) => syncBossChallengeHud(state),
       onExitStart: (sec) => {
@@ -715,6 +732,7 @@ const IdleBoss = (() => {
       <div class="idle-boss-arena-shell" role="dialog" aria-modal="true" aria-labelledby="idleBossArenaTitle">
         <div class="idle-boss-arena-head">
           <span id="idleBossArenaTitle">BOSS</span>
+          <span id="idleBossArenaAuto" class="idle-boss-arena-auto" hidden></span>
           <button type="button" id="idleBossArenaClose" class="idle-hunt-picker-nav">關閉</button>
         </div>
         <div class="idle-boss-arena-body">
@@ -1380,14 +1398,13 @@ const IdleBoss = (() => {
 
   function onChallengeTimeUp() {
     if (!arenaRunning || exitCountdownActive) return;
-    const title = $('idleBossArenaTitle');
     const boss = getBoss(arenaBossId);
-    if (title && boss) {
+    if (boss) {
       const diffName = (typeof IdleBossDiff !== 'undefined' && IdleBossDiff.meta)
         ? IdleBossDiff.meta(arenaDiffId).name
         : '';
       const tag = diffName ? `${diffName}｜` : '';
-      title.textContent = `${boss.name}｜${tag}時間到`;
+      setArenaTitleText(`${boss.name}｜${tag}時間到`);
     }
     onCombatEnd('lose', { keepTitle: true });
   }
@@ -1716,17 +1733,16 @@ const IdleBoss = (() => {
       }
     }
     setArenaRunning(false);
-    const title = $('idleBossArenaTitle');
     const boss = getBoss(arenaBossId);
-    if (title && boss && !opts?.keepTitle) {
+    if (boss && !opts?.keepTitle) {
       const diffName = (typeof IdleBossDiff !== 'undefined' && IdleBossDiff.meta)
         ? IdleBossDiff.meta(arenaDiffId).name
         : '';
       const tag = diffName ? `${diffName}｜` : '';
-      const auto = repeatHudTag();
-      const autoTag = auto ? `｜${auto}` : '';
-      if (result === 'win') title.textContent = `${boss.name}｜${tag}通關${autoTag}`;
-      else if (result === 'lose') title.textContent = `${boss.name}｜${tag}失敗${autoTag}`;
+      if (result === 'win') setArenaTitleText(`${boss.name}｜${tag}通關`);
+      else if (result === 'lose') setArenaTitleText(`${boss.name}｜${tag}失敗`);
+    } else {
+      syncArenaAutoTag();
     }
     // 通關（無離場倒數）立刻解鎖；死亡失敗維持鎖定直到退出／關場
     if (result === 'win' && !usesPhaseFight(arenaBossId)) {
@@ -2115,14 +2131,13 @@ const IdleBoss = (() => {
     syncArenaChrome();
     if (!arenaOpen) return;
     const boss = getBoss(arenaBossId || selectedId);
-    const title = $('idleBossArenaTitle');
-    if (title) {
+    if (boss) {
       const diffName = (typeof IdleBossDiff !== 'undefined' && IdleBossDiff.meta)
         ? IdleBossDiff.meta(arenaDiffId).name
         : '';
-      const auto = repeatHudTag();
-      const base = diffName ? `${boss.name}｜${diffName}` : boss.name;
-      title.textContent = auto ? `${base}｜${auto}` : base;
+      setArenaTitleText(diffName ? `${boss.name}｜${diffName}` : boss.name);
+    } else {
+      syncArenaAutoTag();
     }
     applyMapLayers(boss);
     syncBossOverlayBars();

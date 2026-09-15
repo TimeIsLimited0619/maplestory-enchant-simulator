@@ -190,6 +190,14 @@ const BONUS_STAT_STAT_POOL = {
 
 const BONUS_STAT_VALUE_TABLES = {
   "singleMain": [
+    { "minLevel": 0, "maxLevel": 19, "values": [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    { "minLevel": 20, "maxLevel": 39, "values": [2, 4, 6, 8, 10, 12, 14, 16, 18] },
+    { "minLevel": 40, "maxLevel": 59, "values": [3, 6, 9, 12, 15, 18, 21, 24, 27] },
+    { "minLevel": 60, "maxLevel": 79, "values": [4, 8, 12, 16, 20, 24, 28, 32, 36] },
+    { "minLevel": 80, "maxLevel": 99, "values": [5, 10, 15, 20, 25, 30, 35, 40, 45] },
+    { "minLevel": 100, "maxLevel": 119, "values": [6, 12, 18, 24, 30, 36, 42, 48, 54] },
+    { "minLevel": 120, "maxLevel": 139, "values": [7, 14, 21, 28, 35, 42, 49, 56, 63] },
+    { "minLevel": 140, "maxLevel": 159, "values": [8, 16, 24, 32, 40, 48, 56, 64, 72] },
     {
       "minLevel": 160,
       "maxLevel": 179,
@@ -267,6 +275,10 @@ const BONUS_STAT_VALUE_TABLES = {
     }
   ],
   "dualMain": [
+    { "minLevel": 0, "maxLevel": 39, "values": [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    { "minLevel": 40, "maxLevel": 79, "values": [2, 4, 6, 8, 10, 12, 14, 16, 18] },
+    { "minLevel": 80, "maxLevel": 119, "values": [3, 6, 9, 12, 15, 18, 21, 24, 27] },
+    { "minLevel": 120, "maxLevel": 159, "values": [4, 8, 12, 16, 20, 24, 28, 32, 36] },
     {
       "minLevel": 160,
       "maxLevel": 199,
@@ -314,6 +326,14 @@ const BONUS_STAT_VALUE_TABLES = {
     }
   ],
   "def": [
+    { "minLevel": 0, "maxLevel": 19, "values": [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    { "minLevel": 20, "maxLevel": 39, "values": [2, 4, 6, 8, 10, 12, 14, 16, 18] },
+    { "minLevel": 40, "maxLevel": 59, "values": [3, 6, 9, 12, 15, 18, 21, 24, 27] },
+    { "minLevel": 60, "maxLevel": 79, "values": [4, 8, 12, 16, 20, 24, 28, 32, 36] },
+    { "minLevel": 80, "maxLevel": 99, "values": [5, 10, 15, 20, 25, 30, 35, 40, 45] },
+    { "minLevel": 100, "maxLevel": 119, "values": [6, 12, 18, 24, 30, 36, 42, 48, 54] },
+    { "minLevel": 120, "maxLevel": 139, "values": [7, 14, 21, 28, 35, 42, 49, 56, 63] },
+    { "minLevel": 140, "maxLevel": 159, "values": [8, 16, 24, 32, 40, 48, 56, 64, 72] },
     {
       "minLevel": 160,
       "maxLevel": 179,
@@ -391,6 +411,22 @@ const BONUS_STAT_VALUE_TABLES = {
     }
   ],
   "hpMp": [
+    { "minLevel": 0, "maxLevel": 9, "values": [3, 6, 9, 12, 15, 18, 21, 24, 27] },
+    { "minLevel": 10, "maxLevel": 19, "values": [30, 60, 90, 120, 150, 180, 210, 240, 270] },
+    { "minLevel": 20, "maxLevel": 29, "values": [60, 120, 180, 240, 300, 360, 420, 480, 540] },
+    { "minLevel": 30, "maxLevel": 39, "values": [90, 180, 270, 360, 450, 540, 630, 720, 810] },
+    { "minLevel": 40, "maxLevel": 49, "values": [120, 240, 360, 480, 600, 720, 840, 960, 1080] },
+    { "minLevel": 50, "maxLevel": 59, "values": [150, 300, 450, 600, 750, 900, 1050, 1200, 1350] },
+    { "minLevel": 60, "maxLevel": 69, "values": [180, 360, 540, 720, 900, 1080, 1260, 1440, 1620] },
+    { "minLevel": 70, "maxLevel": 79, "values": [210, 420, 630, 840, 1050, 1260, 1470, 1680, 1890] },
+    { "minLevel": 80, "maxLevel": 89, "values": [240, 480, 720, 960, 1200, 1440, 1680, 1920, 2160] },
+    { "minLevel": 90, "maxLevel": 99, "values": [270, 540, 810, 1080, 1350, 1620, 1890, 2160, 2430] },
+    { "minLevel": 100, "maxLevel": 109, "values": [300, 600, 900, 1200, 1500, 1800, 2100, 2400, 2700] },
+    { "minLevel": 110, "maxLevel": 119, "values": [330, 660, 990, 1320, 1650, 1980, 2310, 2640, 2970] },
+    { "minLevel": 120, "maxLevel": 129, "values": [360, 720, 1080, 1440, 1800, 2160, 2520, 2880, 3240] },
+    { "minLevel": 130, "maxLevel": 139, "values": [390, 780, 1170, 1560, 1950, 2340, 2730, 3120, 3510] },
+    { "minLevel": 140, "maxLevel": 149, "values": [420, 840, 1260, 1680, 2100, 2520, 2940, 3360, 3780] },
+    { "minLevel": 150, "maxLevel": 159, "values": [450, 900, 1350, 1800, 2250, 2700, 3150, 3600, 4050] },
     {
       "minLevel": 160,
       "maxLevel": 169,
@@ -794,8 +830,16 @@ function bsParsePercentString(s) {
 function bsFindLevelRow(table, reqLevel) {
   if (!table?.length) return null;
   const lv = Math.max(0, Math.floor(Number(reqLevel) || 0));
-  return table.find((row) => lv >= row.minLevel && lv <= row.maxLevel)
-    || table[table.length - 1];
+  const exact = table.find((row) => lv >= row.minLevel && lv <= row.maxLevel);
+  if (exact) return exact;
+  // 找不到時：用「不超過該等級」的最高檔；再低於全表則用最低檔（勿用最高檔，否則 160 以下會暴衝）
+  let bestBelow = null;
+  for (const row of table) {
+    if (row.maxLevel <= lv && (!bestBelow || row.maxLevel > bestBelow.maxLevel)) {
+      bestBelow = row;
+    }
+  }
+  return bestBelow || table[0];
 }
 
 function bsGetTableValue(tableName, reqLevel, starTier, item, options = {}) {
@@ -964,7 +1008,7 @@ function bsCanRollAtkStat(statName, item) {
 }
 
 function bsCanRollStat(statName, item) {
-  const req = item?.reqLevel || 200;
+  const req = bsResolveEquipReqLevel(item) || 200;
   const isWeapon = bsIsWeaponItem(item);
   if (!bsCanRollAtkStat(statName, item)) return false;
   if (statName === 'BOSS怪物傷害%' && req < 90) return false;
@@ -973,10 +1017,22 @@ function bsCanRollStat(statName, item) {
   return true;
 }
 
+/** 裝備需求等級：state → ITEM_DATABASE；勿預設 200（會讓低等裝查到高檔） */
+function bsResolveEquipReqLevel(item) {
+  const direct = Number(item?.reqLevel);
+  if (Number.isFinite(direct) && direct > 0) return Math.floor(direct);
+  const id = item?.id ?? item?.itemId;
+  if (id != null && typeof ITEM_DATABASE !== 'undefined') {
+    const fromDb = Number(ITEM_DATABASE[id]?.reqLevel);
+    if (Number.isFinite(fromDb) && fromDb > 0) return Math.floor(fromDb);
+  }
+  return 0;
+}
+
 function bsResolveStatLine(statName, starTier, item) {
   const meta = BONUS_STAT_NAME_TO_KEY[statName];
   if (!meta) return null;
-  const reqLevel = item?.reqLevel || 200;
+  const reqLevel = bsResolveEquipReqLevel(item);
   const isBoss = bsIsBossGearItem(item);
   const isWeapon = bsIsWeaponItem(item);
 
@@ -1112,4 +1168,117 @@ function bsRollBonusStatLines(item, starFireType = 'enhanced', starFireLevel = n
     lines.push(rolled);
   }
   return { starFireLevel: sfLevel, starFireType, lines };
+}
+
+/** 依已存 starTier 推回 bsResolveStatLine 用的詞條名 */
+function bsResolveStatNameForStoredLine(line, item) {
+  if (!line) return null;
+  if (Array.isArray(line.dual) && line.dual.length >= 2) {
+    const key = line.dual.map((s) => String(s).toUpperCase()).join('+');
+    if (BONUS_STAT_NAME_TO_KEY[key]) return key;
+  }
+  const id = String(line.statId || '');
+  if (id === 'watk' || id === 'watkPct') {
+    if (line.isPercent || id === 'watkPct') return '物理攻擊力%';
+    return '攻擊力';
+  }
+  if (id === 'matk' || id === 'matkPct') {
+    if (line.isPercent || id === 'matkPct') return '魔法攻擊力%';
+    return '魔力';
+  }
+  if (id === 'maxHp') return '最大HP';
+  if (id === 'maxMp') return '最大MP';
+  if (id === 'allStat') return '全屬性%';
+  if (id === 'bossDmg') return 'BOSS怪物傷害%';
+  if (id === 'dmg') return '傷害%';
+  if (id === 'def') return '防禦力';
+  if (id === 'speed') return '移動速度';
+  if (id === 'jump') return '跳躍力';
+  if (id === 'levelReduce') return '穿戴等級減少';
+  if (id === 'str') return 'STR';
+  if (id === 'dex') return 'DEX';
+  if (id === 'int') return 'INT';
+  if (id === 'luk') return 'LUK';
+
+  const label = String(line.label || '').trim();
+  if (label && BONUS_STAT_NAME_TO_KEY[label]) return label;
+  if (label && BONUS_STAT_NAME_TO_KEY[`${label}%`]) return `${label}%`;
+
+  const hit = Object.keys(BONUS_STAT_NAME_TO_KEY).find((name) => {
+    const meta = BONUS_STAT_NAME_TO_KEY[name];
+    return meta?.key === id && !meta.dual;
+  });
+  return hit || null;
+}
+
+/**
+ * 依 starTier + 裝備等級重算詞條數值（修正 160 以下誤用最高檔的舊存檔）。
+ * @returns {{ line: object, changed: boolean }}
+ */
+function rematerializeBonusStatLineValue(line, item) {
+  const tier = Math.floor(Number(line?.starTier) || 0);
+  if (!line || tier <= 0 || typeof bsResolveStatLine !== 'function') {
+    return { line, changed: false };
+  }
+  const name = bsResolveStatNameForStoredLine(line, item);
+  if (!name) return { line, changed: false };
+  const rolled = bsResolveStatLine(name, tier, item);
+  if (!rolled) return { line, changed: false };
+
+  const nextVal = Number(rolled.value);
+  const prevVal = Number(line.value);
+  const sameVal = Number.isFinite(nextVal) && Number.isFinite(prevVal)
+    && Math.abs(nextVal - prevVal) < 1e-6;
+  const samePct = Boolean(rolled.isPercent) === Boolean(line.isPercent);
+  if (sameVal && samePct && rolled.statId === line.statId) {
+    return { line, changed: false };
+  }
+
+  return {
+    line: {
+      ...line,
+      statId: rolled.statId || line.statId,
+      value: rolled.value,
+      isPercent: rolled.isPercent,
+      dual: rolled.dual || line.dual,
+      label: rolled.label || line.label,
+      starTier: tier,
+    },
+    changed: true,
+  };
+}
+
+/**
+ * 顯示／加總用：有 starTier 時一律依裝備等級查表，不信任舊存檔 line.value。
+ */
+function bonusStatLineTableValue(line, equip = null) {
+  if (!line) return 0;
+  const tier = Math.floor(Number(line.starTier) || 0);
+  if (tier > 0) {
+    const r = rematerializeBonusStatLineValue(line, equip);
+    const v = Number(r?.line?.value);
+    if (Number.isFinite(v)) return v;
+  }
+  return Number(line.value) || 0;
+}
+
+/** 對裝備 enchant state 的 bonusStat 重算數值；回傳是否有改動 */
+function rematerializeEnchantBonusStat(state) {
+  if (!state || typeof state !== 'object') return false;
+  const bs = state.bonusStat;
+  if (!bs?.lines?.length) return false;
+
+  let changed = false;
+  const lines = bs.lines.map((line) => {
+    const r = rematerializeBonusStatLineValue(line, state);
+    if (r.changed) changed = true;
+    return r.line;
+  });
+  if (!changed) return false;
+
+  bs.lines = lines;
+  if (typeof calcBonusStatAtkPow === 'function') {
+    bs.atkPow = calcBonusStatAtkPow(lines, state);
+  }
+  return true;
 }

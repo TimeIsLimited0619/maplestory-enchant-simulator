@@ -377,14 +377,16 @@ function formatBonusStatValue(line, equip = null) {
   if (!line) return '';
   const eq = equip ?? (typeof BonusStatModule !== 'undefined' ? BonusStatModule.itemData : null);
   const type = BONUS_STAT_TYPE_BY_ID[line.statId];
+  const tableVal = typeof bonusStatLineTableValue === 'function'
+    ? bonusStatLineTableValue(line, eq)
+    : (Number(line.value) || 0);
   if (eq && isBonusStatWeaponAtkPercentLine(line, eq)) {
     return `+${bonusStatLineEffectiveValue(line, eq)}`;
   }
   const isPercent = line.isPercent ?? type?.isPercent;
-  const v = line.value ?? '';
-  if (isPercent) return `+${v}%`;
-  if (line.statId === 'levelReduce') return String(v);
-  return `+${v}`;
+  if (isPercent) return `+${tableVal}%`;
+  if (line.statId === 'levelReduce') return String(tableVal);
+  return `+${tableVal}`;
 }
 
 function getBonusStatEquipBaseAtk(equip) {
@@ -421,7 +423,9 @@ function isBonusStatWeaponAtkPercentLine(line, equip) {
 function bonusStatLineEffectiveValue(line, equip = null) {
   if (!line) return 0;
   const eq = equip ?? (typeof BonusStatModule !== 'undefined' ? BonusStatModule.itemData : null);
-  const v = Number(line.value) || 0;
+  const v = typeof bonusStatLineTableValue === 'function'
+    ? bonusStatLineTableValue(line, eq)
+    : (Number(line.value) || 0);
   if (eq && isBonusStatWeaponAtkPercentLine(line, eq)) {
     return Math.round(getBonusStatEquipBaseForPercentLine(line, eq) * v / 100);
   }
@@ -432,8 +436,11 @@ function getBonusStatStatTotal(lines, statId, equip = null) {
   const eq = equip ?? (typeof BonusStatModule !== 'undefined' ? BonusStatModule.itemData : null);
   let total = 0;
   (lines || []).forEach((line) => {
+    const tableVal = typeof bonusStatLineTableValue === 'function'
+      ? bonusStatLineTableValue(line, eq)
+      : (Number(line.value) || 0);
     if (line?.dual?.length) {
-      if (line.dual.includes(statId)) total += Number(line.value) || 0;
+      if (line.dual.includes(statId)) total += tableVal;
       return;
     }
     if (line.statId === statId) {
@@ -472,12 +479,15 @@ function bonusStatTargetMet(state, statId, minTier, _equip = null) {
 function formatBonusStatLineDisplay(line, equip = null) {
   const eq = equip ?? (typeof BonusStatModule !== 'undefined' ? BonusStatModule.itemData : null);
   const iconIndex = getBonusStatLineIconIndex(line);
+  const tableVal = typeof bonusStatLineTableValue === 'function'
+    ? bonusStatLineTableValue(line, eq)
+    : (Number(line?.value) || 0);
 
   if (line?.dual?.length) {
     const label = line.label || line.dual.map((id) => id.toUpperCase()).join('+');
     const value = line.statId === 'levelReduce'
-      ? String(line.value)
-      : `+${line.value}`;
+      ? String(tableVal)
+      : `+${tableVal}`;
     return {
       label,
       value,
@@ -507,7 +517,7 @@ function formatBonusStatLineDisplay(line, equip = null) {
 
   const isPercent = line?.isPercent ?? type?.isPercent;
   const value = line
-    ? (isPercent ? `+${line.value}%` : (line.statId === 'levelReduce' ? String(line.value) : `+${line.value}`))
+    ? (isPercent ? `+${tableVal}%` : (line.statId === 'levelReduce' ? String(tableVal) : `+${tableVal}`))
     : '';
   return {
     label,
@@ -547,15 +557,18 @@ function aggregateBonusStatLines(lines = [], equip = null) {
   };
 
   lines.forEach((line) => {
+    const tableVal = typeof bonusStatLineTableValue === 'function'
+      ? bonusStatLineTableValue(line, eq)
+      : (Number(line?.value) || 0);
     if (line?.dual?.length) {
       line.dual.forEach((statId) => {
-        addStat(statId, line.value, false, statId.toUpperCase());
+        addStat(statId, tableVal, false, statId.toUpperCase());
       });
       return;
     }
 
     const type = BONUS_STAT_TYPE_BY_ID[line.statId];
-    let value = line.value;
+    let value = tableVal;
     let isPercent = line.isPercent ?? type?.isPercent;
     if (eq && isBonusStatWeaponAtkPercentLine(line, eq)) {
       value = bonusStatLineEffectiveValue(line, eq);
@@ -582,18 +595,20 @@ function formatAggregatedBonusStatValue(row) {
   return v > 0 ? `+${v}` : String(v);
 }
 
-function calcBonusStatAtkPow(lines = []) {
+function calcBonusStatAtkPow(lines = [], equip = null) {
+  const eq = equip ?? (typeof BonusStatModule !== 'undefined' ? BonusStatModule.itemData : null);
   let pow = 0;
   lines.forEach((line) => {
+    const v = typeof bonusStatLineTableValue === 'function'
+      ? bonusStatLineTableValue(line, eq)
+      : (Number(line?.value) || 0);
     if (line?.dual?.length) {
-      const v = Number(line.value) || 0;
       pow += v * line.dual.length;
       return;
     }
 
     const type = BONUS_STAT_TYPE_BY_ID[line.statId];
     if (!type && !line.isPercent) return;
-    const v = Number(line.value) || 0;
     const isPercent = line.isPercent ?? type?.isPercent;
     if (isPercent) {
       pow += v * 8;
@@ -629,7 +644,7 @@ function rollBonusStatState(current = getDefaultBonusStatState(), options = {}) 
     starFireLevel: rolled.starFireLevel,
     starFireType: rolled.starFireType || starFireType,
     lines,
-    atkPow: calcBonusStatAtkPow(lines),
+    atkPow: calcBonusStatAtkPow(lines, equip),
   };
 }
 
@@ -683,4 +698,14 @@ function formatBonusStatAtkPow(delta) {
   return typeof maybeAtkPowEasterEgg === 'function'
     ? maybeAtkPowEasterEgg(text, n)
     : text;
+}
+
+// sessionPersistence 早於星火表載入；數值遷移需在 rematerialize／atkPow 就緒後執行
+if (typeof SessionPersistenceModule !== 'undefined'
+  && typeof SessionPersistenceModule.runBonusStatValueMigrationWhenReady === 'function') {
+  try {
+    SessionPersistenceModule.runBonusStatValueMigrationWhenReady();
+  } catch (err) {
+    console.warn('[bonusStatData] 存檔星火數值遷移失敗:', err);
+  }
 }

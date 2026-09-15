@@ -426,11 +426,19 @@
   font-size: 14px;
 }
 
-.idle-boss-arena-head span {
+.idle-boss-arena-head > #idleBossArenaTitle {
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.idle-boss-arena-auto {
+  flex-shrink: 0;
+  color: rgba(255, 220, 120, 0.92);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 
