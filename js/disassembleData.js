@@ -98,6 +98,20 @@ const EQUIP_DISASSEMBLE_LIST = {
       '01522094', '01372177', '01402196', '01472214', '01222058',
     ], { '04008003': 10 }),
 
+    //航海防具 → 航海裝備精華
+    ...disassembleFillIds([
+      '01004422', '01004423', '01004424', '01004425', '01004426',
+      '01102775', '01102794', '01102795', '01102796', '01102797',
+      '01082636', '01082637', '01082638', '01082639', '01082640',
+      '01073030', '01073032', '01073033', '01073034', '01073035',
+      '01152174', '01152176', '01152177', '01152178', '01152179',
+    ], { '04310216': 5 }),
+
+    //航海武器 → 航海裝備精華
+    ...disassembleFillIds([
+      '01372222', '01402251', '01472261', '01522138', '01222109',
+    ], { '04310216': 10 }),
+
     // 永恆防具 → 永恆粉塵
     ...disassembleFillIds([
       '01005980', '01005981', '01005982', '01005983', '01005984',
@@ -159,32 +173,22 @@ const SCROLL_DISASSEMBLE_LIST = {
   // 普通卷軸 → 咒文的痕跡
   ...disassembleFillIds([
     'scroll_normal_weapon_atk_100', 'scroll_normal_weapon_matk_100',
-    'scroll_normal_non_weapon_str_100', 'scroll_normal_non_weapon_int_100',
-    'scroll_normal_non_weapon_dex_100', 'scroll_normal_non_weapon_luk_100',
+    'scroll_normal_non_weapon_str_100', 
   ], { spell_trace: 10 }),
   ...disassembleFillIds([
     'scroll_normal_weapon_atk_70',
     'scroll_normal_weapon_matk_70',
-    'scroll_normal_non_weapon_str_70',
-    'scroll_normal_non_weapon_int_70',
-    'scroll_normal_non_weapon_dex_70',
-    'scroll_normal_non_weapon_luk_70',
+    'scroll_normal_non_weapon_str_70',   
   ], { spell_trace: 30 }),
   ...disassembleFillIds([
     'scroll_normal_weapon_atk_30',
     'scroll_normal_weapon_matk_30',
-    'scroll_normal_non_weapon_str_30',
-    'scroll_normal_non_weapon_int_30',
-    'scroll_normal_non_weapon_dex_30',
-    'scroll_normal_non_weapon_luk_30',
+    'scroll_normal_non_weapon_str_30',   
   ], { spell_trace: 100 }),
   ...disassembleFillIds([
     'scroll_normal_weapon_atk_15',
     'scroll_normal_weapon_matk_15',
     'scroll_normal_non_weapon_str_15',
-    'scroll_normal_non_weapon_int_15',
-    'scroll_normal_non_weapon_dex_15',
-    'scroll_normal_non_weapon_luk_15',
   ], { spell_trace: 500 }),
 };
 

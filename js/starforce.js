@@ -79,6 +79,8 @@ const StarForceModule = {
   autoRunning: false,
   autoCancelled: false,
   autoCancelHandler: null,
+  /** 手動強化擲骰～套用期間鎖定，防止連點造成 LOG／動畫／星數不一致 */
+  _enhanceBusy: false,
   AUTO_ENHANCE_DELAY_MS: 8,
 
   getMaxStar() {
@@ -170,6 +172,7 @@ const StarForceModule = {
       && StarForceEffectModule.isPlaying();
     const shouldDisable = !canEnhance
       || this.autoRunning
+      || this._enhanceBusy
       || effectPlaying
       || this.currentStars >= maxStar
       || !this.ensureSelectedScrollAvailable(true)
@@ -865,23 +868,47 @@ const StarForceModule = {
   },
 
   enhanceStarWithAnim() {
+    // 動畫／忙碌中禁止再擲一次，避免 LOG／動畫／實際星數各走各的
+    if (this._enhanceBusy) return null;
+    if (typeof StarForceEffectModule !== 'undefined' && StarForceEffectModule.isPlaying?.()) {
+      return null;
+    }
+
+    this._enhanceBusy = true;
+    const release = () => {
+      this._enhanceBusy = false;
+      this.updateEnhanceButtonState();
+    };
+
     const rolled = this.rollEnhanceStar({ silent: false });
-    if (!rolled) return null;
+    if (!rolled) {
+      release();
+      return null;
+    }
+
+    const applyOnce = () => {
+      try {
+        rolled.apply();
+      } finally {
+        release();
+      }
+    };
 
     if (!rolled.animate || typeof StarForceEffectModule === 'undefined') {
-      rolled.apply();
+      applyOnce();
       return rolled.outcome;
     }
 
     StarForceEffectModule.runWithAnim({
       outcome: rolled.outcome,
-      fn: rolled.apply,
+      fn: applyOnce,
       scrollAnim: rolled.scrollAnim,
     });
     return rolled.outcome;
   },
 
   enhanceStar(options = {}) {
+    if (this._enhanceBusy) return null;
     const rolled = this.rollEnhanceStar(options);
     if (!rolled) return null;
     rolled.apply();
@@ -1045,40 +1072,46 @@ const StarForceModule = {
       && isStarForceCatValleyRatesEnabled();
     const fromStar = this.currentStars;
 
-    let outcome = 'keep';
-    if (roll < rates.success) outcome = 'success';
-    else if (roll < rates.success + rates.fail) outcome = 'keep';
-    else outcome = 'destroy';
+    // result：實際套用結果；animOutcome：演出用（drop 播 fail）
+    let result = 'keep';
+    if (roll < rates.success) result = 'success';
+    else if (roll < rates.success + rates.fail) result = 'keep';
+    else result = 'destroy';
 
-    if (outcome === 'destroy' && protectDestroy) {
-      outcome = 'keep';
+    if (result === 'destroy' && protectDestroy) {
+      result = 'keep';
     }
 
     const failDest = typeof getStarForceFailDestStar === 'function'
       ? getStarForceFailDestStar(fromStar, catValley)
       : fromStar;
-    if (outcome !== 'success' && failDest !== fromStar) {
-      outcome = 'drop';
+    // 僅「失敗維持」才依貓谷規則改降星；破壞不可被蓋成降星
+    if (result === 'keep' && failDest !== fromStar) {
+      result = 'drop';
     }
 
+    const animOutcome = result === 'success'
+      ? 'success'
+      : (result === 'destroy' ? 'destroy' : 'keep');
+
     return {
-      outcome: outcome === 'drop' ? 'keep' : outcome,
+      outcome: animOutcome,
       animate: method === 'normal',
       apply: () => {
-        if (outcome === 'success') {
+        if (result === 'success') {
           this.currentStars++;
           this.setStarConsecutiveDrops(0);
           if (!silent) {
             addLog(`✨ 星力成功升至 ★ ${this.currentStars}！`, 'log-success');
           }
           this.afterEnhanceUpdate();
-        } else if (outcome === 'drop') {
+        } else if (result === 'drop') {
           this.currentStars = failDest;
           if (!silent) {
             addLog(`星力強化失敗，下降至 ★ ${this.currentStars}。`, 'log-fail');
           }
           this.afterEnhanceUpdate();
-        } else if (outcome === 'destroy') {
+        } else if (result === 'destroy') {
           this.applyStarforceDestroy({ silent });
         } else {
           if (!silent) {
@@ -1127,8 +1160,19 @@ const StarForceModule = {
   },
 
   afterEnhanceUpdate() {
-    if (currentEnchantItem) {
-      currentEnchantItem.star = this.currentStars;
+    const star = this.currentStars;
+    if (this.itemData) this.itemData.star = star;
+    if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
+      currentEnchantItem.star = star;
+    }
+    // 焦點模式：立刻寫回 ItemStore／背包／穿著，避免 UI／LOG 與實體星數脫節
+    const writeTarget = (typeof currentEnchantItem !== 'undefined' && currentEnchantItem)
+      || this.itemData;
+    if (writeTarget && typeof writeBackEnchantProgress === 'function') {
+      writeBackEnchantProgress(writeTarget);
+    }
+    if (typeof SessionPersistenceModule !== 'undefined') {
+      SessionPersistenceModule.scheduleSave?.();
     }
     this.updateUI();
     this.updateStatsUI();

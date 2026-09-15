@@ -12,6 +12,7 @@ const STARFORCE_SCROLLS = [
     rate: 100,
     previewTargetStar: 20,
     maxCurrentStar: 19,
+    desc: '成功率 100%。\n可將裝備的星力直接強化至 20 星。\n（僅限目前星力低於 20 星的裝備）',
   },
   {
     id: 'scroll_under23_30',
@@ -20,6 +21,7 @@ const STARFORCE_SCROLLS = [
     icon: `${STARFORCE_SCROLL_IMAGE_BASE}/scroll_under23_30.png`,
     rate: 30,
     maxCurrentStar: 22,
+    desc: '成功率 30%。\n可將裝備的星力強化 1 星。\n（僅限目前星力低於 23 星的裝備）',
   },
   {
     id: 'scroll_under23_100',
@@ -28,6 +30,7 @@ const STARFORCE_SCROLLS = [
     icon: `${STARFORCE_SCROLL_IMAGE_BASE}/scroll_under23_100.png`,
     rate: 100,
     maxCurrentStar: 22,
+    desc: '成功率 100%。\n可將裝備的星力強化 1 星。\n（僅限目前星力低於 23 星的裝備）',
   },
   {
     id: 'scroll_24_100',
@@ -36,6 +39,7 @@ const STARFORCE_SCROLLS = [
     icon: `${STARFORCE_SCROLL_IMAGE_BASE}/scroll_24_100.png`,
     rate: 100,
     requiredCurrentStar: 23,
+    desc: '成功率 100%。\n可將 ★23 的裝備強化至 ★24。\n（僅限目前星力為 23 星的裝備）',
   },
   {
     id: 'scroll_25_30',
@@ -44,6 +48,7 @@ const STARFORCE_SCROLLS = [
     icon: `${STARFORCE_SCROLL_IMAGE_BASE}/scroll_25_30.png`,
     rate: 30,
     requiredCurrentStar: 24,
+    desc: '成功率 30%。\n可將 ★24 的裝備強化至 ★25。\n（僅限目前星力為 24 星的裝備）',
   },
 ];
 

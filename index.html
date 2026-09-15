@@ -57,7 +57,7 @@
   <link rel="stylesheet" href="css/modules/32-damage-number.css?v=20260910huntPerf3">
   <link rel="stylesheet" href="css/modules/33-skill-board.css?v=20260912settings2">
   <link rel="stylesheet" href="css/modules/34-skill-tooltip.css?v=20260830skillTip1">
-  <link rel="stylesheet" href="css/modules/25-idle-hunt.css?v=20260913bossTopHp1">
+  <link rel="stylesheet" href="css/modules/25-idle-hunt.css?v=20260915fxOp2">
   <link rel="stylesheet" href="css/modules/36-idle-potion.css?v=20260904uipotion4">
   <link rel="stylesheet" href="css/modules/27-idle-gm-drops.css?v=20260903dgDiffRw1">
   <link rel="stylesheet" href="css/modules/28-idle-dungeon.css?v=20260913bossTopHp1">
@@ -67,7 +67,7 @@
   <link rel="stylesheet" href="css/modules/43-trunk.css?v=20260914trunk8">
   <link rel="stylesheet" href="css/modules/44-job-change.css?v=20260911starter1">
   <link rel="stylesheet" href="css/modules/45-save-backup.css?v=20260912save1">
-  <link rel="stylesheet" href="css/modules/46-game-settings.css?v=20260914hotkey2">
+  <link rel="stylesheet" href="css/modules/46-game-settings.css?v=20260915fxOp1">
   <link rel="stylesheet" href="css/modules/29-npcshop.css?v=20260829shop5">
   <link rel="stylesheet" href="css/modules/30-toads-hammer.css?v=20260828th4">
   <link rel="stylesheet" href="css/modules/31-catvalley.css?v=20260829cv4">
@@ -2116,7 +2116,7 @@
   <script src="js/wzImportedSetItems.js?v=20260907set1"></script>
   <script src="js/equipSetData.js?v=20260907set1"></script>
   <script src="js/hoverTooltipGuard.js?v=20260912tipRight2"></script>
-  <script src="js/inventory.js?v=20260914invBoss1"></script>
+  <script src="js/inventory.js?v=20260915sfTip1"></script>
   <script src="js/trunk.js?v=20260914trunk8"></script>
   <script src="js/itemRequestPanel.js?v=20260824req2"></script>
   <script src="js/uiEquip.js?v=20260914itemStore1"></script>
@@ -2130,10 +2130,10 @@
   <script src="js/scrollEffectData.js"></script>
   <script src="js/scrollEffect.js?v=20260825recQty1"></script>
   <script src="js/starforceEffectData.js?v=20260820destroy2"></script>
-  <script src="js/starforceEffect.js?v=20260820destroy1"></script>
-  <script src="js/starforceScrollData.js?v=20260911nl4"></script>
+  <script src="js/starforceEffect.js?v=20260915sfSync1"></script>
+  <script src="js/starforceScrollData.js?v=20260915sfTip1"></script>
   <script src="js/potentialScrollData.js?v=20260824idlePot1"></script>
-  <script src="js/starforce.js?v=20260914itemStore1"></script>
+  <script src="js/starforce.js?v=20260915sfSync1"></script>
   <script src="js/autoEnchantData.js?v=20260911aeDelay1"></script>
   <script src="js/autoEnchantStarForce.js?v=20260913sfProtectClick2"></script>
   <script src="js/scroll.js?v=20260912tipRight2"></script>
@@ -2148,7 +2148,7 @@
   <script src="js/exceptionalEffect.js"></script>
   <script src="js/exceptional.js"></script>
   <script src="js/catValleyUnlock.js?v=20260831sfCatOff1"></script>
-  <script src="js/catValleyEnhanceData.js?v=20260913catSafe1"></script>
+  <script src="js/catValleyEnhanceData.js?v=20260915absolab1"></script>
   <script src="js/equipCraftData.js?v=20260913recover22"></script>
   <script src="js/equipCraftPanel.js?v=20260913recover22"></script>
   <script src="js/disassembleData.js?v=20260914disConfirm1"></script>
@@ -2371,7 +2371,7 @@
   <script src="js/skillMobStatus.js?v=20260914bal4"></script>
   <script src="js/skillTooltip.js?v=20260903tipGuard1"></script>
   <script src="js/skillBoardPanel.js?v=20260912settings2"></script>
-  <script src="js/skillEffectPlayer.js?v=20260913seek2"></script>
+  <script src="js/skillEffectPlayer.js?v=20260915fxOp1"></script>
   <script src="js/skillBallCast.js?v=20260911nl4"></script>
   <script src="js/skillAreaCast.js?v=20260905bgHunt1"></script>
   <script src="js/skillChannelCast.js?v=20260913abRes1"></script>
@@ -2385,7 +2385,7 @@
   <script src="js/idleHuntDropData.js?v=20260903skill2fix2"></script>
   <script src="js/idleMobData.js?v=20260831mobDmg1"></script>
   <script src="js/idleMobAnim.js?v=20260914pagesWarm1"></script>
-  <script src="js/itemDropController.js?v=20260911nl4"></script>
+  <script src="js/itemDropController.js?v=20260915suu72"></script>
   <script src="js/idleUiTimer.js?v=20260904timerPos1"></script>
   <script src="js/idlePlayerDeathFlow.js?v=20260905deathOpt1"></script>
   <script src="js/idlePlayerDeathFx.js?v=20260905deathOpt1"></script>
@@ -2394,16 +2394,16 @@
   <script src="js/idleDungeonData.js?v=20260912goldDmg2"></script>
   <script src="js/idleDungeon.js?v=20260913dgHudOut1"></script>
   <script src="js/idleBossListData.js?v=20260914suu20"></script>
-  <script src="js/idleBossWzData.js?v=20260914suu20"></script>
-  <script src="js/idleBossMobData.js?v=20260914suu20"></script>
-  <script src="js/idleBossSuuPatternData.js?v=20260914suu20"></script>
-  <script src="js/idleBossPhaseData.js?v=20260914suu36"></script>
-  <script src="js/idleBossFight.js?v=20260914suu35"></script>
-  <script src="js/idleBoss.js?v=20260914suu20"></script>
+  <script src="js/idleBossWzData.js?v=20260915suu74"></script>
+  <script src="js/idleBossMobData.js?v=20260915suu74"></script>
+  <script src="js/idleBossSuuPatternData.js?v=20260915suu37"></script>
+  <script src="js/idleBossPhaseData.js?v=20260915suu76"></script>
+  <script src="js/idleBossFight.js?v=20260915suu76"></script>
+  <script src="js/idleBoss.js?v=20260915suu71"></script>
   <script src="js/appHotkeys.js?v=20260914hotkey2"></script>
-  <script src="js/idleSessionRefresh.js?v=20260914hotkey2"></script>
+  <script src="js/idleSessionRefresh.js?v=20260915fxOp2"></script>
   <script src="js/idleNpcShopData.js?v=20260911starShop1"></script>
-  <script src="js/uiNpcShop.js?v=20260912shopEnter1"></script>
+  <script src="js/uiNpcShop.js?v=20260915sfTip1"></script>
   <script src="js/uiToadsHammer.js?v=20260913equipSafe1"></script>
   <script src="js/uiIdleGmDrops.js?v=20260911nl4"></script>
   <script src="js/appMode.js?v=20260908sfIdleCat1"></script>

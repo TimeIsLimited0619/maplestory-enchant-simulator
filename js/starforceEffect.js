@@ -636,7 +636,6 @@ const StarForceEffectModule = {
       return;
     }
 
-    const trySpec = this.getSpec('try');
     const resultPhase = this.outcomePhase(outcome);
     const resultSpec = this.getSpec(resultPhase);
     const showResultText = Boolean(resultSpec?.layers?.textScreen?.length);
@@ -644,22 +643,34 @@ const StarForceEffectModule = {
       ? scrollAnim.summaryStars
       : null;
 
+    let applied = false;
+    const applyOnce = () => {
+      if (applied) return;
+      applied = true;
+      onComplete?.();
+    };
+
+    // 同步上鎖，避免 preload 期間按鈕仍可連點再擲一次
+    this.playing = true;
+    if (typeof StarForceModule !== 'undefined') StarForceModule.updateEnhanceButtonState();
+
     await this.begin();
     try {
+      const trySpec = this.getSpec('try');
       await this.playLayerFrames({ phase: 'try', spec: trySpec, showText: false });
-      if (!this.playing) return;
-
-      await this.playLayerFrames({
-        phase: resultPhase,
-        spec: resultSpec,
-        showText: showResultText,
-        textAfterBody: showResultText,
-        summaryAfterBody: resultPhase === 'success' && !summaryStarIndices,
-        summaryStarIndices,
-      });
-
-      onComplete?.();
+      if (this.playing) {
+        await this.playLayerFrames({
+          phase: resultPhase,
+          spec: resultSpec,
+          showText: showResultText,
+          textAfterBody: showResultText,
+          summaryAfterBody: resultPhase === 'success' && !summaryStarIndices,
+          summaryStarIndices,
+        });
+      }
     } finally {
+      // 已擲骰就一定套用，保證 LOG／實體星數與 outcome 一致
+      applyOnce();
       this.end();
     }
   },
@@ -669,7 +680,11 @@ const StarForceEffectModule = {
       fn?.();
       return;
     }
-    if (typeof StarForceModule !== 'undefined') StarForceModule.updateEnhanceButtonState();
+    if (this.playing) {
+      // 不重播第二段；仍套用結果（並釋放 StarForceModule._enhanceBusy）
+      fn?.();
+      return;
+    }
     this.playStarEnhance({ outcome, onComplete: fn, scrollAnim });
   },
 };

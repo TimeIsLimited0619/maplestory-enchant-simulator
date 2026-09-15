@@ -78,6 +78,10 @@ const IDLE_ETC_DATABASE = [
   { id: '01102832', name: '心臟升級材料Lv.5', icon: 'images/ETCicon/01102832.png', desc: '心臟升級材料，可通過擊敗極限史烏獲取。' },
   { id: '04008003', name: '深淵裝備粉塵', icon: 'images/ETCicon/04008003.png', desc: '深淵強化素材，可通過分解深淵裝備獲取。' },
   { id: '04310225', name: '深淵強化幣', icon: 'images/ETCicon/04310225.png', desc: '深淵強化素材，可通過擊敗深淵四王獲取。' },
+  { id: '04310156', name: '航海強化幣', icon: 'images/ETCicon/04310156.png', desc: '航海強化素材，可通過擊敗史烏、戴米安獲取。' },
+  { id: '04310216', name: '航海裝備精華', icon: 'images/ETCicon/04310216.png', desc: '航海強化素材，可通過分解航海裝備獲取。' },
+  { id: '02630291', name: '航海防具箱', icon: 'images/ETCicon/02630291.png', desc: '製作航海防具的素材，可通過擊敗史烏、戴米安獲取。' },
+  { id: '02630292', name: '航海武器箱', icon: 'images/ETCicon/02630291.png', desc: '製作航海武器的素材，可通過擊敗史烏、戴米安獲取。' },
 ];
 
 const IdleEtcStore = {

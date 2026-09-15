@@ -1779,7 +1779,8 @@ const InventoryModule = {
     scrollImg.alt = scroll.name;
     scrollImg.id = `inv_item_consume_${slotIndex}`;
     scrollImg.draggable = true;
-    scrollImg.title = `${scroll.name}（雙擊開啟星力）`;
+    // 不用 native title，改走 UIToolTip（eq-tooltip）
+    scrollImg.removeAttribute('title');
 
     scrollImg.ondragstart = (e) => {
       e.dataTransfer.setData('text/plain', JSON.stringify({
@@ -1795,6 +1796,13 @@ const InventoryModule = {
         el.classList.remove('inv-drag-over');
       });
     };
+
+    scrollImg.addEventListener('mouseenter', () => {
+      this.showEtcTooltip(scrollImg, scroll.name, scroll.desc || '', scroll.icon);
+    });
+    scrollImg.addEventListener('mouseleave', () => {
+      this.hideEtcTooltip();
+    });
 
     scrollImg.addEventListener('dblclick', (e) => {
       e.preventDefault();

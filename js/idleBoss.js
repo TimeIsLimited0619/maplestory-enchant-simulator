@@ -909,9 +909,14 @@ const IdleBoss = (() => {
 
   function rewardPreviewName(row) {
     if (typeof ItemDropController !== 'undefined' && ItemDropController.dropBaseName) {
-      return ItemDropController.dropBaseName(row);
+      const n = ItemDropController.dropBaseName(row);
+      if (n) return n;
     }
     const id = String(row?.itemId || '').trim();
+    const scrollId = String(row?.scrollId || '').trim();
+    if (row?.consumeType === 'starforce_scroll' && typeof getStarForceScrollById === 'function') {
+      return getStarForceScrollById(scrollId)?.name || row?.name || scrollId;
+    }
     if (row?.kind === 'equip' && typeof ITEM_DATABASE !== 'undefined') {
       return ITEM_DATABASE[id]?.name || id;
     }
@@ -922,7 +927,21 @@ const IdleBoss = (() => {
       return ThrowingStarStore.get(id)?.name || id;
     }
     if (typeof IdleEtcStore !== 'undefined') return IdleEtcStore.get(id)?.name || row?.name || id;
-    return row?.name || id || '掉落物';
+    return row?.name || id || scrollId || '掉落物';
+  }
+
+  function rewardRowIdentity(row) {
+    if (!row) return '';
+    const kind = String(row.kind || '').trim();
+    const itemId = String(row.itemId || row.id || '').trim();
+    const scrollId = String(row.scrollId || '').trim();
+    const cubeId = String(row.cubeId || '').trim();
+    const hammerId = String(row.hammerId || '').trim();
+    const soulId = String(row.soulId || '').trim();
+    const id = itemId || scrollId || cubeId || hammerId || soulId;
+    if (!id) return '';
+    const sub = String(row.consumeType || '').trim();
+    return `${kind}:${sub}:${id}`;
   }
 
   function uniqueRewardPreviewRows(rows) {
@@ -930,8 +949,8 @@ const IdleBoss = (() => {
     const out = [];
     (Array.isArray(rows) ? rows : []).forEach((row) => {
       if (!row) return;
-      const key = `${row.kind || ''}:${row.itemId || row.id || ''}`;
-      if (!String(row.itemId || row.id || '').trim() || seen.has(key)) return;
+      const key = rewardRowIdentity(row);
+      if (!key || seen.has(key)) return;
       seen.add(key);
       out.push(row);
     });
@@ -949,9 +968,11 @@ const IdleBoss = (() => {
   function rewardTipKind(row) {
     const kind = String(row?.kind || '').trim();
     const id = String(row?.itemId || row?.id || '').trim();
+    const scrollId = String(row?.scrollId || '').trim();
     if (kind === 'equip') return 'equip';
     if (kind === 'etc') return 'etc';
     if (kind === 'consume' || kind === 'potion') {
+      if (row?.consumeType === 'starforce_scroll' && scrollId) return 'starforce_scroll';
       if (typeof IdlePotionStore !== 'undefined' && IdlePotionStore.isPotionId?.(id)) return 'potion';
       if (typeof ThrowingStarStore !== 'undefined' && ThrowingStarStore.isThrowingStarId?.(id)) return 'throwing_star';
       return 'consume';
@@ -983,6 +1004,16 @@ const IdleBoss = (() => {
         catalog?.name || id,
         catalog?.desc || '',
         catalog?.icon || '',
+      );
+      return;
+    }
+    if (kind === 'starforce_scroll' && typeof InventoryModule !== 'undefined') {
+      const scroll = typeof getStarForceScrollById === 'function' ? getStarForceScrollById(id) : null;
+      InventoryModule.showEtcTooltip?.(
+        anchorEl,
+        scroll?.name || id,
+        '星力強化卷',
+        scroll?.icon || '',
       );
       return;
     }
@@ -1056,7 +1087,9 @@ const IdleBoss = (() => {
         const icon = rewardPreviewIcon(row);
         const name = rewardPreviewName(row);
         const safeName = String(name || '').replace(/[<>]/g, '');
-        const id = String(row?.itemId || row?.id || '').trim();
+        const id = String(
+          row?.itemId || row?.id || row?.scrollId || row?.cubeId || row?.hammerId || row?.soulId || '',
+        ).trim();
         const tipKind = rewardTipKind(row);
         const tipAttr = tipKind && id
           ? ` data-boss-tip="${tipKind}" data-item-id="${id}"`

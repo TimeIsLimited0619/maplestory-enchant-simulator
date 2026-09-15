@@ -4565,7 +4565,9 @@ const IDLE_BOSS_WZ = {
       }
     ],
     "extraMobs": [
-      "8881103"
+      "8881103",
+      "8881107",
+      "8881108"
     ],
     "hpMult": 1,
     "dmgMult": 1,

@@ -16,7 +16,7 @@ const IdleSessionRefresh = (() => {
 
   let inited = false;
   let panelOpen = false;
-  /** home | hotkeys */
+  /** home | hotkeys | fxOpacity */
   let panelView = 'home';
   let refreshing = false;
   let timer = null;
@@ -309,9 +309,41 @@ const IdleSessionRefresh = (() => {
     $('btnViewGameSettings')?.classList.toggle('is-active', panelOpen);
     const back = $('gameSettingsBack');
     const title = $('gameSettingsTitle');
-    const onSub = panelView === 'hotkeys';
+    const onSub = panelView === 'hotkeys' || panelView === 'fxOpacity';
     back?.classList.toggle('hidden', !onSub);
-    if (title) title.textContent = onSub ? '自訂快捷鍵' : '設定';
+    if (title) {
+      title.textContent = panelView === 'hotkeys'
+        ? '自訂快捷鍵'
+        : (panelView === 'fxOpacity' ? '特效透明度' : '設定');
+    }
+  }
+
+  function fxOpacityBodyMarkup() {
+    const fx = (typeof SkillEffectPlayer !== 'undefined' && SkillEffectPlayer.getFxOpacity)
+      ? SkillEffectPlayer.getFxOpacity()
+      : { skill: 1, hit: 1 };
+    const skillPct = Math.round((Number(fx.skill) || 1) * 100);
+    const hitPct = Math.round((Number(fx.hit) || 1) * 100);
+    return `
+      <section class="game-settings-section" aria-label="特效透明度">
+        <p class="game-settings-hint">調整戰鬥中技能特效與怪物受擊特效的顯示透明度（0% 全透明、100% 不透明）。</p>
+        <label class="game-settings-range">
+          <span class="game-settings-range-head">
+            <span>特效透明度</span>
+            <span id="gameSettingsFxSkillPct">${skillPct}%</span>
+          </span>
+          <input type="range" id="gameSettingsFxSkill" min="0" max="100" step="1" value="${skillPct}" aria-label="特效透明度">
+        </label>
+        <p class="game-settings-hint">玩家技能 effect（施法／effect／召喚等；不含投射物）。</p>
+        <label class="game-settings-range">
+          <span class="game-settings-range-head">
+            <span>打擊透明度</span>
+            <span id="gameSettingsFxHitPct">${hitPct}%</span>
+          </span>
+          <input type="range" id="gameSettingsFxHit" min="0" max="100" step="1" value="${hitPct}" aria-label="打擊透明度">
+        </label>
+        <p class="game-settings-hint">打在怪物身上的 hit 特效。</p>
+      </section>`;
   }
 
   function homeBodyMarkup() {
@@ -343,11 +375,15 @@ const IdleSessionRefresh = (() => {
       </section>
       <section class="game-settings-section" aria-label="快捷鍵">
         <h3 class="game-settings-section-title">操作</h3>
+        <button type="button" class="game-settings-subnav" data-settings-nav="fxOpacity">
+          <span class="game-settings-subnav-label">特效透明度</span>
+          <span class="game-settings-subnav-chevron" aria-hidden="true">›</span>
+        </button>
         <button type="button" class="game-settings-subnav" data-settings-nav="hotkeys">
           <span class="game-settings-subnav-label">自訂快捷鍵</span>
           <span class="game-settings-subnav-chevron" aria-hidden="true">›</span>
         </button>
-        <p class="game-settings-hint">為左側選單各功能綁定鍵盤快捷鍵。</p>
+        <p class="game-settings-hint">戰鬥顯示與選單快捷鍵可於此調整。</p>
       </section>`;
   }
 
@@ -357,16 +393,19 @@ const IdleSessionRefresh = (() => {
       && typeof AppHotkeys.settingsSectionHtml === 'function') {
       return AppHotkeys.settingsSectionHtml();
     }
+    if (panelView === 'fxOpacity') {
+      return fxOpacityBodyMarkup();
+    }
     return homeBodyMarkup();
   }
 
   function setPanelView(next) {
-    const view = next === 'hotkeys' ? 'hotkeys' : 'home';
+    const view = (next === 'hotkeys' || next === 'fxOpacity') ? next : 'home';
     if (panelView === view) {
       renderPanel();
       return;
     }
-    if (panelView === 'hotkeys' && view === 'home' && typeof AppHotkeys !== 'undefined') {
+    if (panelView === 'hotkeys' && view !== 'hotkeys' && typeof AppHotkeys !== 'undefined') {
       AppHotkeys.stopCapture?.();
     }
     panelView = view;
@@ -416,6 +455,22 @@ const IdleSessionRefresh = (() => {
     renderPanel();
   }
 
+  function applyFxOpacityFromPanel() {
+    if (typeof SkillEffectPlayer === 'undefined' || typeof SkillEffectPlayer.setFxOpacity !== 'function') {
+      return;
+    }
+    const skillEl = $('gameSettingsFxSkill');
+    const hitEl = $('gameSettingsFxHit');
+    if (!skillEl && !hitEl) return;
+    const skill = skillEl ? (Number(skillEl.value) || 0) / 100 : undefined;
+    const hit = hitEl ? (Number(hitEl.value) || 0) / 100 : undefined;
+    const next = SkillEffectPlayer.setFxOpacity({ skill, hit });
+    const skillPct = $('gameSettingsFxSkillPct');
+    const hitPct = $('gameSettingsFxHitPct');
+    if (skillPct) skillPct.textContent = `${Math.round((next.skill || 0) * 100)}%`;
+    if (hitPct) hitPct.textContent = `${Math.round((next.hit || 0) * 100)}%`;
+  }
+
   function bindPanelEvents() {
     $('btnViewGameSettings')?.addEventListener('click', (e) => {
       e.preventDefault();
@@ -438,11 +493,21 @@ const IdleSessionRefresh = (() => {
       }
       if (typeof AppHotkeys !== 'undefined') AppHotkeys.onSettingsClick?.(e);
     });
+    $('gameSettingsBody')?.addEventListener('input', (e) => {
+      const id = e.target?.id;
+      if (id === 'gameSettingsFxSkill' || id === 'gameSettingsFxHit') {
+        applyFxOpacityFromPanel();
+      }
+    });
     $('gameSettingsBody')?.addEventListener('change', (e) => {
       const t = e.target;
       if (!t) return;
       if (t.id === 'gameSettingsHideDamageNumbers') {
         applyHideDamageFromPanel();
+        return;
+      }
+      if (t.id === 'gameSettingsFxSkill' || t.id === 'gameSettingsFxHit') {
+        applyFxOpacityFromPanel();
         return;
       }
       if (t.id === 'gameSettingsAutoRefresh' || t.id === 'gameSettingsMinutes') {
@@ -462,6 +527,7 @@ const IdleSessionRefresh = (() => {
     bindPanelEvents();
     syncChrome();
     if (typeof AppHotkeys !== 'undefined') AppHotkeys.init?.();
+    if (typeof SkillEffectPlayer !== 'undefined') SkillEffectPlayer.initFxOpacity?.();
 
     const pending = consumeTicket();
     if (pending) {

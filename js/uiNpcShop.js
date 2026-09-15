@@ -280,7 +280,7 @@ const UiNpcShop = (() => {
       const meta = typeof getStarForceScrollById === 'function' ? getStarForceScrollById(entry.scrollId) : null;
       if (!meta) return null;
       if (meta.hover) return { kind: 'consume', hover: meta.hover };
-      return etcTipFromDisplay({ name: meta.name, icon: meta.icon });
+      return etcTipFromDisplay({ name: meta.name, icon: meta.icon }, meta.desc || '');
     }
     if (typeof isPotentialScrollConsumeEntry === 'function' && isPotentialScrollConsumeEntry(entry)) {
       const meta = typeof getPotentialScrollById === 'function' ? getPotentialScrollById(entry.scrollId) : null;

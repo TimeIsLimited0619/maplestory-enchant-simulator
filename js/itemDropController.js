@@ -211,6 +211,15 @@ const ItemDropController = (() => {
       const catalog = typeof IdleEtcStore !== 'undefined' ? IdleEtcStore.get(id) : null;
       return catalog?.name || row.name || id;
     }
+    if (row.consumeType === 'starforce_scroll' && typeof getStarForceScrollById === 'function') {
+      return getStarForceScrollById(row.scrollId)?.name || row.name || row.scrollId || '星力強化卷';
+    }
+    if (row.consumeType === 'glory_scroll' && typeof getScrollById === 'function') {
+      return getScrollById(row.scrollId)?.name || row.name || row.scrollId || '捲軸';
+    }
+    if (row.consumeType === 'potential_scroll' && typeof getPotentialScrollById === 'function') {
+      return getPotentialScrollById(row.scrollId)?.name || row.name || row.scrollId || '潛能捲';
+    }
     return row.name || id || '掉落物';
   }
 

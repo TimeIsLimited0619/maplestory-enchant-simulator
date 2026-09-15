@@ -2,6 +2,67 @@
  * 技能 effect／hit／shootobj／循環特效播放
  */
 const SkillEffectPlayer = (() => {
+  const FX_OPACITY_KEY = 'idle.display.fxOpacity.v1';
+  const DEFAULT_FX_OPACITY = { skill: 1, hit: 1 };
+  let fxOpacity = { ...DEFAULT_FX_OPACITY };
+
+  function clampOpacity(raw, fallback = 1) {
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.max(0, Math.min(1, n));
+  }
+
+  function readFxOpacity() {
+    try {
+      const raw = localStorage.getItem(FX_OPACITY_KEY);
+      if (!raw) return { ...DEFAULT_FX_OPACITY };
+      const data = JSON.parse(raw);
+      return {
+        skill: clampOpacity(data?.skill, 1),
+        hit: clampOpacity(data?.hit, 1),
+      };
+    } catch (_) {
+      return { ...DEFAULT_FX_OPACITY };
+    }
+  }
+
+  function writeFxOpacity(next) {
+    fxOpacity = {
+      skill: clampOpacity(next?.skill, fxOpacity.skill),
+      hit: clampOpacity(next?.hit, fxOpacity.hit),
+    };
+    try {
+      localStorage.setItem(FX_OPACITY_KEY, JSON.stringify(fxOpacity));
+    } catch (_) { /* ignore */ }
+    return { ...fxOpacity };
+  }
+
+  function applyFxOpacityToDom() {
+    const root = document.documentElement;
+    if (!root?.style) return;
+    root.style.setProperty('--idle-skill-fx-opacity', String(fxOpacity.skill));
+    root.style.setProperty('--idle-mob-hit-fx-opacity', String(fxOpacity.hit));
+  }
+
+  function getFxOpacity() {
+    return { ...fxOpacity };
+  }
+
+  function setFxOpacity(partial = {}) {
+    writeFxOpacity({
+      skill: partial.skill != null ? partial.skill : fxOpacity.skill,
+      hit: partial.hit != null ? partial.hit : fxOpacity.hit,
+    });
+    applyFxOpacityToDom();
+    return getFxOpacity();
+  }
+
+  function initFxOpacity() {
+    fxOpacity = readFxOpacity();
+    applyFxOpacityToDom();
+  }
+
+  initFxOpacity();
   const instances = new Set();
   /** @type {Set<{ cancel: (settleHits?: boolean) => void }>} */
   const projectiles = new Set();
@@ -2133,6 +2194,9 @@ const SkillEffectPlayer = (() => {
     activeCombatField,
     getSkillFxLayer,
     getSkillFxBehindLayer,
+    getFxOpacity,
+    setFxOpacity,
+    initFxOpacity,
   };
 })();
 

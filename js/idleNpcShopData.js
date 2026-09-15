@@ -216,6 +216,7 @@ const IDLE_NPC_SHOP = {
 
 
     { kind: 'scroll', itemId: 'scroll_epic_potential', buyPrice: 1000000, amount: 1, minLevel: 60 },
+    { kind: 'scroll', itemId: 'scroll_rare_add_potential', buyPrice: 100000000000, amount: 1, minLevel: 160 },
     { kind: 'consume', itemId: 'eternalFlame', buyPrice: 10000000, amount: 1, minLevel: 100 },
   ],
 };

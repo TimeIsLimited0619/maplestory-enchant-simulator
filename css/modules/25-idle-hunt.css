@@ -475,6 +475,38 @@
   overflow: visible;
 }
 
+/* 設定：特效／打擊透明度（documentElement CSS 變數） */
+:root {
+  --idle-skill-fx-opacity: 1;
+  --idle-mob-hit-fx-opacity: 1;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage {
+  opacity: var(--idle-skill-fx-opacity, 1);
+}
+
+/* 投射物／球體／光束：不套用「特效透明度」（使用者要調的是 effect，不是飛行物） */
+.idle-hunt-skill-fx > .idle-skill-fx-stage--shootobj,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--ball,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--ball-beam,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--ball-special,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--projectile,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--shootobj,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--ball,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--ball-beam,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--ball-special,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--projectile {
+  opacity: 1;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--hit,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--blizzard-fa-hit,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--hit,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--blizzard-fa-hit {
+  opacity: var(--idle-mob-hit-fx-opacity, 1);
+}
+
 /* 怪物血條／名稱：高於技能特效、低於傷害數字 */
 .idle-hunt-mob-hud-fx {
   position: absolute;

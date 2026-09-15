@@ -838,6 +838,98 @@ const EQUIP_CRAFT_MAKE_LIST = [
     ],
 },
 
+//航海裝備
+{
+  id: 'navy_equip',
+  name: '航海裝備',
+  iconItemId: '01402251',
+  categories: [
+    {
+      id: 'navy_weapon',
+      name: '航海武器',
+      iconItemId: '01402251',
+      materials: { '02630292': 15 },
+      meso: 1000000000,
+      variants: [
+        { id: 'twohanded_sword', label: '雙手劍', output: '01402251' },
+        { id: 'short_wand', label: '短杖', output: '01372222' },
+        { id: 'dual_crossbow', label: '雙弩槍', output: '01522138' },
+        { id: 'fist_weapon', label: '拳套', output: '01472261' },
+        { id: 'soul_gun', label: '靈魂手槍', output: '01222109' },
+      ],
+    },
+    {
+      id: 'navy_cap',
+      name: '航海帽子',
+      iconItemId: '01004422',
+      materials: { '02630291': 10 },
+      meso: 500000000,
+      variants: [
+        { id: 'warrior', label: '劍士', output: '01004422' },
+        { id: 'mage', label: '法師', output: '01004423' },
+        { id: 'bowman', label: '弓箭手', output: '01004424' },
+        { id: 'thief', label: '盜賊', output: '01004425' },
+        { id: 'pirate', label: '海盜', output: '01004426' },
+      ],
+    },
+    {
+      id: 'navy_gloves',
+      name: '航海手套',
+      iconItemId: '01082636',
+      materials: { '02630291': 10 },
+      meso: 500000000,
+      variants: [
+        { id: 'warrior', label: '劍士', output: '01082636' },
+        { id: 'mage', label: '法師', output: '01082637' },
+        { id: 'bowman', label: '弓箭手', output: '01082638' },
+        { id: 'thief', label: '盜賊', output: '01082639' },
+        { id: 'pirate', label: '海盜', output: '01082640' },
+      ],
+    },
+    {
+      id: 'navy_shose',
+      name: '航海鞋子',
+      iconItemId: '01073030',
+      materials: { '02630291': 10 },
+      meso: 500000000,
+      variants: [
+        { id: 'warrior', label: '劍士', output: '01073030' },
+        { id: 'mage', label: '法師', output: '01073032' },
+        { id: 'bowman', label: '弓箭手', output: '01073033' },
+        { id: 'thief', label: '盜賊', output: '01073034' },
+        { id: 'pirate', label: '海盜', output: '01073035' },
+      ],
+    },
+    {
+      id: 'navy_cape',
+      name: '航海斗篷',
+      iconItemId: '01102775',
+      materials: { '02630291': 10 },
+      meso: 500000000,
+      variants: [
+        { id: 'warrior', label: '劍士', output: '01102775' },
+        { id: 'mage', label: '法師', output: '01102794' },
+        { id: 'bowman', label: '弓箭手', output: '01102795' },
+        { id: 'thief', label: '盜賊', output: '01102796' },
+        { id: 'pirate', label: '海盜', output: '01102797' },
+      ],
+    },
+    {
+      id: 'navy_shoulder',
+      name: '航海護肩',
+      iconItemId: '01152174',
+      materials: { '02630291': 15 },
+      meso: 500000000,
+      variants: [
+        { id: 'warrior', label: '劍士', output: '01152174' },
+        { id: 'mage', label: '法師', output: '01152176' },
+        { id: 'bowman', label: '弓箭手', output: '01152177' },
+        { id: 'thief', label: '盜賊', output: '01152178' },
+        { id: 'pirate', label: '海盜', output: '01152179' },
+      ],
+    },
+  ],
+},
 
 
 //濃姬副手

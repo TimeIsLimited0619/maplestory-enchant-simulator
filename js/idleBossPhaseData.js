@@ -441,8 +441,8 @@ const IDLE_BOSS_PHASE = {
         reqLevel: 140,
         timeLimitSec: 1800,
         rewards: [
-          { kind: 'equip', itemId: '01662306', amount: 1, chance: 10 },
-          { kind: 'equip', itemId: '01662308', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01662306', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01662308', amount: 1, chance: 1 },
           { kind: 'equip', itemId: '01672073', amount: 1, chance: 5 },
           { kind: 'consume', itemId: 'Reindeer-milk', amount: 5 },
           { kind: 'consume', itemId: 'Reindeer-milk', amount: 5 },
@@ -1414,9 +1414,13 @@ const IDLE_BOSS_PHASE = {
 
   /**
    * 史烏 Remaster：三階分血（原地）；BossPattern 精選子集＋簡化過熱／護盾。
-   * Normal 目標血：5000億／5000億／7500億（WZ 21億 × formHpMult）。
+   * Normal 目標血：5000億／5000億／7500億（WZ 20億 × formHpMult 250／250／375）。
    * Hard／極限：formHpMult 已內建 ×20／×1000（現有 hpMult 對 formHpMult 是覆寫不是相乘）。
-   * 出傷＝深淵四王公式（PA×ratio×dmgMult）。
+   * 出傷＝深淵四王公式（PA×ratio×dmgMult）；dmgMult 依基準機體校準：
+   *   Normal 17萬／減傷80%／防 6萬 → ×15
+   *   Hard   20萬／減傷80%／防 7萬 → ×18
+   *   Extreme 30萬／減傷80%／防 10萬 → ×27
+   * （ratio＝1 約吃機體 18～19% 血；已含技能減傷＋物防公式）
    */
   '13': {
     name: '史烏',
@@ -1427,6 +1431,8 @@ const IDLE_BOSS_PHASE = {
       { statMob: '8881102', visualMob: '8881102', mapArt: '13/3' },
     ],
     chestMob: '8881103',
+    // 清場獎勵箱地圖（黑頻後切換）
+    chestMapArt: '13/4',
     exitSec: 30,
     suuKit: {
       // P1 核心（鋸刃 pre）：地圖下方正中央；之後可微調像素
@@ -1445,14 +1451,31 @@ const IDLE_BOSS_PHASE = {
       shield: {
         cdSec: 40,
         durationSec: 20,
-        // 額外護盾池＝當階 maxHp × hpRatio（나무 0.5%）
-        hpRatio: 0.005,
+        // 護盾池＝當階 maxHp × hpRatio（5%）
+        hpRatio: 0.01,
+        // 護盾存在期間：進傷先 ×(1−damageReduce) 再扣護盾／溢傷進本體
         damageReduce: 0.9,
         // 逾時回血上限（依剩餘護盾比例縮放）
         healRatioOnExpire: 0.04,
       },
       // 無施法動作：招式動畫可同時在場；開招之間全域間隔（秒）
       patternCastGapSec: 1,
+      // 二階掉落物（1002/004）：由 8881101 skill5 召喚（非常駐 ambient）
+      debrisRain: {
+        phases: [2],
+        assetKey: '1002/004',
+        styles: [0, 1, 2],
+        // skill5 一發丟幾顆；間隔錯開
+        burstCount: 4,
+        burstGapMs: 420,
+        // fallMs 省略＝跟 WZ loop 總 delay；fallAirPx＝相對腳底高度
+        fallAirPx: 520,
+        landYBias: -85,
+        hitRadiusPx: 150,
+        attackHpRatio: 1.0,
+        heatOnHit: 7,
+        maxAlive: 6,
+      },
       // 各階本體 skill：盡量播正服動畫（effect／areaWarning／hit）
       phaseKits: {
         '8881100': {
@@ -1462,74 +1485,99 @@ const IDLE_BOSS_PHASE = {
         },
         '8881101': {
           excludeActions: ['skillAfter4', 'move'],
+          // skill4＝傳送消失 → skillAfter4＝出現（出現時出傷）
+          skillChain: {
+            skill4: { afterKey: 'skillAfter4', damageFrame: 0, dmgRatio: 1 },
+          },
+          // skill5＝掉落物、skill6＝頭頂無人機、skill7＝爆炸瓶（本體動畫召喚，非獨立 pattern）
+          summonPatternByAction: {
+            skill5: 'debrisRain',
+            skill6: 'bombard',
+            skill7: 'slowWall',
+          },
           attackHpRatio: {
             skill1: 1.15,
             skill2: 1.0,
             skill3: 1.2,
             skill4: 1.05,
-            skill5: 1.25,
-            skill6: 1.1,
-            skill7: 1.35,
+            // 5／6／7 傷在召喚物上，本體招不另算
+            skill5: 0,
+            skill6: 0,
+            skill7: 0,
           },
           attackCdSec: {
             skill1: 8,
             skill2: 10,
             skill3: 12,
             skill4: 14,
-            skill5: 11,
-            skill6: 13,
-            skill7: 16,
+            // Hard 基準秒（× difficulty.patternCdMult）；對齊原 pattern／ambient
+            skill5: 8,
+            skill6: 25,
+            skill7: 10,
           },
           heatOnHit: {
             skill1: 6,
             skill2: 7,
             skill3: 8,
             skill4: 6,
-            skill5: 9,
-            skill6: 7,
-            skill7: 10,
+            skill5: 0,
+            skill6: 0,
+            skill7: 0,
           },
         },
         '8881102': {
           excludeActions: ['flip', 'skillAfter7', 'move'],
+          // skill7＝傳送消失 → skillAfter7＝出現（出現時出傷）
+          skillChain: {
+            skill7: { afterKey: 'skillAfter7', damageFrame: 0, dmgRatio: 1 },
+          },
+          // skill3＝벙커、skill4＝중력구속、skill6＝발판、skill9＝함포
+          summonPatternByAction: {
+            skill3: 'bunker',
+            skill4: 'gravityBind',
+            skill6: 'platformShot',
+            skill9: 'cannons',
+          },
           attackHpRatio: {
             skill1: 1.15,
             skill2: 1.05,
-            skill3: 1.35,
-            skill4: 1.1,
+            skill3: 0,
+            skill4: 0,
             skill5: 1.2,
-            skill6: 1.15,
+            skill6: 0,
             skill7: 1.3,
             skill8: 1.25,
-            skill9: 1.4,
+            skill9: 0,
           },
           attackCdSec: {
             skill1: 8,
             skill2: 10,
-            skill3: 12,
-            skill4: 11,
+            // Hard 基準＝pattern cdSec（× patternCdMult）
+            skill3: 20,
+            skill4: 40,
             skill5: 13,
-            skill6: 12,
+            skill6: 45,
             skill7: 15,
             skill8: 14,
-            skill9: 18,
+            skill9: 60,
           },
           heatOnHit: {
             skill1: 6,
             skill2: 7,
-            skill3: 10,
-            skill4: 7,
+            skill3: 0,
+            skill4: 0,
             skill5: 8,
-            skill6: 8,
+            skill6: 0,
             skill7: 9,
             skill8: 9,
-            skill9: 11,
+            skill9: 0,
           },
         },
       },
       // pattern：深淵公式；節奏／分層依 나무위키＋正服（scripts/_suu-pattern-fx-notes.mjs）
       // CD：下列 cdSec／cdSecByPhase＝Hard 基準秒；實際＝基準 × difficulty.patternCdMult
-      // 略：Teleport／真移動／破平台本體／mobHit 降溫；1000/005 包內無；1002/000·001·003 空殼
+      // 略：Teleport／真移動／破平台本體／mobHit 降溫；1002/000·001·003 空殼
+      // 1000/005→8881108 自爆無人機；1000/007→8881107 地雷（召喚時播一次 effect）
       patterns: [
         // —— 共通：소형 기계팔 —— pre/pre2 瞄準；end 隨機角插下；special當hit
         // Extreme：소형10 → 大臂（ball2頭＋ball3×N身體＋ball）→ 소형2
@@ -1640,17 +1688,38 @@ const IDLE_BOSS_PHASE = {
             { action: 'hit', anchor: 'feet' },
           ],
         },
-        // —— 一階：자폭 지뢰 —— 中樞 effect → 腳邊地雷（同 effect）
+        // —— 一階：자폭 지뢰 —— 8881107；召喚時播一次 1000/007 effect
+        // 出傷顆數 N/H/E＝2/3/5；畫面顆數 4/6/8
         {
           id: 'mine',
           phases: [1],
           cdSec: 12,
           attackHpRatio: 1.0,
           heatOnHit: 6,
-          warningMs: 1500,
-          assetKey: '1000/007',
-          fxWarnLayers: [{ action: 'effect', anchor: 'boss' }],
-          fxHitLayers: [{ action: 'effect', anchor: 'feet' }],
+          castMode: 'suicideMine',
+          summonMob: '8881107',
+          warnFxKey: '1000/007',
+          warningMs: 720,
+          fuseMs: 2800,
+          // 實際出傷／畫面顯示（依難度）；同高度並排（Y＝corePos／鋸刃）
+          hitCountByDiff: { normal: 2, hard: 3, extreme: 5 },
+          visualCountByDiff: { normal: 4, hard: 6, extreme: 8 },
+          spreadPx: 160,
+        },
+        // —— 共通：제압용 로봇 —— 8881108；隨機點飛向玩家；N/H/E＝4/6/8
+        {
+          id: 'suicideRobot',
+          phases: [1, 2, 3],
+          cdSec: 25,
+          cdSecByPhase: { 1: 28, 2: 25, 3: 22 },
+          attackHpRatio: 1.2,
+          heatOnHit: 8,
+          castMode: 'suicideRobot',
+          summonMob: '8881108',
+          countByDiff: { normal: 4, hard: 6, extreme: 8 },
+          spawnGapMs: 180,
+          flyMs: 1600,
+          prepareMs: 500,
         },
         // —— 一階：폭발물 낙하 —— regen空中→stand落下→pre(repeatIdx6)→end
         {
@@ -1674,7 +1743,7 @@ const IDLE_BOSS_PHASE = {
           id: 'floorCurrent',
           phases: [1],
           cdSec: 45,
-          attackHpRatio: 2.2,
+          attackHpRatio: 1.5,
           heatOnHit: 12,
           castMode: 'floorCurrent',
           warningMs: 1740,
@@ -1698,7 +1767,7 @@ const IDLE_BOSS_PHASE = {
           assetKey: '1002/002',
           fxWarnLayers: [
             { action: 'special', anchor: 'boss' },
-            { action: 'loop', anchor: 'boss' },
+            { action: 'loop', anchor: 'boss', loop: true },
           ],
           fxHitLayers: [
             { action: 'hit', anchor: 'boss' },
@@ -1711,87 +1780,60 @@ const IDLE_BOSS_PHASE = {
             { action: 'hit', anchor: 'feet' },
           ],
         },
-        // —— 二階：부품 추락 —— 無 hit 層；end／end2 為落下
-        {
-          id: 'debris',
-          phases: [2],
-          cdSec: 14,
-          attackHpRatio: 1.0,
-          heatOnHit: 7,
-          warningMs: 720,
-          hitCount: 3,
-          hitGapMs: 1260,
-          assetKey: '1002/004',
-          fxWarnLayers: [
-            { action: 'regen', anchor: 'map' },
-            { action: 'loop', anchor: 'map' },
-          ],
-          fxHitLayers: [
-            { action: 'end', anchor: 'map' },
-            { action: 'end2', anchor: 'map' },
-          ],
-        },
-        // —— 二階：포격 프로토콜 —— 頭頂球機；regen/stand 在王，彈往玩家
+        // —— 二階：포격 프로토콜 —— 8881101 skill6 召喚（bodySummonOnly）
         {
           id: 'bombard',
           phases: [2],
-          cdSec: 40,
+          bodySummonOnly: true,
+          cdSec: 25,
           attackHpRatio: 1.1,
           heatOnHit: 6,
-          warningMs: 800,
-          hitCount: 5,
-          hitGapMs: 2000,
+          castMode: 'headDrone',
+          // regen→stand→attack（第9幀從無人機中心出 ball）→hit×N→die
+          hitCount: 4,
+          hitGapMs: 1280,
+          ballTravelMs: 480,
+          ballLaunchFrame: 9,
+          headYBias: -150,
           assetKey: '1002/005',
-          fxWarnLayers: [
-            { action: 'regen', anchor: 'boss' },
-            { action: 'stand', anchor: 'boss' },
-          ],
-          fxHitLayers: [
-            { action: 'ball', anchor: 'feet' },
-            { action: 'attack', anchor: 'feet' },
-            { action: 'hit', anchor: 'feet' },
-          ],
         },
-        // —— 二階：슬로우 방벽 → 爆炸
+        // —— 二階：슬로우 방벽／爆炸罐 —— 8881101 skill7 召喚（bodySummonOnly）
         {
           id: 'slowWall',
           phases: [2],
-          cdSec: 20,
+          bodySummonOnly: true,
+          cdSec: 10,
           attackHpRatio: 1.15,
           heatOnHit: 7,
-          warningMs: 2800,
+          castMode: 'jarBomb',
+          // loop／warning 各 0／1 疊加；warning 播完立刻 end＋hit
           assetKey: '1002/006',
-          fxWarnLayers: [
-            { action: 'warning', anchor: 'map' },
-            { action: 'loop', anchor: 'map' },
-          ],
-          fxHitLayers: [
-            { action: 'end', anchor: 'map' },
-            { action: 'hit', anchor: 'feet' },
-          ],
         },
-        // —— 三階：유도탄 —— 資產層較短的 1005/001（1005/002 已給機械臂）
+        // —— 三階：유도탄 —— 1005/001；左右場外飛向玩家（可靠近王引爆）
         {
           id: 'rocket',
           phases: [3],
-          cdSec: 5,
+          cdSec: 15,
           attackHpRatio: 0.7,
           heatOnHit: 4,
-          warningMs: 480,
+          castMode: 'sideRocket',
+          // pre 鎖定 → ball 場外多角度直線飛入 → end 爆炸（不用 hit／mobHit）
+          warningMs: 720,
           hitCount: 3,
           hitGapMs: 420,
+          // 固定飛行速度（px/s）；短距不再變慢
+          ballSpeedPx: 1000,
+          edgePadPx: 80,
+          spawnDirCount: 8,
+          // 玩家距王中心小於此距離則飛向王（正服可引）
+          lureBossPx: 140,
           assetKey: '1005/001',
-          fxWarnLayers: [{ action: 'pre', anchor: 'feet' }],
-          fxHitLayers: [
-            { action: 'ball', anchor: 'feet' },
-            { action: 'end', anchor: 'feet' },
-            { action: 'hit', anchor: 'feet' },
-          ],
         },
-        // —— 三階：제압용 벙커 —— effect 只播一次（長動畫）；兩段 hit 隔 0.99s
+        // —— 三階：제압용 벙커 —— 8881102 skill3 召喚；effect 長動畫；兩段 hit 隔 0.99s
         {
           id: 'bunker',
           phases: [3],
+          bodySummonOnly: true,
           cdSec: 20,
           attackHpRatio: 1.3,
           heatOnHit: 9,
@@ -1802,94 +1844,76 @@ const IDLE_BOSS_PHASE = {
           fxWarnLayers: [{ action: 'effect', anchor: 'boss' }],
           fxHitLayers: [{ action: 'hit', anchor: 'feet' }],
         },
-        // —— 三階：전 방향 중력구속 → 어둠의 기운
+        // —— 三階：전 방향 중력구속 —— 8881102 skill4；鐵線＋地板雷射
         {
           id: 'gravityBind',
           phases: [3],
+          bodySummonOnly: true,
           cdSec: 40,
           attackHpRatio: 1.0,
           heatOnHit: 8,
+          castMode: 'gravityBind',
+          // regen 竄出 → loop 綁住 warningMs → hit → end 放開；hit2＝暗闇簡化
           warningMs: 1320,
           hit2Ms: 1800,
           hit2Ratio: 2.0,
           assetKey: '1004/003',
-          fxWarnLayers: [
-            { action: 'pre', anchor: 'boss' },
-            { action: 'regen', anchor: 'boss' },
-            { action: 'loop', anchor: 'boss' },
-          ],
-          fxHitLayers: [
-            { action: 'hit', anchor: 'feet' },
-            { action: 'end', anchor: 'boss' },
-          ],
-          fxHit2Layers: [
-            { action: 'end', anchor: 'boss' },
-            { action: 'hit', anchor: 'feet' },
-          ],
         },
-        // —— 三階：발판 파괴簡化＝鎖點飛彈
+        // —— 三階：발판 파괴 —— 8881102 skill6；destroyed→lockOn→ball×3 斜插＋special＋hit
         {
           id: 'platformShot',
           phases: [3],
+          bodySummonOnly: true,
           cdSec: 45,
           attackHpRatio: 1.15,
           heatOnHit: 7,
-          warningMs: 1000,
+          castMode: 'platformBreak',
+          // destroyed 破地板（不用 destroyed2）；三塊＝ball／ball2／ball3
           hitCount: 3,
-          hitGapMs: 450,
+          hitGapMs: 280,
+          lockMs: 1080,
+          armMaxTiltRad: 0.55,
           assetKey: '1004/005',
-          fxWarnLayers: [
-            { action: 'lockOn', anchor: 'feet' },
-            { action: 'special', anchor: 'feet' },
-          ],
-          fxHitLayers: [
-            { action: 'ball', anchor: 'feet' },
-            { action: 'destroyed', anchor: 'feet' },
-            { action: 'hit', anchor: 'feet' },
-          ],
         },
-        // —— 三階：함포 —— 召喚／廣預警後下砸
+        // —— 三階：함포 —— 8881102 skill9；召喚砲→預警→發射→砲彈落地
         {
           id: 'cannons',
           phases: [3],
+          bodySummonOnly: true,
           cdSec: 60,
           attackHpRatio: 1.4,
           heatOnHit: 8,
-          warningMs: 1800,
+          castMode: 'skyCannons',
+          // summon→stand（場頂外只露砲管）；areaWarning→attack→ball→summonSpecial（落點可抬高）
+          // masking 用途未明，暫略
+          warningMs: 720,
           hitCount: 3,
           hitGapMs: 900,
+          ballTravelMs: 520,
+          cannonMapY: -150,
+          // summonSpecial 相對腳底往上（負＝抬高）
+          summonSpecialYBias: -80,
           assetKey: '1004/008',
-          fxWarnLayers: [
-            { action: 'summon', anchor: 'map' },
-            { action: 'summonSpecial', anchor: 'mapCenter' },
-            { action: 'areaWarning', anchor: 'feet' },
-            { action: 'stand', anchor: 'map' },
-          ],
-          fxHitLayers: [
-            { action: 'attack', anchor: 'map' },
-            { action: 'ball', anchor: 'feet' },
-            { action: 'hit', anchor: 'feet' },
-          ],
         },
-        // —— 三階：무차별 폭격 —— 1.5s 預警、約 4.5s 間隔×3
+        // —— 三階：무차별 폭격 —— 核心預警條 → 1.5s 後激光爆炸；4.5s×3
         {
           id: 'mapBarrage',
           phases: [3],
           cdSec: 60,
+          // 나무 CD 60／60／45（覆寫 patternCdMult）
+          cdMultByDiff: { normal: 1, hard: 1, extreme: 0.75 },
+          // 對應 20%／25%／25% 相對強度
           attackHpRatio: 1.25,
+          attackHpRatioByDiff: { normal: 1.0, hard: 1.25, extreme: 1.25 },
           heatOnHit: 8,
+          castMode: 'mapBarrage',
+          // pre＝紅警告（難度 6／8／9 格寬）→ effect 激光爆炸＋hit
           warningMs: 1500,
           hitCount: 3,
           hitGapMs: 4500,
+          warnGridByDiff: { normal: 6, hard: 8, extreme: 9 },
+          gridPx: 90,
           assetKey: '1004/009',
-          fxWarnLayers: [
-            { action: 'pre', anchor: 'map' },
-            { action: 'effect', anchor: 'map' },
-          ],
-          fxHitLayers: [
-            { action: 'effect', anchor: 'map' },
-            { action: 'hit', anchor: 'feet' },
-          ],
         },
         // —— destruction：상단 포격 —— 每次重新鎖點
         {
@@ -1897,7 +1921,7 @@ const IDLE_BOSS_PHASE = {
           phases: [2, 3],
           cdSec: 12,
           cdSecByPhase: { 2: 12, 3: 20 },
-          attackHpRatio: 2.0,
+          attackHpRatio: 1.6,
           heatOnHit: 12,
           castMode: 'pinpointVolley',
           requiresPurge: true,
@@ -1925,8 +1949,8 @@ const IDLE_BOSS_PHASE = {
         {
           id: 'purgeRoutine',
           phases: [2, 3],
-          cdSec: 24,
-          attackHpRatio: 2.4,
+          cdSec: 15,
+          attackHpRatio: 1.3,
           heatOnHit: 16,
           castMode: 'horizontalBarrage',
           requiresPurge: true,
@@ -1935,6 +1959,8 @@ const IDLE_BOSS_PHASE = {
           tickMs: 500,
           gunAttackRepeatIdx: 13,
           waveSpecialRepeatIdx: 4,
+          // 高度＝corePos；發射器靠地圖右／左緣
+          edgePadPx: 36,
           assetKeyByPhase: { 2: '1008/000', 3: '1009/000' },
         },
       ],
@@ -1944,16 +1970,43 @@ const IDLE_BOSS_PHASE = {
         id: 'normal',
         hpMult: 1,
         formHpMult: {
-          '8881100': 240,
-          '8881101': 238.095238,
-          '8881102': 357.142857,
+          '8881100': 250,
+          '8881101': 250,
+          '8881102': 375,
         },
-        dmgMult: 8,
+        dmgMult: 25,
         // 相對 Hard：CD 稍長（全模式再 ×0.75）
         patternCdMult: 0.8625,
-        reqLevel: 190,
+        reqLevel: 160,
         timeLimitSec: 1800,
         rewards: [
+          { kind: 'equip', itemId: '01004422', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01004423', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01004424', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01004425', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01004426', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01102775', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01102794', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01102795', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01102796', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01102797', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01082636', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01082637', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01082638', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01082639', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01082640', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01073030', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01073032', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01073033', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01073034', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01073035', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01152174', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01152176', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01152177', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01152178', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01152179', amount: 1, chance: 1 },
+          { kind: 'etc', itemId: '04310156', amount: 1 },
+          { kind: 'etc', itemId: '02630291', amount: 1, chance: 10 },
           { kind: 'etc', itemId: 'meowcoin', amount: 5 },
           { kind: 'etc', itemId: 'meowcoin', amount: 5 },
           { kind: 'etc', itemId: 'meowcoin', amount: 5 },
@@ -1966,15 +2019,52 @@ const IDLE_BOSS_PHASE = {
         id: 'hard',
         hpMult: 1,
         formHpMult: {
-          '8881100': 4761.90476,
-          '8881101': 4761.90476,
-          '8881102': 7142.85714,
+          '8881100': 5000,
+          '8881101': 5000,
+          '8881102': 7500,
         },
-        dmgMult: 16,
+        dmgMult: 40,
         patternCdMult: 0.75,
-        reqLevel: 210,
+        reqLevel: 190,
         timeLimitSec: 1800,
         rewards: [
+          { kind: 'equip', itemId: '01004422', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01004423', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01004424', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01004425', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01004426', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01102775', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01102794', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01102795', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01102796', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01102797', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01082636', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01082637', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01082638', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01082639', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01082640', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01073030', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01073032', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01073033', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01073034', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01073035', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01152174', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01152176', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01152177', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01152178', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01152179', amount: 1, chance: 3 },
+          { kind: 'equip', itemId: '01372222', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01402251', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01522138', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01472261', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01222109', amount: 1, chance: 1 },
+          { kind: 'equip', itemId: '01012632', amount: 1, chance: 0.1 },
+          { kind: 'consume', consumeType: 'starforce_scroll', scrollId: 'scroll_set20', amount: 1, chance: 4 },
+          { kind: 'etc', itemId: '04310156', amount: 1 },
+          { kind: 'etc', itemId: '04310156', amount: 1 , chance: 10},
+          { kind: 'etc', itemId: '04310156', amount: 1 , chance: 30},
+          { kind: 'etc', itemId: '02630291', amount: 1, chance: 30 },
+          { kind: 'etc', itemId: '02630292', amount: 1, chance: 10 },
           { kind: 'etc', itemId: 'meowcoin', amount: 10 },
           { kind: 'etc', itemId: 'meowcoin', amount: 10 },
           { kind: 'etc', itemId: 'meowcoin', amount: 10 },
@@ -1987,16 +2077,57 @@ const IDLE_BOSS_PHASE = {
         id: 'extreme',
         hpMult: 1,
         formHpMult: {
-          '8881100': 238095.238,
-          '8881101': 238095.238,
-          '8881102': 357142.857,
+          '8881100': 250000,
+          '8881101': 250000,
+          '8881102': 375000,
         },
-        dmgMult: 40,
+        dmgMult: 60,
         // 相對 Hard：CD 稍短（全模式再 ×0.75）
         patternCdMult: 0.6,
         reqLevel: 250,
         timeLimitSec: 1800,
         rewards: [
+          { kind: 'equip', itemId: '01004422', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01004423', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01004424', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01004425', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01004426', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01102775', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01102794', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01102795', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01102796', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01102797', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01082636', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01082637', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01082638', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01082639', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01082640', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01073030', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01073032', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01073033', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01073034', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01073035', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01152174', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01152176', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01152177', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01152178', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01152179', amount: 1, chance: 10 },
+          { kind: 'equip', itemId: '01372222', amount: 1, chance: 5 },
+          { kind: 'equip', itemId: '01402251', amount: 1, chance: 5 },
+          { kind: 'equip', itemId: '01522138', amount: 1, chance: 5 },
+          { kind: 'equip', itemId: '01472261', amount: 1, chance: 5 },
+          { kind: 'equip', itemId: '01222109', amount: 1, chance: 5 },
+          { kind: 'equip', itemId: '01012632', amount: 1, chance: 5 },
+          { kind: 'consume', consumeType: 'starforce_scroll', scrollId: 'scroll_set20', amount: 1, chance: 10 },
+          { kind: 'consume', consumeType: 'starforce_scroll', scrollId: 'scroll_under23_30', amount: 1, chance: 5 },        
+          { kind: 'etc', itemId: '01102832', amount: 1, chance: 0.1 },
+          { kind: 'etc', itemId: '04310156', amount: 1 },
+          { kind: 'etc', itemId: '04310156', amount: 1 , chance: 10},
+          { kind: 'etc', itemId: '04310156', amount: 1 , chance: 30},
+          { kind: 'etc', itemId: '04310156', amount: 1 , chance: 30},
+          { kind: 'etc', itemId: '04310156', amount: 1 , chance: 30},
+          { kind: 'etc', itemId: '02630291', amount: 1 },
+          { kind: 'etc', itemId: '02630292', amount: 1 , chance: 30 },
           { kind: 'etc', itemId: 'meowcoin', amount: 20 },
           { kind: 'etc', itemId: 'meowcoin', amount: 20 },
           { kind: 'etc', itemId: 'meowcoin', amount: 20 },
