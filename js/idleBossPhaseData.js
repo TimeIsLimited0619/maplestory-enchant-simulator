@@ -1856,7 +1856,7 @@ const IDLE_BOSS_PHASE = {
           // regen 竄出 → loop 綁住 warningMs → hit → end 放開；hit2＝暗闇簡化
           warningMs: 1320,
           hit2Ms: 1800,
-          hit2Ratio: 2.0,
+          hit2Ratio: 1.6,
           assetKey: '1004/003',
         },
         // —— 三階：발판 파괴 —— 8881102 skill6；destroyed→lockOn→ball×3 斜插＋special＋hit
