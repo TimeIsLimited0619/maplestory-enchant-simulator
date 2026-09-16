@@ -71,6 +71,7 @@ const DEFAULT_SETTINGS = {
   closeToTray: true,
   forceGcOnHide: false,
   assetDir: '',
+  assetSourceDir: '',
 };
 
 function projectRoot() {
@@ -88,13 +89,18 @@ function loadSettings() {
     const raw = fs.readFileSync(settingsPath(), 'utf8');
     const data = JSON.parse(raw);
     let assetDir = '';
+    let assetSourceDir = '';
     if (typeof data?.assetDir === 'string' && data.assetDir.trim()) {
       assetDir = path.resolve(data.assetDir.trim());
+    }
+    if (typeof data?.assetSourceDir === 'string' && data.assetSourceDir.trim()) {
+      assetSourceDir = path.resolve(data.assetSourceDir.trim());
     }
     return {
       closeToTray: data?.closeToTray !== false,
       forceGcOnHide: !!data?.forceGcOnHide,
       assetDir,
+      assetSourceDir,
     };
   } catch (_) {
     return { ...DEFAULT_SETTINGS };
@@ -249,6 +255,139 @@ function packIsReady(pack) {
 
 function missingPacks() {
   return (ASSET_MANIFEST.packs || []).filter((pack) => !packIsReady(pack));
+}
+
+function addSearchDir(dirs, candidate) {
+  if (!candidate) return;
+  try {
+    const abs = path.resolve(candidate);
+    if (!dirs.includes(abs)) dirs.push(abs);
+  } catch (_) { /* ignore */ }
+}
+
+function localSearchDirs() {
+  const dirs = [];
+  try { addSearchDir(dirs, path.join(process.resourcesPath, 'asset-packs')); } catch (_) { /* ignore */ }
+  try {
+    const exeDir = path.dirname(app.getPath('exe'));
+    addSearchDir(dirs, path.join(exeDir, 'asset-packs'));
+    addSearchDir(dirs, exeDir);
+  } catch (_) { /* ignore */ }
+  addSearchDir(dirs, assetRoot());
+  addSearchDir(dirs, path.join(assetRoot(), 'tmp'));
+  addSearchDir(dirs, path.join(assetRoot(), 'images'));
+  try { addSearchDir(dirs, app.getPath('downloads')); } catch (_) { /* ignore */ }
+  try { addSearchDir(dirs, app.getPath('desktop')); } catch (_) { /* ignore */ }
+  const src = loadSettings().assetSourceDir;
+  if (src) {
+    addSearchDir(dirs, src);
+    addSearchDir(dirs, path.join(src, 'images'));
+  }
+  return dirs;
+}
+
+function isPackZipName(pack, name) {
+  const file = String(name || '');
+  if (!file.toLowerCase().endsWith('.zip')) return false;
+  return file.startsWith(pack.filePrefix);
+}
+
+function findLocalZip(pack) {
+  const exact = `${pack.filePrefix}-${String(ASSET_MANIFEST.version || app.getVersion())}.zip`;
+  for (const dir of localSearchDirs()) {
+    try {
+      const exactPath = path.join(dir, exact);
+      if (fs.existsSync(exactPath) && fs.statSync(exactPath).isFile()) return exactPath;
+      const hit = fs.readdirSync(dir).find((name) => isPackZipName(pack, name));
+      if (hit) {
+        const full = path.join(dir, hit);
+        if (fs.statSync(full).isFile()) return full;
+      }
+    } catch (_) { /* ignore */ }
+  }
+  return null;
+}
+
+function unpackedDirHasFiles(dir) {
+  try {
+    if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) return false;
+    return fs.readdirSync(dir).some((name) => name !== '.pack-version');
+  } catch (_) {
+    return false;
+  }
+}
+
+function findLocalUnpacked(pack) {
+  for (const dir of localSearchDirs()) {
+    const candidates = [
+      path.join(dir, pack.dest),
+      path.join(dir, 'images', pack.dest),
+    ];
+    if (path.basename(dir) === pack.dest) candidates.unshift(dir);
+    for (const candidate of candidates) {
+      if (unpackedDirHasFiles(candidate)) return candidate;
+    }
+  }
+  return null;
+}
+
+function localPackStatus() {
+  const needed = missingPacks();
+  const found = [];
+  const missing = [];
+  needed.forEach((pack) => {
+    const zip = findLocalZip(pack);
+    const dir = findLocalUnpacked(pack);
+    if (zip || dir) found.push({ id: pack.id, zip, dir });
+    else missing.push(pack);
+  });
+  return {
+    needed,
+    found,
+    missing,
+    allLocal: needed.length > 0 && missing.length === 0,
+  };
+}
+
+function splashReadyPayload() {
+  const dest = downloadedImagesRoot();
+  const st = localPackStatus();
+  if (st.allLocal) {
+    return {
+      state: 'ready',
+      percent: 0,
+      message: `已找到本機資源包（${st.found.length}/${st.needed.length}），不需再從網路下載。`,
+      detail: dest,
+      path: dest,
+      startLabel: '開始安裝資源',
+    };
+  }
+  if (st.found.length) {
+    return {
+      state: 'ready',
+      percent: 0,
+      message: `已找到 ${st.found.length}/${st.needed.length} 個本機資源包，其餘改從網路下載。也可再指定 Google Drive 下載的資料夾。`,
+      detail: dest,
+      path: dest,
+      startLabel: '開始安裝／下載',
+    };
+  }
+  return {
+    state: 'ready',
+    percent: 0,
+    message: '首次啟動需要 BOSS 動畫與技能特效（約 1.7GB）。可先從 Google Drive 下載 zip 再選資料夾，或直接下載。',
+    detail: dest,
+    path: dest,
+    startLabel: '開始下載',
+  };
+}
+
+async function installUnpackedPack(unpacked, unpackDir) {
+  const same = path.resolve(unpacked) === path.resolve(unpackDir);
+  if (same) return;
+  await fs.promises.mkdir(path.dirname(unpackDir), { recursive: true });
+  await fs.promises.rm(unpackDir, { recursive: true, force: true });
+  await fs.promises.symlink(unpacked, unpackDir, 'junction');
 }
 
 function formatSpeed(bps) {
@@ -447,6 +586,34 @@ async function ensureLargeAssets() {
   for (let i = 0; i < needed.length; i += 1) {
     const pack = needed[i];
     const fileName = `${pack.filePrefix}-${assetVer}.zip`;
+    const unpackDir = path.join(destRoot, pack.dest);
+    const localUnpacked = findLocalUnpacked(pack);
+    const localZip = findLocalZip(pack);
+
+    if (localUnpacked) {
+      sendSplash({
+        state: 'extract',
+        percent: ((i + 0.4) / needed.length) * 100,
+        message: `正在套用本機${pack.label || pack.id}（${i + 1}/${needed.length}）…`,
+        detail: localUnpacked,
+      });
+      await installUnpackedPack(localUnpacked, unpackDir);
+      await fs.promises.writeFile(packMarkerPath(pack), `${assetVer}\n`, 'utf8');
+      continue;
+    }
+
+    if (localZip) {
+      sendSplash({
+        state: 'extract',
+        percent: ((i + 0.4) / needed.length) * 100,
+        message: `正在解壓本機${pack.label || pack.id}（${i + 1}/${needed.length}）…`,
+        detail: localZip,
+      });
+      await extractZip(localZip, unpackDir);
+      await fs.promises.writeFile(packMarkerPath(pack), `${assetVer}\n`, 'utf8');
+      continue;
+    }
+
     const url = `https://github.com/${GH_OWNER}/${GH_REPO}/releases/download/v${version}/${fileName}`;
     const zipPath = path.join(assetRoot(), 'tmp', fileName);
     sendSplash({
@@ -474,7 +641,6 @@ async function ensureLargeAssets() {
       message: `正在解壓${pack.label || pack.id}…`,
       detail: '',
     });
-    const unpackDir = path.join(destRoot, pack.dest);
     await extractZip(zipPath, unpackDir);
     await fs.promises.writeFile(packMarkerPath(pack), `${assetVer}\n`, 'utf8');
     try { await fs.promises.unlink(zipPath); } catch (_) { /* ignore */ }
@@ -499,7 +665,7 @@ function resolveSplashConfirm() {
 function createSplashWindow() {
   splashWindow = new BrowserWindow({
     width: 560,
-    height: 400,
+    height: 430,
     frame: false,
     resizable: false,
     show: true,
@@ -729,7 +895,7 @@ function bindIpc() {
   ipcMain.handle('splash:pick-dir', async () => {
     const parent = splashWindow && !splashWindow.isDestroyed() ? splashWindow : undefined;
     const result = await dialog.showOpenDialog(parent, {
-      title: '選擇資源下載資料夾',
+      title: '選擇資源存放位置',
       defaultPath: assetRoot(),
       properties: ['openDirectory', 'createDirectory'],
     });
@@ -738,15 +904,24 @@ function bindIpc() {
     }
     saveSettings({ assetDir: result.filePaths[0] });
     invalidateImageRoots();
-    const nextPath = downloadedImagesRoot();
-    sendSplash({
-      state: 'ready',
-      percent: 0,
-      message: '首次啟動需下載 BOSS 動畫與技能特效（約 1.7GB，只下載一次）。',
-      detail: nextPath,
-      path: nextPath,
+    sendSplash(splashReadyPayload());
+    return { ok: true, path: downloadedImagesRoot() };
+  });
+
+  ipcMain.handle('splash:pick-source', async () => {
+    const parent = splashWindow && !splashWindow.isDestroyed() ? splashWindow : undefined;
+    const result = await dialog.showOpenDialog(parent, {
+      title: '選擇已下載的資源包資料夾',
+      defaultPath: loadSettings().assetSourceDir || app.getPath('downloads'),
+      properties: ['openDirectory'],
     });
-    return { ok: true, path: nextPath };
+    if (result.canceled || !result.filePaths || !result.filePaths[0]) {
+      return { ok: false, path: downloadedImagesRoot() };
+    }
+    saveSettings({ assetSourceDir: result.filePaths[0] });
+    invalidateImageRoots();
+    sendSplash(splashReadyPayload());
+    return { ok: true, path: downloadedImagesRoot(), source: result.filePaths[0] };
   });
 
   ipcMain.handle('splash:start', () => {
@@ -768,13 +943,7 @@ async function startAppWindows() {
       if (app.isPackaged && missingPacks().length) {
         splashCanClose = false;
         if (!splashWindow || splashWindow.isDestroyed()) await createSplashWindow();
-        sendSplash({
-          state: 'ready',
-          percent: 0,
-          message: '首次啟動需下載 BOSS 動畫與技能特效（約 1.7GB，只下載一次）。',
-          detail: downloadedImagesRoot(),
-          path: downloadedImagesRoot(),
-        });
+        sendSplash(splashReadyPayload());
         await waitForSplashConfirm();
         await ensureLargeAssets();
       }

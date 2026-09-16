@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('mssSplash', {
     return () => ipcRenderer.removeListener('splash:progress', handler);
   },
   pickDir: () => ipcRenderer.invoke('splash:pick-dir'),
+  pickSource: () => ipcRenderer.invoke('splash:pick-source'),
   start: () => ipcRenderer.invoke('splash:start'),
   retry: () => ipcRenderer.invoke('splash:retry'),
 });

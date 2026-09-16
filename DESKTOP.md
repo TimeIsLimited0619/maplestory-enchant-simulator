@@ -4,9 +4,11 @@
 
 ## 安裝
 
-1. 打開 [GitHub Releases](https://github.com/TimeIsLimited0619/maplestory-enchant-simulator/releases) 下載 `MapleEnchantSimulator-Setup-x.y.z.exe`。
+1. 打開 [GitHub Releases](https://github.com/TimeIsLimited0619/maplestory-enchant-simulator/releases) 下載 `MapleEnchantSimulator-Setup-x.y.z.exe`（**64 位元**遊戲；Setup 安裝程式本身可能顯示成 32 位元，這是 NSIS 包裝，不影響）。
 2. 雙擊安裝，可自選安裝資料夾（不要裝在空間不夠的磁碟）。
-3. 第一次啟動會再下載 BOSS 動畫與技能特效（約 1.7GB）。畫面上可再選資源存放資料夾，確認後按「開始下載」。
+3. 大型動畫（BOSS／技能，約 1.7GB）有兩種取得方式：
+   - **本機資源包（建議網路慢時使用）**：先從 Google Drive 或其他地方下載 `MapleEnchant-assets-idle-bosses-*.zip` 與 `MapleEnchant-assets-skills-*.zip`。把兩個 zip 放在 Setup.exe **同一層**再安裝，或第一次啟動按「已下載的資源」選那個資料夾。程式會偵測並解壓，不再從 GitHub 抓。
+   - **直接下載**：第一次啟動按「開始下載」，從 GitHub Release 多連線抓取。
 4. 之後可完全離線遊玩。
 
 未簽章時 Windows 可能出現 SmartScreen：選「其他資訊」→「仍要執行」。

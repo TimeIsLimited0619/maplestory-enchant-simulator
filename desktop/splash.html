@@ -91,7 +91,8 @@
     <div class="bar"><div id="fill"></div></div>
     <div id="pct"></div>
     <div class="actions">
-      <button type="button" id="choose">選擇資料夾</button>
+      <button type="button" id="choose">存放位置</button>
+      <button type="button" id="source">已下載的資源</button>
       <button type="button" id="start">開始下載</button>
       <button type="button" id="retry">重試下載</button>
     </div>
@@ -102,6 +103,7 @@
     const fillEl = document.getElementById('fill');
     const pctEl = document.getElementById('pct');
     const chooseEl = document.getElementById('choose');
+    const sourceEl = document.getElementById('source');
     const startEl = document.getElementById('start');
     const retryEl = document.getElementById('retry');
     let currentPath = '';
@@ -116,14 +118,19 @@
       if (d.path) currentPath = d.path;
       pathEl.textContent = currentPath ? ('資源位置：' + currentPath) : '';
       if (ready) {
-        pctEl.textContent = '可改到較快的磁碟，再按開始下載。';
+        pctEl.textContent = d.startLabel === '開始安裝資源'
+          ? '將解壓本機 zip／資料夾，不會再從網路下載。'
+          : '可改存放位置，或指定 Google Drive 下載好的 zip 資料夾。';
       } else {
         pctEl.textContent = d.detail || (pct > 0 ? pct.toFixed(0) + '%' : '');
       }
       chooseEl.classList.toggle('show', ready || err);
+      sourceEl.classList.toggle('show', ready || err);
       startEl.classList.toggle('show', ready);
       retryEl.classList.toggle('show', err);
+      startEl.textContent = d.startLabel || '開始下載';
       chooseEl.disabled = busy;
+      sourceEl.disabled = busy;
       startEl.disabled = busy;
     }
     if (window.mssSplash && typeof window.mssSplash.onProgress === 'function') {
@@ -137,9 +144,14 @@
         pathEl.textContent = '資源位置：' + result.path;
       }
     });
+    sourceEl.addEventListener('click', async () => {
+      if (!window.mssSplash || typeof window.mssSplash.pickSource !== 'function') return;
+      await window.mssSplash.pickSource();
+    });
     startEl.addEventListener('click', () => {
       startEl.disabled = true;
       chooseEl.disabled = true;
+      sourceEl.disabled = true;
       if (window.mssSplash) window.mssSplash.start();
     });
     retryEl.addEventListener('click', () => {
