@@ -341,6 +341,7 @@ const SessionPersistenceModule = {
       localStorage.setItem(keys.full, JSON.stringify(payload));
       localStorage.setItem(keys.session, JSON.stringify(payload.session));
       this.scheduleFileBackupWrite();
+      this.scheduleDesktopSaveWrite();
     } catch (err) {
       console.warn('[SessionPersistence] 儲存失敗:', err);
     }
@@ -353,6 +354,63 @@ const SessionPersistenceModule = {
       && typeof window.showSaveFilePicker === 'function'
       && typeof window.showOpenFilePicker === 'function'
       && typeof indexedDB !== 'undefined';
+  },
+
+  isDesktopApp() {
+    return typeof window !== 'undefined' && typeof window.mssDesktop?.writeSaveBackup === 'function';
+  },
+
+  desktopSaveMetaKey() {
+    return 'mss-desktop-save-meta.v1';
+  },
+
+  readDesktopSaveMeta() {
+    try {
+      const raw = localStorage.getItem(this.desktopSaveMetaKey());
+      if (!raw) return { lastWriteAt: 0, path: '' };
+      const data = JSON.parse(raw);
+      return {
+        lastWriteAt: Number(data?.lastWriteAt) || 0,
+        path: String(data?.path || ''),
+        profile: data?.profile === 'idle' ? 'idle' : 'sim',
+      };
+    } catch (_) {
+      return { lastWriteAt: 0, path: '' };
+    }
+  },
+
+  scheduleDesktopSaveWrite() {
+    if (!this.isDesktopApp()) return;
+    if (this._desktopSaveTimer) clearTimeout(this._desktopSaveTimer);
+    this._desktopSaveTimer = setTimeout(() => {
+      this._desktopSaveTimer = null;
+      this.writeDesktopSaveNow().catch(() => {});
+    }, MSS_BACKUP_WRITE_MIN_MS);
+  },
+
+  async writeDesktopSaveNow() {
+    if (!this.isDesktopApp() || !this.loadedFromStorage) return false;
+    if (this._applyingWorld) return false;
+    try {
+      const payload = this.buildExportPayload();
+      if (this.activeProfile === 'idle') delete payload.costTracker;
+      const json = await this.serializePayloadForFile(payload);
+      const result = await window.mssDesktop.writeSaveBackup(this.activeProfile, json);
+      if (result?.ok) {
+        try {
+          localStorage.setItem(this.desktopSaveMetaKey(), JSON.stringify({
+            lastWriteAt: Date.now(),
+            path: result.path || '',
+            profile: this.activeProfile,
+          }));
+        } catch (_) { /* ignore */ }
+        if (typeof SaveBackupPanel !== 'undefined') SaveBackupPanel.refresh?.();
+        return true;
+      }
+    } catch (err) {
+      console.warn('[SessionPersistence] 桌面備份寫入失敗:', err);
+    }
+    return false;
   },
 
   openBackupDb() {
@@ -570,6 +628,8 @@ const SessionPersistenceModule = {
       lastWriteAt: meta.lastWriteAt || 0,
       profile: profile === 'idle' ? 'idle' : 'sim',
       importCooldown: this.getImportCooldown(profile),
+      desktop: this.isDesktopApp(),
+      desktopSave: this.readDesktopSaveMeta(),
     };
   },
 
@@ -622,8 +682,15 @@ const SessionPersistenceModule = {
       clearTimeout(this._backupWriteTimer);
       this._backupWriteTimer = null;
     }
+    if (this._desktopSaveTimer) {
+      clearTimeout(this._desktopSaveTimer);
+      this._desktopSaveTimer = null;
+    }
     try {
       await this.writeBackupFileNow({ force: true });
+    } catch (_) { /* ignore */ }
+    try {
+      await this.writeDesktopSaveNow();
     } catch (_) { /* ignore */ }
   },
 
@@ -731,6 +798,7 @@ const SessionPersistenceModule = {
   },
 
   maybeRemindBindBackup() {
+    if (this.isDesktopApp()) return;
     if (!this.loadedFromStorage) return;
     const key = this.activeProfile === 'idle' ? 'idle' : 'sim';
     const meta = this.readBackupMeta(key);

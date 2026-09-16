@@ -1,7 +1,12 @@
 {
   "name": "maplestory-enchant-simulator",
+  "productName": "MapleEnchantSimulator",
+  "version": "1.0.0",
   "private": true,
-  "description": "MapleStory enchant simulator (local static app). npm 僅給匯入腳本用。",
+  "description": "楓之谷做裝模擬器桌面版（本機離線執行）。",
+  "author": "時閒人",
+  "main": "desktop/main.cjs",
+  "homepage": "https://github.com/TimeIsLimited0619/maplestory-enchant-simulator",
   "scripts": {
     "import:equips": "node scripts/import-maplestory-io.mjs",
     "import:wz": "node scripts/import-wz-xml.mjs",
@@ -11,14 +16,86 @@
     "import:mob": "node scripts/import-mob-wz.mjs",
     "import:boss": "node scripts/import-boss-wz.mjs",
     "import:boss:suu-pattern": "node scripts/import-boss-pattern-suu.mjs",
+    "import:boss:damien-pattern": "node scripts/import-boss-pattern-damien.mjs",
     "import:npcshop": "node scripts/import-npcshop-ui.mjs",
     "import:levelup": "node scripts/import-basic-eff-levelup.mjs",
     "import:skill": "node scripts/import-skill-wz.mjs",
     "import:throwing-star": "node scripts/import-throwing-star.mjs",
     "import:action-instructions": "node scripts/import-action-instructions.mjs",
-    "gm-writer": "node scripts/idle-gm-writer.mjs"
+    "gm-writer": "node scripts/idle-gm-writer.mjs",
+    "start": "electron .",
+    "desktop": "electron .",
+    "pack:assets": "node desktop/pack-assets.cjs",
+    "dist": "electron-builder --win nsis",
+    "dist:dir": "electron-builder --win dir"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9",
+    "extract-zip": "^2.0.1"
   },
   "devDependencies": {
+    "archiver": "^7.0.1",
+    "electron": "^32.2.1",
+    "electron-builder": "^25.1.8",
     "sharp": "^0.33.5"
+  },
+  "build": {
+    "appId": "com.timeislimited.mapleenchant",
+    "productName": "MapleEnchantSimulator",
+    "copyright": "Copyright © 時閒人",
+    "asar": true,
+    "directories": {
+      "output": "dist-desktop"
+    },
+    "files": [
+      "index.html",
+      "js/**",
+      "css/**",
+      "desktop/**",
+      "!desktop/pack-assets.cjs",
+      "!js/uiIdleGmDrops.js",
+      "!css/modules/27-idle-gm-drops.css"
+    ],
+    "extraResources": [
+      {
+        "from": "images",
+        "to": "images",
+        "filter": [
+          "**/*",
+          "!idle-bosses/**",
+          "!skills/**",
+          "!menubtn/gm/**"
+        ]
+      }
+    ],
+    "win": {
+      "icon": "desktop/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "MapleEnchantSimulator-Setup-${version}.${ext}",
+      "executableName": "MapleEnchantSimulator"
+    },
+    "nsis": {
+      "oneClick": true,
+      "unicode": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "楓之谷做裝模擬器",
+      "installerLanguages": [
+        "zh_TW"
+      ]
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "TimeIsLimited0619",
+      "repo": "maplestory-enchant-simulator",
+      "releaseType": "release"
+    }
   }
 }

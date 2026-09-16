@@ -1261,10 +1261,16 @@ const IdleBoss = (() => {
       if (body) {
         const maxHp = Math.max(1, Number(body.maxHp) || 1);
         const hp = Math.max(0, Number(body.hp) || 0);
-        const pct = Math.max(0, Math.min(100, (hp / maxHp) * 100));
+        const barRatio = Number(body.barRatio);
+        const pct = Number.isFinite(barRatio)
+          ? Math.max(0, Math.min(100, barRatio * 100))
+          : Math.max(0, Math.min(100, (hp / maxHp) * 100));
         if (fill) fill.style.width = `${pct}%`;
         if (text) text.textContent = formatHp(hp, maxHp);
-        if (pctEl) pctEl.textContent = formatHpPct(hp, maxHp);
+        if (pctEl) pctEl.textContent = formatHpPct(
+          Number.isFinite(barRatio) ? barRatio * maxHp : hp,
+          maxHp,
+        );
         const shHp = Math.max(0, Number(body.shieldHp) || 0);
         const shMax = Math.max(0, Number(body.shieldMax) || 0);
         if (shieldEl) {

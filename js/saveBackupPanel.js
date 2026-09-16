@@ -81,6 +81,8 @@ const SaveBackupPanel = (() => {
         lastWriteAt: 0,
         profile: 'sim',
         importCooldown: { remainingMs: 0, ready: true, lastAt: 0 },
+        desktop: typeof window !== 'undefined' && !!window.mssDesktop,
+        desktopSave: { lastWriteAt: 0, path: '' },
       };
       return status;
     }
@@ -95,6 +97,10 @@ const SaveBackupPanel = (() => {
       : '尚未綁定本機備份檔';
     const writeLine = `上次寫入：${escapeHtml(formatTime(s.lastWriteAt))}`;
     const modeLine = `目前模式：${escapeHtml(profileLabel(s.profile))}`;
+    const desktopSave = s.desktopSave || {};
+    const desktopLine = s.desktop
+      ? `桌面自動備份：${escapeHtml(formatTime(desktopSave.lastWriteAt))}`
+      : '';
     const cd = s.importCooldown || {};
     const cdReady = cd.ready !== false && !(Number(cd.remainingMs) > 0);
     const cdRemain = (!cdReady && typeof SessionPersistenceModule !== 'undefined')
@@ -133,9 +139,12 @@ const SaveBackupPanel = (() => {
           <li>${modeLine}</li>
           <li>${boundLine}</li>
           <li>${writeLine}</li>
+          ${desktopLine ? `<li>${desktopLine}</li>` : ''}
           <li>${cdLine}</li>
         </ul>
-        ${s.bound ? '' : '<p class="save-backup-warn">未綁定時，清理瀏覽器／網站資料可能遺失進度。</p>'}
+        ${s.desktop
+          ? '<p class="save-backup-hint">桌面版會自動把完整 .mss 寫到本機資料夾（更新程式不會清進度）。路徑：%APPDATA%\\MapleEnchantSimulator\\saves\\</p>'
+          : (s.bound ? '' : '<p class="save-backup-warn">未綁定時，清理瀏覽器／網站資料可能遺失進度。</p>')}
       </section>
       ${bindSection}
       <section class="save-backup-section" aria-label="匯出匯入">

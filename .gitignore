@@ -31,6 +31,8 @@ node_modules/
 npm-debug.log*
 yarn-error.log*
 dist/
+dist-desktop/
+dist-assets/
 build/
 
 # CSS 切開後的 monolith 備份（本機重切用，不必上傳）

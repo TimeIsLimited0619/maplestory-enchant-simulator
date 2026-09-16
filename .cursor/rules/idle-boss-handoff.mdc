@@ -101,6 +101,7 @@ alwaysApply: false
 | `banban` | `5` | skill1 召喚香蕉 → skillAfter1 窗 60s；擊殺→弱化／逾時→強化 |
 | `vellum` | `7` | 本體＋尾巴**共血**；尾巴每 7s 竄出 2s（隨機左右） |
 | `suu` | `13` | 三階**分血**原地；過熱 destruction／overload；BossPattern 大集合＋本體 skill 動畫 |
+| `damien` | `15` | 兩階**共血一條**（前段＝一階血、後段＝二階血；打完前段轉階）；大劍＋P2 小劍；藍球 1→2→3；**無印章／無瞬移／無圈內減傷** |
 
 **重要：** `forms`／papulatus／zakum bodyForms = 打死換型＋**新血條**。  
 若要「戰鬥中切視覺／招式但共用同一條血」，必須像血腥女皇另做 kind（或等價共血狀態），**不要**用 `onZakumBodyFormDown`。
@@ -190,6 +191,14 @@ alwaysApply: false
 - 地雷 `8881107`（P1）：召喚播一次 `1000/007` effect；畫面 4/6/8、出傷顆 2/3/5。無人機 `8881108`（P1–P3）：隨機點飛向玩家 4/6/8。
 - P3：機械臂視覺 `1005/002`、誘導彈 `1005/001`（與나무資料夾對調，依實際幀層）。
 - 缺：`1002/000` 電絲推；`1006` 가로포격／전기장 部分細節仍可調。
+
+## 戴米安（`15` / `damien`）摘要
+
+- 本體 `8880100`→`8880101` **共血一條**：`formHpMult`＝前段一階／後段二階絕對血；打完前段轉階（剩後段池，不重設 maxHp）。清場箱 `8950111`。P1→P2 播 `directionAct1`。
+- 出傷：`PA × attackHpRatio × dmgMult`。`disease 237` 不套（無印章）。
+- P1：本體招＋Etc 大劍（亂飛換向＋鎖定連突；**不做插地**）。attack1／attack3 同高多點 AW。skill2 meteor＝`9601026`。
+- P2：藍球 `8880102` ×1→2→3（總血 ≤20%／≤10%；**無圈內對王減傷**）；小魔劍 `flyingSword2`；世界樹總血≤20%：等位移招結束再開 skill8 引導（**引導期不 busy，玩家可持續輸出破條**）→成功 skill9／after9、失敗 attack7；**無 skill7 輪轉**；skill4／after4＝消失播完→瞬間換位→**已在定位點才播** after；attack1＝0～4抬手續力／5～8衝刺（effect 同步第5幀）／9～13終點收刀→skill4 回原位；skill2＝0～9消失→就位後再播斬擊→after2 原位出現；attack3 龍捲＋火球自王中心左右射出。
+- Pattern：`import-boss-pattern-damien.mjs`（含 `flyingSword2`）。入口：`damienPhasePools`／`tryDamienSharedPhaseUp`／`tickDamien`。
 
 ## 濃姬（`18` / `forms` + `nohimeKit`）摘要
 

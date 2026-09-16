@@ -13,6 +13,7 @@
  * - 班班（kind: 'banban'）：skill1 召喚香蕉 → skillAfter1 窗；擊殺→弱化／逾時→強化
  * - 貝倫（kind: 'vellum'）：本體＋尾巴共血；尾巴週期竄出攻擊
  * - 史烏（kind: 'suu'）：三階分血原地；簡化過熱／護盾＋BossPattern 子集
+ * - 戴米安（kind: 'damien'）：兩階分血；大劍亂飛換向＋鎖定連突；二階結晶跟隨；無印章
  * 由 IdleBoss 呼叫；UI／紙娃娃仍在 IdleBoss。
  */
 const IdleBossFight = (() => {
@@ -91,6 +92,11 @@ const IdleBossFight = (() => {
       && Array.isArray(script.bodyForms) && script.bodyForms.length);
   }
 
+  function isDamienScript(script) {
+    return !!(script && script.kind === 'damien'
+      && Array.isArray(script.bodyForms) && script.bodyForms.length);
+  }
+
   function isZakum(f = fight) {
     return !!(f && (f.kind === 'zakum' || isZakumScript(f.script)));
   }
@@ -135,13 +141,17 @@ const IdleBossFight = (() => {
     return !!(f && (f.kind === 'suu' || isSuuScript(f.script)));
   }
 
+  function isDamien(f = fight) {
+    return !!(f && (f.kind === 'damien' || isDamienScript(f.script)));
+  }
+
   function cygnusSleeping(f = fight) {
     return isCygnus(f) && !!f?.cygnusSleep;
   }
 
   /** 單本體（無手臂／多部位） */
   function isBodyOnly(f = fight) {
-    return isPapulatus(f) || isSimple(f) || isBloodyQueen(f) || isSuu(f);
+    return isPapulatus(f) || isSimple(f) || isBloodyQueen(f) || isSuu(f) || isDamien(f);
   }
 
   /** 炎魔／龍王／粉豆雕像：以 arms[] 當前可打部位列表 */
@@ -408,6 +418,7 @@ const IdleBossFight = (() => {
     if (isPierreScript(script)) return createPierreFight(listId, script);
     if (isBanbanScript(script)) return createBanbanFight(listId, script);
     if (isVellumScript(script)) return createVellumFight(listId, script);
+    if (isDamienScript(script)) return createDamienFight(listId, script);
     if (isSuuScript(script)) return createSuuFight(listId, script);
     if (isBloodyQueenScript(script)) return createBloodyQueenFight(listId, script);
     if (isPapulatusScript(script)) return createPapulatusFight(listId, script);
@@ -1591,7 +1602,7 @@ const IdleBossFight = (() => {
       return null;
     }
 
-    if (isSimple() || isBloodyQueen() || isSuu()) {
+    if (isSimple() || isBloodyQueen() || isSuu() || isDamien()) {
       if (fight.body.hp > 0 && !fight.body.invincible && fight.body.targetable) {
         return { kind: 'body', unit: fight.body };
       }
@@ -1731,6 +1742,8 @@ const IdleBossFight = (() => {
     if (isPapulatus()) return;
     if (isSimple()) return;
     if (isBloodyQueen()) return;
+    if (isSuu()) return;
+    if (isDamien()) return;
     if (isPierre()) {
       tryPierreSplit();
       return;
@@ -2455,6 +2468,9 @@ const IdleBossFight = (() => {
       fight.suuOverloadUntil = 0;
       clearSuuGaugeHud();
     }
+    if (isDamien()) {
+      clearDamienRuntime();
+    }
     if (!fight || fight.mode !== 'fight') return;
     busy = true;
     stopSustainCombat();
@@ -2505,7 +2521,15 @@ const IdleBossFight = (() => {
     const bodyVisual = isBodyFormStyle()
       ? (currentBodyForm()?.visualMob || currentBodyForm()?.statMob || fight.body.visualId)
       : (fight.script.bodyStatMob || fight.body.visualId);
-    await playAnim('body', bodyVisual, 'die1');
+    // 戴米安二階最終死亡：播 8880121 die1（非本體 8880101）
+    let dieVisual = bodyVisual;
+    if (isDamien() && (Number(fight.phase) || 1) >= 2) {
+      const dieId = pad(fight.script.dieMob || '8880121');
+      if (typeof IdleMobAnim !== 'undefined' && IdleMobAnim.resolveAction?.(dieId, 'die1')) {
+        dieVisual = dieId;
+      }
+    }
+    await playAnim('body', dieVisual, 'die1');
     if (clearSeq !== atkFxSeq || fight !== clearFight || !fight || fight.mode === 'done') return;
     hideSlot('body');
 
@@ -2664,11 +2688,60 @@ const IdleBossFight = (() => {
     if (!fight?.chest || fight.mode === 'done' || fight.rewardsGranted || busy) return;
     busy = true;
     fight.rewardsGranted = true;
-    const chestVisual = fight.chest.visualId;
+    const chestVisual = pad(fight.chest.visualId);
     fight.chest = null;
-    await playAnim('chest', chestVisual, 'die');
+    const seq = atkFxSeq;
+    const fightRef = fight;
+    const el = slotEl('chest');
+    const dieAction = (typeof IdleMobAnim !== 'undefined'
+      && (IdleMobAnim.resolveAction?.(chestVisual, 'die1')
+        || IdleMobAnim.resolveAction?.(chestVisual, 'die')))
+      || 'die1';
+    // chestRewardFrame：動畫進行中噴獎勵（如戴米安 8950111 die1 第 17 幀）；未設則播完再噴
+    const rewardFr = Number(fight.script?.chestRewardFrame);
+    const hasMidReward = Number.isFinite(rewardFr) && rewardFr >= 0;
+    const rewardAt = hasMidReward
+      ? scaleDelayMs(Math.max(
+        0,
+        Number(IdleMobAnim?.actionFrameOffsetMs?.(chestVisual, dieAction, rewardFr)) || 0,
+      ))
+      : -1;
+
+    let rewarded = false;
+    const doGrant = () => {
+      if (rewarded) return;
+      rewarded = true;
+      grantPlaceholderRewards();
+    };
+
+    if (el && typeof IdleMobAnim !== 'undefined') {
+      IdleMobAnim.beginActorDie(el, chestVisual);
+      const dur = Math.max(
+        400,
+        Number(IdleMobAnim.actionDurationMs(chestVisual, dieAction, 'die')) || 1200,
+      );
+      const speed = Math.max(0.1, Number(el.dataset.animSpeed) || 1);
+      const timeout = scaleDelayMs(dur + 250) / speed;
+      const start = Date.now();
+      while (Date.now() - start < timeout) {
+        if (seq !== atkFxSeq || fight !== fightRef || !fight) {
+          busy = false;
+          return;
+        }
+        if (hasMidReward && Date.now() - start >= rewardAt) doGrant();
+        if (el.dataset.dieDone === '1') break;
+        await sleep(TICK_MS);
+      }
+    } else {
+      await sleep(600);
+    }
+    if (!hasMidReward) doGrant();
+    else doGrant(); // 保險：中途沒噴到也補噴
     hideSlot('chest');
-    grantPlaceholderRewards();
+    if (!fight || fight !== fightRef) {
+      busy = false;
+      return;
+    }
     fight.mode = 'done';
     busy = false;
     hooks?.onTitle?.('領獎完成');
@@ -2704,6 +2777,17 @@ const IdleBossFight = (() => {
         // 可超過雕像當前血，實際鏡像打殼；雕像保底在 applyDamage／afterExternalHits
         const shellHp = Math.max(0, Math.floor(Number(fight.shell.hp) || 0));
         return Math.max(hp, shellHp);
+      }
+      return 0;
+    }
+
+    if (isDamien()) {
+      if (kind === 'body') {
+        // 共血：可打量＝當前階段實際池剩餘（血條 70／30 另映射）
+        if (fight.phase === 1) {
+          return Math.max(0, Math.floor(Number(fight.damienP1Remain) || 0));
+        }
+        return Math.max(0, Math.floor(Number(fight.damienP2Remain) || 0));
       }
       return 0;
     }
@@ -2801,6 +2885,11 @@ const IdleBossFight = (() => {
       const kind = mob?.uid || mob?.key;
       if (kind === 'body') raw = applySuuShieldIncoming(raw, opts);
     }
+    if (isDamien()) {
+      const kind = mob?.uid || mob?.key;
+      // 藍球只做接觸傷／圈顯示，不對王減傷
+      if (kind === 'body') return raw;
+    }
     if (!mob) return raw;
     return Math.min(raw, maxDamageAllowed(mob));
   }
@@ -2813,7 +2902,19 @@ const IdleBossFight = (() => {
       const kind = mob.uid || mob.key;
       if (kind === 'body') {
         if (dmg > 0) coolSuuGaugeByDamage(dmg);
-        // 護盾可能吃掉傷害（dmg=0），仍刷新白條
+        syncHud();
+      }
+      return;
+    }
+    if (isDamien() && dmg > 0) {
+      const kind = mob.uid || mob.key;
+      if (kind === 'body') {
+        // IdleHunt／applyDamage 已對 body.hp 做線性扣血；改為實際池＋血條 70／30 映射
+        const max = Math.max(1, Number(fight.body.maxHp) || 1);
+        fight.body.hp = Math.min(max, Math.max(0, (Number(fight.body.hp) || 0) + dmg));
+        applyDamienPoolDamage(dmg);
+        noteDamienWorldTreeDamage(dmg);
+        tryDamienSharedPhaseUp();
         syncHud();
       }
       return;
@@ -2915,6 +3016,14 @@ const IdleBossFight = (() => {
     if (isSuu()) {
       if (target.kind === 'body' && target.unit.hp <= 0) {
         onSuuPhaseDown();
+      }
+      return;
+    }
+
+    if (isDamien()) {
+      if (target.kind === 'body') {
+        if (fight.phase === 1) tryDamienSharedPhaseUp();
+        else if (target.unit.hp <= 0) onDamienPhaseDown();
       }
       return;
     }
@@ -3045,7 +3154,7 @@ const IdleBossFight = (() => {
       if (!cygnusSleeping()) pushIf(fight.body);
       return out;
     }
-    if (isPapulatus() || isSimple() || isBloodyQueen() || isSuu()) {
+    if (isPapulatus() || isSimple() || isBloodyQueen() || isSuu() || isDamien()) {
       pushIf(fight.body);
       return out;
     }
@@ -3190,6 +3299,22 @@ const IdleBossFight = (() => {
         }
         if (kind === 'body' && mob.hp <= 0 && fight.mode === 'fight') {
           onSuuPhaseDown();
+        }
+      });
+      syncHud();
+      return;
+    }
+    if (isDamien()) {
+      list.forEach((mob) => {
+        if (!mob || !fight) return;
+        const kind = mob.uid || mob.key;
+        if (kind === 'chest' && mob.hp <= 0) {
+          if (!busy && fight.chest && !fight.rewardsGranted) onChestDead();
+          return;
+        }
+        if (kind === 'body' && fight.mode === 'fight') {
+          if (fight.phase === 1) tryDamienSharedPhaseUp();
+          else if (mob.hp <= 0) onDamienPhaseDown();
         }
       });
       syncHud();
@@ -3359,6 +3484,11 @@ const IdleBossFight = (() => {
   function tickPlayer(dt) {
     if (!fight || busy) return;
     if (fight.mode === 'done') return;
+    // 戴米安 bind／QTE 替代：暫停玩家全部動作
+    if (isDamien() && Date.now() < (Number(fight.damienActionStopUntil) || 0)) {
+      hooks?.syncOverlay?.();
+      return;
+    }
     if (typeof SkillBuffRuntime !== 'undefined') {
       SkillBuffRuntime.tick?.(undefined, combatCtx());
     }
@@ -3431,6 +3561,11 @@ const IdleBossFight = (() => {
 
   function unitAttacks(listId, visualOrStatMob) {
     const mobId = pad(visualOrStatMob);
+    if (isDamien()) {
+      const built = buildDamienAttacks(listId, mobId);
+      if (built && built.length) return built;
+      return [];
+    }
     if (isSuu()) {
       const built = buildSuuAttacks(listId, mobId);
       if (built && built.length) return built;
@@ -3553,7 +3688,7 @@ const IdleBossFight = (() => {
     return [];
   }
 
-  function flashAttack(slotKey, mobId, action) {
+  function flashAttack(slotKey, mobId, action, opts = {}) {
     const el = slotEl(slotKey);
     if (!el || typeof IdleMobAnim === 'undefined') return false;
     const id = pad(mobId);
@@ -3561,6 +3696,7 @@ const IdleBossFight = (() => {
     return !!IdleMobAnim.flashActorAttack(el, action, {
       iconId: id,
       scaleDelayMs,
+      startFrame: opts.startFrame,
     });
   }
 
@@ -3597,6 +3733,7 @@ const IdleBossFight = (() => {
         ignoreMitigation: !!opts.ignoreMitigation,
         trueDamage: !!opts.trueDamage,
         ignoreHurtIframe: !!opts.ignoreHurtIframe,
+        skipHurtIframe: !!opts.skipHurtIframe,
       });
     }
     if (isSuu() && opts.heatOnHit !== false) {
@@ -4186,7 +4323,7 @@ const IdleBossFight = (() => {
     unlock();
   }
 
-  /** skillN 播完接 afterKey，在 after 指定幀出傷 */
+  /** skillN 播完接 afterKey；可在本體幀（castDamageFrame）或 after 幀（damageFrame）出傷 */
   async function runSkillChainAttack(slotKey, unit, atk) {
     if (!fight || !unit || !atk?.skillChain) return;
     const el = slotEl(slotKey);
@@ -4197,9 +4334,15 @@ const IdleBossFight = (() => {
     const key = atk.actionKey;
     const afterKey = String(atk.skillChain.afterKey || '');
     const dM = dmgMult(fight.listId);
-    const ratio = Number(atk.skillChain.dmgRatio) > 0 ? Number(atk.skillChain.dmgRatio) : 1;
-    const hitDmg = Math.max(1, Math.floor((Number(atk.dmg) || 0) * dM * ratio));
+    const rawRatio = Number(atk.skillChain.dmgRatio);
+    const ratio = Number.isFinite(rawRatio) ? rawRatio : 1;
+    const hitDmg = Math.max(0, Math.floor((Number(atk.dmg) || 0) * dM * Math.max(0, ratio)));
     const playerEl = getBossPlayerEl();
+    const castDmgFr = Number(atk.skillChain.castDamageFrame);
+    const hasCastHit = Number.isFinite(castDmgFr) && castDmgFr >= 0 && hitDmg > 0;
+    const afterDmgFr = Number(atk.skillChain.damageFrame);
+    // 有 castDamageFrame 時只在本體出傷；否則沿用 after 的 damageFrame
+    const hasAfterHit = !hasCastHit && Number.isFinite(afterDmgFr) && afterDmgFr >= 0 && hitDmg > 0;
 
     fight.bossActionLock = { slotKey, actionKey: key };
     const unlock = () => {
@@ -4208,21 +4351,43 @@ const IdleBossFight = (() => {
       }
     };
 
+    const applyHit = () => {
+      if (playerEl && typeof IdleMobAnim.playPlayerHit === 'function') {
+        IdleMobAnim.playPlayerHit(playerEl, castId, key, { immediate: true });
+      }
+      const heatOpts = (isSuu() && Number(atk.heatOnHit) > 0)
+        ? { heatOnHit: Number(atk.heatOnHit) }
+        : undefined;
+      hurtPlayerFromBoss(slotKey, hitDmg, heatOpts);
+    };
+
     if (!flashAttack(slotKey, castId, key)) {
       unlock();
       if (atkAcc[slotKey]) atkAcc[slotKey][key] = 0;
       return;
     }
     const castCap = scaleDelayMs(mobAnimMs(castId, key, 2000) + 200);
+    const castHitAt = hasCastHit
+      ? scaleDelayMs(IdleMobAnim.actionFrameOffsetMs?.(castId, key, castDmgFr) || 0)
+      : -1;
     const castStart = Date.now();
+    let castDamaged = false;
     while (Date.now() - castStart < castCap) {
       if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') {
         if (!skipStandOnBossCancel()) bindVisual(slotKey, bodyId, 'stand');
         unlock();
         return;
       }
+      if (hasCastHit && !castDamaged && Date.now() - castStart >= castHitAt) {
+        castDamaged = true;
+        applyHit();
+      }
       if (!IdleMobAnim.isActorCasting?.(el)) break;
       await sleep(TICK_MS);
+    }
+    if (hasCastHit && !castDamaged && seq === atkFxSeq && fight) {
+      castDamaged = true;
+      applyHit();
     }
     if (seq !== atkFxSeq || !fight) {
       unlock();
@@ -4247,27 +4412,21 @@ const IdleBossFight = (() => {
       return;
     }
 
-    const dmgDelay = scaleDelayMs(
-      IdleMobAnim.actionFrameOffsetMs?.(castId, afterKey, atk.skillChain.damageFrame) || 0,
-    );
+    const dmgDelay = hasAfterHit
+      ? scaleDelayMs(IdleMobAnim.actionFrameOffsetMs?.(castId, afterKey, afterDmgFr) || 0)
+      : -1;
     const afterMs = scaleDelayMs(mobAnimMs(castId, afterKey, 1200) + 200);
     const afterStart = Date.now();
-    let damaged = false;
+    let afterDamaged = false;
     while (Date.now() - afterStart < afterMs) {
       if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') {
         if (!skipStandOnBossCancel()) bindVisual(slotKey, bodyId, 'stand');
         unlock();
         return;
       }
-      if (!damaged && Date.now() - afterStart >= dmgDelay) {
-        damaged = true;
-        if (playerEl && typeof IdleMobAnim.playPlayerHit === 'function') {
-          IdleMobAnim.playPlayerHit(playerEl, castId, key, { immediate: true });
-        }
-        const heatOpts = (isSuu() && Number(atk.heatOnHit) > 0)
-          ? { heatOnHit: Number(atk.heatOnHit) }
-          : undefined;
-        hurtPlayerFromBoss(slotKey, hitDmg, heatOpts);
+      if (hasAfterHit && !afterDamaged && Date.now() - afterStart >= dmgDelay) {
+        afterDamaged = true;
+        applyHit();
       }
       if (!IdleMobAnim.isActorCasting?.(el) && Date.now() - afterStart > 200) break;
       await sleep(TICK_MS);
@@ -4954,13 +5113,13 @@ const IdleBossFight = (() => {
       if (!(dmg > 0)
         && !atk.castTicks && !atk.skillChain && !atk.bombAfter && !atk.damageChain
         && !atk.healSelfRatio && !atk.sealSkillsMs && !atk.dropToHpRatio && !atk.playerHpRatio
-        && !atk.banbanSummon && !atk.suuSummonPattern) {
+        && !atk.banbanSummon && !atk.suuSummonPattern && !atk.damienCast) {
         continue;
       }
       const castId = pad(atk.flashMob || iconId);
       const isAreaWarn = !atk.channel && !atk.castTicks && !atk.skillChain
         && !atk.bombAfter && !atk.damageChain && !atk.healSelfRatio && !atk.sealSkillsMs && !atk.dropToHpRatio
-        && !atk.banbanSummon && !atk.suuSummonPattern
+        && !atk.banbanSummon && !atk.suuSummonPattern && !atk.damienCast
         && typeof IdleMobAnim !== 'undefined'
         && IdleMobAnim.hasAreaWarningAttack?.(castId, key);
       if (isAreaWarn && awActive) continue;
@@ -4974,7 +5133,7 @@ const IdleBossFight = (() => {
     // 引導／鏈技就緒時優先，否則會被短 CD 普攻永遠擠掉
     const specialReady = pool.filter((r) => r.atk.channel || r.atk.sleep || r.atk.castTicks || r.atk.skillChain
       || r.atk.bombAfter || r.atk.damageChain || r.atk.healSelfRatio || r.atk.sealSkillsMs || r.atk.dropToHpRatio
-      || r.atk.banbanSummon);
+      || r.atk.banbanSummon || r.atk.damienCast);
     if (specialReady.length) pool = specialReady;
     const pick = pool[Math.floor(Math.random() * pool.length)];
     if (!pick) return;
@@ -5020,6 +5179,11 @@ const IdleBossFight = (() => {
 
     if (atk.suuSummonPattern) {
       void runSuuBodySummonSkill(slotKey, unit, atk);
+      return;
+    }
+
+    if (atk.damienCast) {
+      void runDamienCast(slotKey, unit, atk);
       return;
     }
 
@@ -5165,6 +5329,11 @@ const IdleBossFight = (() => {
 
     if (isSuu()) {
       tickSuu(dt);
+      return;
+    }
+
+    if (isDamien()) {
+      tickDamien(dt);
       return;
     }
 
@@ -5327,6 +5496,19 @@ const IdleBossFight = (() => {
         const maxHp = minions.reduce((sum, m) => sum + Math.max(1, Number(m?.maxHp) || 1), 0);
         return { hp, maxHp: Math.max(1, maxHp), phase: fight.phase, mode: fight.mode };
       }
+    }
+    if (isDamien()) {
+      const p1m = Math.max(0, Number(fight.damienP1Max) || 0);
+      const p2m = Math.max(0, Number(fight.damienP2Max) || 0);
+      const p1r = Math.max(0, Number(fight.damienP1Remain) || 0);
+      const p2r = Math.max(0, Number(fight.damienP2Remain) || 0);
+      return {
+        hp: p1r + p2r,
+        maxHp: Math.max(1, p1m + p2m),
+        barRatio: damienBarRatio(),
+        phase: fight.phase,
+        mode: fight.mode,
+      };
     }
     return {
       hp: fight.body.hp,
@@ -10056,6 +10238,2430 @@ const IdleBossFight = (() => {
     syncHud();
   }
 
+  function damienKitCfg() {
+    return fight?.script?.damienKit || phaseScript(fight?.listId)?.damienKit || {};
+  }
+
+  /** 共血池：各階實際可打血；血條顯示固定前 70%／後 30%（barP1Share／barP2Share） */
+  function damienFormPoolHp(listId, form) {
+    if (!form) return 0;
+    const fixed = Number(form.maxHp);
+    if (Number.isFinite(fixed) && fixed > 0) return Math.max(1, Math.floor(fixed));
+    const mob = form.statMob || form.visualMob;
+    const id = pad(mob);
+    // formHpMult＝該階實際血（不乘 WZ maxHP，避免 P1=0／P2=1200億把比例打歪）
+    if (activeDiff?.formHpMult && typeof activeDiff.formHpMult === 'object') {
+      const hit = activeDiff.formHpMult[id]
+        ?? activeDiff.formHpMult[String(mob)]
+        ?? activeDiff.formHpMult[String(Number(id))];
+      if (Number(hit) > 0) return Math.max(1, Math.floor(Number(hit)));
+    }
+    return Math.max(1, maxHpOfBodyForm(listId, form));
+  }
+
+  function damienPhasePools(listId, script) {
+    const forms = Array.isArray(script?.bodyForms) ? script.bodyForms : [];
+    const form0 = forms[0] || { statMob: '8880100', visualMob: '8880100' };
+    const form1 = forms[1] || null;
+    const p1 = Math.max(1, damienFormPoolHp(listId, form0));
+    const p2 = form1 ? Math.max(1, damienFormPoolHp(listId, form1)) : 0;
+    return { p1, p2, total: Math.max(1, p1 + p2), form0, form1 };
+  }
+
+  function damienBarShares() {
+    const kit = damienKitCfg();
+    let a = Number(kit.barP1Share);
+    let b = Number(kit.barP2Share);
+    if (!(a > 0)) a = 0.7;
+    if (!(b > 0)) b = 0.3;
+    const s = a + b;
+    return { p1: a / Math.max(1e-9, s), p2: b / Math.max(1e-9, s) };
+  }
+
+  /** 血條比例 0～1：一階打完仍顯示 30%，與實際池大小無關 */
+  function damienBarRatio() {
+    if (!fight || !isDamien()) return 1;
+    const { p1: s1, p2: s2 } = damienBarShares();
+    if ((Number(fight.phase) || 1) <= 1) {
+      const r = (Number(fight.damienP1Remain) || 0) / Math.max(1, Number(fight.damienP1Max) || 1);
+      return s2 + s1 * Math.max(0, Math.min(1, r));
+    }
+    const r = (Number(fight.damienP2Remain) || 0) / Math.max(1, Number(fight.damienP2Max) || 1);
+    return s2 * Math.max(0, Math.min(1, r));
+  }
+
+  function syncDamienDisplayHp() {
+    if (!fight?.body || !isDamien()) return;
+    const max = Math.max(1, Number(fight.body.maxHp) || 1);
+    fight.body.hp = Math.max(0, Math.round(max * damienBarRatio()));
+  }
+
+  function applyDamienPoolDamage(actualDmg) {
+    if (!fight || !isDamien()) return;
+    const dmg = Math.max(0, Math.floor(Number(actualDmg) || 0));
+    if ((Number(fight.phase) || 1) <= 1) {
+      fight.damienP1Remain = Math.max(0, (Number(fight.damienP1Remain) || 0) - dmg);
+    } else {
+      fight.damienP2Remain = Math.max(0, (Number(fight.damienP2Remain) || 0) - dmg);
+    }
+    syncDamienDisplayHp();
+  }
+
+  function createDamienFight(listId, script) {
+    const pools = damienPhasePools(listId, script);
+    const form0 = pools.form0;
+    // body.maxHp＝血條解析度；實際可打血在 damienP*Max／Remain
+    const displayMax = 10000000;
+    return {
+      listId: String(listId),
+      kind: 'damien',
+      script,
+      phase: 1,
+      bodyFormIndex: 0,
+      bodyZ: Number.isFinite(Number(script.bodyZ)) ? Number(script.bodyZ) : 20,
+      body: {
+        key: 'body',
+        uid: 'body',
+        isBoss: true,
+        visualId: pad(form0.visualMob || form0.statMob),
+        hp: displayMax,
+        maxHp: displayMax,
+        targetable: true,
+        invincible: false,
+        dead: false,
+      },
+      handL: null,
+      handR: null,
+      arms: [],
+      chest: null,
+      mode: 'fight',
+      rewardsGranted: false,
+      damienP1Max: pools.p1,
+      damienP1Remain: pools.p1,
+      damienP2Max: pools.p2,
+      damienP2Remain: pools.p2,
+      damienSword: null,
+      damienSword2: null,
+      damienCrystals: null,
+      damienCrystal: null,
+      damienFireballs: null,
+      damienTornadoBalls: null,
+      damienAwMarkers: null,
+      damienWorldTree: null,
+      damienNextWorldTreeAt: 0,
+      damienBindUntil: 0,
+      damienActionStopUntil: 0,
+    };
+  }
+
+  function buildDamienAttacks(listId, mobId) {
+    const id = pad(mobId);
+    const pkit = damienKitCfg().phaseKits?.[id] || {};
+    const exclude = new Set((pkit.excludeActions || []).map(String));
+    const ratioMap = pkit.attackHpRatio || {};
+    const cdMap = pkit.attackCdSec || {};
+    const chainMap = pkit.skillChain || {};
+    const castMap = pkit.damienCast || {};
+    const part = wzPart(listId, id);
+    const basePa = Math.max(0, Number(part?.PADamage) || Number(part?.MADamage) || 22000);
+    const cdDiff = Number(activeDiff?.patternCdMult) > 0 ? Number(activeDiff.patternCdMult) : 1;
+    const out = [];
+    const seen = new Set();
+    const push = (row) => {
+      if (!row?.actionKey || seen.has(row.actionKey) || exclude.has(row.actionKey)) return;
+      seen.add(row.actionKey);
+      out.push(row);
+    };
+    Object.keys(ratioMap).forEach((actionKey) => {
+      if (exclude.has(actionKey)) return;
+      if (typeof IdleMobAnim !== 'undefined' && !IdleMobAnim.resolveAction?.(id, actionKey)) return;
+      const ratio = Number(ratioMap[actionKey]);
+      const dmg = scaleWzByHpRatio(basePa, Number.isFinite(ratio) && ratio > 0 ? ratio : 0.0001, 0.0001);
+      const cdSec = Number(cdMap[actionKey]);
+      const cdMs = cdSec > 0 ? cdSec * 1000 * cdDiff : 0;
+      const chainCfg = chainMap[actionKey];
+      const castKind = castMap[actionKey] ? String(castMap[actionKey]) : '';
+      let animMs = Math.max(
+        mobAnimMs(id, actionKey, 1600),
+        cdMs,
+      );
+      if (chainCfg?.afterKey) {
+        animMs = Math.max(
+          animMs,
+          mobAnimMs(id, actionKey, 1600) + mobAnimMs(id, String(chainCfg.afterKey), 1000),
+          cdMs,
+        );
+      }
+      const row = {
+        actionKey,
+        dmg: (Number.isFinite(ratio) && ratio > 0) ? dmg : 0,
+        animMs,
+        magic: /^skill/i.test(actionKey),
+        damienCast: castKind || undefined,
+      };
+      if (chainCfg?.afterKey && !castKind) {
+        const rowChain = {
+          afterKey: String(chainCfg.afterKey),
+          dmgRatio: Number.isFinite(Number(chainCfg.dmgRatio)) ? Number(chainCfg.dmgRatio) : 1,
+        };
+        if (Number.isFinite(Number(chainCfg.castDamageFrame))) {
+          rowChain.castDamageFrame = Math.max(0, Math.floor(Number(chainCfg.castDamageFrame)));
+        }
+        if (Number.isFinite(Number(chainCfg.damageFrame))) {
+          rowChain.damageFrame = Math.max(0, Math.floor(Number(chainCfg.damageFrame)));
+        }
+        row.skillChain = rowChain;
+      }
+      push(row);
+    });
+    return out;
+  }
+
+  function damienPatternFrames(assetKey, action) {
+    const data = (typeof IDLE_BOSS_DAMIEN_PATTERN_DATA !== 'undefined')
+      ? IDLE_BOSS_DAMIEN_PATTERN_DATA
+      : {};
+    const frames = data?.[assetKey]?.[action];
+    return Array.isArray(frames) ? frames : [];
+  }
+
+  function damienFxHost() {
+    return getBossFieldEl() || stage();
+  }
+
+  function mountDamienFx(slot, x, y, zIndex, opts = {}) {
+    const host = damienFxHost();
+    if (!host) return null;
+    let el = host.querySelector(`.idle-boss-damien-fx-stage[data-slot="${slot}"]`);
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'idle-actor idle-actor--mob idle-boss-damien-fx-stage';
+      el.dataset.slot = slot;
+      el.innerHTML = '<img class="idle-actor-sprite idle-boss-damien-fx-sprite" alt="" draggable="false">';
+      host.appendChild(el);
+    }
+    if (opts.poseTransform) {
+      // 飛劍：用 translate 小數座標，避免 left/top 取整造成斜向「下樓梯」
+      el.style.left = '0px';
+      el.style.top = '0px';
+    } else {
+      el.style.left = `${Number(x) || 0}px`;
+      el.style.top = `${Number(y) || 0}px`;
+      el.style.transform = 'none';
+    }
+    if (Number.isFinite(zIndex)) el.style.zIndex = String(zIndex);
+    el.style.display = '';
+    return el;
+  }
+
+  function damienPatternDurationMs(frames) {
+    if (!Array.isArray(frames) || !frames.length) return 0;
+    let total = 0;
+    for (let i = 0; i < frames.length; i += 1) {
+      total += Math.max(1, Number(frames[i]?.delay) || 90);
+    }
+    return total;
+  }
+
+  function paintDamienFx(el, frames, elapsedMs, opts = {}) {
+    if (!el || !frames?.length) return 0;
+    const img = el.querySelector('img');
+    if (!img) return 0;
+    const loop = opts.loop !== false;
+    const total = damienPatternDurationMs(frames);
+    if (!(total > 0)) return 0;
+
+    let acc = Math.max(0, Number(elapsedMs) || 0);
+    if (loop) acc %= total;
+    else acc = Math.min(acc, Math.max(0, total - 0.01));
+    let fr = frames[frames.length - 1];
+    let frameIdx = frames.length - 1;
+    for (let i = 0; i < frames.length; i += 1) {
+      const delay = Math.max(1, Number(frames[i]?.delay) || 90);
+      if (acc < delay) {
+        fr = frames[i];
+        frameIdx = i;
+        break;
+      }
+      acc -= delay;
+    }
+
+    const src = fr?.src ? String(fr.src) : '';
+    const pivotKey = opts.pivot === 'tip' ? 'tip' : 'origin';
+    const paintKey = `${src}|${frameIdx}|${pivotKey}`;
+    // 同幀不要重設 src／origin：RAF 每幀寫 img.src 會閃；換幀時 origin 先改、圖還沒解完也會閃
+    if (img.dataset.damienPaintKey === paintKey) return elapsedMs;
+
+    let ox = Number(fr?.origin?.[0]) || 0;
+    let oy = Number(fr?.origin?.[1]) || 0;
+    if (opts.pivot === 'tip') {
+      // flyingSword 飛行：劍尖約在圖頂，用 tip 當定位／旋轉軸（出生／stand 勿用，否則錨點亂跳）
+      oy = Math.min(8, Math.max(0, Math.round(oy * 0.04)));
+    }
+
+    const commit = () => {
+      if (img.dataset.damienPaintKey !== paintKey && img.dataset.damienPendingKey !== paintKey) return;
+      img.dataset.damienPaintKey = paintKey;
+      img.dataset.damienPendingKey = '';
+      if (src && img.dataset.src !== src) {
+        img.dataset.src = src;
+        img.src = src;
+      }
+      img.style.setProperty('--ox', `${ox}px`);
+      img.style.setProperty('--oy', `${oy}px`);
+    };
+
+    img.dataset.damienPendingKey = paintKey;
+    if (!src) {
+      commit();
+      return elapsedMs;
+    }
+    if (img.dataset.src === src && img.complete && img.naturalWidth) {
+      commit();
+      return elapsedMs;
+    }
+    const cached = typeof EnchantImagePreload !== 'undefined'
+      ? EnchantImagePreload.getImage?.(src)
+      : null;
+    if (cached) {
+      commit();
+      return elapsedMs;
+    }
+    const probe = new Image();
+    const finish = () => {
+      if (img.dataset.damienPendingKey !== paintKey) return;
+      commit();
+    };
+    probe.addEventListener('load', finish, { once: true });
+    probe.addEventListener('error', finish, { once: true });
+    probe.src = src;
+    if (typeof EnchantImagePreload !== 'undefined' && EnchantImagePreload.preload) {
+      EnchantImagePreload.preload(src).then(finish).catch(finish);
+    }
+    return elapsedMs;
+  }
+
+  function clearDamienRuntime() {
+    if (!fight) return;
+    if (fight._damienSwordRaf) {
+      cancelAnimationFrame(fight._damienSwordRaf);
+      fight._damienSwordRaf = 0;
+    }
+    if (fight._damienSword2Raf) {
+      cancelAnimationFrame(fight._damienSword2Raf);
+      fight._damienSword2Raf = 0;
+    }
+    if (fight._damienFireballRaf) {
+      cancelAnimationFrame(fight._damienFireballRaf);
+      fight._damienFireballRaf = 0;
+    }
+    if (fight._damienTornadoRaf) {
+      cancelAnimationFrame(fight._damienTornadoRaf);
+      fight._damienTornadoRaf = 0;
+    }
+    if (fight._damienAwRaf) {
+      cancelAnimationFrame(fight._damienAwRaf);
+      fight._damienAwRaf = 0;
+    }
+    fight.damienSword = null;
+    fight.damienSword2 = null;
+    fight.damienCrystals = null;
+    fight.damienCrystal = null;
+    fight.damienFireballs = null;
+    fight.damienTornadoBalls = null;
+    fight.damienAwMarkers = null;
+    fight.damienBindUntil = 0;
+    fight.damienActionStopUntil = 0;
+    const field = getBossFieldEl();
+    field?.querySelectorAll?.('.idle-boss-damien-fx-stage').forEach((n) => n.remove());
+    stage()?.querySelectorAll(
+      '.idle-boss-damien-fx-stage, [data-slot^="damienCrystal"], [data-slot="damienSword2"], [data-slot="damienSword2Lock"]',
+    ).forEach((n) => n.remove());
+    removeSlot('damienCrystal');
+  }
+
+  function damienPa() {
+    const id = pad(fight?.body?.visualId || '8880100');
+    return Math.max(0, Number(wzPart(fight.listId, id)?.PADamage) || 22000);
+  }
+
+  function damienHit(ratio, slotKey, opts = {}) {
+    const dM = dmgMult(fight.listId);
+    const dmg = Math.max(1, Math.floor(scaleWzByHpRatio(damienPa(), ratio, 1) * dM));
+    const playerEl = getBossPlayerEl();
+    if (playerEl && typeof IdleMobAnim?.playPlayerHit === 'function') {
+      IdleMobAnim.playPlayerHit(playerEl, pad(fight.body.visualId), 'stand', { immediate: true });
+    }
+    hurtPlayerFromBoss(slotKey || 'body', dmg, opts);
+  }
+
+  function playerFeetPos() {
+    const playerEl = getBossPlayerEl();
+    if (!playerEl) return { x: 400, y: 640 };
+    return actorStylePos(playerEl);
+  }
+
+  function clampDamienSwordPos(x, y, opts = {}) {
+    const field = damienFxHost();
+    const W = field?.clientWidth || 1366;
+    const H = field?.clientHeight || 768;
+    // allowOffscreen：突進穿過後可飛出畫面
+    const m = opts.allowOffscreen
+      ? Math.max(360, Number(opts.margin) || 560)
+      : 0;
+    return {
+      x: Math.max(70 - m, Math.min(W - 70 + m, Number(x) || 0)),
+      y: Math.max(110 - m, Math.min(H - 90 + m, Number(y) || 0)),
+      W,
+      H,
+    };
+  }
+
+  function damienSwordHeadingDeg(dx, dy) {
+    if (!(Math.hypot(dx, dy) > 0.5)) return 0;
+    // 預設圖劍尖朝上；atan2(dx, -dy)=0 時朝上
+    return Math.atan2(dx, -dy) * (180 / Math.PI);
+  }
+
+  function setDamienSwordHeading(el, deg) {
+    // 舊介面保留；飛劍改走 syncDamienSwordPose
+    if (!el) return;
+    const n = Number(deg) || 0;
+    el.style.transformOrigin = '0 0';
+    el.style.transform = Math.abs(n) < 0.01 ? 'none' : `rotate(${n}deg)`;
+  }
+
+  function syncDamienSwordPose(el, x, y, deg) {
+    if (!el) return;
+    el.style.left = '0px';
+    el.style.top = '0px';
+    el.style.transformOrigin = '0 0';
+    const d = Number(deg) || 0;
+    el.style.transform = `translate(${Number(x) || 0}px, ${Number(y) || 0}px) rotate(${d}deg)`;
+  }
+
+  /** 飛劍用顯示幀推進（約 60fps），避免戰鬥 tick 100ms + 座標取整造成斜向階梯感 */
+  function ensureDamienSwordLoop() {
+    if (!fight || fight._damienSwordRaf) return;
+    let lastTs = performance.now();
+    const loop = (ts) => {
+      if (!fight || !isDamien() || fight.phase !== 1 || fight.mode !== 'fight') {
+        if (fight) fight._damienSwordRaf = 0;
+        return;
+      }
+      fight._damienSwordRaf = requestAnimationFrame(loop);
+      let dt = (ts - lastTs) / 1000;
+      lastTs = ts;
+      if (!(dt > 0)) return;
+      if (dt > 0.05) dt = 0.05;
+      tickDamienSword(dt);
+    };
+    fight._damienSwordRaf = requestAnimationFrame(loop);
+  }
+
+  /** 固定速度向量直線飛到 (tx,ty)；飛行中不改航向 */
+  function setDamienSwordFlightLeg(sw, tx, ty, speedPx, opts = {}) {
+    const end = clampDamienSwordPos(tx, ty, opts);
+    const dx = end.x - sw.x;
+    const dy = end.y - sw.y;
+    const len = Math.hypot(dx, dy);
+    if (!(len > 8)) {
+      sw.vx = 0;
+      sw.vy = 0;
+      sw.wx = sw.x;
+      sw.wy = sw.y;
+      return false;
+    }
+    const spd = Math.max(40, Number(speedPx) || 240);
+    sw.wx = end.x;
+    sw.wy = end.y;
+    sw.vx = (dx / len) * spd;
+    sw.vy = (dy / len) * spd;
+    sw.headingDeg = damienSwordHeadingDeg(dx, dy);
+    return true;
+  }
+
+  function advanceDamienSwordFlight(sw, dtSec) {
+    const vx = Number(sw.vx) || 0;
+    const vy = Number(sw.vy) || 0;
+    if (!(Math.hypot(vx, vy) > 1)) return true;
+    const stepX = vx * dtSec;
+    const stepY = vy * dtSec;
+    const remX = sw.wx - sw.x;
+    const remY = sw.wy - sw.y;
+    const rem = Math.hypot(remX, remY);
+    const step = Math.hypot(stepX, stepY);
+    if (rem <= step + 1) {
+      sw.x = sw.wx;
+      sw.y = sw.wy;
+      sw.vx = 0;
+      sw.vy = 0;
+      return true;
+    }
+    sw.x += stepX;
+    sw.y += stepY;
+    // 航向鎖在出發時的向量，直線感更穩
+    sw.headingDeg = damienSwordHeadingDeg(vx, vy);
+    return false;
+  }
+
+  function pickDamienSwordWanderTarget(sw, player, opts = {}) {
+    const field = damienFxHost();
+    const W = field?.clientWidth || 1366;
+    const H = field?.clientHeight || 768;
+    const away = !!opts.away;
+    // 長直線段：橫跨場地，避免短距抖動
+    for (let i = 0; i < 10; i += 1) {
+      let ang;
+      if (away) {
+        ang = Math.atan2(sw.y - player.y, sw.x - player.x) + (Math.random() - 0.5) * 0.9;
+      } else {
+        ang = Math.random() * Math.PI * 2;
+      }
+      const dist = 280 + Math.random() * Math.max(200, Math.min(W, H) * 0.45);
+      const tx = sw.x + Math.cos(ang) * dist;
+      const ty = sw.y + Math.sin(ang) * dist;
+      const end = clampDamienSwordPos(tx, ty);
+      if (Math.hypot(end.x - sw.x, end.y - sw.y) >= 200) return end;
+    }
+    // fallback：往場地另一側
+    return clampDamienSwordPos(
+      player.x + (sw.x >= player.x ? -420 : 420),
+      player.y - 80 - Math.random() * 120,
+    );
+  }
+
+  function beginDamienSwordWanderLeg(sw, player, speedPx, opts) {
+    const end = pickDamienSwordWanderTarget(sw, player, opts);
+    setDamienSwordFlightLeg(sw, end.x, end.y, speedPx);
+  }
+
+  function beginDamienSwordLock(sw, player, cfg, now) {
+    sw.mode = 'lock';
+    sw.vx = 0;
+    sw.vy = 0;
+    sw.tx = player.x;
+    sw.ty = player.y;
+    sw.lockAcc = 0;
+    sw.headingDeg = damienSwordHeadingDeg(sw.tx - sw.x, sw.ty - sw.y);
+    sw.frameAcc = 0;
+    sw.anim = '';
+    sw.nextAt = now + scaleDelayMs(Number(cfg.lockMs) || 900);
+  }
+
+  function beginDamienSwordDash(sw, cfg) {
+    let dx = sw.tx - sw.x;
+    let dy = sw.ty - sw.y;
+    let len = Math.hypot(dx, dy);
+    if (!(len > 48)) {
+      const ang = Math.random() * Math.PI * 2;
+      const back = clampDamienSwordPos(sw.tx - Math.cos(ang) * 220, sw.ty - Math.sin(ang) * 140);
+      sw.x = back.x;
+      sw.y = back.y;
+      dx = sw.tx - sw.x;
+      dy = sw.ty - sw.y;
+      len = Math.hypot(dx, dy) || 1;
+    }
+    const nx = dx / len;
+    const ny = dy / len;
+    const pierce = Math.max(400, Number(cfg.piercePx) || 560);
+    const end = {
+      x: sw.tx + nx * pierce,
+      y: sw.ty + ny * pierce,
+    };
+    const dashSpeed = Math.max(120, Number(cfg.dashSpeedPx) || 640);
+    setDamienSwordFlightLeg(sw, end.x, end.y, dashSpeed, { allowOffscreen: true, margin: pierce + 80 });
+    sw.ex = sw.wx;
+    sw.ey = sw.wy;
+    sw.hitDone = false;
+    sw.frameAcc = 0;
+    sw.anim = '';
+    sw.mode = 'dash';
+  }
+
+  function startDamienSword() {
+    if (!fight || !isDamien()) return;
+    const boss = hooks?.getBossPos?.() || { x: 720, y: 620 };
+    const pos = clampDamienSwordPos(boss.x + 80, boss.y - 40);
+    fight.damienSword = {
+      mode: 'create',
+      x: pos.x,
+      y: pos.y,
+      wx: pos.x,
+      wy: pos.y,
+      vx: 0,
+      vy: 0,
+      tx: pos.x,
+      ty: pos.y,
+      ex: pos.x,
+      ey: pos.y,
+      headingDeg: 0,
+      frameAcc: 0,
+      lockAcc: 0,
+      contactAcc: 999,
+      hitDone: false,
+      dashesLeft: 0,
+      nextAt: 0,
+      anim: '',
+    };
+  }
+
+  function tickDamienSword(dt) {
+    if (!fight || !isDamien() || fight.phase !== 1 || fight.mode !== 'fight') return;
+    if (!fight.damienSword) startDamienSword();
+    const sw = fight.damienSword;
+    if (!sw) return;
+    const cfg = damienKitCfg().sword || {};
+    const player = playerFeetPos();
+    const now = Date.now();
+    const dtSec = Math.max(0, Number(dt) || 0);
+    const wanderSpeed = Math.max(120, Number(cfg.wanderSpeedPx) || Number(cfg.hoverSpeedPx) || 280);
+    const radius = Math.max(36, Number(cfg.hitRadiusPx) || 68);
+    const host = damienFxHost();
+
+    if (!sw.nextAt) {
+      const createMs = damienPatternDurationMs(damienPatternFrames('flyingSword', 'create')) || 1200;
+      sw.nextAt = now + scaleDelayMs(createMs);
+    }
+
+    // —— 狀態轉移 ——
+    if (sw.mode === 'create' && now >= sw.nextAt) {
+      sw.mode = 'wander';
+      sw.frameAcc = 0;
+      sw.anim = '';
+      sw.nextAt = now + scaleDelayMs((Number(cfg.wanderSec) || Number(cfg.hoverSec) || 6) * 1000);
+      beginDamienSwordWanderLeg(sw, player, wanderSpeed);
+    } else if (sw.mode === 'wander' && now >= sw.nextAt) {
+      const minC = Math.max(1, Math.floor(Number(cfg.dashCountMin) || 3));
+      const maxC = Math.max(minC, Math.floor(Number(cfg.dashCountMax) || 4));
+      sw.dashesLeft = minC + Math.floor(Math.random() * (maxC - minC + 1));
+      beginDamienSwordLock(sw, player, cfg, now);
+    } else if (sw.mode === 'lock' && now >= sw.nextAt) {
+      beginDamienSwordDash(sw, cfg);
+    } else if (sw.mode === 'pause' && now >= sw.nextAt) {
+      if ((Number(sw.dashesLeft) || 0) > 0) beginDamienSwordLock(sw, player, cfg, now);
+      else {
+        sw.mode = 'wander';
+        sw.frameAcc = 0;
+        sw.anim = '';
+        sw.nextAt = now + scaleDelayMs((Number(cfg.wanderSec) || 6) * 1000);
+        beginDamienSwordWanderLeg(sw, player, wanderSpeed);
+      }
+    }
+
+    // —— 移動／攻擊 ——
+    if (sw.mode === 'create') {
+      sw.headingDeg = 0;
+      sw.vx = 0;
+      sw.vy = 0;
+    } else if (sw.mode === 'wander') {
+      const arrived = advanceDamienSwordFlight(sw, dtSec);
+      if (arrived) beginDamienSwordWanderLeg(sw, player, wanderSpeed);
+      sw.contactAcc = (Number(sw.contactAcc) || 0) + dtSec;
+      const dist = Math.hypot(sw.x - player.x, sw.y - player.y);
+      const cd = Math.max(0.4, Number(cfg.contactCdSec) || 0.9);
+      if (dist <= radius && sw.contactAcc >= cd) {
+        sw.contactAcc = 0;
+        damienHit(Number(cfg.contactRatio) || 0.15, 'damienSword');
+        beginDamienSwordWanderLeg(sw, player, wanderSpeed * 1.15, { away: true });
+      }
+    } else if (sw.mode === 'lock') {
+      sw.vx = 0;
+      sw.vy = 0;
+      sw.headingDeg = damienSwordHeadingDeg(sw.tx - sw.x, sw.ty - sw.y);
+    } else if (sw.mode === 'dash') {
+      const arrived = advanceDamienSwordFlight(sw, dtSec);
+      if (!sw.hitDone) {
+        const dist = Math.hypot(sw.x - player.x, sw.y - player.y);
+        const lockDist = Math.hypot(sw.x - sw.tx, sw.y - sw.ty);
+        if (dist <= radius || lockDist <= radius * 0.65) {
+          sw.hitDone = true;
+          damienHit(Number(cfg.dashRatio) || Number(cfg.contactRatio) || 0.15, 'damienSword');
+        }
+      }
+      if (arrived) {
+        sw.dashesLeft = Math.max(0, (Number(sw.dashesLeft) || 1) - 1);
+        sw.headingDeg = 0;
+        sw.vx = 0;
+        sw.vy = 0;
+        sw.mode = 'pause';
+        sw.frameAcc = 0;
+        sw.anim = '';
+        sw.nextAt = now + scaleDelayMs(Number(cfg.betweenDashMs) || 280);
+      }
+    } else if (sw.mode === 'pause') {
+      sw.headingDeg = 0;
+      sw.vx = 0;
+      sw.vy = 0;
+    }
+
+    let action = 'move';
+    if (sw.mode === 'create') action = 'create';
+    else if (sw.mode === 'lock' || sw.mode === 'pause') action = 'stand';
+    else action = 'move';
+
+    const el = mountDamienFx('damienSword', sw.x, sw.y, 46, { poseTransform: true });
+    if (sw.anim !== action) {
+      sw.anim = action;
+      sw.frameAcc = 0;
+    }
+    sw.frameAcc = (Number(sw.frameAcc) || 0) + dtSec * 1000;
+    // tip pivot 只給飛行（move）；create／stand 用 WZ origin，避免出生／鎖定閃爍
+    paintDamienFx(el, damienPatternFrames('flyingSword', action), sw.frameAcc, {
+      loop: action !== 'create',
+      pivot: action === 'move' ? 'tip' : 'origin',
+    });
+    syncDamienSwordPose(el, sw.x, sw.y, sw.headingDeg);
+
+    if (sw.mode === 'lock' || sw.mode === 'dash') {
+      const lockEl = mountDamienFx('damienSwordLock', sw.tx, sw.ty, 40);
+      if (lockEl) lockEl.style.transform = 'none';
+      sw.lockAcc = (Number(sw.lockAcc) || 0) + dtSec * 1000;
+      const createLock = damienPatternFrames('flyingSword', 'lockon_create');
+      const createLockMs = damienPatternDurationMs(createLock);
+      const lockAction = (createLock.length && sw.lockAcc < createLockMs) ? 'lockon_create' : 'lockon_loop';
+      paintDamienFx(
+        lockEl,
+        damienPatternFrames('flyingSword', lockAction),
+        lockAction === 'lockon_create' ? sw.lockAcc : (sw.lockAcc - createLockMs),
+        { loop: lockAction === 'lockon_loop' },
+      );
+    } else {
+      host?.querySelector?.('[data-slot="damienSwordLock"]')?.remove();
+    }
+    host?.querySelector?.('[data-slot="damienZone"]')?.remove();
+  }
+
+  /** P2 小魔劍：同大劍狀態機，sprite＝flyingSword2（lockon 借大劍） */
+  function ensureDamienSword2Loop() {
+    if (!fight || fight._damienSword2Raf) return;
+    let lastTs = performance.now();
+    const loop = (ts) => {
+      if (!fight || !isDamien() || fight.phase < 2 || fight.mode !== 'fight') {
+        if (fight) fight._damienSword2Raf = 0;
+        return;
+      }
+      fight._damienSword2Raf = requestAnimationFrame(loop);
+      let dt = (ts - lastTs) / 1000;
+      lastTs = ts;
+      if (!(dt > 0)) return;
+      if (dt > 0.05) dt = 0.05;
+      tickDamienSword2(dt);
+    };
+    fight._damienSword2Raf = requestAnimationFrame(loop);
+  }
+
+  function startDamienSword2() {
+    if (!fight || !isDamien()) return;
+    const boss = hooks?.getBossPos?.() || { x: 720, y: 620 };
+    const pos = clampDamienSwordPos(boss.x - 60, boss.y - 60);
+    fight.damienSword2 = {
+      mode: 'create',
+      x: pos.x,
+      y: pos.y,
+      wx: pos.x,
+      wy: pos.y,
+      vx: 0,
+      vy: 0,
+      tx: pos.x,
+      ty: pos.y,
+      ex: pos.x,
+      ey: pos.y,
+      headingDeg: 0,
+      frameAcc: 0,
+      lockAcc: 0,
+      contactAcc: 999,
+      hitDone: false,
+      dashesLeft: 0,
+      nextAt: 0,
+      anim: '',
+    };
+  }
+
+  function tickDamienSword2(dt) {
+    if (!fight || !isDamien() || fight.phase < 2 || fight.mode !== 'fight') return;
+    if (!fight.damienSword2) startDamienSword2();
+    const sw = fight.damienSword2;
+    if (!sw) return;
+    const cfg = damienKitCfg().sword2 || damienKitCfg().sword || {};
+    const assetKey = String(cfg.assetKey || 'flyingSword2');
+    const lockKey = String(cfg.lockAssetKey || 'flyingSword');
+    const player = playerFeetPos();
+    const now = Date.now();
+    const dtSec = Math.max(0, Number(dt) || 0);
+    const wanderSpeed = Math.max(120, Number(cfg.wanderSpeedPx) || 280);
+    const radius = Math.max(28, Number(cfg.hitRadiusPx) || 52);
+    const host = damienFxHost();
+
+    if (!sw.nextAt) {
+      const createMs = damienPatternDurationMs(damienPatternFrames(assetKey, 'create')) || 1200;
+      sw.nextAt = now + scaleDelayMs(createMs);
+    }
+
+    if (sw.mode === 'create' && now >= sw.nextAt) {
+      sw.mode = 'wander';
+      sw.frameAcc = 0;
+      sw.anim = '';
+      sw.nextAt = now + scaleDelayMs((Number(cfg.wanderSec) || 5) * 1000);
+      beginDamienSwordWanderLeg(sw, player, wanderSpeed);
+    } else if (sw.mode === 'wander' && now >= sw.nextAt) {
+      const minC = Math.max(1, Math.floor(Number(cfg.dashCountMin) || 2));
+      const maxC = Math.max(minC, Math.floor(Number(cfg.dashCountMax) || 3));
+      sw.dashesLeft = minC + Math.floor(Math.random() * (maxC - minC + 1));
+      beginDamienSwordLock(sw, player, cfg, now);
+    } else if (sw.mode === 'lock' && now >= sw.nextAt) {
+      beginDamienSwordDash(sw, cfg);
+    } else if (sw.mode === 'pause' && now >= sw.nextAt) {
+      if ((Number(sw.dashesLeft) || 0) > 0) beginDamienSwordLock(sw, player, cfg, now);
+      else {
+        sw.mode = 'wander';
+        sw.frameAcc = 0;
+        sw.anim = '';
+        sw.nextAt = now + scaleDelayMs((Number(cfg.wanderSec) || 5) * 1000);
+        beginDamienSwordWanderLeg(sw, player, wanderSpeed);
+      }
+    }
+
+    if (sw.mode === 'create') {
+      sw.headingDeg = 0;
+      sw.vx = 0;
+      sw.vy = 0;
+    } else if (sw.mode === 'wander') {
+      const arrived = advanceDamienSwordFlight(sw, dtSec);
+      if (arrived) beginDamienSwordWanderLeg(sw, player, wanderSpeed);
+      sw.contactAcc = (Number(sw.contactAcc) || 0) + dtSec;
+      const dist = Math.hypot(sw.x - player.x, sw.y - player.y);
+      const cd = Math.max(0.4, Number(cfg.contactCdSec) || 0.85);
+      if (dist <= radius && sw.contactAcc >= cd) {
+        sw.contactAcc = 0;
+        damienHit(Number(cfg.contactRatio) || 0.15, 'body');
+        beginDamienSwordWanderLeg(sw, player, wanderSpeed * 1.15, { away: true });
+      }
+    } else if (sw.mode === 'lock') {
+      sw.vx = 0;
+      sw.vy = 0;
+      sw.headingDeg = damienSwordHeadingDeg(sw.tx - sw.x, sw.ty - sw.y);
+    } else if (sw.mode === 'dash') {
+      const arrived = advanceDamienSwordFlight(sw, dtSec);
+      if (!sw.hitDone) {
+        const dist = Math.hypot(sw.x - player.x, sw.y - player.y);
+        const lockDist = Math.hypot(sw.x - sw.tx, sw.y - sw.ty);
+        if (dist <= radius || lockDist <= radius * 0.65) {
+          sw.hitDone = true;
+          damienHit(Number(cfg.dashRatio) || Number(cfg.contactRatio) || 0.15, 'body');
+        }
+      }
+      if (arrived) {
+        sw.dashesLeft = Math.max(0, (Number(sw.dashesLeft) || 1) - 1);
+        sw.headingDeg = 0;
+        sw.vx = 0;
+        sw.vy = 0;
+        sw.mode = 'pause';
+        sw.frameAcc = 0;
+        sw.anim = '';
+        sw.nextAt = now + scaleDelayMs(Number(cfg.betweenDashMs) || 240);
+      }
+    } else if (sw.mode === 'pause') {
+      sw.headingDeg = 0;
+      sw.vx = 0;
+      sw.vy = 0;
+    }
+
+    let action = 'move';
+    if (sw.mode === 'create') action = 'create';
+    else if (sw.mode === 'lock' || sw.mode === 'pause') action = 'stand';
+    else action = 'move';
+
+    const el = mountDamienFx('damienSword2', sw.x, sw.y, 44, { poseTransform: true });
+    if (sw.anim !== action) {
+      sw.anim = action;
+      sw.frameAcc = 0;
+    }
+    sw.frameAcc = (Number(sw.frameAcc) || 0) + dtSec * 1000;
+    const frames = damienPatternFrames(assetKey, action);
+    paintDamienFx(el, frames.length ? frames : damienPatternFrames('flyingSword', action), sw.frameAcc, {
+      loop: action !== 'create',
+      pivot: action === 'move' ? 'tip' : 'origin',
+    });
+    syncDamienSwordPose(el, sw.x, sw.y, sw.headingDeg);
+
+    if (sw.mode === 'lock' || sw.mode === 'dash') {
+      const lockEl = mountDamienFx('damienSword2Lock', sw.tx, sw.ty, 40);
+      if (lockEl) lockEl.style.transform = 'none';
+      sw.lockAcc = (Number(sw.lockAcc) || 0) + dtSec * 1000;
+      const createLock = damienPatternFrames(lockKey, 'lockon_create');
+      const createLockMs = damienPatternDurationMs(createLock);
+      const lockAction = (createLock.length && sw.lockAcc < createLockMs) ? 'lockon_create' : 'lockon_loop';
+      paintDamienFx(
+        lockEl,
+        damienPatternFrames(lockKey, lockAction),
+        lockAction === 'lockon_create' ? sw.lockAcc : (sw.lockAcc - createLockMs),
+        { loop: lockAction === 'lockon_loop' },
+      );
+    } else {
+      host?.querySelector?.('[data-slot="damienSword2Lock"]')?.remove();
+    }
+  }
+
+  function damienCrystalDesiredCount() {
+    const cfg = damienKitCfg().crystal || {};
+    const hpR = damienBarRatio();
+    let count = Math.max(1, Math.floor(Number(cfg.baseCount) || 1));
+    const tiers = Array.isArray(cfg.countAtHpRatio) ? cfg.countAtHpRatio : [];
+    tiers.forEach((row) => {
+      const thr = Number(row?.hpRatio);
+      const n = Math.floor(Number(row?.count) || 0);
+      if (Number.isFinite(thr) && hpR <= thr + 1e-9 && n > count) count = n;
+    });
+    return Math.max(1, Math.min(3, count));
+  }
+
+  function damienCrystalRadius() {
+    const cfg = damienKitCfg().crystal || {};
+    return Math.max(80, Number(cfg.radiusPx) || 160);
+  }
+
+  function damienPlayerInCrystalZone() {
+    if (!fight || !isDamien() || fight.phase < 2) return false;
+    const list = fight.damienCrystals;
+    if (!Array.isArray(list) || !list.length) return false;
+    const player = playerFeetPos();
+    const r = damienCrystalRadius();
+    return list.some((c) => c && Math.hypot((c.x || 0) - player.x, (c.y || 0) - player.y) <= r);
+  }
+
+  function ensureDamienCrystals() {
+    if (!fight || !isDamien() || fight.phase < 2) return;
+    const cfg = damienKitCfg().crystal || {};
+    const mobId = pad(cfg.mobId || '8880102');
+    const want = damienCrystalDesiredCount();
+    const player = playerFeetPos();
+    const spread = Math.max(40, Number(cfg.spreadPx) || 70);
+    if (!Array.isArray(fight.damienCrystals)) fight.damienCrystals = [];
+    while (fight.damienCrystals.length < want) {
+      const i = fight.damienCrystals.length;
+      const ang = (i / Math.max(1, want)) * Math.PI * 2;
+      fight.damienCrystals.push({
+        id: `damienCrystal_${i}`,
+        x: player.x + Math.cos(ang) * (80 + spread * i),
+        y: player.y + Math.sin(ang) * 20,
+        contactAcc: 0,
+        zoneAcc: 0,
+      });
+    }
+    while (fight.damienCrystals.length > want) {
+      const dead = fight.damienCrystals.pop();
+      if (dead) {
+        removeSlot(dead.id);
+        stage()?.querySelector(`[data-slot="${dead.id}"]`)?.remove();
+        stage()?.querySelector(`[data-slot="${dead.id}_zone"]`)?.remove();
+      }
+    }
+    const st = stage();
+    if (!st) return;
+    fight.damienCrystals.forEach((c, i) => {
+      if (!c) return;
+      c.id = `damienCrystal_${i}`;
+      let el = slotEl(c.id);
+      if (!el) {
+        st.insertAdjacentHTML('beforeend', `<div class="idle-actor idle-actor--mob idle-boss-part"
+          data-slot="${c.id}" data-uid="${c.id}" data-mob-id="${mobId}"
+          style="left:${c.x}px;top:${c.y}px;z-index:18;pointer-events:none">
+          <div class="idle-actor-sprite-stage">
+            <img class="idle-actor-sprite" alt="" draggable="false">
+          </div>
+        </div>`);
+        el = slotEl(c.id);
+        if (el) {
+          el.dataset.holdAction = 'move';
+          bindVisual(c.id, mobId, 'move');
+        }
+      }
+    });
+    // 相容舊單一指標
+    fight.damienCrystal = fight.damienCrystals[0] || null;
+  }
+
+  function tickDamienCrystal(dt) {
+    if (!fight || !isDamien() || fight.phase < 2 || fight.mode !== 'fight') return;
+    ensureDamienCrystals();
+    const list = fight.damienCrystals;
+    if (!Array.isArray(list) || !list.length) return;
+    const cfg = damienKitCfg().crystal || {};
+    const player = playerFeetPos();
+    const hold = Math.max(8, Number(cfg.holdRange) || 50);
+    const speed = Math.max(20, Number(cfg.followSpeedPx) || 110);
+    const zoneR = damienCrystalRadius();
+    const spread = Math.max(40, Number(cfg.spreadPx) || 70);
+    list.forEach((c, i) => {
+      if (!c) return;
+      const el = slotEl(c.id);
+      if (!el) return;
+      const ang = (i / Math.max(1, list.length)) * Math.PI * 2;
+      const tx = player.x + Math.cos(ang) * spread * (0.35 + i * 0.35);
+      const ty = player.y + Math.sin(ang) * spread * 0.25;
+      const dx = tx - c.x;
+      const dy = ty - c.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > hold) {
+        const step = speed * Math.max(0, Number(dt) || 0);
+        const pull = Math.min(step, dist - hold);
+        c.x += (dx / Math.max(1, dist)) * pull;
+        c.y += (dy / Math.max(1, dist)) * pull;
+      }
+      setActorStylePos(el, c.x, c.y);
+      const toPlayer = Math.hypot(c.x - player.x, c.y - player.y);
+      const inZone = toPlayer <= zoneR;
+      const zone = mountDamienFx(`${c.id}_zone`, c.x, c.y, 16);
+      const zKey = list.length >= 3 ? 'mobZone/3' : (list.length >= 2 ? 'mobZone/2' : 'mobZone/1');
+      c.zoneAcc = (Number(c.zoneAcc) || 0) + Math.max(0, Number(dt) || 0) * 1000;
+      paintDamienFx(zone, damienPatternFrames(zKey, 'loop'), c.zoneAcc, { loop: true });
+      if (inZone) {
+        c.contactAcc = (Number(c.contactAcc) || 0) + Math.max(0, Number(dt) || 0);
+        if (c.contactAcc >= (Number(cfg.contactCdSec) || 0.9)) {
+          c.contactAcc = 0;
+          // 藍球接觸：穿透／不給無敵幀，避免擋其他招式出傷
+          damienHit(Number(cfg.contactRatio) || 0.15, 'body', {
+            ignoreHurtIframe: true,
+            skipHurtIframe: true,
+          });
+        }
+      }
+    });
+  }
+
+  function noteDamienWorldTreeDamage(dmg) {
+    if (!fight?.damienWorldTree || !fight.damienWorldTree.active) return;
+    // 破條以血條比例計：實際傷害換算成當前階段對應的血條份額
+    const { p1: s1, p2: s2 } = damienBarShares();
+    const max = Math.max(1, Number(fight.body.maxHp) || 1);
+    const phaseMax = ((Number(fight.phase) || 1) <= 1)
+      ? Math.max(1, Number(fight.damienP1Max) || 1)
+      : Math.max(1, Number(fight.damienP2Max) || 1);
+    const share = ((Number(fight.phase) || 1) <= 1) ? s1 : s2;
+    const displayDmg = Math.max(0, Number(dmg) || 0) * (max * share) / phaseMax;
+    fight.damienWorldTree.dealt = (Number(fight.damienWorldTree.dealt) || 0) + displayDmg;
+  }
+
+  async function waitDamienAction(slotKey, mobId, action, seq, fallbackMs = 1200) {
+    const el = slotEl(slotKey);
+    const id = pad(mobId);
+    const cap = scaleDelayMs(mobAnimMs(id, action, fallbackMs) + 200);
+    // 傳送／連段：至少撐滿大部分時長，避免 isActorCasting 提早清掉導致邊播邊換位
+    const minHold = Math.max(200, Math.floor(cap * 0.88));
+    const t0 = Date.now();
+    while (Date.now() - t0 < cap) {
+      if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') return false;
+      if (!IdleMobAnim.isActorCasting?.(el) && Date.now() - t0 >= minHold) break;
+      await sleep(TICK_MS);
+    }
+    return seq === atkFxSeq && !!fight;
+  }
+
+  /**
+   * 世界樹（P2）：HP≤hpRatio 且 CD 好時觸發。
+   * skill8 引導 channelMs：期間玩家必須能打（不可 busy），累積傷害 ≥ breakHp＝成功。
+   * 成功→skill9→skillAfter9（期間仍可打）；失敗→attack7＋failRatio 傷玩家。
+   * 不可在位移／傳送招（bossActionLock／casting）進行中插入，否則會被 after 動畫打斷。
+   */
+  async function tryDamienWorldTree() {
+    if (!fight || !isDamien() || fight.phase < 2 || busy || fight.mode !== 'fight') return;
+    if (fight.damienWorldTree?.active) return;
+    // 等位移／傳送／其他招完全結束再開檢定
+    if (fight.bossActionLock) return;
+    const el = slotEl('body');
+    if (el && typeof IdleMobAnim !== 'undefined' && IdleMobAnim.isActorCasting?.(el)) return;
+
+    const cfg = damienKitCfg().worldTree || {};
+    const maxHp = Math.max(1, Number(fight.body.maxHp) || 1);
+    const hpR = damienBarRatio();
+    if (hpR > (Number(cfg.hpRatio) || 0.2)) return;
+    if (Date.now() < (Number(fight.damienNextWorldTreeAt) || 0)) return;
+    const id = pad(fight.body.visualId);
+    if (typeof IdleMobAnim === 'undefined' || !IdleMobAnim.resolveAction?.(id, 'skill8')) return;
+
+    const seq = atkFxSeq;
+    // 引導期：只鎖王招，不設 busy（busy 會停 tickPlayer／傷害＝玩家無法破條）
+    IdleMobAnim.clearActorCastFlags?.(el);
+    fight.bossActionLock = { slotKey: 'body', actionKey: 'skill8' };
+    const breakHp = Math.max(1, Math.floor(maxHp * (Number(cfg.breakHpRatio) || 0.08)));
+    fight.damienWorldTree = { active: true, dealt: 0, breakHp };
+
+    if (!flashAttack('body', id, 'skill8')) {
+      fight.damienWorldTree = null;
+      fight.bossActionLock = null;
+      return;
+    }
+
+    const channelMs = scaleDelayMs(Number(cfg.channelMs) || 10000);
+    const start = Date.now();
+    while (Date.now() - start < channelMs) {
+      if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') {
+        if (fight) {
+          fight.damienWorldTree = null;
+          fight.bossActionLock = null;
+        }
+        return;
+      }
+      // 若被其他邏輯清掉 lock／插招，中止檢定避免殘態
+      if (!fight.damienWorldTree?.active) return;
+      if ((Number(fight.damienWorldTree.dealt) || 0) >= breakHp) break;
+      await sleep(TICK_MS);
+    }
+    if (seq !== atkFxSeq || !fight) {
+      if (fight) {
+        fight.damienWorldTree = null;
+        fight.bossActionLock = null;
+      }
+      return;
+    }
+
+    const ok = (Number(fight.damienWorldTree.dealt) || 0) >= breakHp;
+    fight.damienWorldTree.active = false;
+    {
+      const cdDiff = Number(activeDiff?.patternCdMult) > 0 ? Number(activeDiff.patternCdMult) : 1;
+      fight.damienNextWorldTreeAt = Date.now()
+        + scaleDelayMs((Number(cfg.cdSec) || 120) * 1000 * cdDiff);
+    }
+
+    damienHardStopCast('body');
+
+    if (ok) {
+      // 成功：skill9／after9 只鎖王招，不 busy（玩家可持續輸出）
+      fight.bossActionLock = { slotKey: 'body', actionKey: 'skill9' };
+      if (IdleMobAnim.resolveAction?.(id, 'skill9') && flashAttack('body', id, 'skill9')) {
+        if (!(await waitDamienAction('body', id, 'skill9', seq, 5000))) {
+          fight.damienWorldTree = null;
+          fight.bossActionLock = null;
+          return;
+        }
+      }
+      if (seq !== atkFxSeq || !fight) {
+        if (fight) {
+          fight.damienWorldTree = null;
+          fight.bossActionLock = null;
+        }
+        return;
+      }
+      damienHardStopCast('body');
+      fight.bossActionLock = { slotKey: 'body', actionKey: 'skillAfter9' };
+      if (IdleMobAnim.resolveAction?.(id, 'skillAfter9') && flashAttack('body', id, 'skillAfter9')) {
+        await waitDamienAction('body', id, 'skillAfter9', seq, 1200);
+      } else {
+        await sleep(scaleDelayMs(Number(cfg.groggyMs) || 4400));
+      }
+    } else {
+      // 失敗 attack7：busy 擋玩家攻擊／插招
+      busy = true;
+      fight.bossActionLock = { slotKey: 'body', actionKey: 'attack7' };
+      if (IdleMobAnim.resolveAction?.(id, 'attack7') && flashAttack('body', id, 'attack7')) {
+        const failDmgFr = Math.max(0, Math.floor(Number(cfg.failDamageFrame) || 11));
+        const hitAt = scaleDelayMs(
+          Number(IdleMobAnim.actionFrameOffsetMs?.(id, 'attack7', failDmgFr)) || 0,
+        );
+        const a0 = Date.now();
+        let damaged = false;
+        const attackMs = scaleDelayMs(mobAnimMs(id, 'attack7', 2200) + 100);
+        while (Date.now() - a0 < attackMs) {
+          if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') {
+            if (fight) {
+              fight.damienWorldTree = null;
+              fight.bossActionLock = null;
+            }
+            busy = false;
+            return;
+          }
+          if (!damaged && Date.now() - a0 >= hitAt) {
+            damaged = true;
+            damienHit(Number(cfg.failRatio) || 2, 'body');
+          }
+          await sleep(TICK_MS);
+        }
+        if (!damaged && seq === atkFxSeq && fight) {
+          damienHit(Number(cfg.failRatio) || 2, 'body');
+        }
+      } else {
+        damienHit(Number(cfg.failRatio) || 2, 'body');
+        await sleep(scaleDelayMs(800));
+      }
+    }
+
+    if (seq !== atkFxSeq || !fight) {
+      if (fight) {
+        fight.damienWorldTree = null;
+        fight.bossActionLock = null;
+      }
+      busy = false;
+      return;
+    }
+    bindVisual('body', id, 'stand');
+    fight.bossActionLock = null;
+    fight.damienWorldTree = null;
+    busy = false;
+  }
+
+  /** 放置：多點預警同一腳高度，只在 X 軸散開且不重疊；必含玩家腳下 */
+  function pickDamienFieldPoints(count, minDist) {
+    const field = damienFxHost();
+    const W = field?.clientWidth || 1366;
+    const player = playerFeetPos();
+    const n = Math.max(1, Math.floor(Number(count) || 1));
+    const gap = Math.max(80, Number(minDist) || 150);
+    const y = player.y;
+    const xs = [player.x];
+    let guard = 0;
+    while (xs.length < n && guard < n * 50) {
+      guard += 1;
+      const x = 100 + Math.random() * Math.max(80, W - 200);
+      if (xs.some((px) => Math.abs(px - x) < gap)) continue;
+      xs.push(x);
+    }
+    while (xs.length < n) {
+      const i = xs.length;
+      const x = Math.max(100, Math.min(W - 100, player.x + (i - (n - 1) / 2) * gap));
+      xs.push(x);
+    }
+    return xs.slice(0, n).map((x) => ({ x, y }));
+  }
+
+  function clearDamienAwMarkers() {
+    if (!fight) return;
+    if (fight._damienAwRaf) {
+      cancelAnimationFrame(fight._damienAwRaf);
+      fight._damienAwRaf = 0;
+    }
+    const list = fight.damienAwMarkers || [];
+    const host = damienFxHost();
+    list.forEach((m) => {
+      host?.querySelector?.(`[data-slot="${m.id}"]`)?.remove();
+    });
+    fight.damienAwMarkers = null;
+  }
+
+  function ensureDamienAwLoop() {
+    if (!fight || fight._damienAwRaf) return;
+    let lastTs = performance.now();
+    const loop = (ts) => {
+      if (!fight || !isDamien() || fight.mode !== 'fight') {
+        if (fight) fight._damienAwRaf = 0;
+        return;
+      }
+      const list = fight.damienAwMarkers;
+      if (!Array.isArray(list) || !list.some((m) => m && !m.done)) {
+        fight._damienAwRaf = 0;
+        return;
+      }
+      fight._damienAwRaf = requestAnimationFrame(loop);
+      let dt = (ts - lastTs) / 1000;
+      lastTs = ts;
+      if (!(dt > 0)) return;
+      if (dt > 0.05) dt = 0.05;
+      tickDamienAwMarkers(dt);
+    };
+    fight._damienAwRaf = requestAnimationFrame(loop);
+  }
+
+  function tickDamienAwMarkers(dtSec) {
+    if (!fight || !Array.isArray(fight.damienAwMarkers)) return;
+    const host = damienFxHost();
+    for (let i = 0; i < fight.damienAwMarkers.length; i += 1) {
+      const m = fight.damienAwMarkers[i];
+      if (!m || m.done) continue;
+      const frames = m.frames || [];
+      if (!frames.length) {
+        m.done = true;
+        host?.querySelector?.(`[data-slot="${m.id}"]`)?.remove();
+        continue;
+      }
+      m.frameAcc = (Number(m.frameAcc) || 0) + dtSec * 1000;
+      const dur = damienPatternDurationMs(frames);
+      const el = mountDamienFx(m.id, m.x, m.y, 42);
+      paintDamienFx(el, frames, m.frameAcc, { loop: false });
+      if (m.frameAcc >= dur) {
+        m.done = true;
+        host?.querySelector?.(`[data-slot="${m.id}"]`)?.remove();
+      }
+    }
+  }
+
+  function spawnDamienAwMarkers(mobId, actionKey, points) {
+    if (!fight) return [];
+    const frames = damienBossMobFrames(mobId, `${actionKey}/info/areaWarning`);
+    if (!frames.length) return [];
+    if (!Array.isArray(fight.damienAwMarkers)) fight.damienAwMarkers = [];
+    const out = [];
+    for (let i = 0; i < points.length; i += 1) {
+      const p = points[i];
+      const marker = {
+        id: `daw_${Date.now()}_${i}_${Math.floor(Math.random() * 1e5)}`,
+        x: Number(p.x) || 0,
+        y: Number(p.y) || 0,
+        frames,
+        frameAcc: 0,
+        done: false,
+      };
+      fight.damienAwMarkers.push(marker);
+      out.push(marker);
+    }
+    ensureDamienAwLoop();
+    return out;
+  }
+
+  function applyDamienActionStop(ms) {
+    if (!fight) return;
+    const stopMs = scaleDelayMs(Math.max(200, Number(ms) || 2000));
+    fight.damienActionStopUntil = Date.now() + stopMs;
+    fight.damienBindUntil = fight.damienActionStopUntil;
+    try { SkillCombat.invalidateAsyncCasts?.(); } catch (_) { /* ignore */ }
+  }
+
+  /** 硬停本體招式狀態，讓下一招 flash 一定進得去 */
+  function damienHardStopCast(slotKey) {
+    const el = slotEl(slotKey);
+    IdleMobAnim.clearActorCastFlags?.(el);
+    const bodyImg = IdleMobAnim.actorBodyImg?.(el);
+    if (bodyImg) {
+      bodyImg.dataset.bodyDone = '1';
+      bodyImg.dataset.kindAction = 'stand';
+      IdleMobAnim.clearEffect?.(bodyImg);
+    }
+  }
+
+  /** 隱形中就位；appear 第 0 幀綁好後才退出隱形（避免舊座標／舊圖殘幀） */
+  async function damienPlayAppearAt(slotKey, castId, appearKey, dest, seq) {
+    const el = slotEl(slotKey);
+    const dx = Number(dest?.x) || 0;
+    const dy = Number(dest?.y) || 0;
+    if (el) {
+      el.style.visibility = 'hidden';
+      setActorStylePos(el, dx, dy);
+    }
+    damienHardStopCast(slotKey);
+    if (!IdleMobAnim.resolveAction?.(castId, appearKey)) {
+      if (el) {
+        setActorStylePos(el, dx, dy);
+        el.style.visibility = '';
+      }
+      return seq === atkFxSeq && !!fight;
+    }
+    fight.bossActionLock = { slotKey, actionKey: appearKey };
+    let flashed = flashAttack(slotKey, castId, appearKey);
+    if (!flashed) {
+      damienHardStopCast(slotKey);
+      flashed = flashAttack(slotKey, castId, appearKey);
+    }
+    if (el) setActorStylePos(el, dx, dy);
+    // 仍隱形：等到 appear 圖真正綁上再顯示，避免 stand／skill4 殘幀
+    const bodyImg = IdleMobAnim.actorBodyImg?.(el);
+    if (flashed && bodyImg) {
+      const tBind = Date.now();
+      while (Date.now() - tBind < 240) {
+        if (seq !== atkFxSeq || !fight) return false;
+        if (
+          bodyImg.dataset.action === appearKey
+          && bodyImg.dataset.src
+          && (bodyImg.complete || bodyImg.naturalWidth > 0)
+        ) break;
+        await sleep(16);
+      }
+    }
+    if (el) {
+      setActorStylePos(el, dx, dy);
+      el.style.visibility = '';
+    }
+    if (flashed) {
+      const ms = scaleDelayMs(mobAnimMs(castId, appearKey, 900) + 100);
+      const t0 = Date.now();
+      while (Date.now() - t0 < ms) {
+        if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') return false;
+        await sleep(TICK_MS);
+      }
+    } else {
+      await sleep(scaleDelayMs(200));
+    }
+    if (el) el.style.visibility = '';
+    return seq === atkFxSeq && !!fight;
+  }
+
+  /**
+   * skill4＝進隱形 → 隱形中瞬間就位 → after4＝退出隱形出現。
+   * 消失本體一結束就隱形，禁止舊座標 stand 回閃一幀。
+   */
+  async function damienWarpWithSkill4(slotKey, castId, dest, seq) {
+    const el = slotEl(slotKey);
+    const vanishKey = 'skill4';
+    const appearKey = 'skillAfter4';
+    damienHardStopCast(slotKey);
+    if (IdleMobAnim.resolveAction?.(castId, vanishKey)) {
+      fight.bossActionLock = { slotKey, actionKey: vanishKey };
+      if (flashAttack(slotKey, castId, vanishKey)) {
+        const vanishMs = scaleDelayMs(mobAnimMs(castId, vanishKey, 900) + 100);
+        const t0 = Date.now();
+        while (Date.now() - t0 < vanishMs) {
+          if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') return false;
+          const bodyImg = IdleMobAnim.actorBodyImg?.(el);
+          // 消失播完／鎖招結束：立刻隱形，並延長 skillUntil 避免 advance 切 stand
+          if (el && (bodyImg?.dataset?.bodyDone === '1' || !IdleMobAnim.isActorCasting?.(el))) {
+            el.style.visibility = 'hidden';
+            el.dataset.skillUntil = String(Date.now() + 400);
+          }
+          await sleep(TICK_MS);
+        }
+      } else {
+        if (el) el.style.visibility = 'hidden';
+        await sleep(scaleDelayMs(200));
+      }
+    } else {
+      if (el) el.style.visibility = 'hidden';
+      await sleep(scaleDelayMs(160));
+    }
+    if (seq !== atkFxSeq || !fight) return false;
+    if (el) el.style.visibility = 'hidden';
+    return damienPlayAppearAt(slotKey, castId, appearKey, dest, seq);
+  }
+
+  /** attack1/info/effect 拖尾全長（有圖寬用整寬；否則用 origin.x） */
+  function damienEffectTrailLengthPx(castId, bodyAction) {
+    const fxKey = (typeof IdleMobAnim !== 'undefined' && IdleMobAnim.effectActionFor)
+      ? IdleMobAnim.effectActionFor(castId, bodyAction)
+      : `${bodyAction}/info/effect`;
+    if (!fxKey) return 640;
+    const frames = damienBossMobFrames(castId, fxKey);
+    let best = 0;
+    for (let i = 0; i < frames.length; i += 1) {
+      const fr = frames[i];
+      if (!fr) continue;
+      const ox = Math.max(0, Number(fr.origin?.[0]) || 0);
+      let w = 0;
+      const src = fr.src ? String(fr.src) : '';
+      if (src && typeof EnchantImagePreload !== 'undefined') {
+        const img = EnchantImagePreload.getImage?.(src);
+        if (img?.naturalWidth) w = img.naturalWidth;
+      }
+      const len = w > 0 ? w : Math.max(ox, 480);
+      if (len > best) best = len;
+    }
+    return Math.max(400, Math.round(best || 640));
+  }
+
+  async function runDamienCast(slotKey, unit, atk) {
+    if (!fight || !unit || !atk?.damienCast) return;
+    const kind = String(atk.damienCast);
+    const kit = damienKitCfg();
+    const dM = dmgMult(fight.listId);
+    const seq = atkFxSeq;
+    const castId = pad(atk.flashMob || unit.visualId);
+    const key = atk.actionKey;
+    const playerEl = getBossPlayerEl();
+    // 僅 skill3：先瞬移到玩家再播本體；attack1 在原地蓄力／衝刺
+    const needsWarpFirst = kind === 'diveAfterOnPlayer';
+    fight.bossActionLock = { slotKey, actionKey: key };
+    const unlock = () => {
+      if (fight?.bossActionLock?.slotKey === slotKey) {
+        fight.bossActionLock = null;
+      }
+    };
+    // 需先 skill4 瞬移的招：不要先播本體技能
+    if (!needsWarpFirst) {
+      if (!flashAttack(slotKey, castId, key)) {
+        unlock();
+        return;
+      }
+    }
+    const waitCast = async () => {
+      const cap = scaleDelayMs(mobAnimMs(castId, key, 1800) + 200);
+      const t0 = Date.now();
+      const el = slotEl(slotKey);
+      while (Date.now() - t0 < cap) {
+        if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') return false;
+        if (!IdleMobAnim.isActorCasting?.(el)) break;
+        await sleep(TICK_MS);
+      }
+      return seq === atkFxSeq && !!fight;
+    };
+
+    if (kind === 'meteor') {
+      // skill5 自帶瞬移：0～appear-1 原地；appear 到玩家頭上；hide 離場；return 回原位
+      const mCfg = kit.meteor || {};
+      const el = slotEl(slotKey);
+      const home = el ? actorStylePos(el) : (hooks?.getBossPos?.() || { x: 700, y: 600 });
+      const appearFr = Math.max(0, Math.floor(Number(mCfg.appearFrame) || 10));
+      const hideFr = Math.max(appearFr + 1, Math.floor(Number(mCfg.hideFrame) || 100));
+      const returnFr = Math.max(hideFr + 1, Math.floor(Number(mCfg.returnFrame) || 101));
+      const headOff = Number.isFinite(Number(mCfg.headYOffset)) ? Number(mCfg.headYOffset) : -140;
+      const appearRaw = Math.max(0, Number(IdleMobAnim.actionFrameOffsetMs?.(castId, key, appearFr)) || 0);
+      const hideRaw = Math.max(
+        appearRaw + 400,
+        Number(IdleMobAnim.actionFrameOffsetMs?.(castId, key, hideFr)) || appearRaw + 2000,
+      );
+      const returnRaw = Math.max(
+        hideRaw + 40,
+        Number(IdleMobAnim.actionFrameOffsetMs?.(castId, key, returnFr)) || hideRaw + 90,
+      );
+      const appearAt = scaleDelayMs(appearRaw);
+      const hideAt = scaleDelayMs(hideRaw);
+      const returnAt = scaleDelayMs(returnRaw);
+      const castStart = Date.now();
+      const restoreHome = () => {
+        if (!el) return;
+        el.style.visibility = '';
+        setActorStylePos(el, home.x, home.y);
+      };
+      // 0～appear-1：原地
+      while (Date.now() - castStart < appearAt) {
+        if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') {
+          restoreHome();
+          unlock();
+          return;
+        }
+        await sleep(TICK_MS);
+      }
+      if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') {
+        restoreHome();
+        unlock();
+        return;
+      }
+      // 第 appear 幀：先就位到玩家頭上，再繼續播（禁止邊播邊滑）
+      const player = playerFeetPos();
+      if (el) {
+        el.style.visibility = 'hidden';
+        setActorStylePos(el, player.x, Math.max(80, player.y + headOff));
+        el.style.visibility = '';
+      }
+      const aerialWin = {
+        startMs: 0,
+        endMs: Math.max(400, hideRaw - appearRaw),
+        castMs: mobAnimMs(castId, key, 2000),
+      };
+      await runDamienMeteorBarrage(slotKey, seq, aerialWin, { skipWaitAlive: true });
+      while (Date.now() - castStart < hideAt) {
+        if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') {
+          restoreHome();
+          unlock();
+          return;
+        }
+        await sleep(TICK_MS);
+      }
+      // 第 hide 幀：離場
+      if (el) el.style.visibility = 'hidden';
+      while (Date.now() - castStart < returnAt) {
+        if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') {
+          restoreHome();
+          unlock();
+          return;
+        }
+        await sleep(TICK_MS);
+      }
+      // 第 return 幀：已就位回原點再顯示
+      if (el) {
+        setActorStylePos(el, home.x, home.y);
+        el.style.visibility = '';
+      }
+      const castMs = scaleDelayMs(mobAnimMs(castId, key, 2000) + 200);
+      while (Date.now() - castStart < castMs) {
+        if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') break;
+        if (!IdleMobAnim.isActorCasting?.(el) && Date.now() - castStart > returnAt) break;
+        await sleep(TICK_MS);
+      }
+      if (seq === atkFxSeq && fight) {
+        restoreHome();
+        bindVisual(slotKey, castId, 'stand');
+      }
+      unlock();
+      return;
+    }
+
+    if (kind === 'multiAreaWarn' || kind === 'bind') {
+      const zoneCfg = kind === 'bind'
+        ? (kit.bindZones || {})
+        : (kit.multiAreaWarn || {});
+      const count = Math.max(1, Math.floor(Number(zoneCfg.count) || 5));
+      const minDist = Math.max(80, Number(zoneCfg.minDistPx) || 150);
+      const points = pickDamienFieldPoints(count, minDist);
+      const markers = spawnDamienAwMarkers(castId, key, points);
+      const awAction = `${key}/info/areaWarning`;
+      const awFrames = markers[0]?.frames || [];
+      const awMs = damienPatternDurationMs(awFrames);
+      const awDmgFr = Number(zoneCfg.awDamageFrame);
+      let hitAt;
+      if (Number.isFinite(awDmgFr) && awDmgFr >= 0) {
+        const fromAnim = Number(IdleMobAnim.actionFrameOffsetMs?.(castId, awAction, awDmgFr));
+        if (Number.isFinite(fromAnim) && fromAnim > 0) {
+          hitAt = scaleDelayMs(fromAnim);
+        } else {
+          let acc = 0;
+          const n = Math.min(awFrames.length, Math.floor(awDmgFr));
+          for (let i = 0; i < n; i += 1) {
+            acc += Math.max(1, Number(awFrames[i]?.delay) || 90);
+          }
+          hitAt = scaleDelayMs(Math.max(200, acc));
+        }
+      } else {
+        hitAt = scaleDelayMs(Math.max(400, awMs || Number(IdleMobAnim.attackAfterMs?.(castId, key)) || 1200));
+      }
+      const bodyMs = scaleDelayMs(mobAnimMs(castId, key, 1200));
+      const totalWait = Math.max(hitAt, scaleDelayMs(awMs), bodyMs);
+      const t0 = Date.now();
+      let damaged = false;
+      while (Date.now() - t0 < totalWait + 80) {
+        if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') {
+          clearDamienAwMarkers();
+          unlock();
+          return;
+        }
+        if (!damaged && Date.now() - t0 >= hitAt) {
+          damaged = true;
+          const hitDmg = Math.max(0, Math.floor((Number(atk.dmg) || 0) * dM));
+          if (hitDmg > 0) {
+            if (playerEl && typeof IdleMobAnim?.playPlayerHit === 'function') {
+              IdleMobAnim.playPlayerHit(playerEl, castId, key, { immediate: true });
+            }
+            hurtPlayerFromBoss(slotKey, hitDmg);
+          }
+          if (kind === 'bind') {
+            applyDamienActionStop(Number(zoneCfg.stopMs) || Number(kit.bindMs) || 2000);
+          }
+        }
+        await sleep(TICK_MS);
+      }
+      clearDamienAwMarkers();
+      if (seq === atkFxSeq && fight) bindVisual(slotKey, castId, 'stand');
+      unlock();
+      return;
+    }
+
+    // P2 attack1：0～4 抬手續力；5～8 衝刺（effect 與第 5 幀同步起播）；
+    // 第 9 幀起已在終點收刀（9～13）；播完 skill4→瞬間回 home→after4
+    if (kind === 'rushReturn') {
+      const el = slotEl(slotKey);
+      const bodyImg = (typeof IdleMobAnim !== 'undefined' && IdleMobAnim.actorBodyImg)
+        ? IdleMobAnim.actorBodyImg(el)
+        : el?.querySelector?.('img');
+      const home = el ? actorStylePos(el) : (hooks?.getBossPos?.() || { x: 700, y: 600 });
+      const player = playerFeetPos();
+      const rushDir = (player.x < home.x) ? -1 : 1;
+      if (el) el.classList.toggle('is-flip-x', rushDir > 0);
+      const trailPx = damienEffectTrailLengthPx(castId, key);
+      const field = damienFxHost();
+      const W = field?.clientWidth || 1366;
+      const endX = Math.max(80, Math.min(W - 80, home.x + rushDir * trailPx));
+      const endY = home.y;
+      const rushStartRaw = Math.max(
+        0,
+        Number(IdleMobAnim.actionFrameOffsetMs?.(castId, key, 5)) || 600,
+      );
+      const rushDoneRaw = Math.max(
+        rushStartRaw + 1,
+        Number(IdleMobAnim.actionFrameOffsetMs?.(castId, key, 9)) || (rushStartRaw + 480),
+      );
+      const castMs = scaleDelayMs(mobAnimMs(castId, key, 1650) + 200);
+      const rushStartAt = scaleDelayMs(rushStartRaw);
+      const rushDoneAt = scaleDelayMs(rushDoneRaw);
+      const hitAt = scaleDelayMs(
+        Number(IdleMobAnim.actionFrameOffsetMs?.(castId, key, 6))
+          || (rushStartRaw + 120),
+      );
+      // bind 會立刻 startEffect；改為第 5 幀才跟衝刺同步起播
+      IdleMobAnim.clearEffect?.(bodyImg);
+      const t0 = Date.now();
+      let damaged = false;
+      let effectStarted = false;
+      // 衝刺段用細步进，避免关掉 left transition 後每 100ms 跳格一卡一卡
+      const RUSH_STEP_MS = 16;
+      while (Date.now() - t0 < castMs) {
+        if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') {
+          if (el) {
+            el.classList.remove('is-flip-x');
+            setActorStylePos(el, home.x, home.y);
+          }
+          unlock();
+          return;
+        }
+        const elapsed = Date.now() - t0;
+        if (!effectStarted && elapsed >= rushStartAt) {
+          effectStarted = true;
+          IdleMobAnim.startEffect?.(bodyImg, castId, key);
+        }
+        if (el) {
+          if (elapsed < rushStartAt) {
+            setActorStylePos(el, home.x, home.y);
+          } else if (elapsed >= rushDoneAt) {
+            setActorStylePos(el, endX, endY);
+          } else {
+            const span = Math.max(1, rushDoneAt - rushStartAt);
+            const t = Math.min(1, (elapsed - rushStartAt) / span);
+            setActorStylePos(
+              el,
+              home.x + (endX - home.x) * t,
+              home.y + (endY - home.y) * t,
+            );
+          }
+        }
+        if (!damaged && elapsed >= hitAt) {
+          damaged = true;
+          const hitDmg = Math.max(0, Math.floor((Number(atk.dmg) || 0) * dM));
+          if (hitDmg > 0) {
+            if (playerEl && typeof IdleMobAnim?.playPlayerHit === 'function') {
+              IdleMobAnim.playPlayerHit(playerEl, castId, key, { immediate: true });
+            }
+            hurtPlayerFromBoss(slotKey, hitDmg);
+          }
+        }
+        const inRush = elapsed >= rushStartAt && elapsed < rushDoneAt;
+        await sleep(inRush ? RUSH_STEP_MS : TICK_MS);
+      }
+      if (el) {
+        el.classList.remove('is-flip-x');
+        setActorStylePos(el, endX, endY);
+      }
+      // skill4 消失播滿 → 隱藏就位 home → 再播 after4（不邊播邊動）
+      if (!(await damienWarpWithSkill4(slotKey, castId, home, seq))) {
+        if (el) {
+          setActorStylePos(el, home.x, home.y);
+          el.style.visibility = '';
+        }
+      }
+      if (el) {
+        el.classList.remove('is-flip-x');
+        el.style.visibility = '';
+      }
+      if (seq === atkFxSeq && fight) bindVisual(slotKey, castId, 'stand');
+      unlock();
+      return;
+    }
+
+    // P2 skill2：0～9 原地消失 → 隱藏就位到玩家旁 → 再播 11～47 斬擊結算
+    // → 隱藏就位回 home → 再播 skillAfter2（禁止邊播邊動）
+    if (kind === 'displaceAfterReturn') {
+      const el = slotEl(slotKey);
+      const home = el ? actorStylePos(el) : (hooks?.getBossPos?.() || { x: 700, y: 600 });
+      const player = playerFeetPos();
+      const dest = {
+        x: player.x + (home.x >= player.x ? 90 : -90),
+        y: player.y,
+      };
+      // 0～9 消失段結束（第 11 幀起為斬擊；第 10 幀缺圖）
+      const vanishDoneRaw = Math.max(
+        0,
+        Number(IdleMobAnim.actionFrameOffsetMs?.(castId, key, 11)) || 900,
+      );
+      const settleDoneRaw = Math.max(
+        vanishDoneRaw + 1,
+        Number(IdleMobAnim.actionFrameOffsetMs?.(castId, key, 48)) || 4230,
+      );
+      const slashSegRaw = Math.max(200, settleDoneRaw - vanishDoneRaw);
+      const vanishDoneAt = scaleDelayMs(vanishDoneRaw);
+      const slashSegMs = scaleDelayMs(slashSegRaw);
+      const hitAt = scaleDelayMs(90);
+      // 1) 原地播消失至第 9 幀結束；到點立刻隱形，避免舊位殘一幀
+      const tVanish = Date.now();
+      while (Date.now() - tVanish < vanishDoneAt) {
+        if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') {
+          if (el) {
+            el.style.visibility = '';
+            setActorStylePos(el, home.x, home.y);
+          }
+          unlock();
+          return;
+        }
+        await sleep(TICK_MS);
+      }
+      if (el) el.style.visibility = 'hidden';
+      // 2) 隱形中就位 → 綁斬擊第 11 幀 → 再顯示
+      if (el) setActorStylePos(el, dest.x, dest.y);
+      damienHardStopCast(slotKey);
+      fight.bossActionLock = { slotKey, actionKey: key };
+      let slashFlashed = flashAttack(slotKey, castId, key, { startFrame: 11 });
+      if (!slashFlashed) {
+        damienHardStopCast(slotKey);
+        slashFlashed = flashAttack(slotKey, castId, key, { startFrame: 11 });
+      }
+      if (!slashFlashed) {
+        if (el) {
+          setActorStylePos(el, home.x, home.y);
+          el.style.visibility = '';
+        }
+        unlock();
+        return;
+      }
+      if (el) {
+        setActorStylePos(el, dest.x, dest.y);
+        const bodyImg = IdleMobAnim.actorBodyImg?.(el);
+        const tBind = Date.now();
+        while (bodyImg && Date.now() - tBind < 240) {
+          if (seq !== atkFxSeq || !fight) {
+            unlock();
+            return;
+          }
+          if (
+            bodyImg.dataset.action === key
+            && Number(bodyImg.dataset.frame) >= 11
+            && bodyImg.dataset.src
+            && (bodyImg.complete || bodyImg.naturalWidth > 0)
+          ) break;
+          await sleep(16);
+        }
+        el.style.visibility = '';
+      }
+      const tSlash = Date.now();
+      let damaged = false;
+      while (Date.now() - tSlash < slashSegMs) {
+        if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') {
+          if (el) {
+            el.style.visibility = '';
+            setActorStylePos(el, home.x, home.y);
+          }
+          unlock();
+          return;
+        }
+        if (!damaged && Date.now() - tSlash >= hitAt) {
+          damaged = true;
+          const hitDmg = Math.max(0, Math.floor((Number(atk.dmg) || 0) * dM));
+          if (hitDmg > 0) {
+            if (playerEl && typeof IdleMobAnim?.playPlayerHit === 'function') {
+              IdleMobAnim.playPlayerHit(playerEl, castId, key, { immediate: true });
+            }
+            hurtPlayerFromBoss(slotKey, hitDmg);
+          }
+        }
+        await sleep(TICK_MS);
+      }
+      // 3) 隱形 → 就位 home → after2（避免斬擊點殘一幀）
+      if (el) el.style.visibility = 'hidden';
+      if (!(await damienPlayAppearAt(slotKey, castId, 'skillAfter2', home, seq))) {
+        if (el) {
+          setActorStylePos(el, home.x, home.y);
+          el.style.visibility = '';
+        }
+      }
+      if (el) {
+        setActorStylePos(el, home.x, home.y);
+        el.style.visibility = '';
+      }
+      if (seq === atkFxSeq && fight) bindVisual(slotKey, castId, 'stand');
+      unlock();
+      return;
+    }
+
+    // P2 skill3：skill4 瞬移到玩家（先就位再 after4）→ skill3 → skillAfter3（已在玩家身）→ skill4 回原位
+    if (kind === 'diveAfterOnPlayer') {
+      const el = slotEl(slotKey);
+      const home = el ? actorStylePos(el) : (hooks?.getBossPos?.() || { x: 700, y: 600 });
+      const player = playerFeetPos();
+      const dest = { x: player.x, y: Math.max(120, player.y - 40) };
+      const restore = () => {
+        if (!el) return;
+        el.style.visibility = '';
+        el.classList.remove('is-flip-x');
+        setActorStylePos(el, home.x, home.y);
+      };
+      if (!(await damienWarpWithSkill4(slotKey, castId, dest, seq))) {
+        restore();
+        unlock();
+        return;
+      }
+      // 已在玩家身，再播 skill3
+      damienHardStopCast(slotKey);
+      fight.bossActionLock = { slotKey, actionKey: key };
+      if (!flashAttack(slotKey, castId, key)) {
+        await damienWarpWithSkill4(slotKey, castId, home, seq);
+        restore();
+        unlock();
+        return;
+      }
+      const castOk = await waitCast();
+      if (!castOk) {
+        await damienWarpWithSkill4(slotKey, castId, home, seq);
+        restore();
+        unlock();
+        return;
+      }
+      // after3：座標已在玩家身，禁止改位
+      damienHardStopCast(slotKey);
+      const after = 'skillAfter3';
+      if (IdleMobAnim.resolveAction?.(castId, after) && flashAttack(slotKey, castId, after)) {
+        const afterMs = scaleDelayMs(mobAnimMs(castId, after, 1200) + 120);
+        const hitDmg = Math.max(0, Math.floor((Number(atk.dmg) || 0) * dM));
+        const hitAt = scaleDelayMs(
+          Number(IdleMobAnim.actionFrameOffsetMs?.(castId, after, 2)) || Math.floor(afterMs * 0.25),
+        );
+        const a0 = Date.now();
+        let damaged = false;
+        while (Date.now() - a0 < afterMs) {
+          if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') {
+            restore();
+            unlock();
+            return;
+          }
+          if (!damaged && Date.now() - a0 >= hitAt && hitDmg > 0) {
+            damaged = true;
+            if (playerEl && typeof IdleMobAnim?.playPlayerHit === 'function') {
+              IdleMobAnim.playPlayerHit(playerEl, castId, after, { immediate: true });
+            }
+            hurtPlayerFromBoss(slotKey, hitDmg);
+          }
+          await sleep(TICK_MS);
+        }
+      } else {
+        const hitDmg = Math.max(0, Math.floor((Number(atk.dmg) || 0) * dM));
+        if (hitDmg > 0) hurtPlayerFromBoss(slotKey, hitDmg);
+      }
+      if (!(await damienWarpWithSkill4(slotKey, castId, home, seq))) {
+        restore();
+      }
+      if (el) {
+        el.style.visibility = '';
+        setActorStylePos(el, home.x, home.y);
+      }
+      if (seq === atkFxSeq && fight) bindVisual(slotKey, castId, 'stand');
+      unlock();
+      return;
+    }
+
+    // P2 attack3：本體龍捲期間持續發射火球（上下兩排×左右），不限固定波數
+    if (kind === 'tornadoBall') {
+      const tCfg = kit.tornadoBall || {};
+      const startDelay = scaleDelayMs(Number(tCfg.startDelayMs) || 720);
+      const gap = scaleDelayMs(Math.max(80, Number(tCfg.waveGapMs) || 420));
+      const castMs = scaleDelayMs(mobAnimMs(castId, key, 3690) + 200);
+      // 動畫結束前持續發；可選 waveEndMs／endPaddingMs 提早停
+      const endPad = scaleDelayMs(Math.max(0, Number(tCfg.endPaddingMs) || 200));
+      const fireUntil = Math.max(startDelay + gap, castMs - endPad);
+      const t0 = Date.now();
+      let wave = 0;
+      while (Date.now() - t0 < castMs) {
+        if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') {
+          unlock();
+          return;
+        }
+        const elapsed = Date.now() - t0;
+        while (startDelay + wave * gap < fireUntil && elapsed >= startDelay + wave * gap) {
+          spawnDamienTornadoBall(slotKey, tCfg, { row: 0, goLeft: true });
+          spawnDamienTornadoBall(slotKey, tCfg, { row: 0, goLeft: false });
+          spawnDamienTornadoBall(slotKey, tCfg, { row: 1, goLeft: true });
+          spawnDamienTornadoBall(slotKey, tCfg, { row: 1, goLeft: false });
+          wave += 1;
+        }
+        await sleep(TICK_MS);
+      }
+      if (seq === atkFxSeq && fight) bindVisual(slotKey, castId, 'stand');
+      unlock();
+      return;
+    }
+
+    const ok = await waitCast();
+    if (!ok) {
+      unlock();
+      return;
+    }
+    if (seq === atkFxSeq && fight) bindVisual(slotKey, castId, 'stand');
+    unlock();
+  }
+
+  /**
+   * 龍捲火球：以本體腳點為中心，上下兩排朝左右水平射出（不追玩家）。
+   * row0＝上排、row1＝下排；goLeft＝向左飛。
+   */
+  function spawnDamienTornadoBall(slotKey, cfg, opts = {}) {
+    if (!fight) return;
+    const bodyEl = slotEl(slotKey) || slotEl('body');
+    const feet = bodyEl ? actorStylePos(bodyEl) : (hooks?.getBossPos?.() || { x: 700, y: 600 });
+    const field = damienFxHost();
+    const W = field?.clientWidth || 1366;
+    const speed = Math.max(80, Number(cfg.speedPx) || 520);
+    const row = Math.max(0, Math.floor(Number(opts.row) || 0));
+    const leftward = !!opts.goLeft;
+    const topOff = Number.isFinite(Number(cfg.topYOffset)) ? Number(cfg.topYOffset) : -220;
+    const botOff = Number.isFinite(Number(cfg.bottomYOffset)) ? Number(cfg.bottomYOffset) : -36;
+    const y = row <= 0 ? feet.y + topOff : feet.y + botOff;
+    const spawnGap = Math.max(0, Number(cfg.spawnGapPx) || 24);
+    const x = feet.x + (leftward ? -spawnGap : spawnGap);
+    const vx = leftward ? -speed : speed;
+    if (!Array.isArray(fight.damienTornadoBalls)) fight.damienTornadoBalls = [];
+    fight.damienTornadoBalls.push({
+      id: `tb_${Date.now()}_${row}_${leftward ? 'L' : 'R'}_${Math.floor(Math.random() * 1e5)}`,
+      slotKey,
+      x,
+      y,
+      vx,
+      vy: 0,
+      frameAcc: 0,
+      hitDone: false,
+      done: false,
+      hitRatio: Number(cfg.hitRatio) > 0 ? Number(cfg.hitRatio) : 0.6,
+      hitRadiusPx: Math.max(24, Number(cfg.hitRadiusPx) || 56),
+      fieldW: W,
+    });
+    ensureDamienTornadoLoop();
+  }
+
+  function ensureDamienTornadoLoop() {
+    if (!fight || fight._damienTornadoRaf) return;
+    let lastTs = performance.now();
+    const loop = (ts) => {
+      if (!fight || !isDamien() || fight.mode !== 'fight') {
+        if (fight) fight._damienTornadoRaf = 0;
+        return;
+      }
+      const list = fight.damienTornadoBalls;
+      if (!Array.isArray(list) || !list.some((b) => b && !b.done)) {
+        fight._damienTornadoRaf = 0;
+        return;
+      }
+      fight._damienTornadoRaf = requestAnimationFrame(loop);
+      let dt = (ts - lastTs) / 1000;
+      lastTs = ts;
+      if (!(dt > 0)) return;
+      if (dt > 0.05) dt = 0.05;
+      tickDamienTornadoBalls(dt);
+    };
+    fight._damienTornadoRaf = requestAnimationFrame(loop);
+  }
+
+  function tickDamienTornadoBalls(dtSec) {
+    if (!fight || !Array.isArray(fight.damienTornadoBalls)) return;
+    const player = playerFeetPos();
+    const field = damienFxHost();
+    const W = field?.clientWidth || 1366;
+    const castId = pad(fight.body?.visualId || '8880101');
+    const flyFrames = damienBossMobFrames(castId, 'attack3/info/ball');
+    const hitFrames = damienBossMobFrames(castId, 'attack3/info/hit');
+
+    for (let i = 0; i < fight.damienTornadoBalls.length; i += 1) {
+      const ball = fight.damienTornadoBalls[i];
+      if (!ball || ball.done) continue;
+      // 一般 left/top 錨點（勿用飛劍 poseTransform，避免座標錯位）
+      const el = mountDamienFx(ball.id, ball.x, ball.y, 46);
+      if (ball.mode === 'hit') {
+        ball.frameAcc = (Number(ball.frameAcc) || 0) + dtSec * 1000;
+        paintDamienFx(el, hitFrames.length ? hitFrames : flyFrames, ball.frameAcc, { loop: false });
+        if (el) {
+          el.style.left = `${Math.round(ball.x)}px`;
+          el.style.top = `${Math.round(ball.y)}px`;
+          el.style.transform = 'none';
+        }
+        const dur = damienPatternDurationMs(hitFrames.length ? hitFrames : flyFrames) || 400;
+        if (ball.frameAcc >= dur) {
+          ball.done = true;
+          el?.remove();
+        }
+        continue;
+      }
+      ball.x += (Number(ball.vx) || 0) * dtSec;
+      ball.frameAcc = (Number(ball.frameAcc) || 0) + dtSec * 1000;
+      paintDamienFx(el, flyFrames, ball.frameAcc, { loop: true });
+      if (el) {
+        el.style.left = `${Math.round(ball.x)}px`;
+        el.style.top = `${Math.round(ball.y)}px`;
+        el.style.transform = 'none';
+      }
+      const radius = Math.max(24, Number(ball.hitRadiusPx) || 56);
+      // 放置玩家幾乎不動：水平靠近且同高帶即可出傷
+      const nearX = Math.abs(ball.x - player.x) <= radius;
+      const nearY = Math.abs(ball.y - player.y) <= Math.max(radius * 1.8, 90);
+      if (!ball.hitDone && nearX && nearY) {
+        ball.hitDone = true;
+        damienHit(Number(ball.hitRatio) || 0.6, ball.slotKey || 'body');
+        ball.mode = 'hit';
+        ball.frameAcc = 0;
+        continue;
+      }
+      if (ball.x < -120 || ball.x > W + 120) {
+        ball.done = true;
+        el?.remove();
+      }
+    }
+    fight.damienTornadoBalls = fight.damienTornadoBalls.filter((b) => b && !b.done);
+  }
+
+  function damienBossMobFrames(mobId, action) {
+    const id = pad(mobId);
+    const root = typeof IDLE_BOSS_MOB_DATA !== 'undefined' ? IDLE_BOSS_MOB_DATA : {};
+    const frames = root?.[id]?.[action];
+    if (!Array.isArray(frames)) return [];
+    return frames.filter((f) => f && f.src);
+  }
+
+  /** skill2 飛起後本體腳點不變，畫面位置靠 origin；回傳目前幀精靈中心場座標 */
+  function damienBossVisualPos(slotKey) {
+    const bodyEl = slotEl('body') || slotEl(slotKey);
+    const feet = bodyEl ? actorStylePos(bodyEl) : (hooks?.getBossPos?.() || { x: 700, y: 600 });
+    if (!bodyEl) return feet;
+    const img = (typeof IdleMobAnim !== 'undefined' && IdleMobAnim.actorBodyImg)
+      ? IdleMobAnim.actorBodyImg(bodyEl)
+      : bodyEl.querySelector('img');
+    if (!img) return feet;
+    const w = img.naturalWidth || img.width || 0;
+    const h = img.naturalHeight || img.height || 0;
+    const ox = parseFloat(img.style.getPropertyValue('--ox')) || 0;
+    const oy = parseFloat(img.style.getPropertyValue('--oy')) || 0;
+    if (!(w > 0 && h > 0)) return feet;
+    return {
+      x: feet.x + w * 0.5 - ox,
+      y: feet.y + h * 0.5 - oy,
+    };
+  }
+
+  function spawnDamienMeteorWave(slotKey, cfg) {
+    if (!fight) return;
+    const perWave = Math.max(1, Math.floor(Number(cfg.perWave) || 5));
+    const boss = damienBossVisualPos(slotKey);
+    const field = damienFxHost();
+    const H = field?.clientHeight || 768;
+    // 本體可能瞬移在玩家腳點；地板仍用場地底部
+    const floorY = H - 80;
+    const fanDeg = Math.max(10, Number(cfg.fanDeg) || 100);
+    const half = fanDeg / 2;
+    const speed = Math.max(80, Number(cfg.speedPx) || 420);
+    const mobId = pad(cfg.mobId || '9601026');
+    const stackHold = scaleDelayMs(Number(cfg.stackHoldMs) || 320);
+    const spread = Math.max(6, Number(cfg.stackSpreadPx) || 22);
+    const bodyYOff = Number.isFinite(Number(cfg.bodyYOffset)) ? Number(cfg.bodyYOffset) : 0;
+    const now = Date.now();
+    if (!Array.isArray(fight.damienFireballs)) fight.damienFireballs = [];
+
+    for (let i = 0; i < perWave; i += 1) {
+      const t = perWave <= 1 ? 0.5 : i / (perWave - 1);
+      const angDeg = -half + t * fanDeg;
+      const ang = (angDeg * Math.PI) / 180;
+      const vx = Math.sin(ang) * speed;
+      const vy = Math.cos(ang) * speed;
+      const ox = Math.sin(ang) * spread * (0.35 + t * 0.65);
+      const oy = bodyYOff + Math.cos(ang) * spread * 0.35 - i * 3;
+      fight.damienFireballs.push({
+        id: `fb_${Date.now()}_${i}_${Math.floor(Math.random() * 1e5)}`,
+        slotKey,
+        mobId,
+        x: boss.x + ox,
+        y: boss.y + oy,
+        ox,
+        oy,
+        vx,
+        vy,
+        floorY,
+        mode: 'stack',
+        launchAt: now + stackHold,
+        frameAcc: 0,
+        hitDone: false,
+        done: false,
+      });
+    }
+    ensureDamienFireballLoop();
+  }
+
+  /**
+   * skill2／skill5：依本體動畫「空中段」（origin.y 偏高）決定開火起迄；
+   * 波數＝空中時長 ÷ waveGapMs（至少 1）。
+   */
+  function damienMeteorAerialWindowMs(iconId, actionKey, cfg = {}) {
+    const id = pad(iconId);
+    const action = actionKey || 'skill2';
+    const frames = damienBossMobFrames(id, action);
+    const castMs = Math.max(800, Number(mobAnimMs(id, action, 2000)) || 2000);
+    const yCut = Math.max(200, Number(cfg.aerialOriginY) || 400);
+    let acc = 0;
+    let aerialStart = -1;
+    let aerialEnd = -1;
+    for (let i = 0; i < frames.length; i += 1) {
+      const fr = frames[i];
+      const delay = Math.max(1, Number(fr?.delay) || 90);
+      const oy = Number(fr?.origin?.[1]);
+      if (Number.isFinite(oy) && oy >= yCut) {
+        if (aerialStart < 0) aerialStart = acc;
+        aerialEnd = acc + delay;
+      }
+      acc += delay;
+    }
+    if (aerialStart >= 0 && aerialEnd > aerialStart) {
+      return { startMs: aerialStart, endMs: aerialEnd, castMs };
+    }
+    const startMs = Math.max(0, Number(cfg.startDelayMs) || 600);
+    const endMs = Math.max(startMs + 800, castMs - 800);
+    return { startMs, endMs, castMs };
+  }
+
+  async function runDamienMeteorBarrage(slotKey, seq, win = null, opts = {}) {
+    const kit = damienKitCfg();
+    const cfg = kit.meteor || {};
+    const gap = scaleDelayMs(Number(cfg.waveGapMs) || Number(kit.meteorGapMs) || 320);
+    const windowMs = win && win.endMs > win.startMs
+      ? Math.max(gap, win.endMs - win.startMs)
+      : scaleDelayMs(Math.max(gap, (Number(cfg.waves) || 5) * gap));
+    const waves = Math.max(1, Math.floor(windowMs / Math.max(1, gap)));
+    const fireUntil = Date.now() + scaleDelayMs(windowMs);
+    for (let w = 0; w < waves; w += 1) {
+      if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') return;
+      if (Date.now() > fireUntil + 50) break;
+      spawnDamienMeteorWave(slotKey, cfg);
+      if (w < waves - 1) await sleep(gap);
+    }
+    if (opts.skipWaitAlive) return;
+    const deadline = Date.now() + scaleDelayMs(4500);
+    while (Date.now() < deadline) {
+      if (seq !== atkFxSeq || !fight || fight.mode !== 'fight') return;
+      const alive = (fight.damienFireballs || []).some((b) => b && !b.done);
+      if (!alive) return;
+      await sleep(TICK_MS);
+    }
+  }
+
+  function ensureDamienFireballLoop() {
+    if (!fight || fight._damienFireballRaf) return;
+    let lastTs = performance.now();
+    const loop = (ts) => {
+      if (!fight || !isDamien() || fight.mode !== 'fight') {
+        if (fight) fight._damienFireballRaf = 0;
+        return;
+      }
+      const list = fight.damienFireballs;
+      if (!Array.isArray(list) || !list.some((b) => b && !b.done)) {
+        fight._damienFireballRaf = 0;
+        return;
+      }
+      fight._damienFireballRaf = requestAnimationFrame(loop);
+      let dt = (ts - lastTs) / 1000;
+      lastTs = ts;
+      if (!(dt > 0)) return;
+      if (dt > 0.05) dt = 0.05;
+      tickDamienFireballs(dt);
+    };
+    fight._damienFireballRaf = requestAnimationFrame(loop);
+  }
+
+  function tickDamienFireballs(dtSec) {
+    if (!fight || !Array.isArray(fight.damienFireballs)) return;
+    const cfg = damienKitCfg().meteor || {};
+    const radius = Math.max(24, Number(cfg.hitRadiusPx) || 56);
+    const hitRatio = Number(cfg.hitRatio) > 0 ? Number(cfg.hitRatio) : 0.9;
+    const player = playerFeetPos();
+    const field = damienFxHost();
+    const W = field?.clientWidth || 1366;
+    const H = field?.clientHeight || 768;
+    const now = Date.now();
+
+    for (let i = 0; i < fight.damienFireballs.length; i += 1) {
+      const ball = fight.damienFireballs[i];
+      if (!ball || ball.done) continue;
+      const flyFrames = damienBossMobFrames(ball.mobId, 'fly');
+      const dieFrames = damienBossMobFrames(ball.mobId, 'die1');
+      const el = mountDamienFx(ball.id, ball.x, ball.y, 48, { poseTransform: true });
+
+      if (ball.mode === 'stack') {
+        // 跟隨本體畫面位置堆疊，到點後扇形射出
+        const boss = damienBossVisualPos(ball.slotKey || 'body');
+        ball.x = boss.x + (Number(ball.ox) || 0);
+        ball.y = boss.y + (Number(ball.oy) || 0);
+        ball.floorY = H - 80;
+        ball.frameAcc = (Number(ball.frameAcc) || 0) + dtSec * 1000;
+        paintDamienFx(el, flyFrames.length ? flyFrames : dieFrames, ball.frameAcc, { loop: true });
+        syncDamienSwordPose(el, ball.x, ball.y, 0);
+        if (now >= (Number(ball.launchAt) || 0)) {
+          ball.mode = 'fly';
+          ball.frameAcc = 0;
+        }
+      } else if (ball.mode === 'fly') {
+        ball.x += (Number(ball.vx) || 0) * dtSec;
+        ball.y += (Number(ball.vy) || 0) * dtSec;
+        ball.frameAcc = (Number(ball.frameAcc) || 0) + dtSec * 1000;
+        paintDamienFx(el, flyFrames.length ? flyFrames : dieFrames, ball.frameAcc, { loop: true });
+        syncDamienSwordPose(el, ball.x, ball.y, 0);
+
+        if (!ball.hitDone) {
+          const dist = Math.hypot(ball.x - player.x, ball.y - player.y);
+          if (dist <= radius) {
+            ball.hitDone = true;
+            damienHit(hitRatio, ball.slotKey || 'body');
+            ball.mode = 'die';
+            ball.frameAcc = 0;
+            continue;
+          }
+        }
+        const off = ball.x < -80 || ball.x > W + 80 || ball.y > (Number(ball.floorY) || 9999);
+        if (off) {
+          ball.mode = 'die';
+          ball.frameAcc = 0;
+        }
+      } else if (ball.mode === 'die') {
+        ball.frameAcc = (Number(ball.frameAcc) || 0) + dtSec * 1000;
+        const frames = dieFrames.length ? dieFrames : flyFrames;
+        paintDamienFx(el, frames, ball.frameAcc, { loop: false });
+        syncDamienSwordPose(el, ball.x, ball.y, 0);
+        const dur = damienPatternDurationMs(frames) || 400;
+        if (ball.frameAcc >= dur) {
+          ball.done = true;
+          el?.remove();
+        }
+      }
+    }
+    fight.damienFireballs = fight.damienFireballs.filter((b) => b && !b.done);
+  }
+
+  async function enterDamienPhase(formIndex) {
+    if (!fight || !isDamien()) return;
+    const forms = fight.script.bodyForms || [];
+    if (formIndex < 0 || formIndex >= forms.length) return;
+    busy = true;
+    const seq = atkFxSeq;
+    // 共血：保留各階實際池與血條 maxHp；只換視覺／招式
+    const keepMax = Math.max(1, Number(fight.body.maxHp) || 10000000);
+    const keepP1Max = Number(fight.damienP1Max) || 0;
+    const keepP1Remain = Number(fight.damienP1Remain) || 0;
+    const keepP2Max = Number(fight.damienP2Max) || 0;
+    const keepP2Remain = Number(fight.damienP2Remain) || 0;
+    clearDamienRuntime();
+    if (typeof hooks?.fadeField === 'function') {
+      await hooks.fadeField(1, 400);
+    }
+    if (seq !== atkFxSeq || !fight || !isDamien()) return;
+    fight.bodyFormIndex = formIndex;
+    fight.phase = 1 + formIndex;
+    hooks?.onPhase?.(fight.phase);
+    const form = forms[formIndex];
+    const visualId = pad(form.visualMob || form.statMob);
+    fight.body.visualId = visualId;
+    fight.body.maxHp = keepMax;
+    fight.damienP1Max = keepP1Max;
+    fight.damienP1Remain = keepP1Remain;
+    fight.damienP2Max = keepP2Max;
+    fight.damienP2Remain = keepP2Remain;
+    syncDamienDisplayHp();
+    fight.body.invincible = false;
+    fight.body.targetable = true;
+    fight.body.dead = false;
+    fight.damienWorldTree = null;
+    fight.damienNextWorldTreeAt = 0;
+    let bossPos = hooks?.getBossPos?.() || { x: 720, y: 620 };
+    if (form.bossPos || form.playerPos) {
+      bossPos = applyHorntailStageLayout(form, bossPos);
+    }
+    const el = slotEl('body');
+    if (!el) mountInitialActors(bossPos);
+    else applyActorLayout(bossPos);
+    bindVisual('body', visualId, 'stand');
+    if (formIndex >= 1) {
+      ensureDamienCrystals();
+      startDamienSword2();
+      ensureDamienSword2Loop();
+    }
+    if (typeof hooks?.fadeField === 'function') {
+      await hooks.fadeField(0, 400);
+    }
+    if (seq !== atkFxSeq || !fight || !isDamien()) return;
+    busy = false;
+    syncHud();
+  }
+
+  /** 共血：一階實際池打完 → 轉二階（血條此時應在 30%） */
+  function tryDamienSharedPhaseUp() {
+    if (!fight || !isDamien() || busy || fight.mode !== 'fight') return;
+    if (fight.phase !== 1) return;
+    if ((Number(fight.damienP1Remain) || 0) > 0) return;
+    void onDamienPhaseDown();
+  }
+
+  async function onDamienPhaseDown() {
+    if (!fight || !isDamien() || busy || fight.mode !== 'fight') return;
+    const forms = fight.script.bodyForms || [];
+    const next = (Number(fight.bodyFormIndex) || 0) + 1;
+    const p1Done = (Number(fight.damienP1Remain) || 0) <= 0;
+    if (next < forms.length) {
+      if (!p1Done && !(fight.body.hp <= 0)) return;
+      busy = true;
+      stopSustainCombat();
+      atkFxSeq += 1;
+      const seq = atkFxSeq;
+      const fightRef = fight;
+      clearUnitDebuff('body');
+      const visual = pad(fight.body.visualId);
+      const el = slotEl('body');
+      IdleMobAnim.clearActorCastFlags?.(el);
+      el?.classList.remove('is-dying', 'is-dead', 'is-hidden-slot');
+      if (el) el.style.display = '';
+      // P1→P2：directionAct1 播到第 50 幀就過場（完整太長）
+      const transAct = IdleMobAnim.resolveAction?.(visual, 'directionAct1')
+        ? 'directionAct1'
+        : 'die1';
+      const cutFr = 50;
+      const cutMs = scaleDelayMs(
+        Math.max(
+          400,
+          Number(IdleMobAnim.actionFrameOffsetMs?.(visual, transAct, cutFr))
+            || Number(IdleMobAnim.actionDurationMs?.(visual, transAct, transAct))
+            || 1200,
+        ),
+      );
+      if (!flashAttack('body', visual, transAct)) {
+        IdleMobAnim.bindActorSprite?.(el, visual, transAct);
+      }
+      const t0 = Date.now();
+      while (Date.now() - t0 < cutMs) {
+        if (seq !== atkFxSeq || fight !== fightRef || !fight || !isDamien()) return;
+        await sleep(TICK_MS);
+      }
+      if (seq !== atkFxSeq || fight !== fightRef || !fight || !isDamien()) return;
+      if (fight.mode !== 'fight') return;
+      await enterDamienPhase(next);
+      return;
+    }
+    if ((Number(fight.damienP2Remain) || 0) > 0 && !(fight.body.hp <= 0)) return;
+    busy = true;
+    stopSustainCombat();
+    atkFxSeq += 1;
+    const seq = atkFxSeq;
+    const fightRef = fight;
+    if (seq !== atkFxSeq || fight !== fightRef) return;
+    busy = false;
+    await onBodyDead();
+  }
+
+  async function playDamienIntro() {
+    if (!fight || !isDamien()) return;
+    const seq = atkFxSeq;
+    const form = (fight.script.bodyForms || [])[0];
+    const id = pad(form?.visualMob || form?.statMob || '8880100');
+    busy = true;
+    const el = slotEl('body');
+    if (el) {
+      el.classList.remove('is-hidden-slot');
+      el.style.display = '';
+      bindVisual('body', id, 'stand');
+    }
+    startDamienSword();
+    await sleep(scaleDelayMs(400));
+    if (seq !== atkFxSeq || !fight) return;
+    fight.body.invincible = false;
+    fight.body.targetable = true;
+    busy = false;
+    hooks?.onPhase?.(1);
+    syncHud();
+  }
+
+  function tickDamien(dt) {
+    if (!fight || !isDamien() || busy || fight.mode !== 'fight') return;
+    if (fight.phase === 1) ensureDamienSwordLoop();
+    if (fight.phase >= 2) {
+      tickDamienCrystal(dt);
+      ensureDamienSword2Loop();
+      // 位移／傳送招播完（無 lock、非 casting）才開世界樹，避免 skill8 被 after 打斷
+      void tryDamienWorldTree();
+      const player = playerFeetPos();
+      const bodyEl = slotEl('body');
+      if (bodyEl) {
+        const bpos = actorStylePos(bodyEl);
+        const dist = Math.abs(bpos.x - player.x);
+        fight.damienBodyContactAcc = (Number(fight.damienBodyContactAcc) || 0) + Math.max(0, Number(dt) || 0);
+        if (dist < 52 && fight.damienBodyContactAcc >= 0.8) {
+          fight.damienBodyContactAcc = 0;
+          damienHit(0.15, 'body');
+        }
+      }
+    }
+    fight.body.active = true;
+    // 世界樹引導中仍可累 CD，但 tickUnitAttack 會被 bossActionLock 擋住開新招
+    const attacks = unitAttacks(fight.listId, fight.body.visualId);
+    tickUnitAttack('body', fight.body, attacks, dt);
+  }
+
   function tickSuu(dt) {
     if (!fight || !isSuu() || busy || fight.mode !== 'fight') return;
     trySuuShield();
@@ -10549,6 +13155,38 @@ const IdleBossFight = (() => {
       return true;
     }
 
+    if (isDamien()) {
+      fight.bodyFormIndex = 0;
+      fight.phase = 1;
+      const pools = damienPhasePools(fight.listId, fight.script);
+      const form = pools.form0;
+      const visualId = pad(form?.visualMob || form?.statMob || '8880100');
+      fight.body.visualId = visualId;
+      fight.damienP1Max = pools.p1;
+      fight.damienP1Remain = pools.p1;
+      fight.damienP2Max = pools.p2;
+      fight.damienP2Remain = pools.p2;
+      fight.body.maxHp = 10000000;
+      syncDamienDisplayHp();
+      fight.body.invincible = false;
+      fight.body.targetable = true;
+      fight.body.dead = false;
+      fight.damienNextWorldTreeAt = 0;
+      fight.damienBindUntil = 0;
+      fight.damienActionStopUntil = 0;
+      fight.damienWorldTree = null;
+      clearDamienRuntime();
+      if (opts.playIntro) {
+        mountInitialActors(bossPos, { skipBind: true });
+        syncHud();
+        playDamienIntro();
+      } else {
+        stage()?.querySelectorAll('.idle-boss-part').forEach((n) => n.remove());
+        syncHud();
+      }
+      return true;
+    }
+
     if (isSimple()) {
       fight.phase = 1;
       const statId = pad(fight.script.bodyStatMob);
@@ -10734,6 +13372,15 @@ const IdleBossFight = (() => {
         fight.suuUiBgFrame = 0;
         fight.suuUiBg0Frame = 0;
         fight.suuUiAnimAcc = 0;
+        fight.bodyFormIndex = 0;
+        fight.phase = 1;
+      }
+      if (isDamien()) {
+        clearDamienRuntime();
+        fight.damienWorldTree = null;
+        fight.damienNextWorldTreeAt = 0;
+        fight.damienBindUntil = 0;
+        fight.damienActionStopUntil = 0;
         fight.bodyFormIndex = 0;
         fight.phase = 1;
       }

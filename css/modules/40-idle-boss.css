@@ -847,6 +847,25 @@
   image-rendering: pixelated;
 }
 
+.idle-boss-field > .idle-boss-damien-fx-stage,
+.idle-boss-stage > .idle-boss-damien-fx-stage {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 46;
+  transform-origin: 0 0;
+}
+
+.idle-boss-damien-fx-stage .idle-boss-damien-fx-sprite {
+  position: absolute;
+  left: calc(-1 * var(--ox, 0px));
+  top: calc(-1 * var(--oy, 0px));
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
 .idle-boss-bq-bomb .idle-actor-sprite {
   position: absolute;
   left: calc(-1 * var(--ox, 0px));
@@ -984,6 +1003,8 @@
 
 .idle-boss-part {
   pointer-events: none;
+  /* hunt 的 left 0.32s 過渡會讓瞬移變「邊播邊滑」；Boss 一律瞬間就位 */
+  transition: none !important;
 }
 
 .idle-boss-part.is-dead {

@@ -23,9 +23,41 @@ const IdleSessionRefresh = (() => {
   let armedAt = 0;
   /** @type {{ enabled: boolean, minutes: number }} */
   let settings = { enabled: false, minutes: DEFAULT_MINUTES };
+  /** @type {Record<string, any>|null} */
+  let desktopInfo = null;
+  /** @type {{ state?: string, message?: string, version?: string, percent?: number }} */
+  let updateStatus = { state: 'idle', message: '' };
 
   function $(id) {
     return document.getElementById(id);
+  }
+
+  function escapeHtml(text) {
+    return String(text || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function isDesktop() {
+    return typeof window !== 'undefined' && !!window.mssDesktop;
+  }
+
+  async function initDesktopBridge() {
+    if (!isDesktop()) return;
+    try {
+      desktopInfo = await window.mssDesktop.getInfo();
+    } catch (_) {
+      desktopInfo = { version: '', closeToTray: true, forceGcOnHide: false };
+    }
+    if (typeof window.mssDesktop.onUpdateStatus === 'function') {
+      window.mssDesktop.onUpdateStatus((data) => {
+        updateStatus = data && typeof data === 'object' ? data : { state: 'idle', message: '' };
+        if (panelOpen && panelView === 'home') renderPanel();
+      });
+    }
+    if (panelOpen && panelView === 'home') renderPanel();
   }
 
   function clampMinutes(raw) {
@@ -346,12 +378,42 @@ const IdleSessionRefresh = (() => {
       </section>`;
   }
 
+  function desktopSectionMarkup() {
+    if (!isDesktop()) return '';
+    const info = desktopInfo || {};
+    const version = escapeHtml(info.version || '');
+    const closeChecked = info.closeToTray !== false ? ' checked' : '';
+    const gcChecked = info.forceGcOnHide ? ' checked' : '';
+    const ready = updateStatus.state === 'ready';
+    const statusText = escapeHtml(updateStatus.message || '啟動後會自動檢查更新。');
+    return `
+      <section class="game-settings-section" aria-label="桌面版">
+        <h3 class="game-settings-section-title">桌面版</h3>
+        <p class="game-settings-hint">正式版 ${version || '開發中'}。縮小到工作列後掛機仍會繼續。</p>
+        <p class="game-settings-update-status" id="gameSettingsUpdateStatus">${statusText}</p>
+        <div class="game-settings-actions">
+          <button type="button" class="game-settings-nav" data-desktop-action="check-update">檢查更新</button>
+          ${ready ? '<button type="button" class="game-settings-nav game-settings-nav--primary" data-desktop-action="quit-install">重開並套用更新</button>' : ''}
+        </div>
+        <label class="game-settings-check">
+          <input type="checkbox" id="gameSettingsCloseToTray"${closeChecked}>
+          <span>關閉視窗時縮小到工作列（掛機繼續）</span>
+        </label>
+        <label class="game-settings-check">
+          <input type="checkbox" id="gameSettingsForceGc"${gcChecked}>
+          <span>縮小／隱藏時強制記憶體回收</span>
+        </label>
+        <p class="game-settings-hint">工作列圖示右鍵「結束遊戲」才會真正離開。</p>
+      </section>`;
+  }
+
   function homeBodyMarkup() {
     const s = settings;
     const checked = s.enabled ? ' checked' : '';
     const hideDmg = typeof DamageNumber !== 'undefined' && !!DamageNumber.getHideDamageNumbers?.();
     const hideDmgChecked = hideDmg ? ' checked' : '';
     return `
+      ${desktopSectionMarkup()}
       <section class="game-settings-section" aria-label="戰鬥顯示">
         <h3 class="game-settings-section-title">戰鬥顯示</h3>
         <label class="game-settings-check" title="隱藏玩家對怪物造成的傷害數字（怪物打你仍會顯示）">
@@ -436,6 +498,46 @@ const IdleSessionRefresh = (() => {
     DamageNumber.setHideDamageNumbers?.(!!$('gameSettingsHideDamageNumbers')?.checked);
   }
 
+  async function applyDesktopSettingsFromPanel() {
+    if (!isDesktop()) return;
+    try {
+      const next = await window.mssDesktop.setSettings({
+        closeToTray: !!$('gameSettingsCloseToTray')?.checked,
+        forceGcOnHide: !!$('gameSettingsForceGc')?.checked,
+      });
+      desktopInfo = { ...(desktopInfo || {}), ...next };
+    } catch (_) { /* ignore */ }
+  }
+
+  async function onDesktopAction(action) {
+    if (!isDesktop()) return;
+    if (action === 'check-update') {
+      updateStatus = { state: 'checking', message: '正在檢查更新…' };
+      renderPanel();
+      try {
+        await window.mssDesktop.checkForUpdates();
+      } catch (_) { /* status via event */ }
+      return;
+    }
+    if (action === 'quit-install') {
+      if (isCombatActive()) {
+        const confirmFn = typeof showAppConfirm === 'function'
+          ? showAppConfirm
+          : ({ message }) => Promise.resolve(window.confirm(message));
+        const ok = await confirmFn({
+          title: '套用更新',
+          message: '目前正在戰鬥或掛機，重開會中斷。確定要重開並套用更新？',
+          confirmText: '重開套用',
+          cancelText: '取消',
+        });
+        if (!ok) return;
+      }
+      try {
+        await window.mssDesktop.quitAndInstall();
+      } catch (_) { /* ignore */ }
+    }
+  }
+
   function setPanelOpen(next) {
     panelOpen = !!next;
     if (panelOpen) {
@@ -485,6 +587,12 @@ const IdleSessionRefresh = (() => {
       setPanelView('home');
     });
     $('gameSettingsBody')?.addEventListener('click', (e) => {
+      const deskBtn = e.target?.closest?.('[data-desktop-action]');
+      if (deskBtn) {
+        e.preventDefault();
+        void onDesktopAction(deskBtn.getAttribute('data-desktop-action') || '');
+        return;
+      }
       const navBtn = e.target?.closest?.('[data-settings-nav]');
       if (navBtn) {
         e.preventDefault();
@@ -510,6 +618,10 @@ const IdleSessionRefresh = (() => {
         applyFxOpacityFromPanel();
         return;
       }
+      if (t.id === 'gameSettingsCloseToTray' || t.id === 'gameSettingsForceGc') {
+        void applyDesktopSettingsFromPanel();
+        return;
+      }
       if (t.id === 'gameSettingsAutoRefresh' || t.id === 'gameSettingsMinutes') {
         applyFromPanelInputs();
       }
@@ -525,6 +637,7 @@ const IdleSessionRefresh = (() => {
     settings = readSettings();
     ensureDom();
     bindPanelEvents();
+    void initDesktopBridge();
     syncChrome();
     if (typeof AppHotkeys !== 'undefined') AppHotkeys.init?.();
     if (typeof SkillEffectPlayer !== 'undefined') SkillEffectPlayer.initFxOpacity?.();

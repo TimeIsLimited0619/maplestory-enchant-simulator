@@ -1,0 +1,17 @@
+{
+  "version": "20260916a",
+  "packs": [
+    {
+      "id": "idle-bosses",
+      "filePrefix": "MapleEnchant-assets-idle-bosses",
+      "dest": "idle-bosses",
+      "label": "BOSS 動畫"
+    },
+    {
+      "id": "skills",
+      "filePrefix": "MapleEnchant-assets-skills",
+      "dest": "skills",
+      "label": "技能特效"
+    }
+  ]
+}

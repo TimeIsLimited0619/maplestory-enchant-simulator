@@ -328,6 +328,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 123,
             "level": 3,
+            "fixDamR": 50,
             "animMs": 3200,
             "dmg": 6241
           }
@@ -433,6 +434,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 123,
             "level": 3,
+            "fixDamR": 50,
             "animMs": 2400,
             "dmg": 6591
           }
@@ -566,6 +568,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 123,
             "level": 3,
+            "fixDamR": 50,
             "animMs": 1600,
             "dmg": 8095
           }
@@ -1529,6 +1532,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 1,
             "elemAttr": "F",
+            "fixDamR": 30,
             "animMs": 1800,
             "dmg": 2000
           },
@@ -2098,6 +2102,8 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 132,
             "level": 11,
+            "cooltime": 1000,
+            "fixDamR": 50,
             "animMs": 1050,
             "dmg": 35000
           },
@@ -2112,6 +2118,8 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 123,
             "level": 44,
+            "cooltime": 5000,
+            "fixDamR": 70,
             "animMs": 1500,
             "dmg": 35000
           }
@@ -2161,6 +2169,8 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 126,
             "level": 20,
+            "cooltime": 1000,
+            "fixDamR": 50,
             "animMs": 780,
             "dmg": 35000
           },
@@ -2173,6 +2183,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "fixDamR": 50,
             "animMs": 1260,
             "dmg": 35000
           }
@@ -2183,11 +2194,12 @@ const IDLE_BOSS_WZ = {
             "skill": 170,
             "action": 1,
             "level": 10,
-            "effectAfter": 0
+            "effectAfter": 0,
+            "skillForbid": 2160
           }
         ],
         "skillAnimMs": {
-          "skill1": 1080
+          "skill1": 720
         }
       },
       {
@@ -2258,6 +2270,8 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 123,
             "level": 43,
+            "cooltime": 3000,
+            "fixDamR": 150,
             "animMs": 1530,
             "dmg": 30000
           },
@@ -2270,6 +2284,8 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "cooltime": 6000,
+            "fixDamR": 100,
             "animMs": 2340,
             "dmg": 30000
           },
@@ -2282,6 +2298,8 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "cooltime": 15000,
+            "fixDamR": 100,
             "animMs": 1650,
             "dmg": 30000
           },
@@ -2296,6 +2314,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 126,
             "level": 20,
+            "fixDamR": 50,
             "animMs": 1260,
             "dmg": 30000
           },
@@ -2310,6 +2329,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 126,
             "level": 20,
+            "fixDamR": 50,
             "animMs": 600,
             "dmg": 30000
           },
@@ -2324,6 +2344,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 126,
             "level": 20,
+            "fixDamR": 50,
             "animMs": 600,
             "dmg": 30000
           },
@@ -2338,6 +2359,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 126,
             "level": 20,
+            "fixDamR": 50,
             "animMs": 600,
             "dmg": 30000
           },
@@ -2352,6 +2374,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 126,
             "level": 20,
+            "fixDamR": 50,
             "animMs": 720,
             "dmg": 30000
           }
@@ -2376,7 +2399,8 @@ const IDLE_BOSS_WZ = {
             "skill": 170,
             "action": 3,
             "level": 11,
-            "effectAfter": 0
+            "effectAfter": 0,
+            "skillForbid": 1200
           },
           {
             "index": 3,
@@ -2397,16 +2421,17 @@ const IDLE_BOSS_WZ = {
             "skill": 170,
             "action": 6,
             "level": 14,
-            "effectAfter": 0
+            "effectAfter": 0,
+            "skillForbid": 1200
           }
         ],
         "skillAnimMs": {
           "skill1": 1440,
           "skill2": 2340,
-          "skill3": 600,
+          "skill3": 480,
           "skill4": 30,
           "skill5": 30,
-          "skill6": 600
+          "skill6": 480
         }
       },
       {
@@ -2441,6 +2466,8 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 120,
             "level": 11,
+            "cooltime": 3000,
+            "fixDamR": 150,
             "animMs": 1530,
             "dmg": 15000
           }
@@ -2490,6 +2517,8 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 120,
             "level": 11,
+            "cooltime": 3000,
+            "fixDamR": 20,
             "animMs": 2280,
             "dmg": 20400
           }
@@ -2564,6 +2593,8 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 132,
             "level": 11,
+            "cooltime": 3000,
+            "fixDamR": 20,
             "animMs": 2280,
             "dmg": 20400
           },
@@ -2576,6 +2607,8 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "cooltime": 10000,
+            "fixDamR": 100,
             "animMs": 1800,
             "dmg": 20400
           },
@@ -2588,6 +2621,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "fixDamR": 100,
             "animMs": 720,
             "dmg": 20400
           },
@@ -2600,6 +2634,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "fixDamR": 100,
             "animMs": 600,
             "dmg": 20400
           },
@@ -2612,6 +2647,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "fixDamR": 100,
             "animMs": 600,
             "dmg": 20400
           },
@@ -2624,6 +2660,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "fixDamR": 100,
             "animMs": 1440,
             "dmg": 20400
           }
@@ -2690,6 +2727,8 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 136,
             "level": 6,
+            "cooltime": 3000,
+            "fixDamR": 20,
             "animMs": 2280,
             "dmg": 20400
           },
@@ -2704,6 +2743,8 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 205,
             "level": 1,
+            "cooltime": 15000,
+            "fixDamR": 45,
             "animMs": 4500,
             "dmg": 20400
           }
@@ -2781,6 +2822,8 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "cooltime": 10000,
+            "fixDamR": 100,
             "animMs": 4350,
             "dmg": 46000
           },
@@ -2793,6 +2836,8 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "cooltime": 25000,
+            "fixDamR": 100,
             "animMs": 2490,
             "dmg": 46000
           },
@@ -2805,6 +2850,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "fixDamR": 100,
             "animMs": 2280,
             "dmg": 46000
           },
@@ -2817,6 +2863,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "fixDamR": 100,
             "animMs": 2190,
             "dmg": 46000
           },
@@ -2829,6 +2876,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "fixDamR": 100,
             "animMs": 2100,
             "dmg": 46000
           },
@@ -2841,6 +2889,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "fixDamR": 200,
             "animMs": 2220,
             "dmg": 46000
           },
@@ -2855,6 +2904,8 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 123,
             "level": 43,
+            "cooltime": 4000,
+            "fixDamR": 80,
             "animMs": 3300,
             "dmg": 46000
           },
@@ -2867,6 +2918,8 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "cooltime": 30000,
+            "fixDamR": 100,
             "animMs": 4290,
             "dmg": 46000
           },
@@ -2879,6 +2932,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "fixDamR": 100,
             "animMs": 6210,
             "dmg": 46000
           },
@@ -2891,6 +2945,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "fixDamR": 100,
             "animMs": 1440,
             "dmg": 46000
           },
@@ -2903,6 +2958,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "fixDamR": 100,
             "animMs": 840,
             "dmg": 46000
           },
@@ -2915,6 +2971,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "fixDamR": 100,
             "animMs": 2220,
             "dmg": 46000
           },
@@ -2929,6 +2986,8 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 123,
             "level": 43,
+            "cooltime": 30000,
+            "fixDamR": 80,
             "animMs": 1890,
             "dmg": 46000
           },
@@ -2943,6 +3002,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 131,
             "level": 17,
+            "fixDamR": 150,
             "animMs": 3180,
             "dmg": 46000
           },
@@ -2957,6 +3017,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 131,
             "level": 17,
+            "fixDamR": 150,
             "animMs": 3180,
             "dmg": 46000
           },
@@ -2971,6 +3032,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 131,
             "level": 17,
+            "fixDamR": 150,
             "animMs": 3990,
             "dmg": 46000
           }
@@ -2981,12 +3043,11 @@ const IDLE_BOSS_WZ = {
             "skill": 170,
             "action": 1,
             "level": 13,
-            "effectAfter": 0
+            "effectAfter": 0,
+            "skillForbid": 4000
           }
         ],
-        "skillAnimMs": {
-          "skill1": 2000
-        }
+        "skillAnimMs": {}
       },
       {
         "role": "body",
@@ -3018,6 +3079,7 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "fixDamR": 100,
             "animMs": 3960,
             "dmg": 46000
           }
@@ -3065,6 +3127,8 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 2,
             "elemAttr": "",
+            "cooltime": 12000,
+            "fixDamR": 100,
             "animMs": 1560,
             "dmg": 24000
           },
@@ -3077,6 +3141,8 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 2,
             "elemAttr": "",
+            "cooltime": 10000,
+            "fixDamR": 100,
             "animMs": 2040,
             "dmg": 24000
           },
@@ -3089,6 +3155,8 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 10,
             "elemAttr": "",
+            "cooltime": 8000,
+            "fixDamR": 70,
             "animMs": 2760,
             "dmg": 24000
           },
@@ -3101,6 +3169,8 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 2,
             "elemAttr": "",
+            "cooltime": 15000,
+            "fixDamR": 100,
             "animMs": 7200,
             "dmg": 22000
           },
@@ -3113,6 +3183,8 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 2,
             "elemAttr": "",
+            "cooltime": 15000,
+            "fixDamR": 100,
             "animMs": 5730,
             "dmg": 22000
           },
@@ -3127,6 +3199,8 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 126,
             "level": 61,
+            "cooltime": 120000,
+            "fixDamR": 1,
             "animMs": 2070,
             "dmg": 22000
           },
@@ -3141,6 +3215,8 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 133,
             "level": 32,
+            "cooltime": 60000,
+            "fixDamR": 1,
             "animMs": 1920,
             "dmg": 22000
           }
@@ -3322,6 +3398,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 120,
             "level": 10,
+            "cooltime": 15000,
             "animMs": 2520,
             "dmg": 23100
           }
@@ -3892,6 +3969,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 2,
             "elemAttr": "",
+            "fixDamR": 100,
             "animMs": 5280,
             "dmg": 25000
           },
@@ -3904,6 +3982,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 2,
             "elemAttr": "",
+            "fixDamR": 100,
             "animMs": 2340,
             "dmg": 25000
           },
@@ -3932,6 +4011,7 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 173,
             "level": 1,
+            "fixDamR": 10,
             "animMs": 4920,
             "dmg": 20000
           },
@@ -3944,6 +4024,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 2,
             "elemAttr": "",
+            "fixDamR": 90,
             "animMs": 5280,
             "dmg": 25000
           },
@@ -3956,6 +4037,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 2,
             "elemAttr": "",
+            "fixDamR": 100,
             "animMs": 5280,
             "dmg": 25000
           }
@@ -4226,7 +4308,8 @@ const IDLE_BOSS_WZ = {
             "skill": 170,
             "action": 1,
             "level": 5,
-            "effectAfter": 0
+            "effectAfter": 0,
+            "skillForbid": 960
           },
           {
             "index": 2,
@@ -4573,6 +4656,389 @@ const IDLE_BOSS_WZ = {
     "dmgMult": 1,
     "cdMult": 1
   },
+  "15": {
+    "listId": "15",
+    "name": "戴米安",
+    "parts": [
+      {
+        "role": "body",
+        "mobId": "8880100",
+        "z": 20,
+        "level": 210,
+        "maxHP": 0,
+        "maxMP": 100000,
+        "PADamage": 22000,
+        "MADamage": 24000,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 300,
+        "MDRate": 300,
+        "acc": 9999,
+        "eva": 750,
+        "bodyAttack": false,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 10000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "disease": 237,
+            "level": 1,
+            "cooltime": 10000,
+            "fixDamR": 100,
+            "animMs": 4110,
+            "dmg": 24000
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": false,
+            "conMP": 2,
+            "elemAttr": "",
+            "disease": 237,
+            "level": 1,
+            "fixDamR": 100,
+            "animMs": 0,
+            "dmg": 22000
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "disease": 174,
+            "level": 14,
+            "cooltime": 30000,
+            "fixDamR": 50,
+            "animMs": 960,
+            "dmg": 24000
+          },
+          {
+            "index": 3,
+            "action": 4,
+            "actionKey": "attack4",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": false,
+            "conMP": 2,
+            "elemAttr": "",
+            "disease": 237,
+            "level": 1,
+            "fixDamR": 100,
+            "animMs": 0,
+            "dmg": 22000
+          },
+          {
+            "index": 4,
+            "action": 4,
+            "actionKey": "attack4",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": false,
+            "conMP": 2,
+            "elemAttr": "",
+            "fixDamR": 15,
+            "animMs": 0,
+            "dmg": 22000
+          },
+          {
+            "index": 5,
+            "action": 6,
+            "actionKey": "attack6",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "fixDamR": 90,
+            "animMs": 0,
+            "dmg": 24000
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 170,
+            "action": 1,
+            "level": 44,
+            "effectAfter": 0,
+            "skillForbid": 3420
+          },
+          {
+            "index": 1,
+            "skill": 215,
+            "action": 2,
+            "level": 2,
+            "effectAfter": 0
+          },
+          {
+            "index": 2,
+            "skill": 170,
+            "action": 3,
+            "level": 46,
+            "effectAfter": 0,
+            "skillForbid": 5610
+          },
+          {
+            "index": 3,
+            "skill": 170,
+            "action": 4,
+            "level": 45,
+            "effectAfter": 0,
+            "skillForbid": 5700
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 1050,
+          "skill2": 9840,
+          "skill3": 3960,
+          "skill4": 3960
+        }
+      },
+      {
+        "role": "body",
+        "mobId": "8880101",
+        "z": 20,
+        "level": 210,
+        "maxHP": 120000000000,
+        "maxMP": 100000,
+        "PADamage": 22000,
+        "MADamage": 24000,
+        "PDDamage": 0,
+        "MDDamage": 0,
+        "PDRate": 300,
+        "MDRate": 300,
+        "acc": 9999,
+        "eva": 750,
+        "bodyAttack": true,
+        "firstAttack": true,
+        "boss": true,
+        "hpRecovery": 0,
+        "mpRecovery": 10000,
+        "attacks": [
+          {
+            "index": 0,
+            "action": 1,
+            "actionKey": "attack1",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "disease": 237,
+            "level": 1,
+            "cooltime": 7000,
+            "fixDamR": 70,
+            "animMs": 1650,
+            "dmg": 24000
+          },
+          {
+            "index": 1,
+            "action": 2,
+            "actionKey": "attack2",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "disease": 237,
+            "level": 1,
+            "fixDamR": 100,
+            "animMs": 0,
+            "dmg": 24000
+          },
+          {
+            "index": 2,
+            "action": 3,
+            "actionKey": "attack3",
+            "attackRatio": 100,
+            "type": 2,
+            "magic": false,
+            "conMP": 0,
+            "elemAttr": "",
+            "disease": 237,
+            "level": 1,
+            "cooltime": 20000,
+            "fixDamR": 60,
+            "animMs": 3690,
+            "dmg": 22000
+          },
+          {
+            "index": 3,
+            "action": 4,
+            "actionKey": "attack4",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "disease": 174,
+            "level": 14,
+            "cooltime": 30000,
+            "fixDamR": 50,
+            "animMs": 960,
+            "dmg": 24000
+          },
+          {
+            "index": 4,
+            "action": 5,
+            "actionKey": "attack5",
+            "attackRatio": 100,
+            "type": 3,
+            "magic": false,
+            "conMP": 2,
+            "elemAttr": "",
+            "fixDamR": 15,
+            "animMs": 0,
+            "dmg": 22000
+          },
+          {
+            "index": 5,
+            "action": 6,
+            "actionKey": "attack6",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "fixDamR": 90,
+            "animMs": 0,
+            "dmg": 24000
+          },
+          {
+            "index": 6,
+            "action": 7,
+            "actionKey": "attack7",
+            "attackRatio": 100,
+            "type": 0,
+            "magic": true,
+            "conMP": 2,
+            "elemAttr": "",
+            "disease": 237,
+            "level": 1,
+            "fixDamR": 200,
+            "animMs": 2190,
+            "dmg": 24000
+          }
+        ],
+        "skills": [
+          {
+            "index": 0,
+            "skill": 170,
+            "action": 1,
+            "level": 44,
+            "effectAfter": 0,
+            "skillForbid": 3420
+          },
+          {
+            "index": 1,
+            "skill": 170,
+            "action": 2,
+            "level": 42,
+            "effectAfter": 0,
+            "skillForbid": 5640
+          },
+          {
+            "index": 2,
+            "skill": 170,
+            "action": 3,
+            "level": 47,
+            "effectAfter": 0,
+            "skillForbid": 5640
+          },
+          {
+            "index": 3,
+            "skill": 170,
+            "action": 4,
+            "level": 48,
+            "effectAfter": 0,
+            "skillForbid": 3390
+          },
+          {
+            "index": 4,
+            "skill": 215,
+            "action": 5,
+            "level": 4,
+            "effectAfter": 0
+          },
+          {
+            "index": 5,
+            "skill": 170,
+            "action": 6,
+            "level": 49,
+            "effectAfter": 0,
+            "skillForbid": 3390
+          },
+          {
+            "index": 6,
+            "skill": 170,
+            "action": 7,
+            "level": 50,
+            "effectAfter": 0,
+            "skillForbid": 1080
+          },
+          {
+            "index": 7,
+            "skill": 214,
+            "action": 8,
+            "level": 14,
+            "effectAfter": 0
+          },
+          {
+            "index": 8,
+            "skill": 170,
+            "action": 9,
+            "level": 51,
+            "effectAfter": 0,
+            "skillForbid": 6280
+          },
+          {
+            "index": 9,
+            "skill": 201,
+            "action": 10,
+            "level": 182,
+            "effectAfter": 0
+          }
+        ],
+        "skillAnimMs": {
+          "skill1": 900,
+          "skill2": 4950,
+          "skill3": 3690,
+          "skill5": 11130,
+          "skill8": 11430,
+          "skill9": 4950,
+          "skill4": 900,
+          "skill6": 900,
+          "skill7": 900,
+          "skill10": 960
+        }
+      }
+    ],
+    "extraMobs": [
+      "8880102",
+      "8880121",
+      "8950111",
+      "9601026"
+    ],
+    "hpMult": 1,
+    "dmgMult": 1,
+    "cdMult": 1
+  },
   "18": {
     "listId": "18",
     "name": "濃姬",
@@ -4609,6 +5075,8 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 132,
             "level": 19,
+            "cooltime": 12000,
+            "fixDamR": 20,
             "animMs": 2160,
             "dmg": 52000
           },
@@ -4623,6 +5091,8 @@ const IDLE_BOSS_WZ = {
             "elemAttr": "",
             "disease": 137,
             "level": 4,
+            "cooltime": 12000,
+            "fixDamR": 20,
             "animMs": 2160,
             "dmg": 52000
           },
@@ -4635,6 +5105,8 @@ const IDLE_BOSS_WZ = {
             "magic": false,
             "conMP": 0,
             "elemAttr": "",
+            "cooltime": 90000,
+            "fixDamR": 5,
             "animMs": 9120,
             "dmg": 52000
           }
@@ -4735,6 +5207,7 @@ const IDLE_BOSS_WZ = {
             "magic": true,
             "conMP": 0,
             "elemAttr": "",
+            "fixDamR": 5,
             "animMs": 3120,
             "dmg": 3625
           },

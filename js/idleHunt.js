@@ -2301,7 +2301,10 @@ const IdleHunt = (() => {
     syncPlayerHp();
     state.hp = Math.max(0, (Number(state.hp) || 0) - dmg);
     flashPlayerHurt();
-    grantPlayerHurtIframe();
+    // skipHurtIframe：出傷但不給無敵幀（例：戴米安二階藍球接觸）
+    if (!opts.skipHurtIframe) {
+      grantPlayerHurtIframe();
+    }
     if (typeof SkillComboOrbs !== 'undefined') {
       SkillComboOrbs.onPlayerHit?.();
       syncComboOrbsUi();

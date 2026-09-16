@@ -128,6 +128,8 @@ const IdleMobAnim = (() => {
     if (/^skill(Fail|Use)$/i.test(kind)) {
       return kind.toLowerCase() === 'skillfail' ? 'skillFail' : 'skillUse';
     }
+    // 戴米安 P1→P2 等：directionAct1 需原樣保留
+    if (/^directionAct\d+$/i.test(kind)) return String(kind);
     if (kind === 'skill') return 'skill1';
     if (/^die\d*$/i.test(kind)) return kind === 'die' ? 'die1' : String(kind).toLowerCase();
     if (kind === 'regen') return 'regen';
@@ -1230,7 +1232,7 @@ const IdleMobAnim = (() => {
     const img = actorBodyImg(el);
     if (!img) return false;
     const ka = String(img.dataset.kindAction || '');
-    if (!(/^attack/i.test(ka) || /^skill/i.test(ka))) return false;
+    if (!(/^attack/i.test(ka) || /^skill/i.test(ka) || /^directionAct/i.test(ka))) return false;
     if (img.dataset.bodyDone !== '1') return true;
     return !isEffectDone(img);
   }
@@ -1526,6 +1528,8 @@ const IdleMobAnim = (() => {
     spriteKind,
     isActorCasting,
     clearActorCastFlags,
+    clearEffect,
+    startEffect,
     startActorChannel,
     endActorChannel,
     bindActorSprite,

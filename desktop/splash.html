@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>楓之谷做裝模擬器</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #161A23;
+      color: rgba(255, 255, 255, 0.86);
+      font-family: "Microsoft JhengHei", "PingFang TC", "Segoe UI", sans-serif;
+      user-select: none;
+    }
+    .wrap {
+      box-sizing: border-box;
+      height: 100%;
+      padding: 28px 32px 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    #status {
+      margin: 0 0 18px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.62);
+      min-height: 40px;
+    }
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: #0f131a;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      overflow: hidden;
+    }
+    #fill {
+      height: 100%;
+      width: 0%;
+      background: #6b8cff;
+      transition: width 0.18s ease;
+    }
+    #pct {
+      margin: 8px 0 0;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.45);
+    }
+    #retry {
+      display: none;
+      margin-top: 16px;
+      align-self: flex-start;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 8px;
+      background: #2D2F39;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 13px;
+      font-family: inherit;
+      padding: 8px 14px;
+      cursor: pointer;
+    }
+    #retry.show { display: inline-flex; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>楓之谷做裝模擬器</h1>
+    <p id="status">正在準備遊戲資源…</p>
+    <div class="bar"><div id="fill"></div></div>
+    <div id="pct"></div>
+    <button type="button" id="retry">重試下載</button>
+  </div>
+  <script>
+    const statusEl = document.getElementById('status');
+    const fillEl = document.getElementById('fill');
+    const pctEl = document.getElementById('pct');
+    const retryEl = document.getElementById('retry');
+    function render(data) {
+      const d = data || {};
+      statusEl.textContent = d.message || '正在準備遊戲資源…';
+      const pct = Math.max(0, Math.min(100, Number(d.percent) || 0));
+      fillEl.style.width = pct + '%';
+      pctEl.textContent = d.detail || (pct > 0 ? pct.toFixed(0) + '%' : '');
+      retryEl.classList.toggle('show', d.state === 'error');
+    }
+    if (window.mssSplash && typeof window.mssSplash.onProgress === 'function') {
+      window.mssSplash.onProgress(render);
+    }
+    retryEl.addEventListener('click', () => {
+      retryEl.classList.remove('show');
+      if (window.mssSplash) window.mssSplash.retry();
+    });
+  </script>
+</body>
+</html>

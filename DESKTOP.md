@@ -1,0 +1,48 @@
+# 桌面正式版
+
+給玩家下載到本機玩，不依賴 github.io 分頁。
+
+## 安裝
+
+1. 打開 [GitHub Releases](https://github.com/TimeIsLimited0619/maplestory-enchant-simulator/releases) 下載 `MapleEnchantSimulator-Setup-x.y.z.exe`。
+2. 雙擊安裝。第一次啟動會再下載 BOSS 動畫與技能特效（約 1.7GB，只下載一次）。
+3. 之後可完全離線遊玩。
+
+未簽章時 Windows 可能出現 SmartScreen：選「其他資訊」→「仍要執行」。
+
+## 後台掛機
+
+- 按視窗 X：預設縮小到工作列圖示，狩獵／計時繼續跑。
+- 工作列圖示右鍵「結束遊戲」才會真正離開。
+- 設定裡可改「關閉視窗時縮小到工作列」。
+
+## 一鍵更新
+
+程式啟動會檢查更新。也可在「設定」按「檢查更新」。下載完不會強制重開（避免打斷掛機）；掛機結束後再按「重開並套用更新」。
+
+## 存檔
+
+進度在本機 `%APPDATA%\MapleEnchantSimulator\`（更新安裝檔不會清進度）。桌面版另會自動寫入：
+
+`%APPDATA%\MapleEnchantSimulator\saves\mss-save-idle.mss`（放置）  
+`%APPDATA%\MapleEnchantSimulator\saves\mss-save-sim.mss`（模擬器）
+
+仍可用遊戲內「存檔」匯出／匯入 `.mss`。
+
+## 開發者
+
+本機直接跑（用專案裡的 `images/`，不下載資源包）：
+
+```
+npm install
+npm start
+```
+
+打 tag 發佈 Windows 安裝檔與資源包（`package.json` 的 `version` 必須與 tag 相同，例如 `1.0.0` 對 `v1.0.0`）：
+
+```
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+GitHub Actions 會建 NSIS 安裝檔，並上傳 `idle-bosses`／`skills` 兩個 zip（各低於 GitHub 單檔 2GB）。全包 `images` 約 2.2GB，不能整包塞進單一安裝檔。

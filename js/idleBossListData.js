@@ -28,7 +28,7 @@ const IDLE_BOSS_LIST = [
     playerPos: { x: 380, y: 640 },
     bossPos: { x: 680, y: 620 },
   },
-  { id: '15', artId: '15' },
+  { id: '15', name: '戴米安', artId: '15', playerPos: { x: 400, y: 620 }, bossPos: { x: 720, y: 620 } },
   { id: '19', artId: '19' },
   { id: '23', artId: '23' },
   { id: '24', artId: '24' },
