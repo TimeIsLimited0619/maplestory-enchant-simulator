@@ -82,8 +82,8 @@ const IdleHunt = (() => {
   const CATCH_UP_BURST = 40;
   /** 掛機自動釋放戰鬥視覺／圖片快取間隔 */
   const MEM_RELEASE_MS = 30000;
-  /** 解碼圖快取軟上限（張） */
-  const IMAGE_CACHE_SOFT_MAX = 360;
+  /** 解碼圖快取軟上限。偏高可減少大量擊殺時重 decode 卡頓（用記憶體換順暢） */
+  const IMAGE_CACHE_SOFT_MAX = 1800;
   let lastMemReleaseAt = 0;
   /** @type {ReturnType<typeof setInterval>|null} */
   let memReleaseTimer = null;
@@ -2449,13 +2449,12 @@ const IdleHunt = (() => {
     syncComboOrbsUi();
     // 掉落另延 ~28ms，與死亡／場刷錯開
     scheduleHuntRender();
-    // 大波秒殺後立刻修剪傷害字／狀態，避免越刷越卡
+    // 大量擊殺當幀不要 trim 傷害字／圖快取：那是主執行緒尖峰，會加重卡頓。
+    // 狀態鍵可延後清；解碼圖留給較高的 IMAGE_CACHE_SOFT_MAX。
     if (toKill.length >= 6) {
-      try {
-        DamageNumber.trimTo?.(120);
-        DamageNumber.pruneStaleStacks?.(3000);
-        SkillMobStatus.prune?.();
-      } catch (_) { /* ignore */ }
+      window.setTimeout(() => {
+        try { SkillMobStatus.prune?.(); } catch (_) { /* ignore */ }
+      }, 250);
     }
   }
 
@@ -3021,6 +3020,14 @@ const IdleHunt = (() => {
       : Date.now();
     if (!force && lastMemReleaseAt > 0 && (now - lastMemReleaseAt) < MEM_RELEASE_MS) return;
 
+    const hidden = typeof document !== 'undefined' && document.hidden;
+    // 前景戰鬥：多留解碼圖／特效快取，避免 trim 後下一波擊殺重解碼卡頓
+    if (!force && !hidden) {
+      try { SkillMobStatus.prune?.(); } catch (_) { /* ignore */ }
+      lastMemReleaseAt = now;
+      return;
+    }
+
     // 輕量例行：修剪圖快取／狀態鍵，不整清傷害數字（避免畫面閃一下）
     try {
       const pin = typeof DamageSkinCatalog !== 'undefined'
@@ -3038,12 +3045,9 @@ const IdleHunt = (() => {
     const dmgN = typeof DamageNumber !== 'undefined'
       ? (Number(DamageNumber.activeCount?.()) || 0)
       : 0;
-    // 特效／數字明顯堆積才做 soft release
-    if (!force && typeof document !== 'undefined' && !document.hidden) {
-      if (fxN < 36 && dmgN < 120) {
-        lastMemReleaseAt = now;
-        return;
-      }
+    if (!force && fxN < 36 && dmgN < 120) {
+      lastMemReleaseAt = now;
+      return;
     }
     releaseCombatVisuals({ soft: true });
   }

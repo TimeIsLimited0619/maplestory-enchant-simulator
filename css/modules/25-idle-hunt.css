@@ -1,4 +1,4 @@
-/* 放置狩獵場 */
+/* 放置狩獵場：固定像素，不隨視窗縮放 */
 .idle-hunt-root {
   position: fixed;
   left: 50%;
@@ -6,8 +6,10 @@
   transform: translateX(-50%);
   z-index: 12005;
   width: 860px;
-  max-height: calc(100vh - 72px);
-  overflow: auto;
+  height: 820px;
+  max-width: 860px;
+  max-height: none;
+  overflow: visible;
   background: transparent;
   color: #ddd;
   border: none;
@@ -15,6 +17,7 @@
   box-shadow: none;
   font-size: 12px;
   line-height: 1.35;
+  flex-shrink: 0;
 }
 
 /* UI 素材一律用 <img width height> 原始像素，不做 CSS 縮放 */
@@ -31,6 +34,7 @@
   width: 860px;
   height: 820px;
   margin: 0 auto;
+  flex-shrink: 0;
 }
 
 .idle-hunt-shell__bg {
@@ -427,9 +431,19 @@
   display: block;
   width: 800px;
   height: 500px;
+  max-width: none;
+  max-height: none;
   object-fit: fill;
   pointer-events: none;
   user-select: none;
+}
+
+.idle-hunt-shell img.idle-hunt-map[width][height] {
+  width: 800px;
+  height: 500px;
+  max-width: none;
+  max-height: none;
+  object-fit: fill;
 }
 
 .idle-hunt-player-hp {

@@ -23,7 +23,7 @@ const DamageNumber = (() => {
    * 場上同時存在的數字上限。
    * 需能覆蓋「隊列 mob × 多段」一次打出；超過才回收最舊。
    */
-  const MAX_ON_FIELD = 200;
+  const MAX_ON_FIELD = 360;
   /** 連鎖等同幀大量數字：每幀最多掛載幾個，避免主執行緒卡頓 */
   const SPAWN_PER_FRAME = 16;
   /** 待生成佇列上限；超過丟最舊，避免連鎖秒殺堆積 */

@@ -24,6 +24,7 @@ async function main() {
       const output = fs.createWriteStream(dest);
       const archive = archiver('zip', { zlib: { level: 4 } });
       output.on('close', resolve);
+      output.on('error', reject);
       archive.on('error', reject);
       archive.pipe(output);
       archive.directory(srcDir, false);

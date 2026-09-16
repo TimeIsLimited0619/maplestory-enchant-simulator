@@ -54,7 +54,15 @@ const IdleSessionRefresh = (() => {
     if (typeof window.mssDesktop.onUpdateStatus === 'function') {
       window.mssDesktop.onUpdateStatus((data) => {
         updateStatus = data && typeof data === 'object' ? data : { state: 'idle', message: '' };
-        if (panelOpen && panelView === 'home') renderPanel();
+        if (!(panelOpen && panelView === 'home')) return;
+        const el = $('gameSettingsUpdateStatus');
+        const wantButton = updateStatus.state === 'ready';
+        const hasButton = !!document.querySelector('[data-desktop-action="quit-install"]');
+        if (el && wantButton === hasButton) {
+          el.textContent = updateStatus.message || '';
+          return;
+        }
+        renderPanel();
       });
     }
     if (panelOpen && panelView === 'home') renderPanel();

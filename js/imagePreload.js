@@ -7,8 +7,8 @@ const EnchantImagePreload = {
   promiseCache: new Map(),
   /** @type {Map<string, HTMLImageElement|null>} */
   imageCache: new Map(),
-  /** softTrim 預設上限；掛機過久解碼圖會佔大量記憶體 */
-  DEFAULT_SOFT_MAX: 420,
+  /** softTrim 預設上限；前景戰鬥會再提高到 idleHunt 的 IMAGE_CACHE_SOFT_MAX */
+  DEFAULT_SOFT_MAX: 1800,
 
   normalize(url) {
     if (!url) return '';

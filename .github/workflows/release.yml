@@ -8,6 +8,7 @@ on:
 jobs:
   release:
     runs-on: windows-latest
+    timeout-minutes: 360
     permissions:
       contents: write
     steps:
@@ -26,13 +27,30 @@ jobs:
       - name: Pack large image assets
         run: npm run pack:assets
 
-      - name: Build and publish Windows installer
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Windows installer
         run: npm run dist
 
-      - name: Upload asset packs to the same release
+      - name: Publish installer and asset packs together
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ github.ref_name }}" dist-assets/* --clobber
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          TAG="${GITHUB_REF_NAME}"
+          FILES=(
+            dist-desktop/MapleEnchantSimulator-Setup-*.exe
+            dist-desktop/latest.yml
+            dist-desktop/MapleEnchantSimulator-Setup-*.exe.blockmap
+            dist-assets/*
+          )
+          if [ "${#FILES[@]}" -eq 0 ]; then
+            echo "No release artifacts found" >&2
+            exit 1
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${FILES[@]}" --clobber
+          else
+            gh release create "$TAG" "${FILES[@]}" --title "$TAG" --generate-notes
+          fi

@@ -57,6 +57,10 @@ let splashWindow = null;
 let tray = null;
 let isQuitting = false;
 let assetEnsurePromise = null;
+let updateDownloaded = false;
+let updaterArmed = false;
+let splashCanClose = false;
+let cachedImageRoots = null;
 
 const DEFAULT_SETTINGS = {
   closeToTray: true,
@@ -94,6 +98,10 @@ function saveSettings(next) {
 }
 
 function iconPath() {
+  if (app.isPackaged) {
+    const unpacked = path.join(process.resourcesPath, 'icon.png');
+    if (fs.existsSync(unpacked)) return unpacked;
+  }
   return path.join(__dirname, 'icon.png');
 }
 
@@ -111,28 +119,37 @@ function downloadedImagesRoot() {
   return path.join(app.getPath('userData'), 'assets', 'images');
 }
 
+function invalidateImageRoots() {
+  cachedImageRoots = null;
+}
+
+function imageRoots() {
+  if (cachedImageRoots) return cachedImageRoots;
+  if (!app.isPackaged) {
+    cachedImageRoots = {
+      defaultRoot: path.join(projectRoot(), 'images'),
+      packRoots: {},
+    };
+    return cachedImageRoots;
+  }
+  const extra = extraImagesRoot();
+  const downloaded = downloadedImagesRoot();
+  const packRoots = {};
+  LARGE_PACK_IDS.forEach((dest) => {
+    const dl = path.join(downloaded, dest);
+    packRoots[dest] = fs.existsSync(dl) ? downloaded : extra;
+  });
+  cachedImageRoots = { defaultRoot: extra, packRoots };
+  return cachedImageRoots;
+}
+
 function resolveImageFile(imgRel) {
   const safeRel = path.normalize(imgRel).replace(/^(\.\.(\/|\\|$))+/, '');
   const first = safeRel.split(/[\\/]/)[0];
-  const candidates = [];
-  if (!app.isPackaged) {
-    candidates.push(path.join(projectRoot(), 'images', safeRel));
-  } else {
-    if (LARGE_PACK_IDS.has(first)) {
-      candidates.push(path.join(downloadedImagesRoot(), safeRel));
-      candidates.push(path.join(extraImagesRoot(), safeRel));
-    } else {
-      candidates.push(path.join(extraImagesRoot(), safeRel));
-      candidates.push(path.join(downloadedImagesRoot(), safeRel));
-    }
-    candidates.push(path.join(projectRoot(), 'images', safeRel));
-  }
-  for (const candidate of candidates) {
-    try {
-      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) return candidate;
-    } catch (_) { /* ignore */ }
-  }
-  return candidates[0];
+  const roots = imageRoots();
+  const packRoot = roots.packRoots[first];
+  if (packRoot) return path.join(packRoot, safeRel);
+  return path.join(roots.defaultRoot, safeRel);
 }
 
 function resolveGameFile(rel) {
@@ -159,6 +176,15 @@ function registerMssProtocol() {
     let rel = decodeURIComponent(url.pathname || '/');
     if (rel.endsWith('/')) rel += 'index.html';
     const filePath = resolveGameFile(rel);
+    try {
+      if (!fs.statSync(filePath).isFile()) {
+        return new Response(null, { status: 404, headers: { 'cache-control': 'no-store' } });
+      }
+    } catch (_) {
+      // 遊戲會預載很多可選圖（技能幀、怪物死亡等），缺檔在瀏覽器只是 404。
+      // 若仍走 net.fetch(file://) ，Electron 會把每個 ERR_FILE_NOT_FOUND 打到 cmd。
+      return new Response(null, { status: 404, headers: { 'cache-control': 'no-store' } });
+    }
     return net.fetch(pathToFileURL(filePath).href);
   });
 }
@@ -215,28 +241,34 @@ async function downloadToFile(url, dest, onProgress) {
   const total = Number(res.headers.get('content-length')) || 0;
   await fs.promises.mkdir(path.dirname(dest), { recursive: true });
   const file = fs.createWriteStream(dest);
-  if (!res.body || typeof res.body.getReader !== 'function') {
-    const buf = Buffer.from(await res.arrayBuffer());
-    await new Promise((resolve, reject) => {
-      file.end(buf, (err) => (err ? reject(err) : resolve()));
-    });
-    if (onProgress) onProgress(buf.length, buf.length);
-    return;
-  }
-  const reader = res.body.getReader();
-  let received = 0;
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    received += value.byteLength;
-    if (!file.write(Buffer.from(value))) {
-      await new Promise((resolve) => file.once('drain', resolve));
+  try {
+    if (!res.body || typeof res.body.getReader !== 'function') {
+      const buf = Buffer.from(await res.arrayBuffer());
+      await new Promise((resolve, reject) => {
+        file.end(buf, (err) => (err ? reject(err) : resolve()));
+      });
+      if (onProgress) onProgress(buf.length, buf.length);
+      return;
     }
-    if (onProgress) onProgress(received, total);
+    const reader = res.body.getReader();
+    let received = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      received += value.byteLength;
+      if (!file.write(Buffer.from(value))) {
+        await new Promise((resolve) => file.once('drain', resolve));
+      }
+      if (onProgress) onProgress(received, total);
+    }
+    await new Promise((resolve, reject) => {
+      file.end((err) => (err ? reject(err) : resolve()));
+    });
+  } catch (err) {
+    try { file.destroy(); } catch (_) { /* ignore */ }
+    try { await fs.promises.unlink(dest); } catch (_) { /* ignore */ }
+    throw err;
   }
-  await new Promise((resolve, reject) => {
-    file.end((err) => (err ? reject(err) : resolve()));
-  });
 }
 
 async function extractZip(zipPath, destDir) {
@@ -298,6 +330,7 @@ async function ensureLargeAssets() {
     await fs.promises.writeFile(packMarkerPath(pack), `${assetVer}\n`, 'utf8');
     try { await fs.promises.unlink(zipPath); } catch (_) { /* ignore */ }
   }
+  invalidateImageRoots();
 }
 
 function createSplashWindow() {
@@ -307,6 +340,7 @@ function createSplashWindow() {
     frame: false,
     resizable: false,
     show: true,
+    title: '放置谷',
     backgroundColor: '#161A23',
     icon: iconPath(),
     webPreferences: {
@@ -317,6 +351,9 @@ function createSplashWindow() {
     },
   });
   splashWindow.setMenuBarVisibility(false);
+  splashWindow.on('close', (event) => {
+    if (!isQuitting && !splashCanClose) event.preventDefault();
+  });
   splashWindow.on('closed', () => {
     splashWindow = null;
   });
@@ -350,7 +387,7 @@ function createTray() {
     image = image.resize({ width: 16, height: 16 });
   }
   tray = new Tray(image);
-  tray.setToolTip('楓之谷做裝模擬器');
+  tray.setToolTip('放置谷');
   const menu = Menu.buildFromTemplate([
     {
       label: '顯示視窗',
@@ -376,6 +413,7 @@ function createMainWindow() {
     height: 900,
     minWidth: 1100,
     minHeight: 720,
+    title: '放置谷',
     backgroundColor: '#161A23',
     icon: iconPath(),
     show: false,
@@ -392,6 +430,7 @@ function createMainWindow() {
   mainWindow.setMenuBarVisibility(false);
   mainWindow.webContents.setBackgroundThrottling(false);
   mainWindow.once('ready-to-show', () => {
+    splashCanClose = true;
     if (splashWindow && !splashWindow.isDestroyed()) {
       splashWindow.close();
     }
@@ -403,7 +442,6 @@ function createMainWindow() {
       event.preventDefault();
       mainWindow.setSkipTaskbar(true);
       mainWindow.hide();
-      releaseRendererMemory();
     }
   });
   mainWindow.on('hide', () => {
@@ -419,9 +457,11 @@ function setupAutoUpdater() {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.on('checking-for-update', () => {
+    if (updateDownloaded) return;
     sendUpdate({ state: 'checking', message: '正在檢查更新…' });
   });
   autoUpdater.on('update-available', (info) => {
+    if (updateDownloaded) return;
     sendUpdate({
       state: 'available',
       version: info?.version || '',
@@ -429,9 +469,17 @@ function setupAutoUpdater() {
     });
   });
   autoUpdater.on('update-not-available', () => {
+    if (updateDownloaded) {
+      sendUpdate({
+        state: 'ready',
+        message: '更新已下載。掛機結束後按「重開並套用更新」。',
+      });
+      return;
+    }
     sendUpdate({ state: 'idle', message: '已是最新版本。' });
   });
   autoUpdater.on('download-progress', (progress) => {
+    if (updateDownloaded) return;
     const pct = Number(progress?.percent) || 0;
     sendUpdate({
       state: 'downloading',
@@ -440,6 +488,7 @@ function setupAutoUpdater() {
     });
   });
   autoUpdater.on('update-downloaded', (info) => {
+    updateDownloaded = true;
     sendUpdate({
       state: 'ready',
       version: info?.version || '',
@@ -447,6 +496,7 @@ function setupAutoUpdater() {
     });
   });
   autoUpdater.on('error', (err) => {
+    if (updateDownloaded) return;
     sendUpdate({
       state: 'error',
       message: `更新失敗：${err?.message || err}`,
@@ -507,7 +557,8 @@ function bindIpc() {
     const dest = path.join(dir, name);
     const tmp = `${dest}.tmp`;
     await fs.promises.writeFile(tmp, contents, 'utf8');
-    await fs.promises.rename(tmp, dest);
+    await fs.promises.copyFile(tmp, dest);
+    try { await fs.promises.unlink(tmp); } catch (_) { /* ignore */ }
     return { ok: true, path: dest };
   });
 
@@ -521,7 +572,9 @@ async function startAppWindows() {
   if (assetEnsurePromise) return assetEnsurePromise;
   assetEnsurePromise = (async () => {
     try {
+      createTray();
       if (app.isPackaged && missingPacks().length) {
+        splashCanClose = false;
         if (!splashWindow || splashWindow.isDestroyed()) await createSplashWindow();
         sendSplash({
           state: 'download',
@@ -532,13 +585,14 @@ async function startAppWindows() {
         await ensureLargeAssets();
       }
       if (!mainWindow || mainWindow.isDestroyed()) createMainWindow();
-      createTray();
-      if (app.isPackaged) {
+      if (app.isPackaged && !updaterArmed) {
+        updaterArmed = true;
         setTimeout(() => {
           autoUpdater.checkForUpdates().catch(() => {});
         }, 5000);
       }
     } catch (err) {
+      splashCanClose = true;
       sendSplash({
         state: 'error',
         percent: 0,
@@ -555,7 +609,14 @@ async function startAppWindows() {
 
 if (gotLock) {
   app.on('second-instance', () => {
-    showMainWindow();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      showMainWindow();
+      return;
+    }
+    if (splashWindow && !splashWindow.isDestroyed()) {
+      splashWindow.show();
+      splashWindow.focus();
+    }
   });
 
   app.on('before-quit', () => {
@@ -563,6 +624,7 @@ if (gotLock) {
   });
 
   app.on('window-all-closed', () => {
+    if (tray && loadSettings().closeToTray && !isQuitting) return;
     isQuitting = true;
     if (process.platform !== 'darwin') app.quit();
   });

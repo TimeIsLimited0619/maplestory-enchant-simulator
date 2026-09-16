@@ -143,7 +143,7 @@ const SaveBackupPanel = (() => {
           <li>${cdLine}</li>
         </ul>
         ${s.desktop
-          ? '<p class="save-backup-hint">桌面版會自動把完整 .mss 寫到本機資料夾（更新程式不會清進度）。路徑：%APPDATA%\\MapleEnchantSimulator\\saves\\</p>'
+          ? '<p class="save-backup-hint">桌面版會自動把完整 .mss 寫到本機資料夾（更新程式不會清進度）。路徑：%APPDATA%\\MapleEnchantSimulator\\saves\\<br>網頁版（github.io）進度不會自動帶過來，請先匯出再在此匯入。</p>'
           : (s.bound ? '' : '<p class="save-backup-warn">未綁定時，清理瀏覽器／網站資料可能遺失進度。</p>')}
       </section>
       ${bindSection}
