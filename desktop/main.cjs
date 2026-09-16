@@ -9,6 +9,7 @@ const {
   protocol,
   net,
   nativeImage,
+  dialog,
 } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -61,10 +62,15 @@ let updateDownloaded = false;
 let updaterArmed = false;
 let splashCanClose = false;
 let cachedImageRoots = null;
+let splashConfirmResolve = null;
+
+const DOWNLOAD_UA = 'MapleEnchantSimulator';
+const RANGE_PARTS = 8;
 
 const DEFAULT_SETTINGS = {
   closeToTray: true,
   forceGcOnHide: false,
+  assetDir: '',
 };
 
 function projectRoot() {
@@ -81,9 +87,14 @@ function loadSettings() {
   try {
     const raw = fs.readFileSync(settingsPath(), 'utf8');
     const data = JSON.parse(raw);
+    let assetDir = '';
+    if (typeof data?.assetDir === 'string' && data.assetDir.trim()) {
+      assetDir = path.resolve(data.assetDir.trim());
+    }
     return {
       closeToTray: data?.closeToTray !== false,
       forceGcOnHide: !!data?.forceGcOnHide,
+      assetDir,
     };
   } catch (_) {
     return { ...DEFAULT_SETTINGS };
@@ -115,8 +126,18 @@ function extraImagesRoot() {
   return path.join(process.resourcesPath, 'images');
 }
 
+function defaultAssetRoot() {
+  return path.join(app.getPath('userData'), 'assets');
+}
+
+function assetRoot() {
+  const custom = loadSettings().assetDir;
+  if (custom) return custom;
+  return defaultAssetRoot();
+}
+
 function downloadedImagesRoot() {
-  return path.join(app.getPath('userData'), 'assets', 'images');
+  return path.join(assetRoot(), 'images');
 }
 
 function invalidateImageRoots() {
@@ -230,28 +251,142 @@ function missingPacks() {
   return (ASSET_MANIFEST.packs || []).filter((pack) => !packIsReady(pack));
 }
 
-async function downloadToFile(url, dest, onProgress) {
+function formatSpeed(bps) {
+  const v = Number(bps) || 0;
+  if (v <= 0) return '';
+  if (v < 1024) return `${v.toFixed(0)} B/s`;
+  if (v < 1024 * 1024) return `${(v / 1024).toFixed(1)} KB/s`;
+  return `${(v / (1024 * 1024)).toFixed(1)} MB/s`;
+}
+
+function makeSpeedMeter() {
+  let lastT = Date.now();
+  let lastB = 0;
+  let speed = 0;
+  return {
+    sample(received) {
+      const now = Date.now();
+      const dt = now - lastT;
+      if (dt >= 350) {
+        speed = (received - lastB) / (dt / 1000);
+        lastT = now;
+        lastB = received;
+      }
+      return speed;
+    },
+  };
+}
+
+async function probeDownload(url) {
   const res = await fetch(url, {
     redirect: 'follow',
-    headers: { 'User-Agent': 'MapleEnchantSimulator' },
+    headers: { 'User-Agent': DOWNLOAD_UA, Range: 'bytes=0-0' },
+  });
+  if (!res.ok && res.status !== 206) {
+    throw new Error(`下載失敗 HTTP ${res.status}`);
+  }
+  const cr = res.headers.get('content-range');
+  let total = 0;
+  if (cr) {
+    const m = /\/(\d+)\s*$/.exec(cr);
+    if (m) total = Number(m[1]) || 0;
+  }
+  if (!total) total = Number(res.headers.get('content-length')) || 0;
+  const ranged = res.status === 206 && total > 1;
+  try {
+    if (res.body && typeof res.body.cancel === 'function') await res.body.cancel();
+  } catch (_) { /* ignore */ }
+  return { total, ranged };
+}
+
+async function readStreamToOffset(res, dest, start, onChunk) {
+  const fh = await fs.promises.open(dest, 'r+');
+  try {
+    let offset = start;
+    if (!res.body || typeof res.body.getReader !== 'function') {
+      const buf = Buffer.from(await res.arrayBuffer());
+      await fh.write(buf, 0, buf.length, offset);
+      if (onChunk) onChunk(buf.length);
+      return;
+    }
+    const reader = res.body.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const buf = Buffer.from(value);
+      await fh.write(buf, 0, buf.length, offset);
+      offset += buf.length;
+      if (onChunk) onChunk(buf.length);
+    }
+  } finally {
+    await fh.close();
+  }
+}
+
+async function downloadRanged(url, dest, total, onProgress) {
+  const parts = Math.min(RANGE_PARTS, Math.max(1, Math.ceil(total / (8 * 1024 * 1024))));
+  const chunkSize = Math.ceil(total / parts);
+  await fs.promises.mkdir(path.dirname(dest), { recursive: true });
+  const fh = await fs.promises.open(dest, 'w');
+  try {
+    await fh.truncate(total);
+  } finally {
+    await fh.close();
+  }
+  let received = 0;
+  const meter = makeSpeedMeter();
+  const notify = () => {
+    if (onProgress) onProgress(received, total, meter.sample(received));
+  };
+  const tasks = [];
+  for (let i = 0; i < parts; i += 1) {
+    const start = i * chunkSize;
+    const end = Math.min(total, start + chunkSize) - 1;
+    if (start > end) break;
+    tasks.push((async () => {
+      const res = await fetch(url, {
+        redirect: 'follow',
+        headers: {
+          'User-Agent': DOWNLOAD_UA,
+          Range: `bytes=${start}-${end}`,
+        },
+      });
+      if (!res.ok && res.status !== 206) {
+        throw new Error(`下載失敗 HTTP ${res.status}`);
+      }
+      await readStreamToOffset(res, dest, start, (n) => {
+        received += n;
+        notify();
+      });
+    })());
+  }
+  await Promise.all(tasks);
+  notify();
+}
+
+async function downloadSingle(url, dest, total, onProgress) {
+  const res = await fetch(url, {
+    redirect: 'follow',
+    headers: { 'User-Agent': DOWNLOAD_UA },
   });
   if (!res.ok) {
     throw new Error(`下載失敗 HTTP ${res.status}`);
   }
-  const total = Number(res.headers.get('content-length')) || 0;
+  const size = total || Number(res.headers.get('content-length')) || 0;
   await fs.promises.mkdir(path.dirname(dest), { recursive: true });
   const file = fs.createWriteStream(dest);
+  const meter = makeSpeedMeter();
+  let received = 0;
   try {
     if (!res.body || typeof res.body.getReader !== 'function') {
       const buf = Buffer.from(await res.arrayBuffer());
       await new Promise((resolve, reject) => {
         file.end(buf, (err) => (err ? reject(err) : resolve()));
       });
-      if (onProgress) onProgress(buf.length, buf.length);
+      if (onProgress) onProgress(buf.length, buf.length || size, 0);
       return;
     }
     const reader = res.body.getReader();
-    let received = 0;
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -259,7 +394,7 @@ async function downloadToFile(url, dest, onProgress) {
       if (!file.write(Buffer.from(value))) {
         await new Promise((resolve) => file.once('drain', resolve));
       }
-      if (onProgress) onProgress(received, total);
+      if (onProgress) onProgress(received, size, meter.sample(received));
     }
     await new Promise((resolve, reject) => {
       file.end((err) => (err ? reject(err) : resolve()));
@@ -269,6 +404,19 @@ async function downloadToFile(url, dest, onProgress) {
     try { await fs.promises.unlink(dest); } catch (_) { /* ignore */ }
     throw err;
   }
+}
+
+async function downloadToFile(url, dest, onProgress) {
+  const probe = await probeDownload(url);
+  if (probe.ranged && probe.total > 4 * 1024 * 1024) {
+    try {
+      await downloadRanged(url, dest, probe.total, onProgress);
+      return;
+    } catch (_) {
+      try { await fs.promises.unlink(dest); } catch (e) { /* ignore */ }
+    }
+  }
+  await downloadSingle(url, dest, probe.total, onProgress);
 }
 
 async function extractZip(zipPath, destDir) {
@@ -300,23 +448,24 @@ async function ensureLargeAssets() {
     const pack = needed[i];
     const fileName = `${pack.filePrefix}-${assetVer}.zip`;
     const url = `https://github.com/${GH_OWNER}/${GH_REPO}/releases/download/v${version}/${fileName}`;
-    const zipPath = path.join(app.getPath('userData'), 'assets', 'tmp', fileName);
+    const zipPath = path.join(assetRoot(), 'tmp', fileName);
     sendSplash({
       state: 'download',
       percent: Math.round((i / needed.length) * 100),
       message: `正在下載${pack.label || pack.id}（${i + 1}/${needed.length}）…`,
-      detail: '首次安裝需下載大型動畫資源，之後離線可玩。',
+      detail: '使用多連線下載以加快速度。',
     });
-    await downloadToFile(url, zipPath, (received, total) => {
+    await downloadToFile(url, zipPath, (received, total, speed) => {
       const packPct = total > 0 ? received / total : 0;
       const percent = ((i + packPct) / needed.length) * 100;
+      const spd = formatSpeed(speed);
       sendSplash({
         state: 'download',
         percent,
         message: `正在下載${pack.label || pack.id}（${i + 1}/${needed.length}）…`,
         detail: total > 0
-          ? `${formatBytes(received)} / ${formatBytes(total)}`
-          : formatBytes(received),
+          ? `${formatBytes(received)} / ${formatBytes(total)}${spd ? ` · ${spd}` : ''}`
+          : `${formatBytes(received)}${spd ? ` · ${spd}` : ''}`,
       });
     });
     sendSplash({
@@ -333,10 +482,24 @@ async function ensureLargeAssets() {
   invalidateImageRoots();
 }
 
+function waitForSplashConfirm() {
+  return new Promise((resolve) => {
+    splashConfirmResolve = resolve;
+  });
+}
+
+function resolveSplashConfirm() {
+  if (!splashConfirmResolve) return false;
+  const fn = splashConfirmResolve;
+  splashConfirmResolve = null;
+  fn();
+  return true;
+}
+
 function createSplashWindow() {
   splashWindow = new BrowserWindow({
-    width: 480,
-    height: 280,
+    width: 560,
+    height: 400,
     frame: false,
     resizable: false,
     show: true,
@@ -512,6 +675,7 @@ function bindIpc() {
       packaged: app.isPackaged,
       userData: app.getPath('userData'),
       saveDir: path.join(app.getPath('userData'), 'saves'),
+      assetDir: downloadedImagesRoot(),
       closeToTray: settings.closeToTray,
       forceGcOnHide: settings.forceGcOnHide,
       assetVersion: ASSET_MANIFEST.version,
@@ -562,6 +726,34 @@ function bindIpc() {
     return { ok: true, path: dest };
   });
 
+  ipcMain.handle('splash:pick-dir', async () => {
+    const parent = splashWindow && !splashWindow.isDestroyed() ? splashWindow : undefined;
+    const result = await dialog.showOpenDialog(parent, {
+      title: '選擇資源下載資料夾',
+      defaultPath: assetRoot(),
+      properties: ['openDirectory', 'createDirectory'],
+    });
+    if (result.canceled || !result.filePaths || !result.filePaths[0]) {
+      return { ok: false, path: downloadedImagesRoot() };
+    }
+    saveSettings({ assetDir: result.filePaths[0] });
+    invalidateImageRoots();
+    const nextPath = downloadedImagesRoot();
+    sendSplash({
+      state: 'ready',
+      percent: 0,
+      message: '首次啟動需下載 BOSS 動畫與技能特效（約 1.7GB，只下載一次）。',
+      detail: nextPath,
+      path: nextPath,
+    });
+    return { ok: true, path: nextPath };
+  });
+
+  ipcMain.handle('splash:start', () => {
+    resolveSplashConfirm();
+    return { ok: true, path: downloadedImagesRoot() };
+  });
+
   ipcMain.handle('splash:retry', async () => {
     await startAppWindows();
     return { ok: true };
@@ -577,11 +769,13 @@ async function startAppWindows() {
         splashCanClose = false;
         if (!splashWindow || splashWindow.isDestroyed()) await createSplashWindow();
         sendSplash({
-          state: 'download',
+          state: 'ready',
           percent: 0,
-          message: '正在準備遊戲資源…',
-          detail: '',
+          message: '首次啟動需下載 BOSS 動畫與技能特效（約 1.7GB，只下載一次）。',
+          detail: downloadedImagesRoot(),
+          path: downloadedImagesRoot(),
         });
+        await waitForSplashConfirm();
         await ensureLargeAssets();
       }
       if (!mainWindow || mainWindow.isDestroyed()) createMainWindow();
@@ -598,6 +792,7 @@ async function startAppWindows() {
         percent: 0,
         message: `資源準備失敗：${err?.message || err}`,
         detail: '請確認網路後重試。大型動畫包與安裝檔放在同一個 GitHub Release。',
+        path: downloadedImagesRoot(),
       });
       throw err;
     } finally {

@@ -15,7 +15,7 @@
     .wrap {
       box-sizing: border-box;
       height: 100%;
-      padding: 28px 32px 24px;
+      padding: 24px 28px 20px;
       display: flex;
       flex-direction: column;
     }
@@ -25,11 +25,19 @@
       font-weight: 700;
     }
     #status {
-      margin: 0 0 18px;
+      margin: 0 0 10px;
       font-size: 13px;
       line-height: 1.5;
       color: rgba(255, 255, 255, 0.62);
       min-height: 40px;
+    }
+    #path {
+      margin: 0 0 14px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: rgba(255, 255, 255, 0.45);
+      word-break: break-all;
+      min-height: 34px;
     }
     .bar {
       height: 10px;
@@ -48,11 +56,16 @@
       margin: 8px 0 0;
       font-size: 12px;
       color: rgba(255, 255, 255, 0.45);
+      min-height: 18px;
     }
-    #retry {
-      display: none;
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
       margin-top: 16px;
-      align-self: flex-start;
+    }
+    button {
+      display: none;
       border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 8px;
       background: #2D2F39;
@@ -62,33 +75,73 @@
       padding: 8px 14px;
       cursor: pointer;
     }
-    #retry.show { display: inline-flex; }
+    #start {
+      background: #3d5ccc;
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+    button.show { display: inline-flex; }
+    button:disabled { opacity: 0.45; cursor: default; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>放置谷</h1>
     <p id="status">正在準備遊戲資源…</p>
+    <p id="path"></p>
     <div class="bar"><div id="fill"></div></div>
     <div id="pct"></div>
-    <button type="button" id="retry">重試下載</button>
+    <div class="actions">
+      <button type="button" id="choose">選擇資料夾</button>
+      <button type="button" id="start">開始下載</button>
+      <button type="button" id="retry">重試下載</button>
+    </div>
   </div>
   <script>
     const statusEl = document.getElementById('status');
+    const pathEl = document.getElementById('path');
     const fillEl = document.getElementById('fill');
     const pctEl = document.getElementById('pct');
+    const chooseEl = document.getElementById('choose');
+    const startEl = document.getElementById('start');
     const retryEl = document.getElementById('retry');
+    let currentPath = '';
     function render(data) {
       const d = data || {};
       statusEl.textContent = d.message || '正在準備遊戲資源…';
       const pct = Math.max(0, Math.min(100, Number(d.percent) || 0));
       fillEl.style.width = pct + '%';
-      pctEl.textContent = d.detail || (pct > 0 ? pct.toFixed(0) + '%' : '');
-      retryEl.classList.toggle('show', d.state === 'error');
+      const ready = d.state === 'ready';
+      const err = d.state === 'error';
+      const busy = d.state === 'download' || d.state === 'extract';
+      if (d.path) currentPath = d.path;
+      pathEl.textContent = currentPath ? ('資源位置：' + currentPath) : '';
+      if (ready) {
+        pctEl.textContent = '可改到較快的磁碟，再按開始下載。';
+      } else {
+        pctEl.textContent = d.detail || (pct > 0 ? pct.toFixed(0) + '%' : '');
+      }
+      chooseEl.classList.toggle('show', ready || err);
+      startEl.classList.toggle('show', ready);
+      retryEl.classList.toggle('show', err);
+      chooseEl.disabled = busy;
+      startEl.disabled = busy;
     }
     if (window.mssSplash && typeof window.mssSplash.onProgress === 'function') {
       window.mssSplash.onProgress(render);
     }
+    chooseEl.addEventListener('click', async () => {
+      if (!window.mssSplash || typeof window.mssSplash.pickDir !== 'function') return;
+      const result = await window.mssSplash.pickDir();
+      if (result && result.path) {
+        currentPath = result.path;
+        pathEl.textContent = '資源位置：' + result.path;
+      }
+    });
+    startEl.addEventListener('click', () => {
+      startEl.disabled = true;
+      chooseEl.disabled = true;
+      if (window.mssSplash) window.mssSplash.start();
+    });
     retryEl.addEventListener('click', () => {
       retryEl.classList.remove('show');
       if (window.mssSplash) window.mssSplash.retry();

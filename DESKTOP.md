@@ -5,8 +5,9 @@
 ## 安裝
 
 1. 打開 [GitHub Releases](https://github.com/TimeIsLimited0619/maplestory-enchant-simulator/releases) 下載 `MapleEnchantSimulator-Setup-x.y.z.exe`。
-2. 雙擊安裝。第一次啟動會再下載 BOSS 動畫與技能特效（約 1.7GB，只下載一次）。
-3. 之後可完全離線遊玩。
+2. 雙擊安裝，可自選安裝資料夾（不要裝在空間不夠的磁碟）。
+3. 第一次啟動會再下載 BOSS 動畫與技能特效（約 1.7GB）。畫面上可再選資源存放資料夾，確認後按「開始下載」。
+4. 之後可完全離線遊玩。
 
 未簽章時 Windows 可能出現 SmartScreen：選「其他資訊」→「仍要執行」。
 
