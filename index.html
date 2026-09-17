@@ -25,6 +25,10 @@
   <link rel="preload" as="image" href="images/iventory/inventory_bg.png">
   <link rel="preload" as="image" href="images/UIEquip/main/main_backgrnd.png">
   <link rel="preload" as="image" href="images/UIEquip/EquipTab/EquipTab.canvas_equip.png">
+  <link rel="preload" as="image" href="images/UIEquip/PetTab/PetTab.canvas_pet.png">
+  <link rel="preload" as="image" href="images/UIEquip/Deco/main/backgrnd.png">
+  <link rel="preload" as="image" href="images/UIEquip/Deco/CoordiTab/canvas_coordi.png">
+  <link rel="preload" as="image" href="images/UIEquip/Symbol/backgrnd.png">
 
   <!-- 自訂 CSS（modules；file:// 勿用 @import） -->
   <link rel="stylesheet" href="css/modules/01-base.css?v=20260902nav1">
@@ -44,9 +48,9 @@
   <link rel="stylesheet" href="css/modules/12-scroll.css?v=20260904traceCost2">
   <link rel="stylesheet" href="css/modules/13-potential.css?v=20260820ptCube2">
   <link rel="stylesheet" href="css/modules/14-potential-inspect.css?v=20260814inspect1">
-  <link rel="stylesheet" href="css/modules/15-equip-tooltip.css?v=20260913sfProtectClick2">
+  <link rel="stylesheet" href="css/modules/15-equip-tooltip.css?v=20260917symbolTip2">
   <link rel="stylesheet" href="css/modules/16-bonus-stat.css?v=20260820btnAlign1">
-  <link rel="stylesheet" href="css/modules/17-uiequip.css?v=20260825doll2">
+  <link rel="stylesheet" href="css/modules/17-uiequip.css?v=20260916symbol6">
   <link rel="stylesheet" href="css/modules/18-equip-stat-panel.css?v=20260814esp2">
   <link rel="stylesheet" href="css/modules/19-ui-character-info.css?v=20260830statInfoR1">
   <link rel="stylesheet" href="css/modules/26-character-hyper-ap.css?v=20260831hyperTip3">
@@ -55,10 +59,10 @@
   <link rel="stylesheet" href="css/modules/22-log-cost-panels.css?v=20260814cost1">
   <link rel="stylesheet" href="css/modules/24-enchant-tools-panel.css?v=20260821expect2">
   <link rel="stylesheet" href="css/modules/23-combat-efficiency-panel.css?v=20260815eff2">
-  <link rel="stylesheet" href="css/modules/32-damage-number.css?v=20260910huntPerf3">
-  <link rel="stylesheet" href="css/modules/33-skill-board.css?v=20260912settings2">
+  <link rel="stylesheet" href="css/modules/32-damage-number.css?v=20260917visual1">
+  <link rel="stylesheet" href="css/modules/33-skill-board.css?v=20260917slot5x5">
   <link rel="stylesheet" href="css/modules/34-skill-tooltip.css?v=20260830skillTip1">
-  <link rel="stylesheet" href="css/modules/25-idle-hunt.css?v=20260916huntFix1">
+  <link rel="stylesheet" href="css/modules/25-idle-hunt.css?v=20260917merc13">
   <link rel="stylesheet" href="css/modules/36-idle-potion.css?v=20260904uipotion4">
   <link rel="stylesheet" href="css/modules/27-idle-gm-drops.css?v=20260903dgDiffRw1">
   <link rel="stylesheet" href="css/modules/28-idle-dungeon.css?v=20260913bossTopHp1">
@@ -210,13 +214,22 @@
       </div> 
 
       <!-- 2a. 裝備欄（可與強化台並存） -->
-      <div id="uiEquipPanel" class="uiequip-panel hidden" aria-label="裝備欄">
+      <div id="uiEquipPanel" class="uiequip-panel hidden" data-window="equip" data-equip-tab="equip" data-deco-tab="coordi" data-symbol-page="arc" aria-label="裝備欄">
         <div class="panel-drag-handle-bar" id="uiEquipDragHandle" title="拖曳裝備欄"></div>
         <button type="button" class="panel-wb-close" id="uiEquipClose" aria-label="關閉裝備欄" title="關閉"><span aria-hidden="true">×</span></button>
-        <button type="button" class="uiequip-tab uiequip-tab-equip" tabindex="-1" aria-hidden="true" title="裝備"></button>
-        <button type="button" class="uiequip-tab uiequip-tab-cash" tabindex="-1" aria-hidden="true" title="裝扮"></button>
+        <div class="uiequip-tabset uiequip-tabset-equip">
+          <button type="button" class="uiequip-tab uiequip-tab-equip is-selected" id="uiEquipTabEquip" data-equip-tab="equip" title="裝備"></button>
+          <button type="button" class="uiequip-tab uiequip-tab-pet" id="uiEquipTabPet" data-equip-tab="pet" title="寵物"></button>
+        </div>
+        <div class="uiequip-tabset uiequip-tabset-deco">
+          <button type="button" class="uiequip-tab uiequip-tab-coordi is-selected" id="uiEquipTabCoordi" data-deco-tab="coordi" title="裝扮"></button>
+          <button type="button" class="uiequip-tab uiequip-tab-android" id="uiEquipTabAndroid" data-deco-tab="android" title="機器人"></button>
+          <button type="button" class="uiequip-tab uiequip-tab-skin" id="uiEquipTabDamageSkin" data-deco-tab="damageSkin" title="傷害字型"></button>
+        </div>
         <div class="uiequip-canvas" aria-hidden="true"></div>
         <div id="uiEquipSlots" class="uiequip-slots"></div>
+        <button type="button" class="uiequip-deco-ui-btn" id="uiEquipDecoUiBtn" title="裝扮"></button>
+        <button type="button" class="uiequip-symbol-btn" id="uiEquipSymbolBtn" title="符文" aria-pressed="false"></button>
         <button type="button" class="uiequip-totem-btn" id="uiEquipTotemBtn" title="貴重物品／圖騰" aria-pressed="false"></button>
         <div id="uiEquipTotemPanel" class="uiequip-totem-panel is-hidden" aria-label="圖騰裝備區">
           <div class="uiequip-totem-canvas" aria-hidden="true"></div>
@@ -228,6 +241,176 @@
         <button type="button" class="uiequip-preset-btn uiequip-preset-2" id="uiEquipPreset2" title="裝備預設 2"></button>
         <button type="button" class="uiequip-preset-btn uiequip-preset-3" id="uiEquipPreset3" title="裝備預設 3"></button>
         <button type="button" class="uiequip-preset-apply" id="uiEquipPresetApply" title="套用預設"></button>
+
+        <div id="uiEquipPetPage" class="uiequip-pet-page">
+          <div class="uiequip-pet-canvas" aria-hidden="true"></div>
+          <div class="uiequip-inert-slots">
+            <div class="uiequip-slot is-inert uiequip-pet-slot" data-pet-slot="Pet1" title="寵物"></div>
+            <div class="uiequip-slot is-inert uiequip-pet-slot" data-pet-slot="Pet2" title="寵物"></div>
+            <div class="uiequip-slot is-inert uiequip-pet-slot" data-pet-slot="Pet3" title="寵物"></div>
+            <div class="uiequip-slot is-inert uiequip-pet-slot" data-pet-slot="114" title="寵物裝備"></div>
+            <div class="uiequip-slot is-inert uiequip-pet-slot" data-pet-slot="124" title="寵物裝備"></div>
+            <div class="uiequip-slot is-inert uiequip-pet-slot" data-pet-slot="126" title="寵物裝備"></div>
+            <div class="uiequip-slot is-inert uiequip-pet-slot" data-pet-slot="Skill1_1" title="寵物技能"></div>
+            <div class="uiequip-slot is-inert uiequip-pet-slot" data-pet-slot="Skill1_2" title="寵物技能"></div>
+            <div class="uiequip-slot is-inert uiequip-pet-slot" data-pet-slot="Skill2_1" title="寵物技能"></div>
+            <div class="uiequip-slot is-inert uiequip-pet-slot" data-pet-slot="Skill2_2" title="寵物技能"></div>
+            <div class="uiequip-slot is-inert uiequip-pet-slot" data-pet-slot="Skill3_1" title="寵物技能"></div>
+            <div class="uiequip-slot is-inert uiequip-pet-slot" data-pet-slot="Skill3_2" title="寵物技能"></div>
+            <div class="uiequip-slot is-inert uiequip-pet-slot" data-pet-slot="200" title="寵物藥水"></div>
+            <div class="uiequip-slot is-inert uiequip-pet-slot" data-pet-slot="201" title="寵物藥水"></div>
+          </div>
+          <span class="uiequip-pet-check" data-pet-check="AutoSkill" aria-hidden="true"></span>
+          <span class="uiequip-pet-check" data-pet-check="petPotion" aria-hidden="true"></span>
+          <span class="uiequip-pet-check" data-pet-check="PetFood" aria-hidden="true"></span>
+          <span class="uiequip-pet-check" data-pet-check="ItemRoot" aria-hidden="true"></span>
+          <span class="uiequip-pet-label" data-pet-label="AutoSkill" aria-hidden="true"></span>
+          <span class="uiequip-pet-label" data-pet-label="petPotion" aria-hidden="true"></span>
+          <span class="uiequip-pet-label" data-pet-label="PetFood" aria-hidden="true"></span>
+          <span class="uiequip-pet-label" data-pet-label="ItemRoot" aria-hidden="true"></span>
+        </div>
+
+        <div id="uiEquipDecoPages" class="uiequip-deco-pages">
+          <button type="button" class="uiequip-equip-ui-btn" id="uiEquipEquipUiBtn" title="裝備"></button>
+          <div id="uiEquipCoordiPage" class="uiequip-deco-page is-active" data-deco-page="coordi">
+            <div class="uiequip-coordi-canvas" aria-hidden="true"></div>
+            <div class="uiequip-inert-slots">
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="101" title="帽子"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="102" title="臉飾"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="103" title="眼飾"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="104" title="耳環"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="105" title="上衣"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="106" title="褲/裙"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="107" title="鞋子"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="108" title="手套"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="109" title="披風"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="110" title="武器"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="111" title="武器"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="112" title="戒指"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="113" title="戒指"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="115" title="戒指"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="116" title="戒指"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="hair" title="髮型"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="face" title="臉型"></div>
+              <div class="uiequip-slot is-inert uiequip-coordi-slot" data-coordi-slot="skin" title="膚色"></div>
+            </div>
+          </div>
+          <div id="uiEquipAndroidPage" class="uiequip-deco-page" data-deco-page="android">
+            <div class="uiequip-android-canvas" aria-hidden="true"></div>
+            <div class="uiequip-android-empty" aria-hidden="true"></div>
+            <div class="uiequip-inert-slots">
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="1200" title="帽子"></div>
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="1201" title="披風"></div>
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="1202" title="臉飾"></div>
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="1203" title="上衣"></div>
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="1204" title="褲/裙"></div>
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="1205" title="鞋子"></div>
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="1206" title="手套"></div>
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="1207" title="肩膀裝飾"></div>
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="1208" title="眼飾"></div>
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="1209" title="耳環"></div>
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="1210" title="戒指"></div>
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="1211" title="戒指"></div>
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="1212" title="戒指"></div>
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="1213" title="戒指"></div>
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="hair" title="髮型"></div>
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="face" title="臉型"></div>
+              <div class="uiequip-slot is-inert uiequip-android-slot" data-android-slot="skin" title="膚色"></div>
+            </div>
+            <button type="button" class="uiequip-android-shop is-disabled" title="商店（尚未實作）" disabled aria-disabled="true"></button>
+          </div>
+          <div id="uiEquipDamageSkinPage" class="uiequip-deco-page" data-deco-page="damageSkin">
+            <div class="uiequip-skin-canvas" aria-hidden="true"></div>
+            <div class="uiequip-inert-slots uiequip-skin-slots">
+              <div class="uiequip-slot is-inert uiequip-skin-slot" data-skin-slot="0" title="傷害字型"></div>
+              <div class="uiequip-slot is-inert uiequip-skin-slot" data-skin-slot="1" title="傷害字型"></div>
+              <div class="uiequip-slot is-inert uiequip-skin-slot" data-skin-slot="2" title="傷害字型"></div>
+              <div class="uiequip-slot is-inert uiequip-skin-slot" data-skin-slot="3" title="傷害字型"></div>
+              <div class="uiequip-slot is-inert uiequip-skin-slot" data-skin-slot="4" title="傷害字型"></div>
+              <div class="uiequip-slot is-inert uiequip-skin-slot" data-skin-slot="5" title="傷害字型"></div>
+              <div class="uiequip-slot is-inert uiequip-skin-slot" data-skin-slot="6" title="傷害字型"></div>
+              <div class="uiequip-slot is-inert uiequip-skin-slot" data-skin-slot="7" title="傷害字型"></div>
+              <div class="uiequip-slot is-inert uiequip-skin-slot" data-skin-slot="8" title="傷害字型"></div>
+              <div class="uiequip-slot is-inert uiequip-skin-slot" data-skin-slot="9" title="傷害字型"></div>
+              <div class="uiequip-slot is-inert uiequip-skin-slot" data-skin-slot="10" title="傷害字型"></div>
+              <div class="uiequip-slot is-inert uiequip-skin-slot" data-skin-slot="11" title="傷害字型"></div>
+              <div class="uiequip-slot is-inert uiequip-skin-slot" data-skin-slot="12" title="傷害字型"></div>
+              <div class="uiequip-slot is-inert uiequip-skin-slot" data-skin-slot="13" title="傷害字型"></div>
+              <div class="uiequip-slot is-inert uiequip-skin-slot" data-skin-slot="14" title="傷害字型"></div>
+            </div>
+            <button type="button" class="uiequip-skin-faq is-disabled" title="說明（尚未實作）" disabled aria-disabled="true"></button>
+            <button type="button" class="uiequip-skin-regist is-disabled" title="登錄（尚未實作）" disabled aria-disabled="true"></button>
+            <button type="button" class="uiequip-skin-gather is-disabled" title="蒐集（尚未實作）" disabled aria-disabled="true"></button>
+            <div class="uiequip-skin-search" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <div id="uiEquipSymbolPanel" class="uiequip-symbol-panel is-hidden" aria-label="符文裝備區">
+          <button type="button" class="uiequip-symbol-tab uiequip-symbol-tab-arc is-selected" id="uiEquipSymbolTabArc" data-symbol-page="arc" title="秘法符文"></button>
+          <button type="button" class="uiequip-symbol-tab uiequip-symbol-tab-aut" id="uiEquipSymbolTabAut" data-symbol-page="aut" title="真實符文"></button>
+          <div class="uiequip-symbol-page is-active" data-symbol-page="arc">
+            <div class="uiequip-symbol-inner uiequip-symbol-inner-arc">
+              <div class="uiequip-symbol-totals" aria-hidden="true"></div>
+              <div class="uiequip-slot uiequip-symbol-slot uiequip-symbol-slot-arc" data-slot="arc-0" data-symbol-slot="arc-0" title="神秘符文">
+                <button type="button" class="uiequip-symbol-enchant uiequip-symbol-enchant-arc is-disabled" title="強化" disabled aria-disabled="true"></button>
+              </div>
+              <div class="uiequip-slot uiequip-symbol-slot uiequip-symbol-slot-arc" data-slot="arc-1" data-symbol-slot="arc-1" title="神秘符文">
+                <button type="button" class="uiequip-symbol-enchant uiequip-symbol-enchant-arc is-disabled" title="強化" disabled aria-disabled="true"></button>
+              </div>
+              <div class="uiequip-slot uiequip-symbol-slot uiequip-symbol-slot-arc" data-slot="arc-2" data-symbol-slot="arc-2" title="神秘符文">
+                <button type="button" class="uiequip-symbol-enchant uiequip-symbol-enchant-arc is-disabled" title="強化" disabled aria-disabled="true"></button>
+              </div>
+              <div class="uiequip-slot uiequip-symbol-slot uiequip-symbol-slot-arc" data-slot="arc-3" data-symbol-slot="arc-3" title="神秘符文">
+                <button type="button" class="uiequip-symbol-enchant uiequip-symbol-enchant-arc is-disabled" title="強化" disabled aria-disabled="true"></button>
+              </div>
+              <div class="uiequip-slot uiequip-symbol-slot uiequip-symbol-slot-arc" data-slot="arc-4" data-symbol-slot="arc-4" title="神秘符文">
+                <button type="button" class="uiequip-symbol-enchant uiequip-symbol-enchant-arc is-disabled" title="強化" disabled aria-disabled="true"></button>
+              </div>
+              <div class="uiequip-slot uiequip-symbol-slot uiequip-symbol-slot-arc" data-slot="arc-5" data-symbol-slot="arc-5" title="神秘符文">
+                <button type="button" class="uiequip-symbol-enchant uiequip-symbol-enchant-arc is-disabled" title="強化" disabled aria-disabled="true"></button>
+              </div>
+            </div>
+          </div>
+          <div class="uiequip-symbol-page" data-symbol-page="aut">
+            <div class="uiequip-symbol-inner uiequip-symbol-inner-aut">
+              <div class="uiequip-symbol-totals" aria-hidden="true"></div>
+              <div class="uiequip-slot uiequip-symbol-slot uiequip-symbol-slot-aut" data-slot="aut-0" data-symbol-slot="aut-0" title="真實符文">
+                <button type="button" class="uiequip-symbol-enchant uiequip-symbol-enchant-aut is-disabled" title="強化" disabled aria-disabled="true"></button>
+              </div>
+              <div class="uiequip-slot uiequip-symbol-slot uiequip-symbol-slot-aut" data-slot="aut-1" data-symbol-slot="aut-1" title="真實符文">
+                <button type="button" class="uiequip-symbol-enchant uiequip-symbol-enchant-aut is-disabled" title="強化" disabled aria-disabled="true"></button>
+              </div>
+              <div class="uiequip-slot uiequip-symbol-slot uiequip-symbol-slot-aut" data-slot="aut-2" data-symbol-slot="aut-2" title="真實符文">
+                <button type="button" class="uiequip-symbol-enchant uiequip-symbol-enchant-aut is-disabled" title="強化" disabled aria-disabled="true"></button>
+              </div>
+              <div class="uiequip-slot uiequip-symbol-slot uiequip-symbol-slot-aut" data-slot="aut-3" data-symbol-slot="aut-3" title="真實符文">
+                <button type="button" class="uiequip-symbol-enchant uiequip-symbol-enchant-aut is-disabled" title="強化" disabled aria-disabled="true"></button>
+              </div>
+              <div class="uiequip-slot uiequip-symbol-slot uiequip-symbol-slot-aut" data-slot="aut-4" data-symbol-slot="aut-4" title="真實符文">
+                <button type="button" class="uiequip-symbol-enchant uiequip-symbol-enchant-aut is-disabled" title="強化" disabled aria-disabled="true"></button>
+              </div>
+              <div class="uiequip-slot uiequip-symbol-slot uiequip-symbol-slot-aut" data-slot="aut-5" data-symbol-slot="aut-5" title="真實符文">
+                <button type="button" class="uiequip-symbol-enchant uiequip-symbol-enchant-aut is-disabled" title="強化" disabled aria-disabled="true"></button>
+              </div>
+              <button type="button" class="uiequip-symbol-next uiequip-symbol-next-aut" id="uiEquipSymbolNext" title="切換真實／豪華真實"></button>
+            </div>
+          </div>
+          <div class="uiequip-symbol-page" data-symbol-page="grand">
+            <div class="uiequip-symbol-inner uiequip-symbol-inner-grand">
+              <div class="uiequip-symbol-totals" aria-hidden="true"></div>
+              <div class="uiequip-slot uiequip-symbol-slot uiequip-symbol-slot-grand" data-slot="grand-0" data-symbol-slot="grand-0" title="豪華真實符文">
+                <button type="button" class="uiequip-symbol-enchant uiequip-symbol-enchant-grand is-disabled" title="強化" disabled aria-disabled="true"></button>
+              </div>
+              <div class="uiequip-slot uiequip-symbol-slot uiequip-symbol-slot-grand" data-slot="grand-1" data-symbol-slot="grand-1" title="豪華真實符文">
+                <button type="button" class="uiequip-symbol-enchant uiequip-symbol-enchant-grand is-disabled" title="強化" disabled aria-disabled="true"></button>
+              </div>
+              <div class="uiequip-slot uiequip-symbol-slot uiequip-symbol-slot-grand" data-slot="grand-2" data-symbol-slot="grand-2" title="豪華真實符文">
+                <button type="button" class="uiequip-symbol-enchant uiequip-symbol-enchant-grand is-disabled" title="強化" disabled aria-disabled="true"></button>
+              </div>
+              <button type="button" class="uiequip-symbol-next uiequip-symbol-next-grand" id="uiEquipSymbolNextGrand" title="切換真實／豪華真實"></button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 2. 中間強化主面板 -->
@@ -2104,26 +2287,27 @@
   <!-- JavaScript 載入 (順序：資料庫 -> 數據配置 -> 互動邏輯) -->
   <script src="js/appNavSidebar.js?v=20260914hotkey1"></script>
   <script src="js/starforceSuperiorData.js?v=20260824sfLv1"></script>
-  <script src="js/starforceRules.js?v=20260824sfLv1"></script>
-  <script src="js/item.js?v=20260913sfBreak1"></script>
+  <script src="js/starforceRules.js?v=20260916symbol1"></script>
+  <script src="js/item.js?v=20260916symbol1"></script>
   <script src="js/generatedEquips.js?v=20260823empty2"></script>
   <script src="js/wzImportedEquips.js?v=20260912rmWarArmor1"></script>
   <script src="js/paperdollItems.js?v=20260912rmWarArmor1"></script>
   <script src="js/generatedEquipLoader.js?v=20260825doll1"></script>
   <script src="js/trunkData.js?v=20260914itemStore1"></script>
-  <script src="js/itemStore.js?v=20260914itemStore1"></script>
-  <script src="js/sessionPersistence.js?v=20260916desktop2"></script>
-  <script src="js/equipTooltipData.js?v=20260820tools1"></script>
+  <script src="js/itemStore.js?v=20260916symbol1"></script>
+  <script src="js/sessionPersistence.js?v=20260916symbol1"></script>
+  <script src="js/equipTooltipData.js?v=20260917symbolTip1"></script>
   <script src="js/wzImportedSetItems.js?v=20260907set1"></script>
   <script src="js/equipSetData.js?v=20260907set1"></script>
   <script src="js/hoverTooltipGuard.js?v=20260912tipRight2"></script>
-  <script src="js/inventory.js?v=20260915sfTip1"></script>
+  <script src="js/inventory.js?v=20260916symbol1"></script>
   <script src="js/trunk.js?v=20260914trunk8"></script>
   <script src="js/itemRequestPanel.js?v=20260824req2"></script>
-  <script src="js/uiEquip.js?v=20260914itemStore1"></script>
+  <script src="js/symbolForce.js?v=20260916forceHud1"></script>
+  <script src="js/uiEquip.js?v=20260916symbol8"></script>
   <script src="js/paperdollData.js?v=20260912rmWarArmor1"></script>
   <script src="js/paperdollActionInstructions.js?v=20260829instr1"></script>
-  <script src="js/paperdoll.js?v=20260911nl5"></script>
+  <script src="js/paperdoll.js?v=20260917nlhitch2"></script>
   <script src="js/data.js?v=20260913sfOfficial1"></script>
   <script src="js/modalAnimation.js"></script>
   <script src="js/imagePreload.js?v=20260916huntMem1"></script>
@@ -2338,59 +2522,61 @@
 
   <script src="js/bonusStatInspect.js?v=20260910bsIdleSf1"></script>
   <script src="js/potentialInspect.js?v=20260814inspect1"></script>
-  <script src="js/equipTooltip.js?v=20260913sfBreak1"></script>
-  <script src="js/equipStatPanel.js?v=20260903allStatPct1"></script>
+  <script src="js/equipTooltip.js?v=20260917symbolTip2"></script>
+  <script src="js/equipStatPanel.js?v=20260916symbolFixed1"></script>
   <script src="js/panelDrag.js?v=20260823drag1"></script>
   <script src="js/formatPower.js?v=20260817padWan1"></script>
   <script src="js/combatJobs.js?v=20260912ab1"></script>
   <script src="js/weaponTypeMap.js?v=20260913wepMult3"></script>
   <script src="js/weaponCorrection.js?v=20260818arcaneName1"></script>
-  <script src="js/combatPower.js?v=20260913jobWep1"></script>
+  <script src="js/combatPower.js?v=20260916symbolFixed1"></script>
   <script src="js/characterCombatPanel.js?v=20260913jobWep1"></script>
   <script src="js/mapleExpTable.js?v=20260905defMitCap1"></script>
   <script src="js/levelUpEffectData.js?v=20260829lv1"></script>
   <script src="js/levelUpEffect.js?v=20260907preloadLv1"></script>
-  <script src="js/characterProgression.js?v=20260912save2"></script>
+  <script src="js/characterProgression.js?v=20260917decent1"></script>
   <script src="js/growingEquip.js?v=20260911starter1"></script>
   <script src="js/uiHyperStat.js?v=20260911hyperDef1"></script>
   <script src="js/uiApDistribution.js?v=20260831gmCharLv1"></script>
-  <script src="js/uiStatInfo.js?v=20260913atkWepMult1"></script>
+  <script src="js/uiStatInfo.js?v=20260917exp1"></script>
   <script src="js/damageSkinCatalog.js?v=20260908critSkinPin1"></script>
-  <script src="js/damageNumber.js?v=20260916huntMem1"></script>
-  <script src="js/uiCharacterInfo.js?v=20260913atkAudit1"></script>
-  <script src="js/skillJobData.js?v=20260913ab5"></script>
-  <script src="js/skillOverrides.js?v=20260914nlQuad1"></script>
-  <script src="js/skillCatalog.js?v=20260912ab1"></script>
-  <script src="js/skillFormula.js?v=20260913tip1"></script>
-  <script src="js/skillPoints.js?v=20260901hyperSp2"></script>
-  <script src="js/characterSkills.js?v=20260913jobWep1"></script>
+  <script src="js/damageNumber.js?v=20260917noscale1"></script>
+  <script src="js/uiCharacterInfo.js?v=20260917exp1"></script>
+  <script src="js/skillJobData.js?v=20260917merc16"></script>
+  <script src="js/skillOverrides.js?v=20260917il3"></script>
+  <script src="js/skillCatalog.js?v=20260917il3"></script>
+  <script src="js/skillFormula.js?v=20260917il1"></script>
+  <script src="js/skillPoints.js?v=20260917nlv1"></script>
+  <script src="js/characterSkills.js?v=20260917slot5x5"></script>
   <script src="js/jobChangePanel.js?v=20260912ab1"></script>
   <script src="js/saveBackupPanel.js?v=20260916desktop2"></script>
-  <script src="js/skillModifiers.js?v=20260914buffRefresh1"></script>
-  <script src="js/skillComboOrbs.js?v=20260911bal3"></script>
-  <script src="js/skillBuffRuntime.js?v=20260913ab16"></script>
-  <script src="js/skillMobStatus.js?v=20260914bal4"></script>
-  <script src="js/skillTooltip.js?v=20260903tipGuard1"></script>
-  <script src="js/skillBoardPanel.js?v=20260912settings2"></script>
-  <script src="js/skillEffectPlayer.js?v=20260915fxOp1"></script>
-  <script src="js/skillBallCast.js?v=20260911nl4"></script>
-  <script src="js/skillAreaCast.js?v=20260905bgHunt1"></script>
-  <script src="js/skillChannelCast.js?v=20260913abRes1"></script>
+  <script src="js/skillModifiers.js?v=20260917il1"></script>
+  <script src="js/skillComboOrbs.js?v=20260917gpu1"></script>
+  <script src="js/skillBuffRuntime.js?v=20260917huntoverkill2"></script>
+  <script src="js/skillMobStatus.js?v=20260917nlcap4"></script>
+  <script src="js/skillTooltip.js?v=20260917vact14"></script>
+  <script src="js/skillBoardPanel.js?v=20260917slot5x5"></script>
+  <script src="js/skillEffectPlayer.js?v=20260917hithit1"></script>
+  <script src="js/mobEffBarrierData.js?v=20260916barrier1"></script>
+  <script src="js/mobEffBarrier.js?v=20260916barrier1"></script>
+  <script src="js/skillBallCast.js?v=20260917nlhitch2"></script>
+  <script src="js/skillAreaCast.js?v=20260917merc18"></script>
+  <script src="js/skillChannelCast.js?v=20260917merc1"></script>
   <script src="js/skillBlizzardCast.js?v=20260908mercedes1"></script>
-  <script src="js/skillCombat.js?v=20260914buffRefresh2"></script>
+  <script src="js/skillCombat.js?v=20260917huntoverkill2"></script>
   <script src="js/combatEfficiencyPanel.js?v=20260820overspeed1"></script>
   <script src="js/idleHuntProgressMaps.js?v=20260826mob2"></script>
   <script src="js/idleZonesData.js?v=20260909twilight19"></script>
   <script src="js/idleZoneArtCatalog.js?v=20260823flatbg1"></script>
-  <script src="js/idleZones.js?v=20260907modeMapKeep1"></script>
-  <script src="js/idleHuntDropData.js?v=20260903skill2fix2"></script>
+  <script src="js/idleZones.js?v=20260916forceReq1"></script>
+  <script src="js/idleHuntDropData.js?v=20260916forceReq1"></script>
   <script src="js/idleMobData.js?v=20260831mobDmg1"></script>
   <script src="js/idleMobAnim.js?v=20260916damien36"></script>
-  <script src="js/itemDropController.js?v=20260915suu72"></script>
+  <script src="js/itemDropController.js?v=20260917gpu1"></script>
   <script src="js/idleUiTimer.js?v=20260904timerPos1"></script>
   <script src="js/idlePlayerDeathFlow.js?v=20260905deathOpt1"></script>
   <script src="js/idlePlayerDeathFx.js?v=20260905deathOpt1"></script>
-  <script src="js/idleHunt.js?v=20260916huntMem1"></script>
+  <script src="js/idleHunt.js?v=20260917huntoverkill2"></script>
   <script src="js/idleDungeonListData.js?v=20260912dgTimer1m"></script>
   <script src="js/idleDungeonData.js?v=20260912goldDmg2"></script>
   <script src="js/idleDungeon.js?v=20260913dgHudOut1"></script>
@@ -2399,21 +2585,21 @@
   <script src="js/idleBossMobData.js?v=20260916damien43"></script>
   <script src="js/idleBossSuuPatternData.js?v=20260915suu37"></script>
   <script src="js/idleBossDamienPatternData.js?v=20260916damien36"></script>
-  <script src="js/idleBossPhaseData.js?v=20260916damien45"></script>
-  <script src="js/idleBossFight.js?v=20260916damien46"></script>
-  <script src="js/idleBoss.js?v=20260915bossTitle1"></script>
+  <script src="js/idleBossPhaseData.js?v=20260916symbol1"></script>
+  <script src="js/idleBossFight.js?v=20260917nlperf1"></script>
+  <script src="js/idleBoss.js?v=20260917combatLod2"></script>
   <script src="js/appHotkeys.js?v=20260914hotkey2"></script>
   <script src="js/idleSessionRefresh.js?v=20260916desktop2"></script>
   <script src="js/idleNpcShopData.js?v=20260911starShop1"></script>
   <script src="js/uiNpcShop.js?v=20260915sfTip1"></script>
   <script src="js/uiToadsHammer.js?v=20260913equipSafe1"></script>
-  <script src="js/uiIdleGmDrops.js?v=20260911nl4"></script>
+  <script src="js/uiIdleGmDrops.js?v=20260916forceReq1"></script>
   <script src="js/appMode.js?v=20260908sfIdleCat1"></script>
   <script src="js/costTracker.js?v=20260914importCd1"></script>
   <script src="js/autoSessionLog.js?v=20260820tools1"></script>
   <script src="js/expectedCostCalc.js?v=20260913sfOfficial1"></script>
   <script src="js/shareCode.js?v=20260820tools1"></script>
   <script src="js/enchantToolsPanel.js?v=20260821expect2"></script>
-  <script src="js/main.js?v=20260914itemStore1"></script>
+  <script src="js/main.js?v=20260916huntLod1"></script>
 </body>
 </html>

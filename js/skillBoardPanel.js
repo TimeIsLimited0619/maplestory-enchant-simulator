@@ -4,7 +4,15 @@
 const SkillBoardPanel = (() => {
   const RANKS = ['10', '30', '60', '100', 'hyper', 'hexa'];
   const TYPES = ['active', 'buff', 'passive'];
-  const LOCKED_RANKS = new Set(['hexa']);
+  /** 五轉用原本 hexa 頁籤（Lv.200 圖），技能資料仍是 rank 200 */
+  const LOCKED_RANKS = new Set();
+
+  function catalogRank(rank) {
+    if (typeof SkillPoints !== 'undefined' && typeof SkillPoints.catalogRank === 'function') {
+      return SkillPoints.catalogRank(rank);
+    }
+    return String(rank) === 'hexa' ? '200' : String(rank || '');
+  }
 
   let inited = false;
   let open = false;
@@ -28,7 +36,7 @@ const SkillBoardPanel = (() => {
     if (!skill) return '';
     const raw = skill.icon || (typeof SkillCatalog !== 'undefined' ? SkillCatalog.iconUrl(skill) : '');
     const url = raw
-      ? (raw.includes('?') ? raw : `${raw}?v=20260829icon2`)
+      ? (raw.includes('?') ? raw : `${raw}?v=20260917icon3`)
       : '';
     if (url) {
       const cls = kind === 'equip' ? 'skb-equip-icon' : 'skb-skill-icon';
@@ -117,7 +125,9 @@ const SkillBoardPanel = (() => {
     });
 
     const grid = $('skbEquipGrid');
-    for (let i = 0; i < 9; i += 1) {
+    const slotCount = (typeof CharacterSkills !== 'undefined' && CharacterSkills.EQUIP_SLOT_COUNT)
+      || 25;
+    for (let i = 0; i < slotCount; i += 1) {
       const slot = document.createElement('button');
       slot.type = 'button';
       slot.className = 'skb-equip-slot';
@@ -183,6 +193,7 @@ const SkillBoardPanel = (() => {
     const lv = typeof CharacterProgression !== 'undefined'
       ? (CharacterProgression.getState?.().level || 1)
       : 1;
+    if (ui.activeRank === '200') ui.activeRank = 'hexa';
     $('skbRankTabs')?.querySelectorAll('.skb-rank-tab').forEach((btn) => {
       const rank = btn.dataset.rank;
       const hardLocked = LOCKED_RANKS.has(rank);
@@ -286,7 +297,7 @@ const SkillBoardPanel = (() => {
       ? CharacterSkills.currentJobId()
       : 100;
     const counts = typeof SkillCatalog !== 'undefined'
-      ? SkillCatalog.countByType(jobId, ui.activeRank)
+      ? SkillCatalog.countByType(jobId, catalogRank(ui.activeRank))
       : { active: 0, buff: 0, passive: 0 };
     $('skbTypeTabs')?.querySelectorAll('.skb-type-tab').forEach((btn) => {
       const type = btn.dataset.type;
@@ -308,16 +319,18 @@ const SkillBoardPanel = (() => {
       ? CharacterSkills.getSpTotal(rank)
       : 0;
     el.textContent = String(Math.max(0, remain | 0));
-    el.title = total > 0
-      ? `${rank} 階：剩餘 ${remain} / 累計 ${total}`
-      : '10 等起依等級區間獲得對應階段技能點';
+    el.title = (rank === '200' || rank === 'hexa')
+      ? '200 等自動滿級（五轉）'
+      : (total > 0
+        ? `${rank} 階：剩餘 ${remain} / 累計 ${total}`
+        : '10 等起依等級區間獲得對應階段技能點');
   }
 
   function renderSkillList() {
     const list = $('skbSkillList');
     if (!list) return;
     const skills = typeof CharacterSkills !== 'undefined'
-      ? CharacterSkills.getPanelSkills(ui.activeRank, ui.activeType)
+      ? CharacterSkills.getPanelSkills(catalogRank(ui.activeRank), ui.activeType)
       : [];
     if (!skills.length) {
       const lv = typeof CharacterProgression !== 'undefined'
@@ -346,6 +359,10 @@ const SkillBoardPanel = (() => {
 
     list.innerHTML = skills.map((skill) => {
       const lv = Math.max(0, Number(skill.level) || 0);
+      const displayLv = (typeof CharacterSkills !== 'undefined'
+        && typeof CharacterSkills.getEffectiveLevel === 'function')
+        ? Math.max(0, Number(CharacterSkills.getEffectiveLevel(skill.id)) || 0)
+        : lv;
       const unlocked = skill.unlocked !== false;
       const maxed = lv >= skill.maxLevel;
       const equipped = typeof CharacterSkills !== 'undefined'
@@ -384,7 +401,7 @@ const SkillBoardPanel = (() => {
             ${iconHtml(skill, 'skill')}
           </div>
           <div class="skb-skill-name">${skill.name}${lockHint ? `<span class="skb-skill-req">${lockHint}</span>` : ''}${followHint ? `<span class="skb-skill-req" title="${followHint}">接技</span>` : ''}${replacedHint ? `<span class="skb-skill-req" title="${replacedHint}">已取代</span>` : ''}</div>
-          <div class="skb-skill-lv">${lv}</div>
+          <div class="skb-skill-lv">${displayLv}</div>
           <div class="skb-skill-max">${skill.maxLevel}</div>
           ${equipped ? '<div class="skb-skill-equipped" aria-label="裝備中"></div>' : ''}
           ${linked ? '<div class="skb-skill-linked" aria-label="連鎖中" title="技能連鎖中"></div>' : ''}

@@ -653,6 +653,7 @@ const UiCharacterInfo = (() => {
       : (50 + Math.max(0, level - 1) * 12);
     const row = snapshot?.mainTotals?.['最大HP'];
     const equipFlat = Number(row?.total) || 0;
+    const symbolFixed = Number(row?.fixed) || 0;
     const ex = Number(snapshot?.exceptionalTotals?.['最大HP']) || 0;
     const extraFlat = extraFlatStatAliases(snapshot, HP_FLAT_KEYS);
     const bonus = typeof CharacterProgression !== 'undefined'
@@ -672,7 +673,7 @@ const UiCharacterInfo = (() => {
     return Math.max(1, applyPercent(
       levelBase + equipFlat + ex + extraFlat + (Number(bonus.hp) || 0) + skillFlat,
       pct,
-    ));
+    ) + symbolFixed);
   }
 
   /** 狩獵／藥水用最大 HP（含裝備、AP、技能） */
@@ -931,7 +932,7 @@ const UiCharacterInfo = (() => {
 
       if (STAT_PERCENT_KEYS[key]) {
         const statPct = sumPercentSources(snapshot, STAT_PERCENT_KEYS[key]);
-        n = applyPercent(flat, statPct) + hyperFlat;
+        n = applyPercent(flat, statPct) + hyperFlat + (Number(row?.fixed) || 0);
       } else if (key === '攻擊力') {
         n = applyPercent(flat, sumPercentSources(snapshot, ATK_PERCENT_KEYS));
       } else if (key === '魔法攻擊力') {
@@ -963,8 +964,21 @@ const UiCharacterInfo = (() => {
         if (key === '爆擊機率') n += bonus.critRate || 0;
         if (key === '無視防禦率') n += bonus.ied || 0;
         if (key === '一般怪物傷害') n += bonus.normalDmg || 0;
-        if (key === '獲得追加經驗值') n += bonus.expPercent || 0;
-        if (key === '神秘力量') n += bonus.arcane || 0;
+        if (key === '獲得追加經驗值') {
+          n += bonus.expPercent || 0;
+          if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getHuntExpR === 'function') {
+            n += Number(SkillModifiers.getHuntExpR()) || 0;
+          }
+        }
+        if (key === '神秘力量') {
+          n += bonus.arcane || 0;
+          if (typeof SymbolForce !== 'undefined' && typeof SymbolForce.totals === 'function') {
+            n += SymbolForce.totals().arc || 0;
+          }
+        }
+        if (key === '真實力量' && typeof SymbolForce !== 'undefined' && typeof SymbolForce.totalAut === 'function') {
+          n += SymbolForce.totalAut() || 0;
+        }
         if (key === '防禦力' || key === '物理防禦力' || key === '魔法防禦力') {
           n += bonus.def || 0;
         }

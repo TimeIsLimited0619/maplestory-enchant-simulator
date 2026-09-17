@@ -16,6 +16,9 @@ const CharacterSkills = (() => {
   };
   /** 技能連鎖 1～4 格解鎖等級（對應 10／30／60／100 階） */
   const SKILL_LINK_SLOT_RANKS = ['10', '30', '60', '100'];
+  const EQUIP_GRID_COLS = 5;
+  const EQUIP_GRID_ROWS = 5;
+  const EQUIP_SLOT_COUNT = EQUIP_GRID_COLS * EQUIP_GRID_ROWS;
 
   const state = {
     currentJobId: DEFAULT_JOB_ID,
@@ -31,7 +34,18 @@ const CharacterSkills = (() => {
   let idleStarterGranted = false;
 
   function emptyLoadout() {
-    return Array.from({ length: 9 }, () => null);
+    return Array.from({ length: EQUIP_SLOT_COUNT }, () => null);
+  }
+
+  function normalizeLoadout(arr) {
+    const next = emptyLoadout();
+    if (!Array.isArray(arr)) return next;
+    const n = Math.min(arr.length, next.length);
+    for (let i = 0; i < n; i += 1) {
+      const v = arr[i];
+      next[i] = v == null || v === '' ? null : v;
+    }
+    return next;
   }
 
   function emptySkillLink() {
@@ -88,11 +102,15 @@ const CharacterSkills = (() => {
     }
     lineSkills().forEach((s) => {
       if (state.levels[s.id] == null) state.levels[s.id] = 0;
+      if (String(s.rank) === '200'
+        && typeof SkillPoints !== 'undefined'
+        && SkillPoints.isRankUnlocked('200', characterLevel())) {
+        const max = Math.max(1, Number(s.maxLevel) || 1);
+        if (!(Number(state.levels[s.id]) > 0)) state.levels[s.id] = max;
+      }
     });
     [1, 2, 3].forEach((p) => {
-      if (!Array.isArray(state.equipped[p]) || state.equipped[p].length !== 9) {
-        state.equipped[p] = emptyLoadout();
-      }
+      state.equipped[p] = normalizeLoadout(state.equipped[p]);
       if (!Array.isArray(state.skillLinks[p]) || state.skillLinks[p].length !== 4) {
         state.skillLinks[p] = emptySkillLink();
       }
@@ -101,6 +119,7 @@ const CharacterSkills = (() => {
     if (pruneNoCdAttackFromLoadouts()) save();
     if (pruneAddAttackFollowups()) save();
     if (pruneSupersededSkills()) save();
+    if (pruneHiddenOrPassiveFromLoadouts()) save();
   }
 
   function load() {
@@ -429,6 +448,33 @@ const CharacterSkills = (() => {
     return 0;
   }
 
+  const COMBAT_ORDERS_ID = '400001004';
+  const COMBAT_ORDERS_RANKS = new Set(['10', '30', '60', '100']);
+
+  /** 實用的戰鬥命令：1～4 轉已學技能 +1；4 轉可超上限，其餘以 max 為限。不含超技／五轉／六轉／本技能。 */
+  function getCombatOrdersBonus(skillId) {
+    const id = String(skillId || '');
+    if (!id || id === COMBAT_ORDERS_ID) return 0;
+    if (!(getLevel(COMBAT_ORDERS_ID) > 0)) return 0;
+    const learned = getLevel(id);
+    if (!(learned > 0)) return 0;
+    const skill = typeof SkillCatalog !== 'undefined' ? SkillCatalog.getSkill(id) : null;
+    if (!skill) return 0;
+    if (Number(skill.hyper) === 1 || Number(skill.hyper) === 2) return 0;
+    const rank = String(skill.rank || '');
+    if (!COMBAT_ORDERS_RANKS.has(rank)) return 0;
+    if (rank === '100') return 1;
+    const max = Math.max(1, Number(skill.maxLevel) || 1);
+    if (learned >= max) return 0;
+    return 1;
+  }
+
+  function getEffectiveLevel(skillId) {
+    const learned = getLevel(skillId);
+    if (!(learned > 0)) return learned;
+    return learned + getCombatOrdersBonus(skillId);
+  }
+
   function currentLoadout() {
     ensureHydrated();
     const p = state.activePreset;
@@ -524,7 +570,7 @@ const CharacterSkills = (() => {
     return false;
   }
 
-  /** 從九宮格清掉不應再出現的無 CD 主動攻擊技（舊存檔／誤放） */
+  /** 從裝備格清掉不應再出現的無 CD 主動攻擊技（舊存檔／誤放） */
   function pruneNoCdAttackFromLoadouts() {
     let changed = false;
     [1, 2, 3].forEach((p) => {
@@ -541,7 +587,7 @@ const CharacterSkills = (() => {
     return changed;
   }
 
-  /** 接技後續技不可裝備／連鎖：清九宮格與技能連鎖 */
+  /** 接技後續技不可裝備／連鎖：清裝備格與技能連鎖 */
   function pruneAddAttackFollowups() {
     let changed = false;
     [1, 2, 3].forEach((p) => {
@@ -600,6 +646,41 @@ const CharacterSkills = (() => {
     return changed;
   }
 
+  /** 改常駐被動／隱藏後：舊存檔裝備格與連鎖中的不可裝備技清掉 */
+  function pruneHiddenOrPassiveFromLoadouts() {
+    let changed = false;
+    const shouldDrop = (id) => {
+      if (!id || typeof SkillCatalog === 'undefined') return false;
+      const skill = SkillCatalog.getSkill(id);
+      if (!skill) return false;
+      if (skill.skipPanel) return true;
+      if (skill.equipable === false) return true;
+      if (skill.type === 'passive') return true;
+      return false;
+    };
+    [1, 2, 3].forEach((p) => {
+      const loadout = state.equipped[p];
+      if (Array.isArray(loadout)) {
+        for (let i = 0; i < loadout.length; i += 1) {
+          if (shouldDrop(loadout[i])) {
+            loadout[i] = null;
+            changed = true;
+          }
+        }
+      }
+      const link = state.skillLinks[p];
+      if (Array.isArray(link)) {
+        for (let i = 0; i < link.length; i += 1) {
+          if (shouldDrop(link[i])) {
+            link[i] = null;
+            changed = true;
+          }
+        }
+      }
+    });
+    return changed;
+  }
+
   function setSkillLinkSlot(slotIndex, skillId) {
     ensureHydrated();
     const i = Number(slotIndex);
@@ -644,7 +725,7 @@ const CharacterSkills = (() => {
 
   function isEquipped(skillId) {
     const id = String(skillId);
-    // 無 CD 主動攻擊改走技能連鎖，九宮格不再算裝備中
+    // 無 CD 主動攻擊改走技能連鎖，裝備格不再算裝備中
     if (isNoCdActiveAttackSkill(id)) return isInSkillLink(id);
     return currentLoadout().includes(id);
   }
@@ -704,7 +785,7 @@ const CharacterSkills = (() => {
       return false;
     }
 
-    // 無 CD 主動攻擊：只進出技能連鎖，不進九宮格
+    // 無 CD 主動攻擊：只進出技能連鎖，不進裝備格
     if (isNoCdActiveAttackSkill(id)) {
       const loadout = currentLoadout();
       const gridIdx = loadout.indexOf(id);
@@ -745,7 +826,7 @@ const CharacterSkills = (() => {
     ensureHydrated();
     const loadout = currentLoadout();
     const i = Number(slotIndex);
-    if (!Number.isFinite(i) || i < 0 || i > 8) return false;
+    if (!Number.isFinite(i) || i < 0 || i >= loadout.length) return false;
     if (!loadout[i]) return false;
     loadout[i] = null;
     save();
@@ -795,7 +876,10 @@ const CharacterSkills = (() => {
 
   function getPanelSkills(rank, type) {
     ensureHydrated();
-    return SkillCatalog.listSkills(state.currentJobId, { rank, type }).map((s) => ({
+    const rankKey = (typeof SkillPoints !== 'undefined' && typeof SkillPoints.catalogRank === 'function')
+      ? SkillPoints.catalogRank(rank)
+      : (String(rank) === 'hexa' ? '200' : rank);
+    return SkillCatalog.listSkills(state.currentJobId, { rank: rankKey, type }).map((s) => ({
       ...s,
       level: getLevel(s.id),
       unlocked: isSkillUnlocked(s.id),
@@ -835,11 +919,16 @@ const CharacterSkills = (() => {
   }
 
   return {
+    EQUIP_SLOT_COUNT,
+    EQUIP_GRID_COLS,
+    EQUIP_GRID_ROWS,
     emptyLoadout,
     emptySkillLink,
     currentJobId,
     setJobId,
     getLevel,
+    getCombatOrdersBonus,
+    getEffectiveLevel,
     currentLoadout,
     currentSkillLink,
     canPlaceInSkillLink,

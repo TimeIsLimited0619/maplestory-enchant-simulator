@@ -43,6 +43,11 @@ const ItemDropController = (() => {
   let lastTs = 0;
   let cachedPlayerPoint = null;
   let cachedPlayerPointAt = 0;
+  let perfLod = false;
+
+  function maxOnField() {
+    return MAX_ON_FIELD;
+  }
 
   function mesoIdForAmount(amount) {
     const n = Math.max(0, Math.floor(Number(amount) || 0));
@@ -237,8 +242,9 @@ const ItemDropController = (() => {
 
   function syncDom(item) {
     if (!item?.el) return;
-    item.el.style.left = `${Math.round(item.x)}px`;
-    item.el.style.top = `${Math.round(item.y)}px`;
+    const x = Math.round(item.x);
+    const y = Math.round(item.y);
+    item.el.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -100%)`;
     item.el.style.opacity = String(item.opacity);
   }
 
@@ -261,7 +267,7 @@ const ItemDropController = (() => {
   }
 
   function trimOldestIfNeeded(need) {
-    while (items.length + need > MAX_ON_FIELD) {
+    while (items.length + need > maxOnField()) {
       const oldest = items.find((it) => it.state !== STATE.LOOTING);
       if (!oldest) break;
       // 超過場上上限：強制撿取入包，不再直接刪除
@@ -560,11 +566,12 @@ const ItemDropController = (() => {
     if (!(step > 0)) return;
     if (!items.length) {
       lootAccum = 0;
+      stopLoop();
       return;
     }
 
     lootAccum += step;
-    if (lootAccum >= LOOT_INTERVAL) {
+    if (lootAccum >= (perfLod ? 0.35 : LOOT_INTERVAL)) {
       lootAccum = 0;
       tryStartLootPass();
     }
@@ -572,7 +579,7 @@ const ItemDropController = (() => {
     for (let i = items.length - 1; i >= 0; i -= 1) {
       const item = items[i];
       item.spawnAge += step;
-      if (item.state !== STATE.LOOTING && item.spawnAge >= DESPAWN_AGE) {
+      if (item.state !== STATE.LOOTING && item.spawnAge >= (perfLod ? 45 : DESPAWN_AGE)) {
         destroyItem(item);
         continue;
       }
@@ -585,6 +592,10 @@ const ItemDropController = (() => {
   }
 
   function loop(ts) {
+    if (!items.length) {
+      stopLoop();
+      return;
+    }
     rafId = window.requestAnimationFrame(loop);
     if (!lastTs) lastTs = ts;
     const dt = Math.min(0.05, Math.max(0, (ts - lastTs) / 1000));
@@ -617,13 +628,18 @@ const ItemDropController = (() => {
     onGrantItem = typeof opts.onGrantItem === 'function' ? opts.onGrantItem : null;
     lootDelaySec = Math.max(0, Number(opts.lootDelaySec) || 0);
     ensureLayer();
-    startLoop();
+    if (items.length) startLoop();
   }
 
   function expandSpawnRows(rows) {
     const out = [];
+    let mesoAmt = 0;
     (Array.isArray(rows) ? rows : []).forEach((row) => {
       if (!row) return;
+      if (row.kind === 'meso') {
+        mesoAmt += Math.max(0, Math.floor(Number(row.amount) || 0));
+        return;
+      }
       if (row.kind === 'equip') {
         const n = dropQty(row);
         for (let i = 0; i < n; i += 1) {
@@ -633,6 +649,7 @@ const ItemDropController = (() => {
       }
       out.push({ ...row });
     });
+    if (mesoAmt > 0) out.unshift({ kind: 'meso', amount: mesoAmt });
     return out;
   }
 
@@ -696,6 +713,20 @@ const ItemDropController = (() => {
     layerEl?.replaceChildren?.();
   }
 
+  function trimTo(maxCount) {
+    const cap = Math.max(0, Math.floor(Number(maxCount) || 0));
+    while (items.length > cap) {
+      const oldest = items.find((it) => it.state !== STATE.LOOTING) || items[0];
+      if (!oldest) break;
+      finishLoot(oldest);
+    }
+  }
+
+  function setPerfLod(on) {
+    perfLod = !!on;
+    if (perfLod) trimTo(maxOnField());
+  }
+
   function getLastDropText() {
     return lastDropText;
   }
@@ -705,6 +736,9 @@ const ItemDropController = (() => {
     spawnBatch,
     update,
     clear,
+    trimTo,
+    activeCount: () => items.length,
+    setPerfLod,
     getLastDropText,
     resolveDropIcon,
     dropName,

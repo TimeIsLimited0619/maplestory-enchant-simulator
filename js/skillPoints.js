@@ -16,7 +16,8 @@ const SkillPoints = (() => {
     60: 60,
     100: 100,
     hyper: 140,
-    hexa: 999,
+    200: 200,
+    hexa: 200,
   };
 
   function clampLevel(level) {
@@ -59,15 +60,20 @@ const SkillPoints = (() => {
     return RANK_LEVELS[key] != null ? RANK_LEVELS[key] : 999;
   }
 
+  /** 技能板 hexa 頁 = 五轉 rank 200；資料層仍用 '200' */
+  function catalogRank(rank) {
+    const key = rank != null ? String(rank) : '';
+    return key === 'hexa' ? '200' : key;
+  }
+
   function isRankUnlocked(rank, characterLevel) {
     const lv = clampLevel(characterLevel);
-    if (String(rank) === 'hexa') return false;
     return lv >= rankRequiredLevel(rank);
   }
 
   function highestUnlockedRank(characterLevel) {
     const lv = clampLevel(characterLevel);
-    const order = ['10', '30', '60', '100', 'hyper'];
+    const order = ['10', '30', '60', '100', 'hyper', 'hexa'];
     let last = null;
     order.forEach((rank) => {
       if (isRankUnlocked(rank, lv)) last = rank;
@@ -189,6 +195,7 @@ const SkillPoints = (() => {
     spRanksForLevel,
     spRankForLevel,
     rankRequiredLevel,
+    catalogRank,
     isRankUnlocked,
     highestUnlockedRank,
     skillReqLevel,

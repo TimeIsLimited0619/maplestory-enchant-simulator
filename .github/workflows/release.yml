@@ -8,7 +8,7 @@ on:
 jobs:
   release:
     runs-on: windows-latest
-    timeout-minutes: 360
+    timeout-minutes: 90
     permissions:
       contents: write
     steps:
@@ -24,13 +24,10 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Pack large image assets
-        run: npm run pack:assets
-
       - name: Build Windows installer
         run: npm run dist
 
-      - name: Publish installer and asset packs together
+      - name: Publish installer
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -43,7 +40,6 @@ jobs:
             dist-desktop/MapleEnchantSimulator-Setup-*.exe
             dist-desktop/latest.yml
             dist-desktop/MapleEnchantSimulator-Setup-*.exe.blockmap
-            dist-assets/*
           )
           if [ "${#FILES[@]}" -eq 0 ]; then
             echo "No release artifacts found" >&2

@@ -1325,6 +1325,25 @@ const ENCHANT_UI_CHROME_EXTRAS = [
   'images/UIEquip/EquipTab/SlotName/SlotName_33.png',
   'images/UIEquip/EquipTab/SlotName/SlotName_34.png',
   'images/UIEquip/EquipTab/SlotName/SlotName_35.png',
+  'images/UIEquip/main/tab_detailTab/main_tab_detailTab_normal_0.png',
+  'images/UIEquip/main/tab_detailTab/main_tab_detailTab_selected_1.png',
+  'images/UIEquip/EquipTab/button_DecoUI/normal_0.png',
+  'images/UIEquip/EquipTab/button_symbol/normal_0.png',
+  'images/UIEquip/PetTab/PetTab.canvas_pet.png',
+  'images/UIEquip/Symbol/backgrnd.png',
+  'images/UIEquip/Symbol/tab_categoryTab/selected_0.png',
+  'images/UIEquip/Symbol/tab_categoryTab/normal_1.png',
+  'images/UIEquip/Symbol/ArcEquip/backgrnd.png',
+  'images/UIEquip/Symbol/AutEquip/backgrnd.png',
+  'images/UIEquip/Symbol/GrandAutEquip/backgrnd.png',
+  'images/UIEquip/Deco/main/backgrnd.png',
+  'images/UIEquip/Deco/tab_detailTab/selected_0.png',
+  'images/UIEquip/Deco/tab_detailTab/normal_1.png',
+  'images/UIEquip/Deco/tab_detailTab/normal_2.png',
+  'images/UIEquip/Deco/CoordiTab/canvas_coordi.png',
+  'images/UIEquip/Deco/CoordiTab/button_EquipUI/normal_0.png',
+  'images/UIEquip/Deco/AndroidTab/canvas_and.png',
+  'images/UIEquip/Deco/DamageSkinTab/canvas_and.png',
 ];
 
 /** 放置殼層首屏 UI（進放置模式立刻可見；hover 態一併預載） */
@@ -2494,6 +2513,7 @@ function addLog(text, className = '') {
   if (className) newLog.classList.add(className);
   newLog.innerText = `[${new Date().toLocaleTimeString()}] ${text}`;
   logBox.appendChild(newLog);
+  while (logBox.childElementCount > 80) logBox.firstElementChild?.remove();
   logBox.scrollTop = logBox.scrollHeight;
 }
 

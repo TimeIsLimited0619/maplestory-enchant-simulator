@@ -118,6 +118,7 @@ const UiStatInfo = (() => {
       pushRow(rows, 'desc', '卷軸', main.scroll, false);
       pushRow(rows, 'desc', '星火', main.bonus, false);
       pushRow(rows, 'desc', '套裝', main.set, false);
+      pushRow(rows, 'desc', '符文', main.fixed, false);
     }
 
     const ex = Number(snapshot?.exceptionalTotals?.[key]) || 0;
@@ -276,6 +277,9 @@ const UiStatInfo = (() => {
         const hyperLv = CharacterProgression.getState()?.hyper?.df || 0;
         pushRow(rows, 'desc', '極限屬性', CharacterProgression.hyperBonusAt?.('df', hyperLv), false);
       }
+      if (key === '獲得追加經驗值') {
+        pushRow(rows, 'desc', '極限屬性', bonus.expPercent, true);
+      }
     }
 
     if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
@@ -304,6 +308,11 @@ const UiStatInfo = (() => {
         const level = Math.max(1, Number(CharacterProgression?.getState?.()?.level) || 1);
         pushRow(rows, 'desc', '技能 HP', (Number(mods.flatHpPerLevel) || 0) * level, false);
         pushRow(rows, 'desc', '技能 HP%', mods.mhpR, true);
+      }
+      if (key === '獲得追加經驗值' && typeof SkillModifiers.getHuntExpSources === 'function') {
+        SkillModifiers.getHuntExpSources().forEach((src) => {
+          pushRow(rows, 'desc', src.name || '技能', src.value, true);
+        });
       }
     }
 

@@ -19,6 +19,39 @@ const SkillBallCast = (() => {
     return 1;
   }
 
+  function startMover(tick) {
+    const mover = {
+      done: false,
+      tick(dt, ts) {
+        if (mover.done) return;
+        tick(dt, ts, mover);
+      },
+      cancel() {
+        mover.done = true;
+        if (typeof SkillEffectPlayer !== 'undefined') {
+          SkillEffectPlayer.unregisterMover?.(mover);
+        }
+      },
+    };
+    const start = () => {
+      if (typeof SkillEffectPlayer !== 'undefined' && SkillEffectPlayer.registerMover) {
+        SkillEffectPlayer.registerMover(mover);
+        return;
+      }
+      let last = 0;
+      const step = (ts) => {
+        if (mover.done) return;
+        if (!last) last = ts;
+        const dt = Math.min(50, Math.max(0, ts - last));
+        last = ts;
+        mover.tick(dt, ts);
+        if (!mover.done) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
+    return { mover, start };
+  }
+
   function framesDurationMs(frames, untilIdx) {
     const list = frames || [];
     const end = untilIdx != null ? Math.min(untilIdx, list.length) : list.length;
@@ -125,6 +158,19 @@ const SkillBallCast = (() => {
     return Number.isFinite(n) ? n : 0;
   }
 
+  /** 散式投擲額外行：主線角度 0，兩側對稱散開 */
+  function extraFanAngles(extraCount, stepDeg = 18) {
+    const n = Math.max(0, Math.floor(Number(extraCount) || 0));
+    if (!n) return [];
+    const step = (Number(stepDeg) || 18) * Math.PI / 180;
+    const left = Math.ceil(n / 2);
+    const right = n - left;
+    const out = [];
+    for (let i = left; i >= 1; i -= 1) out.push(-i * step);
+    for (let i = 1; i <= right; i += 1) out.push(i * step);
+    return out;
+  }
+
   /**
    * 雙弩多箭／飛鏢：bulletCount + ballDelay / ballDelay1..N
    * extraCount：超技追加發數（四飛閃-額外攻擊）；超出的 delay 沿用最後一發。
@@ -187,11 +233,13 @@ const SkillBallCast = (() => {
    * 箭矢發射點：角色身體中段、朝向側前方一點。
    * fieldPointFromPlayer 的 ox 以朝左為準；朝右時 x = feetX - ox，故 ox 負值＝偏右。
    */
-  function launchPointFromEffect(fieldEl, playerEl, facingRight = true) {
-    const offset = [-58, -24];
+  function launchPointFromEffect(fieldEl, playerEl, facingRight = true, offset) {
+    const startOffset = (Array.isArray(offset) && offset.length >= 2)
+      ? offset
+      : [-58, -24];
     if (typeof SkillEffectPlayer !== 'undefined'
       && typeof SkillEffectPlayer.fieldPointFromPlayer === 'function') {
-      return SkillEffectPlayer.fieldPointFromPlayer(fieldEl, playerEl, offset, facingRight);
+      return SkillEffectPlayer.fieldPointFromPlayer(fieldEl, playerEl, startOffset, facingRight);
     }
     return { x: 120, y: 100 };
   }
@@ -379,14 +427,29 @@ const SkillBallCast = (() => {
     img.className = className || 'idle-skill-fx-sprite';
     img.alt = '';
     img.draggable = false;
-    img.decoding = 'sync';
+    img.decoding = 'async';
     applySpriteFrame(img, list[0]);
+    if (list.length <= 1) {
+      return { img, list, stop: () => {} };
+    }
     let idx = 0;
-    const timer = setInterval(() => {
-      idx = (idx + 1) % list.length;
-      applySpriteFrame(img, list[idx]);
-    }, scaleRealMs(Math.max(30, Number(list[0]?.delay) || 60)));
-    return { img, list, stop: () => clearInterval(timer) };
+    let acc = 0;
+    const { mover, start } = startMover((dt) => {
+      if (mover.done) return;
+      if (!img.isConnected) {
+        mover.cancel();
+        return;
+      }
+      acc += dt;
+      const frameDelay = scaleRealMs(Math.max(30, Number(list[idx % list.length]?.delay) || 60));
+      if (acc >= frameDelay) {
+        acc -= frameDelay;
+        idx = (idx + 1) % list.length;
+        applySpriteFrame(img, list[idx]);
+      }
+    });
+    start();
+    return { img, list, stop: () => mover.cancel() };
   }
 
   function skillFxLayer(fieldEl) {
@@ -396,11 +459,44 @@ const SkillBallCast = (() => {
     return fieldEl;
   }
 
+  function setGpuPos(el, x, y, extra) {
+    if (typeof SkillEffectPlayer !== 'undefined' && typeof SkillEffectPlayer.setGpuPos === 'function') {
+      SkillEffectPlayer.setGpuPos(el, x, y, extra);
+      return;
+    }
+    if (!el) return;
+    const nx = Number(x);
+    const ny = Number(y);
+    if (!Number.isFinite(nx) || !Number.isFinite(ny)) return;
+    let extraStr = extra === undefined ? (el._gpuExtra || '') : String(extra || '');
+    if (extraStr === 'none') extraStr = '';
+    extraStr = extraStr.trim();
+    el._gpuExtra = extraStr;
+    el._gpuX = nx;
+    el._gpuY = ny;
+    const next = extraStr
+      ? `translate3d(${nx}px, ${ny}px, 0) ${extraStr}`
+      : `translate3d(${nx}px, ${ny}px, 0)`;
+    if (el.style.transform !== next) el.style.transform = next;
+  }
+
+  let liveBalls = 0;
+  /** @type {Array<{ stage: HTMLElement, stop: () => void }>} */
+  const liveBallList = [];
+  const MAX_LIVE_BALLS = 64;
+
   function createSpriteStage(fieldEl, frames, facingRight, opts = {}) {
     const list = (frames || []).filter((f) => f?.src);
     if (!list.length) return null;
     const layer = skillFxLayer(fieldEl);
     if (!layer) return null;
+    while (liveBallList.length >= MAX_LIVE_BALLS) {
+      const oldest = liveBallList.shift();
+      try {
+        oldest?.stop?.();
+        oldest?.stage?.remove?.();
+      } catch (_) { /* ignore */ }
+    }
     const stage = document.createElement('div');
     stage.className = 'idle-skill-fx-stage idle-skill-fx-stage--ball';
     const anim = createAnimImg(list, 'idle-skill-fx-sprite');
@@ -408,10 +504,23 @@ const SkillBallCast = (() => {
     stage.appendChild(anim.img);
     // 飛向目標時由 travelToPoint 旋轉對準，不先依面向鏡像
     if (!opts.skipFacingFlip) {
-      stage.style.transform = facingRight ? 'scaleX(-1)' : 'none';
+      setGpuPos(stage, 0, 0, facingRight ? 'scaleX(-1)' : '');
     }
     layer.appendChild(stage);
-    return { stage, stop: anim.stop };
+    liveBalls += 1;
+    let released = false;
+    const entry = { stage, stop: null };
+    const release = () => {
+      if (released) return;
+      released = true;
+      liveBalls = Math.max(0, liveBalls - 1);
+      anim.stop?.();
+      const idx = liveBallList.indexOf(entry);
+      if (idx >= 0) liveBallList.splice(idx, 1);
+    };
+    entry.stop = release;
+    liveBallList.push(entry);
+    return { stage, stop: release };
   }
 
   /**
@@ -427,14 +536,12 @@ const SkillBallCast = (() => {
 
     const stage = document.createElement('div');
     stage.className = 'idle-skill-fx-stage idle-skill-fx-stage--ball-beam';
-    stage.style.left = `${x0}px`;
-    stage.style.top = `${y0}px`;
     stage.style.width = `${len}px`;
     stage.style.height = '0';
     stage.style.transformOrigin = '0 50%';
-    stage.style.transform = lengthScale !== 1
+    setGpuPos(stage, x0, y0, lengthScale !== 1
       ? `rotate(${deg}deg) scaleX(${lengthScale})`
-      : `rotate(${deg}deg)`;
+      : `rotate(${deg}deg)`);
 
     const stoppers = [];
     const addPart = (frames, cls) => {
@@ -494,6 +601,8 @@ const SkillBallCast = (() => {
       facingRight = true,
       stage,
       onReach,
+      onStep,
+      keepStage = false,
     } = opts;
     if (!stage) {
       if (typeof onReach === 'function') onReach({ x: toX, y: fromY });
@@ -502,40 +611,35 @@ const SkillBallCast = (() => {
 
     let x = fromX;
     const y = fromY;
-    stage.style.left = `${x}px`;
-    stage.style.top = `${y}px`;
+    setGpuPos(stage, x, y);
     let lastTs = 0;
     let done = false;
     const hitRadius = 28;
 
-    const step = (ts) => {
+    const { mover, start } = startMover((dt) => {
       if (done) return;
-      if (!lastTs) lastTs = ts;
-      const dt = Math.min(50, Math.max(0, ts - lastTs));
-      lastTs = ts;
-
       const dir = facingRight ? 1 : -1;
       x += dir * speedPxPerMs * dt;
-      stage.style.left = `${x}px`;
-      stage.style.top = `${y}px`;
+      setGpuPos(stage, x, y);
+      if (typeof onStep === 'function') onStep({ x, y });
 
       const reached = facingRight ? (x >= toX - hitRadius) : (x <= toX + hitRadius);
       if (reached) {
         done = true;
-        stage.remove();
-        if (typeof onReach === 'function') onReach({ x: toX, y });
+        mover.cancel();
+        if (!keepStage) stage.remove();
+        if (typeof onReach === 'function') onReach({ x: keepStage ? x : toX, y });
         return;
       }
       if (facingRight ? x > toX + 800 : x < toX - 800) {
         done = true;
-        stage.remove();
-        if (typeof onReach === 'function') onReach({ x: toX, y });
-        return;
+        mover.cancel();
+        if (!keepStage) stage.remove();
+        if (typeof onReach === 'function') onReach({ x: keepStage ? x : toX, y });
       }
-      requestAnimationFrame(step);
-    };
+    });
 
-    return { start: () => requestAnimationFrame(step) };
+    return { start };
   }
 
   /**
@@ -563,8 +667,7 @@ const SkillBallCast = (() => {
     const dy = endY - fromY;
     const dist = Math.hypot(dx, dy);
     if (!(dist > 1)) {
-      stage.style.left = `${endX}px`;
-      stage.style.top = `${endY}px`;
+      setGpuPos(stage, endX, endY);
       stage.remove();
       if (typeof onReach === 'function') onReach({ x: endX, y: endY });
       return { start: () => {} };
@@ -575,40 +678,248 @@ const SkillBallCast = (() => {
     const deg = (Math.atan2(dy, dx) * 180) / Math.PI;
     // 素材預設朝右；旋轉對準目標（同閃電連擊 beam 的 atan2）
     stage.style.transformOrigin = '50% 50%';
-    stage.style.transform = `rotate(${deg}deg)`;
-    stage.style.left = `${fromX}px`;
-    stage.style.top = `${fromY}px`;
+    setGpuPos(stage, fromX, fromY, `rotate(${deg}deg)`);
 
     let traveled = 0;
-    let lastTs = 0;
     let done = false;
     const hitRadius = 28;
 
-    const step = (ts) => {
+    const { mover, start } = startMover((dt) => {
       if (done) return;
-      if (!lastTs) lastTs = ts;
-      const dt = Math.min(50, Math.max(0, ts - lastTs));
-      lastTs = ts;
-
+      if (!stage.isConnected) {
+        done = true;
+        mover.cancel();
+        return;
+      }
       traveled += Math.max(0, speedPxPerMs) * dt;
       if (traveled >= dist - hitRadius) {
         done = true;
+        mover.cancel();
         stage.remove();
         if (typeof onReach === 'function') onReach({ x: endX, y: endY });
         return;
       }
       if (traveled > dist + 800) {
         done = true;
+        mover.cancel();
         stage.remove();
         if (typeof onReach === 'function') onReach({ x: endX, y: endY });
         return;
       }
-      stage.style.left = `${fromX + ux * traveled}px`;
-      stage.style.top = `${fromY + uy * traveled}px`;
-      requestAnimationFrame(step);
+      setGpuPos(stage, fromX + ux * traveled, fromY + uy * traveled);
+    });
+
+    return { start };
+  }
+
+  /**
+   * 從場上固定點對多個目標各飛一發 sprite（達克魯的密傳：書本位置出鏢）。
+   * shots: [{ mob, delayMs }]
+   */
+  function playShotsFromPoint(opts = {}) {
+    const fieldEl = opts.fieldEl;
+    const frames = opts.frames;
+    const fromX = Number(opts.fromX);
+    const fromY = Number(opts.fromY);
+    const shots = Array.isArray(opts.shots) ? opts.shots : [];
+    const onHit = opts.onHit;
+    const onDone = opts.onDone;
+    const getMobs = opts.getMobs;
+    const speed = (Number(opts.speedPxPerMs) > 0 ? Number(opts.speedPxPerMs) : 0.7) * gameSpeedMult();
+    const finish = () => {
+      if (typeof onDone === 'function') onDone();
     };
 
-    return { start: () => requestAnimationFrame(step) };
+    if (!(Number.isFinite(fromX) && Number.isFinite(fromY)) || !shots.length) {
+      finish();
+      return false;
+    }
+
+    const resolveLive = (preferred) => {
+      if (preferred && Number(preferred.hp) > 0) return preferred;
+      const list = typeof getMobs === 'function' ? (getMobs() || []) : [];
+      return (list || []).find((m) => m && Number(m.hp) > 0) || null;
+    };
+
+    if (typeof document !== 'undefined' && document.hidden) {
+      shots.forEach((shot, i) => {
+        const mob = resolveLive(shot?.mob);
+        if (mob && typeof onHit === 'function') onHit(mob, i);
+      });
+      finish();
+      return true;
+    }
+
+    let left = shots.length;
+    const mark = () => {
+      left -= 1;
+      if (left <= 0) finish();
+    };
+
+    shots.forEach((shot, shotIndex) => {
+      const fire = () => {
+        const mob = resolveLive(shot?.mob);
+        const dest = mob
+          ? mobPointOrFallback(fieldEl, mob, shotIndex)
+          : { x: fromX + 180, y: fromY };
+        const reach = () => {
+          const live = resolveLive(shot?.mob);
+          if (live && typeof onHit === 'function') onHit(live, shotIndex);
+          mark();
+        };
+        if (!mob) {
+          mark();
+          return;
+        }
+        const mover = createSpriteStage(fieldEl, frames, true, { skipFacingFlip: true });
+        if (!mover) {
+          reach();
+          return;
+        }
+        const jitterY = (shotIndex % 5) * 4 - 8;
+        const spawnY = fromY + jitterY;
+        if (opts.home) {
+          const livePoint = () => {
+            const live = resolveLive(shot?.mob);
+            if (!live) return null;
+            return mobPoint(fieldEl, live) || dest;
+          };
+          travelFanThenHome({
+            fromX,
+            fromY: spawnY,
+            angleRad: Math.atan2(dest.y - spawnY, dest.x - fromX),
+            outPx: 0,
+            speedPxPerMs: speed,
+            stage: mover.stage,
+            getTarget: livePoint,
+            onReach: () => {
+              mover.stop?.();
+              reach();
+            },
+          }).start();
+          return;
+        }
+        travelToPoint({
+          fromX,
+          fromY: spawnY,
+          toX: dest.x,
+          toY: dest.y,
+          speedPxPerMs: speed,
+          stage: mover.stage,
+          onReach: () => {
+            mover.stop?.();
+            reach();
+          },
+        }).start();
+      };
+      const wait = scaleRealMs(Math.max(0, Number(shot?.delayMs) || 0));
+      if (wait > 0) setTimeout(fire, wait);
+      else fire();
+    });
+    return true;
+  }
+
+  const FAN_HOME_OUT_PX = 120;
+
+  function applySpriteRot(stage, dx, dy) {
+    if (!stage) return;
+    const deg = (Math.atan2(dy, dx) * 180) / Math.PI;
+    stage.style.transformOrigin = '50% 50%';
+    const x = Number.isFinite(stage._gpuX) ? stage._gpuX : 0;
+    const y = Number.isFinite(stage._gpuY) ? stage._gpuY : 0;
+    setGpuPos(stage, x, y, `rotate(${deg}deg)`);
+  }
+
+  /**
+   * 扇形直線飛出。home !== false 時飛完 outPx 再追蹤（密傳）。
+   * home === false：沿角度飛 travelPx 後 onReach，不轉向（散投額外行）。
+   */
+  function travelFanThenHome(opts) {
+    const fromX = Number(opts.fromX);
+    const fromY = Number(opts.fromY);
+    const home = opts.home !== false;
+    const rawOut = Number(opts.outPx);
+    const rawTravel = Number(opts.travelPx);
+    const outPx = home
+      ? (Number.isFinite(rawOut) ? Math.max(0, rawOut) : FAN_HOME_OUT_PX)
+      : (Number.isFinite(rawTravel) && rawTravel > 0 ? rawTravel : 360);
+    const speed = Math.max(0.05, Number(opts.speedPxPerMs) || 0.55);
+    const stage = opts.stage;
+    const angleRad = Number(opts.angleRad) || 0;
+    const getTarget = opts.getTarget;
+    const onReach = opts.onReach;
+    const hitRadius = 28;
+    const ox = Math.cos(angleRad);
+    const oy = Math.sin(angleRad);
+
+    if (!stage) {
+      const t = typeof getTarget === 'function' ? getTarget() : null;
+      if (typeof onReach === 'function') onReach(t || { x: fromX, y: fromY });
+      return { start: () => {} };
+    }
+
+    applySpriteRot(stage, ox, oy);
+    setGpuPos(stage, fromX, fromY);
+
+    let x = fromX;
+    let y = fromY;
+    let phase = 'out';
+    let outLeft = outPx;
+    let done = false;
+
+    const finishAt = (pt) => {
+      if (done) return;
+      done = true;
+      mover.cancel();
+      stage.remove();
+      if (typeof onReach === 'function') onReach(pt || { x, y });
+    };
+
+    const { mover, start } = startMover((dt) => {
+      if (done) return;
+      if (!stage.isConnected) {
+        finishAt({ x, y });
+        return;
+      }
+      const stepPx = speed * dt;
+
+      if (phase === 'out') {
+        const move = Math.min(stepPx, outLeft);
+        x += ox * move;
+        y += oy * move;
+        outLeft -= move;
+        setGpuPos(stage, x, y);
+        if (outLeft <= 0.5) {
+          if (!home) {
+            finishAt({ x, y });
+            return;
+          }
+          phase = 'home';
+        }
+        return;
+      }
+
+      const t = typeof getTarget === 'function' ? getTarget() : null;
+      if (!t || !Number.isFinite(Number(t.x)) || !Number.isFinite(Number(t.y))) {
+        finishAt({ x, y });
+        return;
+      }
+      const dx = Number(t.x) - x;
+      const dy = Number(t.y) - y;
+      const dist = Math.hypot(dx, dy);
+      if (!(dist > hitRadius)) {
+        finishAt({ x: Number(t.x), y: Number(t.y) });
+        return;
+      }
+      const ux = dx / dist;
+      const uy = dy / dist;
+      applySpriteRot(stage, ux, uy);
+      x += ux * stepPx;
+      y += uy * stepPx;
+      setGpuPos(stage, x, y);
+    });
+
+    return { start };
   }
 
   function playSpecialAt(fieldEl, frames, pt, facingRight) {
@@ -659,10 +970,12 @@ const SkillBallCast = (() => {
     const aoeRadius = Math.max(60, Number(plan.aoeRadius) || 120);
     const speed = (Number(plan.speedPxPerMs) || 0.55) * gameSpeedMult();
     const launchMs = scaleRealMs(Math.max(0, Number(plan.launchMs) || 0));
+    const tickWhileTravel = !!plan.tickWhileTravel;
+    const keepStage = !!plan.keepStage;
 
     ensureFxPreload([spriteFrames]).then(() => {
       setTimeout(() => {
-        const spawn = launchPointFromEffect(fieldEl, playerEl);
+        const spawn = launchPointFromEffect(fieldEl, playerEl, facingRight, plan.startOffset);
         let fromX = spawn.x;
         const fromY = spawn.y;
         const toX = fromX + (facingRight ? travelDist : -travelDist);
@@ -673,6 +986,38 @@ const SkillBallCast = (() => {
           return;
         }
 
+        let lastTickAt = 0;
+        const fireTick = (pt) => {
+          if (visualOnly || typeof onTick !== 'function') return;
+          const now = performance.now();
+          if (lastTickAt && (now - lastTickAt) < tickMs) return;
+          lastTickAt = now;
+          const victims = targetsNearPoint(
+            fieldEl,
+            mobList(),
+            pt.x,
+            pt.y,
+            aoeRadius,
+            maxTargets,
+          ).map((t) => t.mob);
+          onTick(victims, pt);
+        };
+
+        const startLinger = (pt, stageObj) => {
+          const endAt = performance.now() + durationMs;
+          const tick = () => {
+            if (performance.now() >= endAt) {
+              stageObj.stop?.();
+              stageObj.stage?.remove();
+              finish();
+              return;
+            }
+            fireTick(pt);
+            setTimeout(tick, tickMs);
+          };
+          tick();
+        };
+
         travelHorizontal({
           fromX,
           fromY,
@@ -680,38 +1025,21 @@ const SkillBallCast = (() => {
           speedPxPerMs: speed,
           facingRight,
           stage: mover.stage,
+          keepStage,
+          onStep: tickWhileTravel ? fireTick : null,
           onReach: (pt) => {
+            if (keepStage) {
+              startLinger(pt, mover);
+              return;
+            }
             mover.stop?.();
             const orbStage = createSpriteStage(fieldEl, spriteFrames, facingRight);
             if (!orbStage) {
               finish();
               return;
             }
-            orbStage.stage.style.left = `${pt.x}px`;
-            orbStage.stage.style.top = `${pt.y}px`;
-
-            const endAt = performance.now() + durationMs;
-            const tick = () => {
-              if (performance.now() >= endAt) {
-                orbStage.stop?.();
-                orbStage.stage.remove();
-                finish();
-                return;
-              }
-              if (!visualOnly && typeof onTick === 'function') {
-                const victims = targetsNearPoint(
-                  fieldEl,
-                  mobList(),
-                  pt.x,
-                  pt.y,
-                  aoeRadius,
-                  maxTargets,
-                ).map((t) => t.mob);
-                onTick(victims, pt);
-              }
-              setTimeout(tick, tickMs);
-            };
-            tick();
+            setGpuPos(orbStage.stage, pt.x, pt.y);
+            startLinger(pt, orbStage);
           },
         }).start();
       }, launchMs);
@@ -736,6 +1064,8 @@ const SkillBallCast = (() => {
       visualOnly = false,
       omitPlayerEffect = false,
       extraBulletCount = 0,
+      fanAngles = null,
+      onLaunch = null,
     } = opts;
     // 純動畫：仍飛投射物，但不觸發 onHit 結算
     const onHit = visualOnly ? null : onHitOpt;
@@ -752,6 +1082,7 @@ const SkillBallCast = (() => {
     }
 
     const volleys = resolveBulletVolleys(skill, plan, level, extraBulletCount);
+    const fanList = Array.isArray(fanAngles) ? fanAngles.filter((a) => Number.isFinite(Number(a))) : [];
 
     // 背景：略過飛行／orb 持續，立刻對目前目標結算（避免 setTimeout／rAF 被節流）
     if (typeof document !== 'undefined' && document.hidden && !visualOnly) {
@@ -763,6 +1094,11 @@ const SkillBallCast = (() => {
           if (!mob || !(Number(mob.hp) > 0)) return;
           if (typeof onHit === 'function') onHit(mob, i, null, { volleyIndex: wave });
         });
+        fanList.forEach((_, fi) => {
+          const mob = victims[0];
+          if (!mob || typeof onHit !== 'function') return;
+          onHit(mob, 0, null, { volleyIndex: wave, fanExtra: true, fanIndex: fi });
+        });
       }
       finish();
       return true;
@@ -773,6 +1109,9 @@ const SkillBallCast = (() => {
     if (plan.ballMode === 'orb') {
       if (effectFrames.length && typeof SkillEffectPlayer !== 'undefined') {
         SkillEffectPlayer.playOnPlayer(effectFrames, { playerEl });
+      }
+      if (!omitPlayerEffect && fx.effect0?.length && typeof SkillEffectPlayer !== 'undefined') {
+        SkillEffectPlayer.playOnPlayer(fx.effect0, { playerEl });
       }
       runOrbBall({
         fieldEl,
@@ -813,11 +1152,27 @@ const SkillBallCast = (() => {
       : [spriteFrames];
 
     ensureFxPreload(preload).then(() => {
+      const startFlight = () => {
       const spawn = launchPointFromEffect(fieldEl, playerEl, facingRight);
       const perTargetArrows = !!(skill?.multiTargeting || skill?.rectBasedOnTarget);
       const piercingArrows = !!skill?.piercing;
+      let launchNoted = false;
+      let visualVictims = null;
+      const noteLaunch = () => {
+        if (launchNoted) return;
+        launchNoted = true;
+        if (typeof onLaunch === 'function') {
+          try { onLaunch(); } catch (_) { /* ignore */ }
+        }
+      };
+      const victimsForVolley = () => {
+        if (visualOnly && visualVictims) return visualVictims;
+        const next = targetsByCount(fieldEl, mobList(), maxTargets);
+        if (visualOnly) visualVictims = next;
+        return next;
+      };
 
-      const flyOneArrow = (fromX, fromY, victim, volleyIndex, targetIndex, onArrowDone) => {
+      const flyOneArrow = (fromX, fromY, victim, volleyIndex, targetIndex, onArrowDone, hitMeta) => {
         const doneArrow = () => {
           if (typeof onArrowDone === 'function') onArrowDone();
         };
@@ -825,15 +1180,38 @@ const SkillBallCast = (() => {
           doneArrow();
           return;
         }
+        const meta = { volleyIndex, ...(hitMeta || {}) };
         const mover = createSpriteStage(fieldEl, spriteFrames, facingRight, { skipFacingFlip: true });
-        if (!mover) {
+        const reach = (hitPt) => {
+          mover?.stop?.();
+          const pt = hitPt || { x: victim.x, y: victim.y };
+          if (plan.specialOnFirstHit && fx.special?.frames?.length && targetIndex === 0) {
+            playSpecialAt(fieldEl, fx.special.frames, pt, facingRight);
+          }
           if (typeof onHit === 'function') {
-            onHit(victim.mob, targetIndex, { x: victim.x, y: victim.y }, { volleyIndex });
+            onHit(victim.mob, targetIndex, pt, meta);
           }
           doneArrow();
+        };
+        if (!mover) {
+          reach({ x: victim.x, y: victim.y });
           return;
         }
-        // 微幅錯開發射 Y，多箭並飛時較好辨識
+        if (meta.fanHome && Number.isFinite(Number(meta.fanHome.angleRad))) {
+          travelFanThenHome({
+            fromX,
+            fromY,
+            angleRad: Number(meta.fanHome.angleRad),
+            home: meta.fanHome.home !== false,
+            outPx: Number(meta.fanHome.outPx) || FAN_HOME_OUT_PX,
+            travelPx: Number(meta.fanHome.travelPx) || 360,
+            getTarget: meta.fanHome.getTarget,
+            speedPxPerMs: speed,
+            stage: mover.stage,
+            onReach: reach,
+          }).start();
+          return;
+        }
         const jitterY = (targetIndex % 3) * 4 - 4;
         travelToPoint({
           fromX,
@@ -842,23 +1220,13 @@ const SkillBallCast = (() => {
           toY: victim.y,
           speedPxPerMs: speed,
           stage: mover.stage,
-          onReach: () => {
-            mover.stop?.();
-            const hitPt = { x: victim.x, y: victim.y };
-            if (plan.specialOnFirstHit && fx.special?.frames?.length && targetIndex === 0) {
-              playSpecialAt(fieldEl, fx.special.frames, hitPt, facingRight);
-            }
-            if (typeof onHit === 'function') {
-              onHit(victim.mob, targetIndex, hitPt, { volleyIndex });
-            }
-            doneArrow();
-          },
+          onReach: () => reach({ x: victim.x, y: victim.y }),
         }).start();
       };
 
       /** 急速雙擊等：每一波對「每一隻」目標各射一箭 */
       const runPerTargetVolley = (volleyIndex, onBoltDone) => {
-        const victims = targetsByCount(fieldEl, mobList(), maxTargets);
+        const victims = victimsForVolley();
         const doneBolt = () => {
           if (typeof onBoltDone === 'function') onBoltDone();
           else finish();
@@ -927,7 +1295,37 @@ const SkillBallCast = (() => {
         runSeg(0);
       };
 
+      const launchFanExtras = (volleyIndex, fromX, fromY, victims, onEachDone, baseAng) => {
+        if (!fanList.length || !victims?.length) return;
+        fanList.forEach((angle, fi) => {
+          const fire = () => {
+            const aim = victims[(fi + 1) % victims.length] || victims[0];
+            flyOneArrow(
+              fromX,
+              fromY,
+              aim,
+              volleyIndex,
+              80 + fi,
+              onEachDone,
+              {
+                fanExtra: true,
+                fanIndex: fi,
+                fanHome: {
+                  angleRad: baseAng + angle,
+                  home: false,
+                  travelPx: 360,
+                },
+              },
+            );
+          };
+          const wait = (fi + 1) * 16;
+          if (wait > 0) setTimeout(fire, wait);
+          else fire();
+        });
+      };
+
       const runEnergyBolt = (volleyIndex = 0, onBoltDone) => {
+        noteLaunch();
         if (perTargetArrows) {
           runPerTargetVolley(volleyIndex, onBoltDone);
           return;
@@ -936,7 +1334,7 @@ const SkillBallCast = (() => {
           runPierceVolley(volleyIndex, onBoltDone);
           return;
         }
-        const victims = targetsByCount(fieldEl, mobList(), maxTargets);
+        const victims = victimsForVolley();
         const doneBolt = () => {
           if (typeof onBoltDone === 'function') onBoltDone();
           else finish();
@@ -946,37 +1344,42 @@ const SkillBallCast = (() => {
           return;
         }
         const first = victims[0];
+        let pending = 1 + fanList.length;
+        const mark = () => {
+          pending -= 1;
+          if (pending <= 0) doneBolt();
+        };
+        const baseAng = Math.atan2(first.y - spawn.y, first.x - spawn.x);
         const mover = createSpriteStage(fieldEl, spriteFrames, facingRight, { skipFacingFlip: true });
-        if (!mover) {
+        const hitMain = (hitPt) => {
+          const pt = hitPt || { x: first.x, y: first.y };
+          if (plan.specialOnFirstHit && fx.special?.frames?.length) {
+            playSpecialAt(fieldEl, fx.special.frames, pt, facingRight);
+          }
           victims.forEach((v, i) => {
             if (typeof onHit === 'function') {
-              onHit(v.mob, i, { x: v.x, y: v.y }, { volleyIndex });
+              onHit(v.mob, i, pt, { volleyIndex });
             }
           });
-          doneBolt();
-          return;
+          mark();
+        };
+        if (!mover) {
+          hitMain({ x: first.x, y: first.y });
+        } else {
+          travelToPoint({
+            fromX: spawn.x,
+            fromY: spawn.y,
+            toX: first.x,
+            toY: first.y,
+            speedPxPerMs: speed,
+            stage: mover.stage,
+            onReach: () => {
+              mover.stop?.();
+              hitMain({ x: first.x, y: first.y });
+            },
+          }).start();
         }
-        travelToPoint({
-          fromX: spawn.x,
-          fromY: spawn.y,
-          toX: first.x,
-          toY: first.y,
-          speedPxPerMs: speed,
-          stage: mover.stage,
-          onReach: () => {
-            mover.stop?.();
-            const hitPt = { x: first.x, y: first.y };
-            if (plan.specialOnFirstHit && fx.special?.frames?.length) {
-              playSpecialAt(fieldEl, fx.special.frames, hitPt, facingRight);
-            }
-            victims.forEach((v, i) => {
-              if (typeof onHit === 'function') {
-                onHit(v.mob, i, hitPt, { volleyIndex });
-              }
-            });
-            doneBolt();
-          },
-        }).start();
+        launchFanExtras(volleyIndex, spawn.x, spawn.y, victims, mark, baseAng);
       };
 
       const runBulletVolleys = () => {
@@ -990,13 +1393,17 @@ const SkillBallCast = (() => {
           cumulative += Math.max(0, Number(volleys.delaysMs[i]) || 0);
           const waitMs = scaleRealMs(cumulative);
           const volleyIndex = i;
-          setTimeout(() => {
+          const fire = () => {
             runEnergyBolt(volleyIndex, markDone);
-          }, waitMs);
+          };
+          if (waitMs > 0) setTimeout(fire, waitMs);
+          else if (typeof requestAnimationFrame === 'function') requestAnimationFrame(fire);
+          else fire();
         }
       };
 
       const runInstantBeam = () => {
+        noteLaunch();
         const count = Math.max(1, Number(plan.instantTargets) || maxTargets);
         const victims = targetsByQueue(fieldEl, mobList(), count);
         if (!victims.length) {
@@ -1028,6 +1435,7 @@ const SkillBallCast = (() => {
       };
 
       const runChain = () => {
+        noteLaunch();
         const chainRange = Math.max(280, Number(plan.chainRangePx) || 420);
         const firstRange = Math.max(chainRange, Number(plan.chainFirstRangePx) || Math.round(chainRange * 1.4));
         const path = buildChainPath(
@@ -1106,6 +1514,9 @@ const SkillBallCast = (() => {
         else if (plan.chain) runChain();
         else runEnergyBolt(0);
       }, launchMs);
+      };
+      if (typeof requestAnimationFrame === 'function') requestAnimationFrame(startFlight);
+      else startFlight();
     });
 
     return true;
@@ -1115,7 +1526,9 @@ const SkillBallCast = (() => {
     buildPlan,
     isBallCastSkill,
     resolveBulletVolleys,
+    extraFanAngles,
     playBallCast,
+    playShotsFromPoint,
     framesDurationMs,
   };
 })();

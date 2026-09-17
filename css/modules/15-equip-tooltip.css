@@ -405,6 +405,10 @@
   margin-left: 0;
 }
 
+.eq-tip-req-block .eq-tip-symbol-grow .eq-tip-info-value {
+  white-space: nowrap;
+}
+
 .eq-tip-set-block .eq-tip-info-label,
 .eq-tip-set-block .eq-tip-info-value {
   color: #B7BFC5;

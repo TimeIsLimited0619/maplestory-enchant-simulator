@@ -69,7 +69,7 @@ const SkillTooltip = (() => {
     const iconRaw = skill.icon || (typeof SkillCatalog !== 'undefined' ? SkillCatalog.iconUrl?.(skill) : '') || '';
     const iconSrc = String(iconRaw).replace(/"/g, '&quot;');
     const maxLv = Math.max(1, Number(skill.maxLevel) || 1);
-    const lv = Math.max(0, Math.min(maxLv, Math.floor(Number(level) || 0)));
+    const lv = Math.max(0, Math.floor(Number(level) || 0));
     const previewLv = Math.max(1, lv || 1);
 
     const descHtml = formatText(skill.desc || '（尚無技能說明）', panelCommon(skill, previewLv), previewLv);
@@ -191,7 +191,7 @@ const SkillTooltip = (() => {
     if (!skill) return;
 
     const level = (typeof CharacterSkills !== 'undefined')
-      ? (CharacterSkills.getLevel?.(skillId) || 0)
+      ? (CharacterSkills.getEffectiveLevel?.(skillId) || CharacterSkills.getLevel?.(skillId) || 0)
       : 0;
 
     const tip = ensureRoot();

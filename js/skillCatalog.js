@@ -8,9 +8,58 @@ const SkillCatalog = (() => {
    * @type {Record<string, string[]>}
    */
   const LINE_EXTRA_SKILL_IDS = {
-    mage: ['1000003'],
-    magef: ['1000003'],
+    mage: [
+      '1000003',
+      '400021002', '400021030', '400021094', '400021067',
+      '400021000', '400001021', '400001042',
+      '400004191', '400004192', '400004193', '400004194', '400004195',
+      '400004196', '400004197', '400004198', '400004199', '400004200',
+    ],
+    magef: [
+      '1000003',
+      '400021001', '400021028', '400021101', '400021066',
+      '400021000', '400001021', '400001042',
+      '400004177', '400004178', '400004179', '400004180', '400004181',
+      '400004182', '400004183', '400004184', '400004185', '400004186',
+      '400004187', '400004188', '400004189', '400004190',
+    ],
+    warrior: [
+      '400011001', '400011027', '400011073', '400011124',
+      '400011000', '400011066', '400001010', '400001042',
+      '400004000', '400004001', '400004002', '400004003', '400004004',
+      '400004005', '400004006', '400004007', '400004008', '400004009',
+      '400004010',
+    ],
+    mercedes: [
+      '400031007', '400031017', '400031044', '400031024',
+      '400031023', '400001024', '400001042',
+      '400004346', '400004347', '400004348', '400004349', '400004350',
+      '400004351', '400004352', '400004353', '400004354', '400004355',
+      '400004356', '400004357', '400004358', '400004359', '400004360',
+      '400004361',
+    ],
+    nightlord: [
+      '400041061', '400041038', '400041020', '400041001',
+      '400041000', '400041032', '400001023', '400001042',
+      '400004650', '400004652', '400004653', '400004654', '400004655',
+      '400004656', '400004657', '400004658', '400004659', '400004660',
+    ],
+    angelicbuster: [
+      '400051046', '400051011', '400051018', '400051072',
+      '400051000', '400051033', '400001047', '400001014', '400001042',
+      '400004859', '400004860', '400004861', '400004862', '400004863',
+      '400004864', '400004865', '400004867', '400004868', '400004869',
+    ],
   };
+
+  /** 全職業五轉通用核（200 頁；位移／降臨本體／神聖之泉等不進面板） */
+  const ALL_JOB_V_COMMON_IDS = [
+    '400001002', '400001003', '400001004',
+    '400000005', '400000006',
+    '400001020',
+    '400001039',
+    '400001064',
+  ];
 
   /** 職業線隱藏（仍匯入資料；夜使者不含短劍／位移） */
   const LINE_HIDDEN_SKILL_IDS = {
@@ -28,10 +77,39 @@ const SkillCatalog = (() => {
       '4121021',
       '4121022',
       '4121009',
+      '400041000',
+      '400041062',
+      '400041079',
     ],
     angelicbuster: [
       '65111007', // 探求者 companion
       '65121012', // 共鳴 companion
+      '400051019',
+      '400051020',
+      '400051027',
+      '400051097',
+    ],
+    mage: [
+      '400021031',
+      '400021040',
+      '400021060',
+    ],
+    magef: [
+      '400021060',
+    ],
+    mercedes: [
+      '400031008',
+      '400031009',
+      '400031011',
+      '400031000',
+      '400031018',
+      '400031045',
+      '400001025',
+      '400001026',
+      '400001027',
+      '400001028',
+      '400001029',
+      '400001030',
     ],
   };
 
@@ -103,9 +181,13 @@ const SkillCatalog = (() => {
   /** 職業線額外掛入的技能（去重） */
   function appendLineExtraSkills(jobId, out, opts = {}) {
     const line = getJobLine(jobId);
-    const extras = LINE_EXTRA_SKILL_IDS[String(line?.id || '')] || [];
+    const extras = [
+      ...ALL_JOB_V_COMMON_IDS,
+      ...(LINE_EXTRA_SKILL_IDS[String(line?.id || '')] || []),
+    ];
     if (!extras.length) return;
-    const rank = opts.rank != null ? String(opts.rank) : null;
+    const rankRaw = opts.rank != null ? String(opts.rank) : null;
+    const rank = rankRaw === 'hexa' ? '200' : rankRaw;
     const type = opts.type != null ? String(opts.type) : null;
     const includeHidden = !!opts.includeHidden;
     const seen = new Set((out || []).map((s) => String(s.id)));
@@ -114,6 +196,18 @@ const SkillCatalog = (() => {
       if (seen.has(id)) return;
       const raw = getSkill(id);
       if (!raw) return;
+      if (Number(raw.infoType) === 50) {
+        const psd = raw.psdSkill || raw.wz?.psdSkill || [];
+        const targets = Array.isArray(psd) ? psd.map((tid) => String(tid || '')) : [];
+        if (targets.length && !targets.some((tid) => seen.has(tid)
+          || out.some((s) => String(s.id) === tid))) {
+          const bookList = booksForJob(jobId);
+          const hasTarget = targets.some((tid) => bookList.some((book) => (
+            (book.skills || []).some((s) => String(s.id) === tid)
+          )));
+          if (!hasTarget) return;
+        }
+      }
       if (!includeHidden && raw.skipPanel) return;
       if (rank != null && String(raw.rank) !== rank) return;
       if (type != null && String(raw.type) !== type) return;
@@ -129,7 +223,8 @@ const SkillCatalog = (() => {
   function listSkills(jobId, opts = {}) {
     const bookList = booksForJob(jobId);
     if (!bookList.length) return [];
-    const rank = opts.rank != null ? String(opts.rank) : null;
+    const rankRaw = opts.rank != null ? String(opts.rank) : null;
+    const rank = rankRaw === 'hexa' ? '200' : rankRaw;
     const type = opts.type != null ? String(opts.type) : null;
     const includeHidden = !!opts.includeHidden;
     const hiddenIds = new Set(LINE_HIDDEN_SKILL_IDS[String(getJobLine(jobId)?.id || '')] || []);
@@ -146,7 +241,7 @@ const SkillCatalog = (() => {
         out.push(s);
       });
     });
-    appendLineExtraSkills(jobId, out, opts);
+    appendLineExtraSkills(jobId, out, { ...opts, rank });
     return out;
   }
 
@@ -162,14 +257,14 @@ const SkillCatalog = (() => {
     if (!skill) return '';
     if (typeof skill === 'string') {
       const s = getSkill(skill);
-      return s?.icon ? `${s.icon}?v=20260829icon2` : '';
+      return s?.icon ? `${s.icon}?v=20260917icon3` : '';
     }
-    return skill.icon ? `${skill.icon}?v=20260829icon2` : '';
+    return skill.icon ? `${skill.icon}?v=20260917icon3` : '';
   }
 
   function panelRanksForJob(jobId) {
     const bookList = booksForJob(jobId);
-    const order = ['10', '30', '60', '100', 'hyper', 'hexa'];
+    const order = ['10', '30', '60', '100', 'hyper', '200', 'hexa'];
     const seen = new Set();
     bookList.forEach((book) => {
       (book.skills || []).forEach((s) => {

@@ -38,6 +38,18 @@ const SkillCombat = (() => {
     return Math.max(0, Number(ms) || 0);
   }
 
+  function scheduleAfterPaint(fn) {
+    if (typeof fn !== 'function') return;
+    const kick = () => {
+      try { fn(); } catch (_) { /* ignore */ }
+    };
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(kick);
+      return;
+    }
+    setTimeout(kick, 0);
+  }
+
   function stopActiveSustainChannel() {
     const cur = activeSustainChannel;
     activeSustainChannel = null;
@@ -181,9 +193,11 @@ const SkillCombat = (() => {
     }
     castLockUntil = 0;
     mercedesLinkFollowerReadyAt = 0;
+    mercedesGhostBlossomAt = 0;
     if (!opts.keepCooldowns) lastNoCdAttackSlot = -1;
     chainReservations.clear();
     nextChainReservationId = 1;
+    nlBlastingPassiveAt = 0;
     // 預設保留時限 buff／CD（換圖、進 BOSS、暫停再開）；完整重置才清
     if (!opts.keepBuffs && typeof SkillBuffRuntime !== 'undefined') {
       SkillBuffRuntime.reset?.();
@@ -360,8 +374,31 @@ const SkillCombat = (() => {
     return Math.max(1, Math.floor(mpCon * 5 * (1 + Math.max(0, costR) / 100)));
   }
 
-  function spendSkillHpCost(common) {
-    const cost = resolveSkillHpCost(common);
+  function resolveManaOverloadExtraHpCost() {
+    if (!isMageJobForHpCost()) return 0;
+    const lv = (typeof CharacterSkills !== 'undefined'
+      ? Number(CharacterSkills.getLevel?.('400021000')) || 0
+      : 0);
+    if (!(lv > 0)) return 0;
+    const skill = typeof SkillCatalog !== 'undefined'
+      ? SkillCatalog.getSkill('400021000')
+      : null;
+    if (!skill?.common) return 0;
+    const st = (typeof SkillFormula !== 'undefined' && SkillFormula.evalStatCommon)
+      ? SkillFormula.evalStatCommon(skill.common, lv)
+      : {};
+    const pct = Math.max(0, Number(st.xVal) || 0);
+    if (!(pct > 0)) return 0;
+    const maxHp = (typeof IdleHunt !== 'undefined' && typeof IdleHunt.getPlayerHp === 'function')
+      ? Number(IdleHunt.getPlayerHp()?.maxHp) || 0
+      : 0;
+    if (!(maxHp > 0)) return 0;
+    return Math.max(1, Math.floor(maxHp * pct / 100));
+  }
+
+  function spendSkillHpCost(common, opts = {}) {
+    let cost = resolveSkillHpCost(common);
+    if (opts.includeOverload) cost += resolveManaOverloadExtraHpCost();
     if (!(cost > 0)) return 0;
     if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.spendHuntHp === 'function') {
       return IdleHunt.spendHuntHp(cost, { keepAlive: true });
@@ -398,12 +435,19 @@ const SkillCombat = (() => {
   }
 
   function evalSkill(skill, level) {
+    const invested = Math.max(0, Number(level) || 0);
+    const bonus = (typeof CharacterSkills !== 'undefined'
+      && typeof CharacterSkills.getCombatOrdersBonus === 'function'
+      && invested > 0)
+      ? (Number(CharacterSkills.getCombatOrdersBonus(skill?.id)) || 0)
+      : 0;
+    const lv = invested + bonus;
     if (typeof SkillModifiers !== 'undefined'
       && typeof SkillModifiers.resolveCastCommon === 'function') {
-      return SkillModifiers.resolveCastCommon(skill, level);
+      return SkillModifiers.resolveCastCommon(skill, lv);
     }
     if (typeof SkillFormula === 'undefined') return null;
-    return SkillFormula.evalCommon(skill?.common || {}, level);
+    return SkillFormula.evalCommon(skill?.common || {}, lv);
   }
 
   function resolveWzAttackSpeed(explicitWz) {
@@ -521,8 +565,11 @@ const SkillCombat = (() => {
     const asyncId = registerAsyncCast();
     SkillAreaCast.playAreaCast({
       playerEl: ctx.playerEl,
+      fieldEl: ctx.fieldEl || document.getElementById('idleHuntField'),
       fx,
       plan,
+      skill,
+      targets: resolveSkillTargets(ctx, skill.id, Math.max(1, formCommon.mobCount || 8)),
       onHit: () => {
         if (!isAsyncCastLive(asyncId)) return;
         const result = dealSkillDamage(skill, formCommon, ctx, {
@@ -545,6 +592,540 @@ const SkillCombat = (() => {
     });
     if (opts.mergeLink && picked) mergeLinkFollowers(picked, ctx, []);
     return { kills: [], deferredKills: true };
+  }
+
+  function readWzMultiAttackTimes(skillId) {
+    const sk = typeof SkillCatalog !== 'undefined' ? SkillCatalog.getSkill(skillId) : null;
+    const info = sk?.wz?.multiAttackInfo;
+    if (!info || typeof info !== 'object') return [];
+    return Object.keys(info)
+      .sort((a, b) => Number(a) - Number(b))
+      .map((key) => Math.max(0, Number(info[key]?.attackTime) || 0));
+  }
+
+  function illusionWaveStarts(times, count, firstMs, gapMs) {
+    const n = Math.max(1, count);
+    const starts = [];
+    if (times.length) {
+      let t = 0;
+      for (let i = 0; i < n; i += 1) {
+        const dt = i < times.length
+          ? times[i]
+          : (times[times.length - 1] || gapMs);
+        t = i === 0 ? dt : t + dt;
+        starts.push(t);
+      }
+      return starts;
+    }
+    for (let i = 0; i < n; i += 1) starts.push(firstMs + i * gapMs);
+    return starts;
+  }
+
+  function trySwordIllusionCast(skill, skillForFx, formCommon, fx, ctx, form, picked, finishAfterDamage, opts = {}) {
+    if (String(skill?.id) !== '400011124') return null;
+    const st = (typeof SkillFormula !== 'undefined' && SkillFormula.evalStatCommon)
+      ? SkillFormula.evalStatCommon(skill.common, picked.level || 1)
+      : {};
+    const slashWaves = Math.max(1, Math.floor(Number(st.xVal) || 12));
+    const slashPer = Math.max(1, Math.floor(Number(st.attackCount) || 4));
+    const boomWaves = Math.max(1, Math.floor(Number(st.z) || 5));
+    const boomPer = Math.max(1, Math.floor(Number(st.y) || 5));
+    const boomPct = Math.max(0, Number(st.w) || 0);
+    const slashPct = Number(formCommon.damagePct) || 0;
+    const fieldEl = ctx.fieldEl || document.getElementById('idleHuntField');
+    const kills = [];
+    const hitMobs = [];
+    const asyncId = registerAsyncCast();
+
+    const play = (frames) => {
+      if (!frames?.length || typeof SkillEffectPlayer === 'undefined') return;
+      if (fieldEl && ctx.playerEl && typeof SkillEffectPlayer.playAtField === 'function') {
+        const pt = (typeof SkillBuffRuntime !== 'undefined' && SkillBuffRuntime.summonFieldPoint)
+          ? SkillBuffRuntime.summonFieldPoint(fieldEl, ctx.playerEl, { slot: 'player-feet' }, ctx)
+          : { x: 160, y: 220 };
+        SkillEffectPlayer.playAtField({
+          fieldEl,
+          frames,
+          x: pt.x,
+          y: pt.y,
+          loop: false,
+          className: 'idle-skill-fx-stage idle-skill-fx-stage--cast',
+          zIndex: 58,
+          playerEl: ctx.playerEl,
+          mirrorX: ctxFacingRight(ctx),
+        });
+      } else {
+        SkillEffectPlayer.playOnPlayer(frames, { playerEl: ctx.playerEl });
+      }
+    };
+
+    const slashHit = (typeof SkillCatalog !== 'undefined'
+      ? SkillCatalog.getSkill('400011125')?.fx?.hit
+      : null) || fx.hit;
+    const boomHit = (typeof SkillCatalog !== 'undefined'
+      ? SkillCatalog.getSkill('400011126')?.fx?.hit
+      : null) || slashHit;
+
+    // 400011125/126 multiAttackInfo：間隔累加。第一刀斬擊 1320、爆炸 2790
+    const slashStarts = illusionWaveStarts(readWzMultiAttackTimes('400011125'), slashWaves, 1320, 120);
+    const boomStarts = illusionWaveStarts(readWzMultiAttackTimes('400011126'), boomWaves, 2790, 60);
+
+    play(fx.effect);
+    play(fx.effect0);
+
+    const collect = (result) => {
+      (result?.kills || []).forEach((m) => pushUniqueMob(kills, m));
+      (result?.hitMobs || []).forEach((m) => pushUniqueMob(hitMobs, m));
+    };
+    const dealAt = (startMs, perHit, pct, fxHit, isLast, onDone) => {
+      setTimeout(() => {
+        if (!isAsyncCastLive(asyncId)) return;
+        collect(dealSkillDamage(skill, { ...formCommon, attackCount: perHit, damagePct: pct }, ctx, {
+          isolateStack: true,
+          segmentGapSec: null,
+          normalMobBonusPct: opts.normalMobBonusPct,
+          skillForFx,
+          forceCritTail: isLast ? (form.forceCritTail || 0) : 0,
+          fxHit,
+        }));
+        if (typeof onDone === 'function') onDone();
+      }, Math.max(0, startMs));
+    };
+
+    slashStarts.forEach((startMs) => {
+      dealAt(startMs, slashPer, slashPct, slashHit, false);
+    });
+
+    const comboOrbs = (typeof SkillComboOrbs !== 'undefined') ? SkillComboOrbs : null;
+    const per = Number(comboOrbs?.getPerStackFinalDamR?.()) || 0;
+    if (per > 0 && typeof SkillModifiers !== 'undefined') {
+      const orbCount = Math.max(1, Math.floor(Number(st.u) || 6));
+      const buffMs = scaleGameDelayMs(Math.max(1000, (Number(st.timeSec) || 8) * 1000));
+      SkillModifiers.applyBuff({
+        id: `${skill.id}-comboFd`,
+        name: skill.name || '',
+        icon: skill.icon || '',
+        durationMs: buffMs,
+        finalDamR: per * orbCount,
+      });
+    }
+
+    boomStarts.forEach((startMs, w) => {
+      const last = w === boomStarts.length - 1;
+      dealAt(startMs, boomPer, boomPct, boomHit, last, last ? () => {
+        if (!isAsyncCastLive(asyncId)) return;
+        releaseAsyncCast(asyncId);
+        finishAfterDamage(kills, hitMobs);
+        if (typeof ctx.onProjectileResolve === 'function') ctx.onProjectileResolve(kills);
+      } : null);
+    });
+
+    if (opts.mergeLink && picked) mergeLinkFollowers(picked, ctx, []);
+    return { kills: [], deferredKills: true };
+  }
+
+  function fxSpecialFrames(fx) {
+    if (!fx) return null;
+    if (Array.isArray(fx.special?.frames) && fx.special.frames.length) return fx.special.frames;
+    if (Array.isArray(fx.special) && fx.special.length) return fx.special;
+    if (Array.isArray(fx.layers?.special) && fx.layers.special.length) return fx.layers.special;
+    return null;
+  }
+
+  function fxScreenFrames(fx) {
+    if (!fx) return null;
+    if (Array.isArray(fx.screen) && fx.screen.length) return fx.screen;
+    if (Array.isArray(fx.screen?.frames) && fx.screen.frames.length) return fx.screen.frames;
+    if (Array.isArray(fx.layers?.screen) && fx.layers.screen.length) return fx.layers.screen;
+    return null;
+  }
+
+  function playAbFieldCover(fieldEl, frames) {
+    if (!fieldEl || !frames?.length || typeof SkillEffectPlayer === 'undefined') return;
+    if (typeof SkillEffectPlayer.playAtField !== 'function') return;
+    SkillEffectPlayer.playAtField({
+      fieldEl,
+      frames,
+      x: Math.round((fieldEl.clientWidth || 800) * 0.5),
+      y: Math.round((fieldEl.clientHeight || 500) * 0.5),
+      coverField: true,
+      coverW: fieldEl.clientWidth || 800,
+      coverH: fieldEl.clientHeight || 500,
+      className: 'idle-skill-fx-stage idle-skill-fx-stage--screen idle-skill-fx-stage--ab-v',
+      zIndex: 18,
+      behind: true,
+      forcePlay: true,
+    });
+  }
+
+  function playAbWaveCastFx(skill, fx, ctx, flags = {}) {
+    const fieldEl = ctx.fieldEl || document.getElementById('idleHuntField');
+    playSkillCastFx(skill, fx, ctx);
+    const special = fxSpecialFrames(fx);
+    if (flags.playSpecial && special?.length && typeof SkillEffectPlayer !== 'undefined') {
+      SkillEffectPlayer.playOnPlayer(special, {
+        playerEl: ctx.playerEl,
+        fieldEl,
+        className: 'idle-skill-fx-stage idle-skill-fx-stage--cast idle-skill-fx-stage--ab-special',
+        forcePlay: true,
+      });
+    }
+    if (flags.playScreen) playAbFieldCover(fieldEl, fxScreenFrames(fx));
+  }
+
+  function scheduleAbWaveHits(skill, skillForFx, formCommon, ctx, form, opts = {}) {
+    const waves = Math.max(1, Math.floor(Number(opts.waves) || 1));
+    const perHit = Math.max(1, Math.floor(Number(opts.perHit) || 1));
+    const pct = Number(opts.damagePct);
+    const damagePct = Number.isFinite(pct) ? pct : (Number(formCommon.damagePct) || 0);
+    const mobCount = Math.max(1, Math.floor(Number(opts.mobCount) || formCommon.mobCount || 1));
+    const starts = Array.isArray(opts.starts) && opts.starts.length
+      ? opts.starts
+      : illusionWaveStarts([], waves, Number(opts.firstMs) || 0, Number(opts.gapMs) || 90);
+    const kills = opts.kills || [];
+    const hitMobs = opts.hitMobs || [];
+    const asyncId = opts.asyncId || registerAsyncCast();
+    const fxHit = Object.prototype.hasOwnProperty.call(opts, 'fxHit')
+      ? opts.fxHit
+      : (skillForFx?.fx?.hit || skill?.fx?.hit || null);
+    const collect = (result) => {
+      (result?.kills || []).forEach((m) => pushUniqueMob(kills, m));
+      (result?.hitMobs || []).forEach((m) => pushUniqueMob(hitMobs, m));
+    };
+    starts.forEach((startMs, w) => {
+      const last = w === starts.length - 1;
+      setTimeout(() => {
+        if (!isAsyncCastLive(asyncId)) return;
+        collect(dealSkillDamage(skill, {
+          ...formCommon,
+          attackCount: perHit,
+          damagePct,
+          mobCount,
+        }, ctx, {
+          isolateStack: true,
+          segmentGapSec: null,
+          normalMobBonusPct: opts.normalMobBonusPct,
+          skillForFx,
+          forceCritTail: last ? (form.forceCritTail || 0) : 0,
+          fxHit,
+        }));
+        if (last && typeof opts.onComplete === 'function') opts.onComplete(kills, hitMobs);
+      }, Math.max(0, startMs));
+    });
+    return { kills, hitMobs, asyncId, deferredKills: true };
+  }
+
+  function tryAbVWaveCast(skill, skillForFx, formCommon, fx, ctx, form, picked, finishAfterDamage, opts = {}) {
+    const id = String(skill?.id || '');
+    if (id !== AB_SPARKLE_BURST_ID && id !== AB_TRINITY_FUSION_ID) return null;
+    const st = (typeof SkillFormula !== 'undefined' && SkillFormula.evalStatCommon)
+      ? SkillFormula.evalStatCommon(skill.common, picked?.level || 1)
+      : {};
+    const spec = id === AB_SPARKLE_BURST_ID
+      ? {
+        waves: Math.max(1, Math.floor(Number(st.v) || 15)),
+        perHit: Math.max(1, Math.floor(Number(formCommon.attackCount) || 15)),
+        damagePct: Number(formCommon.damagePct) || 0,
+        firstMs: 720,
+        gapMs: 90,
+        playSpecial: true,
+        playScreen: true,
+      }
+      : {
+        waves: Math.max(1, Math.floor(Number(st.y) || 9)),
+        perHit: Math.max(1, Math.floor(Number(formCommon.attackCount) || 3)),
+        damagePct: Number(formCommon.damagePct) || 0,
+        firstMs: 900,
+        gapMs: 90,
+        playSpecial: false,
+        playScreen: false,
+      };
+    const asyncId = registerAsyncCast();
+    playAbWaveCastFx(skillForFx || skill, fx, ctx, spec);
+    scheduleAbWaveHits(skill, skillForFx, formCommon, ctx, form, {
+      ...spec,
+      starts: illusionWaveStarts(readWzMultiAttackTimes(id), spec.waves, spec.firstMs, spec.gapMs),
+      asyncId,
+      normalMobBonusPct: opts.normalMobBonusPct,
+      onComplete: (kills, hitMobs) => {
+        if (!isAsyncCastLive(asyncId)) return;
+        releaseAsyncCast(asyncId);
+        finishAfterDamage(kills, hitMobs);
+        if (typeof ctx.onProjectileResolve === 'function') ctx.onProjectileResolve(kills);
+      },
+    });
+    if (opts.mergeLink && picked) mergeLinkFollowers(picked, ctx, []);
+    return { kills: [], deferredKills: true };
+  }
+
+  const IL_THUNDERBREAK_ID = '400021030';
+  const IL_THUNDERBREAK_BOLT_IDS = ['400021031', '400021040'];
+  const IL_JUPITER_THUNDER_ID = '400021094';
+
+  function tryIlThunderbreakCast(skill, skillForFx, formCommon, fx, ctx, form, picked, finishAfterDamage, opts = {}) {
+    if (String(skill?.id || '') !== IL_THUNDERBREAK_ID) return null;
+    const st = (typeof SkillFormula !== 'undefined' && SkillFormula.evalStatCommon)
+      ? SkillFormula.evalStatCommon(skill.common, picked?.level || 1)
+      : {};
+    const waves = Math.max(1, Math.floor(Number(st.w) || 8));
+    const perHit = Math.max(1, Math.floor(Number(st.s) || 15));
+    const damagePct = Number(st.v) || Number(formCommon.damagePct) || 0;
+    const mobCount = Math.max(1, Math.floor(Number(st.q) || 12));
+    const firstMs = Math.max(0, Math.floor(Number(st.u) || 290));
+    const boltA = typeof SkillCatalog !== 'undefined' ? SkillCatalog.getSkill(IL_THUNDERBREAK_BOLT_IDS[0]) : null;
+    const boltB = typeof SkillCatalog !== 'undefined' ? SkillCatalog.getSkill(IL_THUNDERBREAK_BOLT_IDS[1]) : null;
+    const gapMs = Math.max(
+      60,
+      Math.floor(Number(
+        (typeof SkillFormula !== 'undefined' && boltA?.common && SkillFormula.evalStatCommon)
+          ? SkillFormula.evalStatCommon(boltA.common, picked?.level || 1).subTimeMs
+          : 210,
+      ) || 210),
+    );
+    const asyncId = registerAsyncCast();
+    const fieldEl = ctx.fieldEl || document.getElementById('idleHuntField');
+    playSkillCastFx(skillForFx || skill, fx, ctx);
+    const facingRight = ctxFacingRight(ctx);
+    let origin = { x: 160, y: 280 };
+    if (typeof SkillBuffRuntime !== 'undefined'
+      && typeof SkillBuffRuntime.summonFieldPoint === 'function'
+      && fieldEl
+      && ctx.playerEl) {
+      origin = SkillBuffRuntime.summonFieldPoint(
+        fieldEl,
+        ctx.playerEl,
+        { slot: 'player-feet' },
+        ctx,
+      ) || origin;
+    }
+    const step = 90;
+    const starts = illusionWaveStarts([], waves, firstMs, gapMs);
+    const kills = [];
+    const hitMobs = [];
+    starts.forEach((startMs, w) => {
+      const last = w === starts.length - 1;
+      setTimeout(() => {
+        if (!isAsyncCastLive(asyncId)) return;
+        const bolt = (w % 2 === 0 ? boltA : boltB) || boltA || boltB || skillForFx || skill;
+        const x = origin.x + (facingRight ? 1 : -1) * (70 + w * step);
+        const y = origin.y;
+        if (fieldEl && bolt?.fx?.effect?.length && typeof SkillEffectPlayer !== 'undefined') {
+          SkillEffectPlayer.playAtField({
+            fieldEl,
+            frames: bolt.fx.effect,
+            x,
+            y,
+            loop: false,
+            className: 'idle-skill-fx-stage idle-skill-fx-stage--thunderbreak',
+            mirrorX: facingRight,
+            zIndex: 48,
+          });
+        }
+        const result = dealSkillDamage(skill, {
+          ...formCommon,
+          attackCount: perHit,
+          damagePct,
+          mobCount,
+        }, ctx, {
+          isolateStack: true,
+          segmentGapSec: null,
+          normalMobBonusPct: opts.normalMobBonusPct,
+          skillForFx: bolt,
+          forceCritTail: last ? (form.forceCritTail || 0) : 0,
+          fxHit: bolt?.fx?.hit || null,
+        });
+        (result?.kills || []).forEach((m) => pushUniqueMob(kills, m));
+        (result?.hitMobs || []).forEach((m) => pushUniqueMob(hitMobs, m));
+        if (typeof SkillBuffRuntime !== 'undefined'
+          && typeof SkillBuffRuntime.onSwordSkillCast === 'function') {
+          SkillBuffRuntime.onSwordSkillCast(skill, ctx);
+        }
+        if (!last) {
+          tryBlizzardFinalAttack(ctx, skill.id, result?.hitMobs || []);
+        }
+        if (last) {
+          releaseAsyncCast(asyncId);
+          finishAfterDamage(kills, hitMobs);
+          if (typeof ctx.onProjectileResolve === 'function') ctx.onProjectileResolve(kills);
+        }
+      }, Math.max(0, startMs));
+    });
+    if (opts.mergeLink && picked) mergeLinkFollowers(picked, ctx, []);
+    return { kills: [], deferredKills: true };
+  }
+
+  function jupiterBallFrames(fx) {
+    if (Array.isArray(fx?.ball?.frames) && fx.ball.frames.length) return fx.ball.frames;
+    const layers = fx?.ball?.layers || [];
+    const numeric = layers.find((l) => /^\d+$/.test(String(l.name)));
+    return (numeric || layers[0])?.frames || [];
+  }
+
+  function tryJupiterThunderCast(skill, skillForFx, formCommon, fx, ctx, form, picked, finishAfterDamage, opts = {}) {
+    if (String(skill?.id || '') !== IL_JUPITER_THUNDER_ID) return null;
+    const st = (typeof SkillFormula !== 'undefined' && SkillFormula.evalStatCommon)
+      ? SkillFormula.evalStatCommon(skill.common, picked?.level || 1)
+      : {};
+    const shocks = Math.max(1, Math.floor(Number(st.xVal) || 30));
+    const gapMs = Math.max(60, Math.floor(Number(st.subTimeMs) || 330));
+    const freezeEvery = Math.max(1, Math.floor(Number(st.v) || 5));
+    const splashCount = Math.max(0, Math.floor(Number(st.prop) || 2));
+    const splashPct = Number(st.s) || 0;
+    const splashHits = Math.max(1, Math.floor(Number(st.dotPct) || 4));
+    const asyncId = registerAsyncCast();
+    playSkillCastFx(skillForFx || skill, fx, ctx);
+    const ballFrames = jupiterBallFrames(fx);
+    const fieldEl = ctx.fieldEl || document.getElementById('idleHuntField');
+    const facingRight = ctxFacingRight(ctx);
+    const behindPlace = { slot: 'feet-behind', behindExtra: -48 };
+    const resolveBehind = () => {
+      if (typeof SkillBuffRuntime !== 'undefined'
+        && typeof SkillBuffRuntime.summonFieldPoint === 'function'
+        && fieldEl
+        && ctx.playerEl) {
+        return SkillBuffRuntime.summonFieldPoint(fieldEl, ctx.playerEl, behindPlace, ctx);
+      }
+      return { x: 120, y: 280 };
+    };
+    let ballFxId = null;
+    if (fieldEl && ballFrames.length && typeof SkillEffectPlayer !== 'undefined'
+      && typeof SkillEffectPlayer.playAtField === 'function') {
+      const pt = resolveBehind();
+      ballFxId = SkillEffectPlayer.playAtField({
+        fieldEl,
+        frames: ballFrames,
+        x: pt.x,
+        y: pt.y,
+        loop: true,
+        className: 'idle-skill-fx-stage idle-skill-fx-stage--jupiter-ball',
+        mirrorX: facingRight,
+        zIndex: 46,
+        resolveAnchor: resolveBehind,
+      });
+    }
+    const kills = [];
+    const hitMobs = [];
+    let shockIdx = 0;
+
+    const stopBall = () => {
+      if (ballFxId != null && typeof SkillEffectPlayer !== 'undefined') {
+        SkillEffectPlayer.stopFx?.(ballFxId);
+      }
+      ballFxId = null;
+    };
+
+    const finish = () => {
+      stopBall();
+      if (!isAsyncCastLive(asyncId)) return;
+      releaseAsyncCast(asyncId);
+      finishAfterDamage(kills, hitMobs);
+      if (typeof ctx.onProjectileResolve === 'function') ctx.onProjectileResolve(kills);
+    };
+
+    const runShock = () => {
+      if (!isAsyncCastLive(asyncId)) {
+        stopBall();
+        return;
+      }
+      const take = 1 + splashCount;
+      const alive = resolveSkillTargets(ctx, skill.id, take)
+        .filter((m) => m && Number(m.hp) > 0);
+      const primary = alive[0] || null;
+      if (primary) {
+        const hit = dealHitsOnMob(skill, {
+          ...formCommon,
+          attackCount: Math.max(1, Math.floor(Number(formCommon.attackCount) || 8)),
+          damagePct: Number(formCommon.damagePct) || 0,
+        }, primary, ctx, {
+          isolateStack: true,
+          segmentGapSec: null,
+          normalMobBonusPct: opts.normalMobBonusPct,
+          forceCritTail: 0,
+          fxHit: skillForFx?.fx?.hit || fx?.hit || null,
+        });
+        if (hit) pushUniqueMob(hitMobs, primary);
+        if (primary.hp <= 0) pushUniqueMob(kills, primary);
+        if (typeof SkillMobStatus !== 'undefined') {
+          SkillMobStatus.applyJupiterShock?.(primary, Math.max(gapMs + 80, (shocks - shockIdx) * gapMs));
+          if ((shockIdx + 1) % freezeEvery === 0 && SkillMobStatus.hasFreeze?.(primary)) {
+            SkillMobStatus.consumeFreeze?.(primary, 1);
+          }
+        }
+      }
+      if (primary && splashCount > 0 && splashPct > 0) {
+        alive.slice(1, 1 + splashCount).forEach((mob) => {
+          const hit = dealHitsOnMob(skill, {
+            ...formCommon,
+            attackCount: splashHits,
+            damagePct: splashPct,
+          }, mob, ctx, {
+            segmentGapSec: null,
+            normalMobBonusPct: opts.normalMobBonusPct,
+            forceCritTail: 0,
+            fxHit: skillForFx?.fx?.hit || fx?.hit || null,
+          });
+          if (hit) pushUniqueMob(hitMobs, mob);
+          if (mob.hp <= 0) pushUniqueMob(kills, mob);
+        });
+      }
+      if (typeof SkillBuffRuntime !== 'undefined'
+        && typeof SkillBuffRuntime.onSwordSkillCast === 'function') {
+        SkillBuffRuntime.onSwordSkillCast(skill, ctx);
+      }
+      shockIdx += 1;
+      if (shockIdx >= shocks) {
+        finish();
+        return;
+      }
+      setTimeout(runShock, scaleGameDelayMs(gapMs));
+    };
+
+    setTimeout(runShock, scaleGameDelayMs(Math.max(90, Number(st.w2) || 180)));
+    if (opts.mergeLink && picked) mergeLinkFollowers(picked, ctx, []);
+    return { kills: [], deferredKills: true };
+  }
+
+  function playAbMascotExplosion(skill, skillForFx, formCommon, ctx, form, picked, onComplete) {
+    const level = picked?.level || 1;
+    const st = (typeof SkillFormula !== 'undefined' && SkillFormula.evalStatCommon)
+      ? SkillFormula.evalStatCommon(skill.common, level)
+      : {};
+    const endSkill = typeof SkillCatalog !== 'undefined'
+      ? SkillCatalog.getSkill(AB_MASCOT_END_ID)
+      : null;
+    const endFx = endSkill?.fx || {};
+    const waves = Math.max(1, Math.floor(Number(st.u2) || 7));
+    const perHit = Math.max(1, Math.floor(Number(st.y) || 10));
+    const damagePct = Number(st.xVal) || Number(formCommon.damagePct) || 0;
+    const mobCount = Math.max(1, Math.floor(Number(st.z) || 15));
+    const asyncId = registerAsyncCast();
+    if (endFx.effect?.length && typeof SkillEffectPlayer !== 'undefined') {
+      SkillEffectPlayer.playOnPlayer(endFx.effect, {
+        playerEl: ctx.playerEl,
+        fieldEl: ctx.fieldEl,
+        className: 'idle-skill-fx-stage idle-skill-fx-stage--cast idle-skill-fx-stage--ab-mascot-end',
+        forcePlay: true,
+      });
+    }
+    scheduleAbWaveHits(skill, endSkill || skillForFx, formCommon, ctx, form, {
+      waves,
+      perHit,
+      damagePct,
+      mobCount,
+      starts: illusionWaveStarts(
+        readWzMultiAttackTimes(AB_MASCOT_END_ID),
+        waves,
+        600,
+        60,
+      ),
+      asyncId,
+      fxHit: skillForFx?.fx?.hit || skill?.fx?.hit || null,
+      onComplete: (kills, hitMobs) => {
+        if (!isAsyncCastLive(asyncId)) return;
+        releaseAsyncCast(asyncId);
+        if (typeof onComplete === 'function') onComplete(kills, hitMobs);
+      },
+    });
   }
 
   function tryChannelCastAttack(skill, skillForFx, atkCommon, fx, ctx, form, picked, finishAfterDamage, opts = {}) {
@@ -622,7 +1203,8 @@ const SkillCombat = (() => {
         segmentGapSec: opts.segmentGapSec,
         normalMobBonusPct: opts.normalMobBonusPct,
         forceCritTail: form.forceCritTail || 0,
-        fxHit: fireBallOnTick ? undefined : null,
+        // 飛箭 tick 由 ball 自己播 hit；其餘引導（伊里加爾等）用技能 hit
+        fxHit: fireBallOnTick ? undefined : (skillForFx?.fx?.hit || fx?.hit || null),
       });
       if (hit) {
         pushUniqueMob(hitMobs, live);
@@ -728,6 +1310,24 @@ const SkillCombat = (() => {
         if (tickDamagedMobs.length) {
           tryAngelicBusterFollowups(ctx, skill.id, tickDamagedMobs);
         }
+        if (isMercedesJob() && !ctx?.skipMercedesExtras) {
+          tryMercedesFollowups(ctx, skill.id, tickDamagedMobs.length ? tickDamagedMobs : targets);
+          if (tickDamagedMobs.length
+            && typeof SkillBuffRuntime !== 'undefined'
+            && typeof SkillBuffRuntime.onSwordSkillCast === 'function') {
+            SkillBuffRuntime.onSwordSkillCast(skill, ctx);
+          }
+        }
+        const lightningIds = (typeof SkillBuffRuntime !== 'undefined'
+          && Array.isArray(SkillBuffRuntime.ICE_AGE_LIGHTNING_TRIGGER_IDS))
+          ? SkillBuffRuntime.ICE_AGE_LIGHTNING_TRIGGER_IDS
+          : null;
+        if (lightningIds
+          && lightningIds.includes(String(skill.id || ''))
+          && typeof SkillBuffRuntime !== 'undefined'
+          && typeof SkillBuffRuntime.onSwordSkillCast === 'function') {
+          SkillBuffRuntime.onSwordSkillCast(skill, ctx);
+        }
         // 連鎖 2–4：每個 tick 都追加，避免整段引導只放一次
         if (opts.mergeLink && picked?.isSkillLink) {
           runWithDamageStackSession(ctx, tickSession, () => {
@@ -767,24 +1367,37 @@ const SkillCombat = (() => {
           Paperdoll.stopHuntSwingLoop?.();
         }
         if (!isAsyncCastLive(asyncId)) return;
-        releaseAsyncCast(asyncId);
-        if (kills.length) {
-          syncMobStateAfterDamage(kills, ctx);
-        } else if (typeof IdleBoss !== 'undefined' && IdleBoss.isRunning?.()) {
-          if (typeof IdleBossFight !== 'undefined'
-            && typeof IdleBossFight.tryPhaseCheck === 'function') {
-            IdleBossFight.tryPhaseCheck(hitMobs);
-          } else {
-            syncMobStateAfterDamage(hitMobs, ctx);
+        const wrapFinish = (extraKills, extraHits) => {
+          if (!isAsyncCastLive(asyncId)) return;
+          (extraKills || []).forEach((m) => pushUniqueMob(kills, m));
+          (extraHits || []).forEach((m) => pushUniqueMob(hitMobs, m));
+          releaseAsyncCast(asyncId);
+          if (kills.length) {
+            syncMobStateAfterDamage(kills, ctx);
+          } else if (typeof IdleBoss !== 'undefined' && IdleBoss.isRunning?.()) {
+            if (typeof IdleBossFight !== 'undefined'
+              && typeof IdleBossFight.tryPhaseCheck === 'function') {
+              IdleBossFight.tryPhaseCheck(hitMobs);
+            } else {
+              syncMobStateAfterDamage(hitMobs, ctx);
+            }
           }
+          const prevSkipAb = ctx.skipAbExtras;
+          const prevSkipMer = ctx.skipMercedesExtras;
+          ctx.skipAbExtras = true;
+          ctx.skipMercedesExtras = true;
+          try {
+            finishAfterDamage(kills, hitMobs);
+          } finally {
+            ctx.skipAbExtras = prevSkipAb;
+            ctx.skipMercedesExtras = prevSkipMer;
+          }
+        };
+        if (String(skill.id) === AB_MASCOT_ID) {
+          playAbMascotExplosion(skill, skillForFx, atkCommon, ctx, form, picked, wrapFinish);
+          return;
         }
-        const prevSkipAb = ctx.skipAbExtras;
-        ctx.skipAbExtras = true;
-        try {
-          finishAfterDamage(kills, hitMobs);
-        } finally {
-          ctx.skipAbExtras = prevSkipAb;
-        }
+        wrapFinish();
       },
     });
 
@@ -879,12 +1492,14 @@ const SkillCombat = (() => {
   /**
    * 飛箭改純動畫：傷害依 mobCount 即時結算（無視飛行距離）。
    * 連鎖／orb／instantBeam 仍走投射物判定。
+   * 夜使者三／四飛閃亦走此路：飛鏢照樣扇形飛出，命中改一次結算，避免打王時每發 onHit。
    */
   function usesBallVisualDamage(skill, plan) {
     if (!skill) return false;
     if (skill.ballVisualDamage === false) return false;
     if (plan?.chain || plan?.ballMode === 'orb' || plan?.instantBeam) return false;
     if (skill.ballVisualDamage === true) return true;
+    if (THROW_STAR_SKILL_IDS.has(String(skill.id || ''))) return true;
     // 精靈遊俠一般 sprite 飛箭：預設即時結算，避免清怪被飛行拖慢
     return isMercedesJob();
   }
@@ -919,6 +1534,14 @@ const SkillCombat = (() => {
   }
 
   const THROW_STAR_SKILL_IDS = new Set(['4111010', '4121013']);
+  const THROW_BLASTING_TRIGGER_IDS = new Set([
+    '4111010', '4121013', '4101013', '4111015', '4121052',
+  ]);
+  const SPREAD_THROW_ID = '400041001';
+  const THROW_BLASTING_ID = '400041061';
+  const THROW_BLASTING_EXTRA_IDS = ['400041062', '400041079'];
+  const WIND_SHURIKEN_ID = '400041020';
+  let nlBlastingPassiveAt = 0;
 
   /** 三／四飛閃：補上消耗品 0207 手裡劍 ball 幀（背包最前格） */
   function resolveSkillFx(skill, fxOpt) {
@@ -945,6 +1568,48 @@ const SkillCombat = (() => {
     return Math.max(0, Number(SkillModifiers.getShadowPartnerRate()) || 0);
   }
 
+  function getSpreadThrowSpec(skill) {
+    const id = String(skill?.id || '');
+    if (!THROW_STAR_SKILL_IDS.has(id)) return null;
+    if (typeof SkillModifiers === 'undefined' || !SkillModifiers.hasBuff?.(SPREAD_THROW_ID)) {
+      return null;
+    }
+    const spread = typeof SkillCatalog !== 'undefined'
+      ? SkillCatalog.getSkill(SPREAD_THROW_ID)
+      : null;
+    if (!spread) return null;
+    const lv = Math.max(
+      1,
+      (typeof CharacterSkills !== 'undefined' ? CharacterSkills.getLevel?.(SPREAD_THROW_ID) : 0) || 1,
+    );
+    const st = (typeof SkillFormula !== 'undefined' && SkillFormula.evalStatCommon)
+      ? SkillFormula.evalStatCommon(spread.common, lv)
+      : null;
+    if (!st) return null;
+    const isTriple = id === '4111010';
+    const extraDirs = isTriple ? 4 : 3;
+    const extraPct = isTriple ? Number(st.u) : Number(st.damagePct);
+    if (!(extraPct > 0)) return null;
+    const dummyKey = isTriple ? 'dummyStr' : 'dummyStr2';
+    let splash = 4;
+    if (typeof SkillFormula !== 'undefined' && typeof SkillFormula.evalExpr === 'function') {
+      const n = SkillFormula.evalExpr(spread.common?.[dummyKey], { x: lv });
+      if (Number.isFinite(n) && n > 0) splash = n;
+    }
+    const fanAngles = (typeof SkillBallCast !== 'undefined'
+      && typeof SkillBallCast.extraFanAngles === 'function')
+      ? SkillBallCast.extraFanAngles(extraDirs)
+      : [];
+    return {
+      extraDirs,
+      extraPct,
+      splash: Math.max(1, Math.floor(splash)),
+      fanAngles,
+      hitCommon: { damagePct: extraPct, attackCount: 1 },
+      spreadSkill: spread,
+    };
+  }
+
   function throwStarClonePlayerEl(ctx) {
     const playerEl = ctx?.playerEl;
     const field = ctx?.fieldEl;
@@ -956,9 +1621,63 @@ const SkillCombat = (() => {
     return clone;
   }
 
+  function usesOrbBallCast(skill, fx) {
+    if (typeof SkillBallCast === 'undefined') return false;
+    const plan = skill?.ballCast || SkillBallCast.buildPlan?.(skill, fx || skill?.fx);
+    return plan?.ballMode === 'orb';
+  }
+
   function throwStarExtraVolleys(skill, atkCommon) {
     if (!THROW_STAR_SKILL_IDS.has(String(skill?.id || ''))) return 0;
     return Math.max(0, Math.floor(Number(atkCommon?._hyperEnhance?.attackCount) || 0));
+  }
+
+  function isWindShuriken(skill) {
+    return String(skill?.id || '') === WIND_SHURIKEN_ID;
+  }
+
+  function windShurikenShootFlags(skill, atkCommon, shootMeta) {
+    if (!isWindShuriken(skill)) {
+      const pierce = !!shootMeta?.pierce;
+      return {
+        pierce,
+        maxTargets: pierce ? Math.max(1, atkCommon?.mobCount || 1) : 1,
+        startDelayMs: shootMeta?.startDelayMs || 0,
+      };
+    }
+    return {
+      pierce: true,
+      maxTargets: Math.max(1, atkCommon?.mobCount || 1),
+      startDelayMs: Number(atkCommon?.attackDelayBaseMs) || Number(shootMeta?.startDelayMs) || 0,
+    };
+  }
+
+  function mobFieldAnchor(ctx, mob) {
+    const fieldEl = ctx?.fieldEl || document.getElementById('idleHuntField');
+    if (mob && typeof SkillEffectPlayer !== 'undefined'
+      && typeof SkillEffectPlayer.fieldPointFromMob === 'function') {
+      const pt = SkillEffectPlayer.fieldPointFromMob(fieldEl, mob);
+      if (pt && Number.isFinite(pt.x) && Number.isFinite(pt.y)) return pt;
+    }
+    return null;
+  }
+
+  function startWindShurikenLinger(skill, level, atkCommon, ctx, anchor) {
+    if (!isWindShuriken(skill)) return;
+    if (typeof SkillBuffRuntime === 'undefined'
+      || typeof SkillBuffRuntime.activateWindShurikenLinger !== 'function') {
+      return;
+    }
+    const timing = (typeof SkillFormula !== 'undefined' && SkillFormula.evalStatCommon)
+      ? SkillFormula.evalStatCommon(skill.common, level)
+      : null;
+    const stat = {
+      ...(timing || {}),
+      damagePct: Number(atkCommon?.damagePct) || Number(timing?.damagePct) || 0,
+      attackCount: Number(atkCommon?.attackCount) || Number(timing?.attackCount) || 7,
+      mobCount: Number(atkCommon?.mobCount) || Number(timing?.mobCount) || 6,
+    };
+    SkillBuffRuntime.activateWindShurikenLinger(skill, level, stat, ctx, anchor);
   }
 
   function tryBallCastAttack(skill, skillForFx, atkCommon, fx, ctx, form, picked, finishAfterDamage, opts = {}) {
@@ -974,6 +1693,7 @@ const SkillCombat = (() => {
     const volleys = typeof SkillBallCast.resolveBulletVolleys === 'function'
       ? SkillBallCast.resolveBulletVolleys(skill, plan, level, extraVolleys)
       : null;
+    const spreadSpec = getSpreadThrowSpec(skill);
     // 多箭 volley：每發只結算 1 段，總段數＝bulletCount（避免 attackCount×volley 翻倍）
     const hitCommon = volleys
       ? { ...atkCommon, attackCount: 1 }
@@ -993,10 +1713,16 @@ const SkillCombat = (() => {
     const stackSession = ctx._damageStack || beginDamageStackSession(ctx);
     const partnerR = throwStarPartnerRate(skill);
     const volleyCount = volleys ? Math.max(1, Number(volleys.count) || 1) : 0;
-    const partnerSets = (partnerR > 0 && THROW_STAR_SKILL_IDS.has(String(skill.id))) ? 2 : 1;
+    const partnerVisual = partnerR > 0 && THROW_STAR_SKILL_IDS.has(String(skill.id));
+    const partnerSets = partnerVisual ? 2 : 1;
+    const spreadSettleHits = spreadSpec ? 1 : 0;
+    const fanLines = spreadSpec ? (1 + spreadSpec.extraDirs) : 1;
+    const settleVolleyCap = (THROW_STAR_SKILL_IDS.has(String(skill.id || '')) && volleyCount > NL_HIT_CAP)
+      ? NL_HIT_CAP
+      : (volleys ? volleyCount : 0);
     const headStackHits = volleys
-      ? volleyCount * partnerSets
-      : Math.max(1, hitCommon.attackCount || 1) * partnerSets;
+      ? settleVolleyCap + spreadSettleHits + (partnerVisual ? 1 : 0)
+      : Math.max(1, hitCommon.attackCount || 1) + (partnerVisual ? 1 : 0);
     // 主技能層數先佔位，讓同步的連鎖接在上方（飛彈／多箭稍後命中仍用同層）
     const headStack = damageStackSlotsForSkill(ctx, skill.id, headStackHits, {
       forceReserve: true,
@@ -1005,65 +1731,171 @@ const SkillCombat = (() => {
 
     // 飛箭純動畫：依目標數即時結算（技能連鎖分攤仍用 resolveSkillTargets）
     if (usesBallVisualDamage(skill, plan)) {
+      const isThrowStar = THROW_STAR_SKILL_IDS.has(String(skill.id || ''));
       const targets = (ballMobList() || [])
         .filter((m) => m && Number(m.hp) > 0)
         .slice(0, maxTargets);
+      const rawVolleys = Math.max(1, volleyCount || Number(volleys?.count) || 1);
+      const volleyFold = (isThrowStar && rawVolleys > NL_HIT_CAP)
+        ? foldAttackSegments(rawVolleys, 1, NL_HIT_CAP)
+        : { attackCount: rawVolleys, damagePct: 1 };
+      const settleVolleys = volleyFold.attackCount;
       const dmgCommon = volleys
-        ? { ...atkCommon, attackCount: Math.max(1, Number(volleys.count) || 1) }
+        ? {
+          ...atkCommon,
+          attackCount: settleVolleys,
+          damagePct: (Number(atkCommon.damagePct) || 0) * volleyFold.damagePct,
+        }
         : hitCommon;
 
-      runWithDamageStackSession(ctx, stackSession, () => {
-        targets.forEach((mob) => {
-          const live = resolveLiveMob(mob, ctx) || mob;
-          if (!live || !(Number(live.hp) > 0)) {
-            if (mob && mob.hp <= 0) {
-              pushUniqueMob(kills, mob);
-              syncMobStateAfterDamage([mob], ctx);
-            }
-            return;
+      const applySettledHit = (common, mob, stackStart, hitFx) => {
+        const live = resolveLiveMob(mob, ctx) || mob;
+        if (!live || !(Number(live.hp) > 0)) {
+          if (mob && mob.hp <= 0) {
+            pushUniqueMob(kills, mob);
+            syncMobStateAfterDamage([mob], ctx);
           }
-          const hit = dealHitsOnMob(skillForFx, dmgCommon, live, ctx, {
-            segmentGapSec: opts.segmentGapSec,
-            normalMobBonusPct: opts.normalMobBonusPct,
-            forceCritTail: form.forceCritTail || 0,
-            stackGroup: headStack.stackGroup,
-            stackStartIndex: headStack.startIndex,
-            stackSession,
-          });
-          if (hit) pushUniqueMob(hitMobs, live);
-          if (live.hp <= 0) {
-            pushUniqueMob(kills, live);
-            syncMobStateAfterDamage([live], ctx);
-          }
-        });
-      });
+          return;
+        }
+        const hitOpts = {
+          segmentGapSec: opts.segmentGapSec,
+          normalMobBonusPct: opts.normalMobBonusPct,
+          forceCritTail: form.forceCritTail || 0,
+          stackGroup: headStack.stackGroup,
+          stackStartIndex: stackStart,
+          stackSession,
+        };
+        if (hitFx !== undefined) hitOpts.fxHit = hitFx;
+        const hit = dealHitsOnMob(skillForFx, common, live, ctx, hitOpts);
+        if (hit) pushUniqueMob(hitMobs, live);
+        if (live.hp <= 0) {
+          pushUniqueMob(kills, live);
+          syncMobStateAfterDamage([live], ctx);
+        }
+      };
 
-      if (!(ctx.quietFx || (typeof document !== 'undefined' && document.hidden))) {
-        SkillBallCast.playBallCast({
-          fieldEl,
-          playerEl: ctx.playerEl,
-          fx,
-          plan,
-          skill,
-          level,
-          mobs: targets,
-          getMobs: () => targets.filter((m) => m && Number(m.hp) > 0),
-          maxTargets,
-          facingRight: ctxFacingRight(ctx),
-          visualOnly: true,
-          onDone: () => {},
-        });
-      }
-
-      if (opts.mergeLink && picked) {
+      const settleHits = () => {
         runWithDamageStackSession(ctx, stackSession, () => {
-          mergeLinkFollowers(picked, ctx, []);
+          targets.forEach((mob) => {
+            applySettledHit(dmgCommon, mob, headStack.startIndex, isThrowStar ? null : undefined);
+          });
+          if (isThrowStar && spreadSpec) {
+            const extraCommon = {
+              ...spreadSpec.hitCommon,
+              damagePct: (Number(spreadSpec.extraPct) || 0) * spreadSpec.extraDirs * settleVolleys,
+              attackCount: 1,
+            };
+            const extraPool = liveMobTargets(ballMobList(), spreadSpec.splash, ctx, skill.id);
+            const extraList = extraPool.length ? extraPool : targets;
+            extraList.forEach((m) => {
+              applySettledHit(extraCommon, m, headStack.startIndex + settleVolleys, null);
+            });
+          }
+          if (isThrowStar && partnerR > 0) {
+            const partnerCoef = new Map();
+            const addCoef = (mob, coef) => {
+              if (!mob || !(coef > 0)) return;
+              const key = mob.uid != null ? String(mob.uid) : '';
+              if (!key) return;
+              const row = partnerCoef.get(key);
+              if (row) row.coef += coef;
+              else partnerCoef.set(key, { mob, coef });
+            };
+            const mainCoef = (Number(dmgCommon.damagePct) || 0)
+              * Math.max(1, Number(dmgCommon.attackCount) || 1);
+            targets.forEach((m) => addCoef(m, mainCoef));
+            if (spreadSpec) {
+              const spreadCoef = (Number(spreadSpec.extraPct) || 0)
+                * spreadSpec.extraDirs
+                * settleVolleys;
+              const extraPool = liveMobTargets(ballMobList(), spreadSpec.splash, ctx, skill.id);
+              const extraList = extraPool.length ? extraPool : targets;
+              extraList.forEach((m) => addCoef(m, spreadCoef));
+            }
+            const partnerStack = headStack.startIndex + settleVolleys + spreadSettleHits;
+            partnerCoef.forEach((row) => {
+              const pct = row.coef * (partnerR / 100);
+              if (!(pct > 0)) return;
+              applySettledHit(
+                { damagePct: pct, attackCount: 1 },
+                row.mob,
+                partnerStack,
+                null,
+              );
+            });
+          }
         });
-      }
+      };
 
-      releaseAsyncCast(asyncId);
-      if (kills.length) syncMobStateAfterDamage(kills, ctx);
-      finishAfterDamage(kills, hitMobs);
+      const playVisuals = (onLaunch) => {
+        if (ctx.quietFx || (typeof document !== 'undefined' && document.hidden)) return;
+        const playVisualBalls = (playerEl, omitPlayerEffect, onDone) => {
+          SkillBallCast.playBallCast({
+            fieldEl,
+            playerEl,
+            fx,
+            plan,
+            skill,
+            level,
+            extraBulletCount: extraVolleys,
+            fanAngles: (isThrowStar && spreadSpec?.fanAngles) ? spreadSpec.fanAngles : null,
+            mobs: targets,
+            getMobs: () => (ballMobList() || []).filter((m) => m && Number(m.hp) > 0),
+            maxTargets,
+            facingRight: ctxFacingRight(ctx),
+            omitPlayerEffect: !!omitPlayerEffect,
+            visualOnly: true,
+            onLaunch: (!omitPlayerEffect && typeof onLaunch === 'function') ? onLaunch : null,
+            onDone: typeof onDone === 'function' ? onDone : () => {},
+          });
+        };
+        playVisualBalls(ctx.playerEl, false, () => {
+          if (!isThrowStar || partnerSets <= 1) return;
+          if (spreadSpec) return;
+          const gap = typeof scaleGameDelayMs === 'function' ? scaleGameDelayMs(90) : 90;
+          const runPartner = () => {
+            playVisualBalls(throwStarClonePlayerEl(ctx), true, () => {});
+          };
+          if (gap > 0) setTimeout(runPartner, gap);
+          else runPartner();
+        });
+      };
+
+      const finishVisualCast = () => {
+        if (!isAsyncCastLive(asyncId)) return;
+        if (opts.mergeLink && picked) {
+          runWithDamageStackSession(ctx, stackSession, () => {
+            mergeLinkFollowers(picked, ctx, []);
+          });
+        }
+        releaseAsyncCast(asyncId);
+        if (kills.length) syncMobStateAfterDamage(kills, ctx);
+        finishAfterDamage(kills, hitMobs);
+      };
+
+      if (isThrowStar) {
+        let settled = false;
+        const settleOnce = () => {
+          if (settled) return;
+          settled = true;
+          scheduleAfterPaint(() => {
+            settleHits();
+            finishVisualCast();
+          });
+        };
+        if (ctx.quietFx || (typeof document !== 'undefined' && document.hidden)) {
+          settleHits();
+          finishVisualCast();
+        } else {
+          playVisuals(settleOnce);
+          if (!targets.length) settleOnce();
+          else setTimeout(settleOnce, scaleGameDelayMs(420));
+        }
+      } else {
+        settleHits();
+        playVisuals();
+        finishVisualCast();
+      }
       return { kills: [], deferredKills: true };
     }
 
@@ -1164,6 +1996,14 @@ const SkillCombat = (() => {
           pushUniqueMob(kills, live);
           syncMobStateAfterDamage([live], ctx);
         }
+        const lightningIds = (typeof SkillBuffRuntime !== 'undefined'
+          && Array.isArray(SkillBuffRuntime.ICE_AGE_LIGHTNING_TRIGGER_IDS))
+          ? SkillBuffRuntime.ICE_AGE_LIGHTNING_TRIGGER_IDS
+          : null;
+        if (hit && lightningIds && lightningIds.includes(String(skill.id || ''))
+          && typeof SkillBuffRuntime.onSwordSkillCast === 'function') {
+          SkillBuffRuntime.onSwordSkillCast(skill, ctx);
+        }
       });
     };
 
@@ -1191,6 +2031,7 @@ const SkillCombat = (() => {
         skill: castSkill,
         level,
         extraBulletCount: extraVolleys,
+        fanAngles: spreadSpec?.fanAngles || null,
         mobs: ballMobList(),
         getMobs: ballMobList,
         maxTargets,
@@ -1208,7 +2049,21 @@ const SkillCombat = (() => {
             chainReservationId = reserveChainMobs(path.map((p) => p.mob), ttl);
           }
           : undefined,
-        onHit: (mob, _hitIndex, _pt, meta) => applyBallHit(mob, meta, common, stackOffset),
+        onHit: (mob, _hitIndex, _pt, meta) => {
+          if (meta && meta.fanExtra && spreadSpec) {
+            const fanIndex = Math.max(0, Math.floor(Number(meta.fanIndex) || 0));
+            const extraOffset = stackOffset + volleyCount * (1 + fanIndex);
+            const extraPct = (omitPlayerEffect && partnerR > 0)
+              ? (Number(spreadSpec.extraPct) || 0) * (partnerR / 100)
+              : (Number(spreadSpec.extraPct) || 0);
+            const extraCommon = { ...spreadSpec.hitCommon, damagePct: extraPct };
+            const pool = liveMobTargets(ballMobList(), spreadSpec.splash, ctx, skill.id);
+            const list = pool.length ? pool : (mob ? [mob] : []);
+            list.forEach((m) => applyBallHit(m, meta, extraCommon, extraOffset));
+            return;
+          }
+          applyBallHit(mob, meta, common, stackOffset);
+        },
         onDone,
       });
     };
@@ -1226,7 +2081,7 @@ const SkillCombat = (() => {
       playThrowStarSet(
         throwStarClonePlayerEl(ctx),
         partnerCommon,
-        volleyCount || 0,
+        volleyCount * fanLines,
         true,
         finishBall,
       );
@@ -1340,8 +2195,45 @@ const SkillCombat = (() => {
     return critRateBonus;
   }
 
+  /** 夜使者壓段：指定技折成 1 段；其餘最多 4 段，多餘段數折進傷害係數 */
+  const NL_HIT_CAP = 4;
+  const NL_HIT_FOLD_TO_ONE_IDS = new Set([
+    '4111015', // 手裏劍挑戰
+    '4121017', // 挑釁契約本體
+    '4121020', // 挑釁追擊手裏劍
+    '400041062', // 飛閃起爆符爆炸
+    '400041079',
+  ]);
+
+  function foldAttackSegments(attackCount, damagePct, cap) {
+    const n = Math.max(1, Math.floor(Number(attackCount) || 1));
+    const keep = Math.max(1, Math.floor(Number(cap) || NL_HIT_CAP));
+    const dmg = Number(damagePct) || 0;
+    if (n <= keep) return { attackCount: n, damagePct: dmg };
+    return {
+      attackCount: keep,
+      damagePct: dmg * (n / keep),
+    };
+  }
+
+  function foldNlHitSegments(skill, common) {
+    if (!common || !isNightLordJob()) return common;
+    const id = String(skill?.id || '');
+    const cap = NL_HIT_FOLD_TO_ONE_IDS.has(id) ? 1 : NL_HIT_CAP;
+    const folded = foldAttackSegments(common.attackCount, common.damagePct, cap);
+    if (folded.attackCount === Math.max(1, Math.floor(Number(common.attackCount) || 1))
+      && folded.damagePct === (Number(common.damagePct) || 0)) {
+      return common;
+    }
+    return {
+      ...common,
+      attackCount: folded.attackCount,
+      damagePct: folded.damagePct,
+    };
+  }
+
   /** 套用超技能被動（傷害／怪物數／段數）與全域戰鬥規則後的施放 common */
-  function combatCommonFor(skill, common) {
+  function combatCommonFor(skill, common, opts = {}) {
     let out = common;
     if (typeof SkillModifiers !== 'undefined') {
       if (typeof SkillModifiers.applySkillEnhance === 'function') {
@@ -1351,7 +2243,8 @@ const SkillCombat = (() => {
         out = SkillModifiers.applyGlobalCombatRules(skill, out);
       }
     }
-    return out;
+    if (opts.skipHitFold) return out;
+    return foldNlHitSegments(skill, out);
   }
 
   /** 單次施放佔用的佇列目標數（技能連鎖依此錯開） */
@@ -1364,6 +2257,9 @@ const SkillCombat = (() => {
     }
     const shootLayers = skill.fx?.shootobj?.layers;
     if (Array.isArray(shootLayers) && shootLayers.length) {
+      if (String(skill.id) === WIND_SHURIKEN_ID) {
+        return Math.max(1, atkCommon?.mobCount || 1);
+      }
       const pierce = !!skill.fx?.shootobj?.pierce;
       return pierce ? Math.max(1, atkCommon?.mobCount || 1) : 1;
     }
@@ -1551,6 +2447,12 @@ const SkillCombat = (() => {
         && CharacterSkills.isSkillSuperseded(resolvedId)) return null;
       const level = CharacterSkills.getLevel(resolvedId);
       if (!(level > 0)) return null;
+      if (String(resolvedId) === '400011073') {
+        const stacks = (typeof SkillComboOrbs !== 'undefined' && SkillComboOrbs.getStacks)
+          ? Number(SkillComboOrbs.getStacks()) || 0
+          : 0;
+        if (stacks < 1) return null;
+      }
       const common = evalSkill(skill, level);
       if (!common) return null;
       const buff = isBuffSkill(skill, common);
@@ -1653,6 +2555,18 @@ const SkillCombat = (() => {
     return { dmg: 0, isCritical: false };
   }
 
+  /** 章節／副本小怪：多餘段數只是超殺，顯示與結算都壓到剛好擊殺（全職業；BOSS 仍打滿段） */
+  function shouldFoldOverkillHits(mob) {
+    return !!(mob && !mob.isBoss && Number(mob.hp) > 0);
+  }
+
+  function previewHitDamage(mob, rawDmg, skillIed) {
+    if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.resolveMobHitDamage === 'function') {
+      return IdleHunt.resolveMobHitDamage(mob, rawDmg, { skillIed });
+    }
+    return Math.max(0, Math.floor(Number(rawDmg) || 0));
+  }
+
   function applyHitsToMob(mob, opts = {}) {
     const {
       damagePct,
@@ -1675,6 +2589,7 @@ const SkillCombat = (() => {
       outgoingMult = 1,
     } = opts;
     if (!mob) return false;
+    if (!mob.isBoss && !(Number(mob.hp) > 0)) return false;
     const pct = (Number(damagePct) || 0) + (Number(damagePctBonus) || 0);
     const n = Math.max(1, Number(attackCount) || 1);
     const critTail = Math.max(0, Math.min(n, Math.floor(Number(forceCritTail) || 0)));
@@ -1710,6 +2625,9 @@ const SkillCombat = (() => {
     }
 
     let any = false;
+    const hitRows = [];
+    const foldOverkill = shouldFoldOverkillHits(mob);
+    let hpLeft = foldOverkill ? Number(mob.hp) : 0;
     for (let i = 0; i < n; i += 1) {
       const forceCritical = critTail > 0 && i >= n - critTail;
       const hit = rollSkillHit(!!mob.isBoss, pct, {
@@ -1732,32 +2650,52 @@ const SkillCombat = (() => {
       }
       if (!(dmg > 0)) continue;
       any = true;
-      const dmgOpts = {
-        multiHit: true,
-        stackIndex: startIndex + i,
-        stackGroup,
-        ...(segmentGapSec != null
-          ? { delay: i * segmentGapSec }
-          : {}),
-      };
-      // 先 cap／IED，再顯示＝實扣
-      if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.applyPlayerHitToMob === 'function') {
-        IdleHunt.applyPlayerHitToMob(mob, dmg, {
+      hitRows.push({
+        dmg,
+        isCritical: !!hit.isCritical,
+        dmgOpts: {
+          multiHit: true,
+          stackIndex: startIndex + i,
+          stackGroup,
+          ...(segmentGapSec != null
+            ? { delay: i * segmentGapSec }
+            : {}),
+        },
+      });
+      if (foldOverkill) {
+        hpLeft -= previewHitDamage(mob, dmg, skillIed);
+        if (!(hpLeft > 0)) break;
+      }
+    }
+    if (hitRows.length) {
+      if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.applyPlayerHitsToMob === 'function') {
+        IdleHunt.applyPlayerHitsToMob(mob, hitRows, {
           skillIed,
-          isCritical: !!hit.isCritical,
           showMobDamage,
           onDamage,
-          dmgOpts,
         });
       } else {
-        const finalDmg = (typeof IdleHunt !== 'undefined' && typeof IdleHunt.resolveMobHitDamage === 'function')
-          ? IdleHunt.resolveMobHitDamage(mob, dmg, { skillIed })
-          : dmg;
-        if (typeof showMobDamage === 'function') {
-          showMobDamage(mob, finalDmg, hit.isCritical, dmgOpts);
+        for (let i = 0; i < hitRows.length; i += 1) {
+          const row = hitRows[i];
+          if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.applyPlayerHitToMob === 'function') {
+            IdleHunt.applyPlayerHitToMob(mob, row.dmg, {
+              skillIed,
+              isCritical: !!row.isCritical,
+              showMobDamage,
+              onDamage,
+              dmgOpts: row.dmgOpts,
+            });
+          } else {
+            const finalDmg = (typeof IdleHunt !== 'undefined' && typeof IdleHunt.resolveMobHitDamage === 'function')
+              ? IdleHunt.resolveMobHitDamage(mob, row.dmg, { skillIed })
+              : row.dmg;
+            if (typeof showMobDamage === 'function') {
+              showMobDamage(mob, finalDmg, row.isCritical, row.dmgOpts);
+            }
+            if (typeof onDamage === 'function') onDamage(finalDmg);
+            mob.hp -= finalDmg;
+          }
         }
-        if (typeof onDamage === 'function') onDamage(finalDmg);
-        mob.hp -= finalDmg;
       }
     }
     if (typeof SkillMobStatus !== 'undefined'
@@ -1823,8 +2761,9 @@ const SkillCombat = (() => {
     };
   }
 
-  function notifyComboAndSync() {
+  function notifyComboAndSync(opts = {}) {
     if (typeof SkillComboOrbs !== 'undefined') SkillComboOrbs.onAttackHit?.();
+    if (opts.skipPanel) return;
     if (typeof CharacterCombatPanel !== 'undefined') {
       CharacterCombatPanel.syncToCombatPower?.();
     }
@@ -2316,7 +3255,558 @@ const SkillCombat = (() => {
     });
   }
 
-  /** 爆破鏢爆炸、刻印星星、影分身額外段、挑釁追擊 */
+  /** 爆破鏢爆炸、刻印星星、影分身額外段、挑釁追擊、飛閃起爆符 */
+  function fireThrowBlastingExtras(ctx, hitMobs, kills) {
+    const delayMs = scaleGameDelayMs(540);
+    const lvParent = Math.max(
+      1,
+      (typeof CharacterSkills !== 'undefined' ? CharacterSkills.getLevel?.(THROW_BLASTING_ID) : 0) || 1,
+    );
+    let playedFx = false;
+    THROW_BLASTING_EXTRA_IDS.forEach((eid) => {
+      const extra = typeof SkillCatalog !== 'undefined' ? SkillCatalog.getSkill(eid) : null;
+      if (!extra) return;
+      const lv = Math.max(
+        1,
+        (typeof CharacterSkills !== 'undefined' ? CharacterSkills.getLevel?.(eid) : 0) || lvParent,
+      );
+      const common = evalSkill(extra, lv);
+      if (!common || !(Number(common.damagePct) > 0)) return;
+      const atkCommon = combatCommonFor(extra, common);
+      const run = () => {
+        const splash = resolveSkillTargets(ctx, eid, Math.max(1, atkCommon.mobCount || 6));
+        const pool = splash.length
+          ? splash
+          : (Array.isArray(hitMobs) ? hitMobs : []).filter((m) => m && Number(m.hp) > 0);
+        const boomMob = pool[0] || (Array.isArray(hitMobs) ? hitMobs[0] : null);
+        if (!playedFx && extra.fx?.effect?.length
+          && boomMob
+          && typeof SkillEffectPlayer !== 'undefined'
+          && typeof SkillEffectPlayer.playAtField === 'function') {
+          const fieldEl = ctx.fieldEl || document.getElementById('idleHuntField');
+          const pt = typeof SkillEffectPlayer.fieldPointFromMob === 'function'
+            ? SkillEffectPlayer.fieldPointFromMob(fieldEl, boomMob)
+            : null;
+          if (pt && Number.isFinite(pt.x) && Number.isFinite(pt.y)) {
+            playedFx = true;
+            SkillEffectPlayer.playAtField({
+              fieldEl,
+              frames: extra.fx.effect,
+              x: pt.x,
+              y: pt.y,
+              zIndex: 56,
+              forcePlay: true,
+              playerEl: ctx.playerEl,
+              mirrorX: ctxFacingRight(ctx),
+            });
+          }
+        }
+        const res = dealNlExtraHits(ctx, extra, atkCommon.damagePct, atkCommon.attackCount, pool);
+        res.kills.forEach((m) => pushUniqueMob(kills, m));
+        if (res.kills.length && typeof ctx.onProjectileResolve === 'function') {
+          ctx.onProjectileResolve(res.kills);
+        }
+      };
+      if (delayMs > 30) setTimeout(run, delayMs);
+      else run();
+    });
+  }
+
+  function tryThrowBlasting(ctx, trigger, hitMobs, kills) {
+    if (!THROW_BLASTING_TRIGGER_IDS.has(trigger)) return;
+    const lv = (typeof CharacterSkills !== 'undefined'
+      ? CharacterSkills.getLevel?.(THROW_BLASTING_ID)
+      : 0) || 0;
+    if (!(lv > 0)) return;
+    const blasting = typeof SkillCatalog !== 'undefined'
+      ? SkillCatalog.getSkill(THROW_BLASTING_ID)
+      : null;
+    if (!blasting) return;
+    const active = typeof SkillModifiers !== 'undefined'
+      && SkillModifiers.hasBuff?.(THROW_BLASTING_ID);
+    let fire = false;
+    if (active) {
+      fire = true;
+    } else if (typeof SkillFormula !== 'undefined' && SkillFormula.evalStatCommon) {
+      const st = SkillFormula.evalStatCommon(blasting.common, lv);
+      const intervalMs = scaleGameDelayMs(Math.max(1, Number(st.u) || 10) * 1000);
+      const t = nowMs();
+      if (!nlBlastingPassiveAt) nlBlastingPassiveAt = t;
+      if (t - nlBlastingPassiveAt >= intervalMs) {
+        fire = true;
+        nlBlastingPassiveAt = t;
+      }
+    }
+    if (fire) fireThrowBlastingExtras(ctx, hitMobs, kills);
+  }
+
+  const ELEMENTAL_GHOST_ID = '400031007';
+  const ELEMENTAL_BLOSSOM_ID = '400031011';
+  const SYLVIDIA_ID = '400031017';
+  const SYLVIDIA_AFTER_ID = '400031018';
+  const IRKALLA_ID = '400031024';
+  const ISHTAR_RING_ID = '23121000';
+  const MERCEDES_GHOST_SKIP_IDS = new Set([
+    ELEMENTAL_GHOST_ID, '400031008', '400031009', ELEMENTAL_BLOSSOM_ID,
+    SYLVIDIA_ID, SYLVIDIA_AFTER_ID, '400031045',
+  ]);
+  let mercedesGhostBlossomAt = 0;
+
+  function rollPercent(p) {
+    const n = Number(p) || 0;
+    if (!(n > 0)) return false;
+    if (n >= 100) return true;
+    return Math.random() * 100 < n;
+  }
+
+  function dealMercedesExtraHits(ctx, skill, damagePct, attackCount, mobs) {
+    const kills = [];
+    const list = (Array.isArray(mobs) ? mobs : []).filter((m) => m && Number(m.hp) > 0);
+    if (!skill || !list.length || !(Number(damagePct) > 0)) return { kills };
+    const common = {
+      damagePct: Number(damagePct) || 0,
+      attackCount: Math.max(1, Math.floor(Number(attackCount) || 1)),
+      mobCount: list.length,
+    };
+    list.forEach((mob) => {
+      const hit = dealHitsOnMob(skill, common, mob, {
+        ...ctx,
+        skipMercedesExtras: true,
+        skipNightLordExtras: true,
+      }, {
+        isolateStack: true,
+        segmentGapSec: null,
+        fxHit: skill.fx?.hit || null,
+      });
+      if (hit && Number(mob.hp) <= 0) pushUniqueMob(kills, mob);
+    });
+    return { kills };
+  }
+
+  function listElementalGhostClones(ctx) {
+    if (typeof Paperdoll === 'undefined' || typeof Paperdoll.listHuntClones !== 'function') {
+      return [];
+    }
+    return Paperdoll.listHuntClones(ctx?.playerEl || ctx?.fieldEl)
+      .filter((el) => el.classList.contains('paperdoll-stage--elemental-ghost')
+        && !el.classList.contains('is-hidden'));
+  }
+
+  /** 分身重做同一招：特效＋飛箭／投擲物，傷害另由殘像 FD 結算 */
+  function playGhostCloneSkillVisual(skill, cloneEl, ctx) {
+    if (!skill || !cloneEl) return;
+    if (ctx?.quietFx || (typeof document !== 'undefined' && document.hidden)) return;
+    if (typeof SkillEffectPlayer === 'undefined') return;
+    const fx = resolveSkillFx(skill, skill.fx) || skill.fx || {};
+    const fieldEl = ctx.fieldEl || document.getElementById('idleHuntField');
+    if (!fieldEl) return;
+    const facingRight = ctxFacingRight(ctx);
+    const fxClass = 'idle-skill-fx-stage idle-skill-fx-stage--elemental-ghost';
+    const maxTargets = Math.max(1, Number(skill.common?.mobCount) || 1);
+    const targets = liveMobTargets(resolveCastMobs(ctx), maxTargets, ctx, skill.id);
+    if (String(skill.castFxAt) === 'targetHead'
+      && typeof SkillEffectPlayer.playOnMobHead === 'function') {
+      const mob = targets[0];
+      if (mob) {
+        if (fx.effect?.length) {
+          SkillEffectPlayer.playOnMobHead(mob, fx.effect, {
+            fieldEl,
+            forcePlay: true,
+            mirrorX: facingRight,
+          });
+        }
+        if (fx.effect0?.length) {
+          SkillEffectPlayer.playOnMobHead(mob, fx.effect0, {
+            fieldEl,
+            forcePlay: true,
+            mirrorX: facingRight,
+          });
+        }
+      }
+    } else {
+      const pose = fx.effect?.length
+        ? fx.effect
+        : (fx.keydown?.length ? fx.keydown : (fx.prepare || null));
+      if (pose?.length) {
+        SkillEffectPlayer.playOnPlayer(pose, {
+          playerEl: cloneEl,
+          fieldEl,
+          className: fxClass,
+          mirrorX: facingRight,
+          forcePlay: true,
+        });
+      }
+      if (fx.effect0?.length) {
+        SkillEffectPlayer.playOnPlayer(fx.effect0, {
+          playerEl: cloneEl,
+          fieldEl,
+          className: fxClass,
+          mirrorX: facingRight,
+          forcePlay: true,
+        });
+      }
+    }
+    const ballPlan = (typeof SkillBallCast !== 'undefined' && SkillBallCast.isBallCastSkill?.(skill, fx))
+      ? (skill.ballCast || SkillBallCast.buildPlan(skill, fx))
+      : null;
+    if (ballPlan && fx.ball && typeof SkillBallCast.playBallCast === 'function') {
+      SkillBallCast.playBallCast({
+        fieldEl,
+        playerEl: cloneEl,
+        fx: { ball: fx.ball, hit: fx.hit },
+        plan: { ...ballPlan, launchMs: 0 },
+        skill,
+        level: 1,
+        mobs: targets,
+        getMobs: () => targets.filter((m) => m && Number(m.hp) > 0),
+        maxTargets,
+        facingRight,
+        omitPlayerEffect: true,
+        visualOnly: true,
+        onDone: () => {},
+      });
+      return;
+    }
+    const shootFrames = shootObjFrames(fx);
+    if (shootFrames.length && typeof SkillEffectPlayer.playShootObj === 'function') {
+      SkillEffectPlayer.playShootObj({
+        fieldEl,
+        playerEl: cloneEl,
+        mobs: targets,
+        frames: shootFrames,
+        startOffset: fx.shootobj?.start || [-80, -60],
+        pierce: !!fx.shootobj?.pierce,
+        maxTargets: Math.max(1, targets.length),
+        moveList: fx.shootobj?.moveList || null,
+        bodyWH: fx.shootobj?.bodyWH || [300, 300],
+        facingRight,
+        onHit: () => {},
+        onDone: () => {},
+      });
+    }
+  }
+
+  function tryMercedesFollowups(ctx, triggerSkillId, hitMobs) {
+    const kills = [];
+    if (!isMercedesJob()) return kills;
+    if (ctx?.skipMercedesExtras) return kills;
+    const trigger = String(triggerSkillId || '');
+    if (!trigger || MERCEDES_GHOST_SKIP_IDS.has(trigger)) return kills;
+    if (typeof SkillModifiers === 'undefined' || !SkillModifiers.hasBuff?.(ELEMENTAL_GHOST_ID)) {
+      return kills;
+    }
+    const ghost = typeof SkillCatalog !== 'undefined'
+      ? SkillCatalog.getSkill(ELEMENTAL_GHOST_ID)
+      : null;
+    const lv = Math.max(
+      1,
+      (typeof CharacterSkills !== 'undefined' ? CharacterSkills.getLevel?.(ELEMENTAL_GHOST_ID) : 0) || 1,
+    );
+    const st = ghost && typeof SkillFormula !== 'undefined'
+      ? SkillFormula.evalStatCommon(ghost.common, lv)
+      : null;
+    if (!st) return kills;
+
+    const triggerSkill = typeof SkillCatalog !== 'undefined'
+      ? SkillCatalog.getSkill(trigger)
+      : null;
+    const liveHits = (Array.isArray(hitMobs) ? hitMobs : [])
+      .filter((m) => m && Number(m.hp) > 0);
+    const trigLv = Math.max(
+      1,
+      (typeof CharacterSkills !== 'undefined' ? CharacterSkills.getLevel?.(trigger) : 0) || 1,
+    );
+    const trigCommon = triggerSkill ? evalSkill(triggerSkill, trigLv) : null;
+    const trigAtk = trigCommon ? combatCommonFor(triggerSkill, trigCommon) : null;
+    const specialFd = trigger === ISHTAR_RING_ID || trigger === IRKALLA_ID;
+    const fd = specialFd ? (Number(st.q) || 0) : (Number(st.xVal) || 0);
+    const chance0 = Number(st.z) || 100;
+    const step = Number(st.u) || 10;
+    const delays = [300, 600, 900];
+
+    if (triggerSkill && trigAtk && Number(trigAtk.damagePct) > 0 && fd > 0) {
+      const clones = listElementalGhostClones(ctx);
+      delays.forEach((delay, i) => {
+        if (!rollPercent(chance0 - step * i)) return;
+        const wait = scaleGameDelayMs(delay);
+        const run = () => {
+          if (ctx?.skipMercedesExtras) return;
+          const clone = clones[i] || clones[0] || null;
+          if (clone) playGhostCloneSkillVisual(triggerSkill, clone, ctx);
+          const pool = liveMobTargets(
+            resolveCastMobs(ctx),
+            Math.max(1, trigAtk.mobCount || liveHits.length || 1),
+            ctx,
+            trigger,
+          );
+          const list = pool.length ? pool : liveHits;
+          const res = dealMercedesExtraHits(
+            ctx,
+            triggerSkill,
+            (Number(trigAtk.damagePct) || 0) * (fd / 100),
+            trigAtk.attackCount,
+            list,
+          );
+          res.kills.forEach((m) => pushUniqueMob(kills, m));
+          if (res.kills.length && typeof ctx.onProjectileResolve === 'function') {
+            ctx.onProjectileResolve(res.kills);
+          }
+        };
+        if (wait > 30) setTimeout(run, wait);
+        else run();
+      });
+    }
+
+    const blossomGap = scaleGameDelayMs(Math.max(1000, (Number(st.s2) || 10) * 1000));
+    const now = nowMs();
+    if (now - mercedesGhostBlossomAt >= blossomGap) {
+      mercedesGhostBlossomAt = now;
+      const blossom = typeof SkillCatalog !== 'undefined'
+        ? SkillCatalog.getSkill(ELEMENTAL_BLOSSOM_ID)
+        : null;
+      const bCommon = blossom ? evalSkill(blossom, lv) : null;
+      const bAtk = bCommon ? combatCommonFor(blossom, bCommon) : null;
+      if (blossom && bAtk && Number(bAtk.damagePct) > 0) {
+        const pool = liveMobTargets(
+          resolveCastMobs(ctx),
+          Math.max(1, bAtk.mobCount || 10),
+          ctx,
+          ELEMENTAL_BLOSSOM_ID,
+        );
+        if (blossom.fx?.effect?.length && typeof SkillEffectPlayer !== 'undefined') {
+          const fieldEl = ctx.fieldEl || document.getElementById('idleHuntField');
+          const tree = (blossom.fx.effect || []).filter((f, i) => !(
+            i === 0
+            && Number(f?.origin?.[0]) === 0
+            && Number(f?.origin?.[1]) === 0
+          ));
+          const pt = (typeof SkillBuffRuntime !== 'undefined' && SkillBuffRuntime.summonFieldPoint)
+            ? SkillBuffRuntime.summonFieldPoint(fieldEl, ctx.playerEl, { slot: 'player-feet' }, ctx)
+            : (SkillEffectPlayer.fieldPointFromPlayer
+              ? SkillEffectPlayer.fieldPointFromPlayer(fieldEl, ctx.playerEl, [0, 0], true)
+              : { x: 220, y: 280 });
+          if (fieldEl && tree.length) {
+            SkillEffectPlayer.playAtField({
+              fieldEl,
+              frames: tree,
+              x: pt.x,
+              y: pt.y,
+              className: 'idle-skill-fx-stage idle-skill-fx-stage--elemental-ghost idle-skill-fx-stage--elemental-blossom',
+              zIndex: 32,
+              behind: true,
+              forcePlay: true,
+              playerEl: ctx.playerEl,
+            });
+          }
+        }
+        const res = dealMercedesExtraHits(ctx, blossom, bAtk.damagePct, bAtk.attackCount, pool);
+        res.kills.forEach((m) => pushUniqueMob(kills, m));
+        if (res.kills.length && typeof ctx.onProjectileResolve === 'function') {
+          ctx.onProjectileResolve(res.kills);
+        }
+      }
+    }
+    return kills;
+  }
+
+  function trySylvidiaCast(skill, skillForFx, formCommon, fx, ctx, form, picked, finishAfterDamage, opts = {}) {
+    if (String(skill?.id) !== SYLVIDIA_ID) return null;
+    const st = (typeof SkillFormula !== 'undefined' && SkillFormula.evalStatCommon)
+      ? SkillFormula.evalStatCommon(skill.common, picked.level || 1)
+      : {};
+    const chargeWaves = Math.max(1, Math.floor(Number(st.u) || 9));
+    const chargePer = Math.max(1, Math.floor(Number(st.attackCount) || 13));
+    const chargePct = Number(formCommon.damagePct) || Number(st.damagePct) || 0;
+    const afterSkill = typeof SkillCatalog !== 'undefined'
+      ? SkillCatalog.getSkill(SYLVIDIA_AFTER_ID)
+      : null;
+    const afterSt = afterSkill && typeof SkillFormula !== 'undefined'
+      ? SkillFormula.evalStatCommon(afterSkill.common, picked.level || 1)
+      : {};
+    const afterWaves = Math.max(1, Math.floor(Number(st.s2) || 14));
+    const afterPer = Math.max(1, Math.floor(Number(afterSt.attackCount) || Number(st.s) || 4));
+    const afterPct = Number(afterSt.damagePct) || Number(st.y) || 0;
+    const fieldEl = ctx.fieldEl || document.getElementById('idleHuntField');
+    const kills = [];
+    const hitMobs = [];
+    const asyncId = registerAsyncCast();
+
+    const playOnPlayer = (frames) => {
+      if (!frames?.length || typeof SkillEffectPlayer === 'undefined') return;
+      SkillEffectPlayer.playOnPlayer(frames, {
+        playerEl: ctx.playerEl,
+        fieldEl,
+        className: 'idle-skill-fx-stage idle-skill-fx-stage--cast',
+        zIndex: 58,
+      });
+    };
+    const playAtPlayer = (frames, zIndex = 46, behind = false) => {
+      if (!frames?.length || typeof SkillEffectPlayer === 'undefined' || !fieldEl) return;
+      const pt = (typeof SkillBuffRuntime !== 'undefined' && SkillBuffRuntime.summonFieldPoint)
+        ? SkillBuffRuntime.summonFieldPoint(fieldEl, ctx.playerEl, { slot: 'player-feet' }, ctx)
+        : { x: 200, y: 280 };
+      SkillEffectPlayer.playAtField({
+        fieldEl,
+        frames,
+        x: pt.x,
+        y: pt.y,
+        className: 'idle-skill-fx-stage idle-skill-fx-stage--cast idle-skill-fx-stage--sylvidia',
+        zIndex,
+        behind,
+        forcePlay: true,
+        playerEl: ctx.playerEl,
+        mirrorX: ctxFacingRight(ctx),
+      });
+    };
+    const playOverlay = (frames, zIndex = 18) => {
+      if (!frames?.length || typeof SkillEffectPlayer === 'undefined' || !fieldEl) return;
+      const mid = {
+        x: Math.round((fieldEl.clientWidth || 800) * 0.5),
+        y: Math.round((fieldEl.clientHeight || 500) * 0.5),
+      };
+      SkillEffectPlayer.playAtField({
+        fieldEl,
+        frames,
+        x: mid.x,
+        y: mid.y,
+        className: 'idle-skill-fx-stage idle-skill-fx-stage--sylvidia-screen',
+        zIndex,
+        behind: true,
+        forcePlay: true,
+      });
+    };
+
+    const layers = fx.layers || {};
+    const chargeSpecial = fx.special?.frames || (Array.isArray(fx.special) ? fx.special : layers.special) || [];
+    // WZ multiAttack 第一下 attackTime=0、之後 +30；這是相對攻擊起點，不是按下技能。
+    // 起點對齊 common.q＝600（與 special1／special2 入場空幀 delay 相同）：獨角獸先飛，飛到再出 9 下。
+    const chargeLeadMs = Math.max(0, Number(st.q) || 0);
+    const chargeStarts = illusionWaveStarts(
+      readWzMultiAttackTimes(SYLVIDIA_ID),
+      chargeWaves,
+      0,
+      30,
+    ).map((t) => t + chargeLeadMs);
+    const firstUnicornMs = (() => {
+      const waitFrame = (fx.special1 || layers.special1 || [])[0];
+      const leadWait = (Number(waitFrame?.origin?.[0]) === 0 && Number(waitFrame?.origin?.[1]) === 0)
+        ? (Number(waitFrame?.delay) || 0)
+        : 0;
+      const flyMs = (typeof SkillEffectPlayer !== 'undefined'
+        && typeof SkillEffectPlayer.framesDurationMs === 'function')
+        ? SkillEffectPlayer.framesDurationMs(chargeSpecial)
+        : chargeSpecial.reduce((sum, f) => sum + (Number(f?.delay) || 60), 0);
+      const lastChargeMs = chargeStarts[chargeStarts.length - 1] || chargeLeadMs;
+      return Math.max(leadWait, flyMs, lastChargeMs, chargeLeadMs);
+    })();
+    const afterGapMs = 120;
+    const afterStarts = illusionWaveStarts(
+      readWzMultiAttackTimes(SYLVIDIA_AFTER_ID),
+      afterWaves,
+      firstUnicornMs,
+      afterGapMs,
+    );
+    const afterLayers = afterSkill?.fx?.layers || {};
+    const afterFront = afterLayers['special/front'] || [];
+    const afterMiddle = afterLayers['special/middle'] || [];
+    const afterBack = afterLayers['special/back'] || [];
+    playOnPlayer(fx.effect);
+    playAtPlayer(fx.special?.frames || (Array.isArray(fx.special) ? fx.special : layers.special), 52);
+    playAtPlayer(fx.special1 || layers.special1, 51);
+    playAtPlayer(fx.special2 || layers.special2, 50);
+    playOverlay(fx.screen || layers.screen, 16);
+    playOverlay(fx.screen0 || layers.screen0, 17);
+
+    const afterTiltRad = (index, total) => {
+      const maxTilt = 0.7;
+      if (total <= 1) return (Math.random() * 2 - 1) * maxTilt;
+      const base = -maxTilt + (maxTilt * 2) * (index / Math.max(1, total - 1));
+      return base + (Math.random() * 2 - 1) * 0.08;
+    };
+    const playAfterBeam = (waveIdx) => {
+      if (!fieldEl || typeof SkillEffectPlayer === 'undefined') return;
+      if (!afterFront.length && !afterMiddle.length && !afterBack.length) return;
+      const afterMobCount = Math.max(1, Number(afterSt.mobCount || st.w) || 8);
+      const targets = resolveSkillTargets(ctx, SYLVIDIA_AFTER_ID, afterMobCount);
+      const throughMob = (targets || []).find((m) => m && m.isBoss && Number(m.hp) > 0)
+        || (targets || []).find((m) => m && Number(m.hp) > 0)
+        || null;
+      const mobPt = throughMob && typeof SkillEffectPlayer.fieldPointFromMob === 'function'
+        ? SkillEffectPlayer.fieldPointFromMob(fieldEl, throughMob)
+        : null;
+      if (!mobPt || !Number.isFinite(mobPt.x) || !Number.isFinite(mobPt.y)) return;
+      const facingRight = ctxFacingRight(ctx);
+      const rot = (facingRight ? 0 : Math.PI) + afterTiltRad(waveIdx, afterWaves);
+      const reach = 220;
+      const ux = Math.cos(rot);
+      const uy = Math.sin(rot);
+      const from = { x: mobPt.x - ux * reach, y: mobPt.y - uy * reach };
+      const to = { x: mobPt.x + ux * reach, y: mobPt.y + uy * reach };
+      if (typeof SkillEffectPlayer.playPierceStreak === 'function') {
+        SkillEffectPlayer.playPierceStreak({
+          fieldEl,
+          from,
+          to,
+          front: afterFront,
+          middle: afterMiddle,
+          back: afterBack,
+          forcePlay: true,
+        });
+      }
+    };
+
+    const collect = (result) => {
+      (result?.kills || []).forEach((m) => pushUniqueMob(kills, m));
+      (result?.hitMobs || []).forEach((m) => pushUniqueMob(hitMobs, m));
+    };
+    const dealAt = (startMs, perHit, pct, fxHit, useSkill, isLast) => {
+      setTimeout(() => {
+        if (!isAsyncCastLive(asyncId)) return;
+        collect(dealSkillDamage(useSkill, {
+          ...formCommon,
+          attackCount: perHit,
+          damagePct: pct,
+          mobCount: Number(useSkill === afterSkill ? (afterSt.mobCount || st.w) : st.mobCount) || formCommon.mobCount,
+        }, {
+          ...ctx,
+          skipMercedesExtras: true,
+        }, {
+          isolateStack: true,
+          segmentGapSec: null,
+          normalMobBonusPct: opts.normalMobBonusPct,
+          skillForFx: useSkill,
+          forceCritTail: isLast ? (form.forceCritTail || 0) : 0,
+          fxHit,
+        }));
+        if (isLast) {
+          releaseAsyncCast(asyncId);
+          finishAfterDamage(kills, hitMobs);
+          if (typeof ctx.onProjectileResolve === 'function') ctx.onProjectileResolve(kills);
+        }
+      }, Math.max(0, startMs));
+    };
+
+    chargeStarts.forEach((startMs) => {
+      dealAt(startMs, chargePer, chargePct, fx.hit, skill, false);
+    });
+    afterStarts.forEach((startMs, w) => {
+      setTimeout(() => {
+        if (!isAsyncCastLive(asyncId)) return;
+        playAfterBeam(w);
+      }, Math.max(0, startMs));
+      dealAt(
+        startMs + 60,
+        afterPer,
+        afterPct,
+        afterSkill?.fx?.hit || fx.hit,
+        afterSkill || skill,
+        w === afterStarts.length - 1,
+      );
+    });
+    if (opts.mergeLink && picked) mergeLinkFollowers(picked, ctx, []);
+    return { kills: [], deferredKills: true };
+  }
+
   function tryNightLordFollowups(ctx, triggerSkillId, hitMobs) {
     const kills = [];
     if (!isNightLordJob()) return kills;
@@ -2397,7 +3887,7 @@ const SkillCombat = (() => {
       && typeof SkillModifiers.getShadowPartnerRate === 'function')
       ? SkillModifiers.getShadowPartnerRate()
       : 0;
-    // 三／四飛閃改由第二組飛鏢結算影分身，避免數字加倍、沒有飛鏢
+    // 影分身：本體技能總傷害 × 係數，只追加 1 段（三／四飛閃在飛鏢結算）
     if (partnerR > 0 && triggerSkill && triggerSkill.type === 'active'
       && !THROW_STAR_SKILL_IDS.has(trigger)) {
       const lv = (typeof CharacterSkills !== 'undefined'
@@ -2405,13 +3895,14 @@ const SkillCombat = (() => {
         : 0) || 1;
       const common = evalSkill(triggerSkill, lv);
       const atk = common ? combatCommonFor(triggerSkill, common) : null;
-      const pct = (Number(atk?.damagePct) || 0) * (partnerR / 100);
+      const n = Math.max(1, Number(atk?.attackCount) || 1);
+      const pct = (Number(atk?.damagePct) || 0) * n * (partnerR / 100);
       if (pct > 0) {
         const res = dealNlExtraHits(
           ctx,
           triggerSkill,
           pct,
-          Math.max(1, atk?.attackCount || 1),
+          1,
           liveHits,
           {
             isolateStack: false,
@@ -2439,7 +3930,7 @@ const SkillCombat = (() => {
       if (mainSkill && atom) {
         const mainCommon = evalSkill(mainSkill, lv);
         const atomCommon = evalSkill(atom, lv);
-        const mainAtk = mainCommon ? combatCommonFor(mainSkill, mainCommon) : null;
+        const mainAtk = mainCommon ? combatCommonFor(mainSkill, mainCommon, { skipHitFold: true }) : null;
         const atomAtk = atomCommon ? combatCommonFor(atom, atomCommon) : null;
         const mainPct = Number(mainAtk?.damagePct) || 0;
         // WZ／atom 的 damage（滿等 24）改為「主傷害 × 該％」：605% × 24% ≈ 145%
@@ -2457,6 +3948,21 @@ const SkillCombat = (() => {
             const res = dealNlExtraHits(ctx, atom, extraPct, 1, [mob]);
             res.kills.forEach((m) => pushUniqueMob(kills, m));
           };
+          const atomLayout = (() => {
+            const n = Math.max(1, swordCount);
+            const r = n <= 1 ? 120 : 160;
+            const out = [];
+            for (let i = 0; i < n; i += 1) {
+              const deg = -90 + (i * 360) / n;
+              const ang = deg * (Math.PI / 180);
+              out.push({
+                pos: [Math.round(Math.cos(ang) * r), Math.round(Math.sin(ang) * r)],
+                rotate: (i * 360) / n,
+                enableDelay: 480,
+              });
+            }
+            return out;
+          })();
           if (frames?.length
             && typeof SkillEffectPlayer !== 'undefined'
             && typeof SkillEffectPlayer.playStationarySeekVolley === 'function') {
@@ -2465,8 +3971,7 @@ const SkillCombat = (() => {
               playerEl: ctx.playerEl,
               mobs: liveHits,
               frames,
-              // 預設在玩家周圍均勻圓（半徑約 2 倍）
-              atoms: null,
+              atoms: atomLayout,
               anchorAt: 'player',
               facingRight: ctxFacingRight(ctx),
               posScale: 1,
@@ -2488,6 +3993,8 @@ const SkillCombat = (() => {
       }
     }
 
+    tryThrowBlasting(ctx, trigger, liveHits, kills);
+
     return kills;
   }
 
@@ -2495,6 +4002,10 @@ const SkillCombat = (() => {
   const AB_SEEKER_EXTRA_ID = '65111007';
   const AB_SEEKER_EXPERT_ID = '65120011';
   const AB_EXALT_ID = '65121054';
+  const AB_SPARKLE_BURST_ID = '400051011';
+  const AB_MASCOT_ID = '400051046';
+  const AB_MASCOT_END_ID = '400051097';
+  const AB_TRINITY_FUSION_ID = '400051072';
   const AB_SUPERNOVA_ID = '65121052';
   const AB_EXPERT_BONUS_IDS = new Set(['65121101', '65121100']);
 
@@ -3010,7 +4521,7 @@ const SkillCombat = (() => {
         damagePct: atkCommon.damagePct,
         damagePctBonus: bonus,
         attackCount,
-        fxHit: fx.hit,
+        fxHit: Object.prototype.hasOwnProperty.call(opts, 'fxHit') ? opts.fxHit : fx.hit,
         multiHit,
         segmentGapSec,
         showMobDamage: ctx.showMobDamage,
@@ -3020,6 +4531,7 @@ const SkillCombat = (() => {
         forceCritTail: opts.forceCritTail || 0,
         critRateBonus,
         skillId: skill?.id,
+        isolateStack: !!opts.isolateStack,
         ctx,
       });
       if (hit) pushUniqueMob(hitMobs, mob);
@@ -3054,7 +4566,7 @@ const SkillCombat = (() => {
     const fx = skillForFx.fx || {};
     const atkCommon = combatCommonFor(skill, formCommon);
     beginSkillResourceCast();
-    spendSkillHpCost(baseCommon);
+    spendSkillHpCost(baseCommon, { includeOverload: true });
     const attackCount = Math.max(1, atkCommon.attackCount || 1);
     const multiHit = attackCount > 1;
     // 跟隨技：傷害一次結清，數字用 stackIndex 疊；不再依攻速排段延遲（減少 timer／卡頓）
@@ -3085,6 +4597,8 @@ const SkillCombat = (() => {
       bzKills.forEach((m) => pushUniqueMob(kills, m));
       const nlKills = tryNightLordFollowups(ctx, skillId, hitMobs);
       nlKills.forEach((m) => pushUniqueMob(kills, m));
+      const merKills = tryMercedesFollowups(ctx, skillId, hitMobs);
+      merKills.forEach((m) => pushUniqueMob(kills, m));
       const abKills = tryAngelicBusterFollowups(ctx, skillId, hitMobs);
       abKills.forEach((m) => pushUniqueMob(kills, m));
       // 意念只由主技能／非 silent 路徑觸發，避免連鎖同幀連續 proc
@@ -3101,29 +4615,27 @@ const SkillCombat = (() => {
 
     const shootFrames = shootObjFrames(fx);
     const shootMeta = fx.shootobj;
-    if (shootFrames.length && typeof SkillEffectPlayer !== 'undefined'
+    if (!usesOrbBallCast(skill, fx)
+      && shootFrames.length && typeof SkillEffectPlayer !== 'undefined'
       && typeof SkillEffectPlayer.playShootObj === 'function') {
+      const shootFlags = windShurikenShootFlags(skill, atkCommon, shootMeta);
+      const pierce = shootFlags.pierce;
+      const maxTargets = shootFlags.maxTargets;
+      const targets = resolveSkillTargets(ctx, skillId, maxTargets);
       if (playCastFx) {
-        if (fx.effect?.length) {
-          SkillEffectPlayer.playOnPlayer(fx.effect, { playerEl: ctx.playerEl });
-        }
-        if (fx.effect0?.length) {
-          SkillEffectPlayer.playOnPlayer(fx.effect0, { playerEl: ctx.playerEl });
-        }
+        playSkillCastFx(skillForFx || skill, fx, ctx, { targets });
       }
       const fieldEl = ctx.fieldEl || document.getElementById('idleHuntField');
-      const pierce = !!shootMeta.pierce;
-      const maxTargets = pierce ? Math.max(1, atkCommon.mobCount || 1) : 1;
-      const targets = resolveSkillTargets(ctx, skillId, maxTargets);
       const kills = [];
       const hitMobs = [];
+      let lingerAt = null;
       SkillEffectPlayer.playShootObj({
         fieldEl,
         playerEl: ctx.playerEl,
         mobs: targets,
         frames: shootFrames,
         startOffset: shootMeta.start || [-80, -60],
-        startDelayMs: shootMeta.startDelayMs || 0,
+        startDelayMs: shootFlags.startDelayMs,
         pierce,
         maxTargets,
         moveList: shootMeta.moveList || null,
@@ -3136,10 +4648,14 @@ const SkillCombat = (() => {
             normalMobBonusPct,
             forceCritTail: form.forceCritTail || 0,
           });
-          if (hit) pushUniqueMob(hitMobs, mob);
+          if (hit) {
+            pushUniqueMob(hitMobs, mob);
+            lingerAt = mobFieldAnchor(ctx, mob) || lingerAt;
+          }
           if (mob.hp <= 0) pushUniqueMob(kills, mob);
         },
         onDone: () => {
+          startWindShurikenLinger(skill, level, atkCommon, ctx, lingerAt);
           finishAfterDamage(kills, hitMobs);
           if (typeof ctx.onProjectileResolve === 'function') {
             ctx.onProjectileResolve(kills);
@@ -3256,7 +4772,8 @@ const SkillCombat = (() => {
     beginDamageStackSession(ctx);
 
     // 連鎖／多段同一施放週期共用傷害公式快取
-    if (typeof UiCharacterInfo !== 'undefined') {
+    if (typeof UiCharacterInfo !== 'undefined'
+      && !THROW_STAR_SKILL_IDS.has(String(picked?.skill?.id || ''))) {
       UiCharacterInfo.invalidateHuntCombatCache?.();
     }
 
@@ -3352,10 +4869,12 @@ const SkillCombat = (() => {
 
     // 無 MP：凡有 mpCon 的技能（含 buff）都扣 HP；依最大 HP 比例換算，魔力激發再加碼
     beginSkillResourceCast();
-    spendSkillHpCost(baseCommon);
+    spendSkillHpCost(baseCommon, { includeOverload: !timedBuff });
 
     if (timedBuff) {
-      if (typeof SkillEffectPlayer !== 'undefined') {
+      const sid = String(skill.id || '');
+      const skipGenericBuffFx = sid === '400031007' || sid === '400031044' || sid === '400001024';
+      if (!skipGenericBuffFx && typeof SkillEffectPlayer !== 'undefined') {
         if (fx.effect?.length) SkillEffectPlayer.playOnPlayer(fx.effect, { playerEl: ctx.playerEl });
         if (fx.effect0?.length) SkillEffectPlayer.playOnPlayer(fx.effect0, { playerEl: ctx.playerEl });
       }
@@ -3394,13 +4913,19 @@ const SkillCombat = (() => {
 
     const finishAfterDamage = (kills, hitMobs) => {
       if (!Array.isArray(kills)) kills = [];
-      notifyComboAndSync();
-      const faKills = tryFinalAttack(ctx, skill.id, hitMobs);
-      faKills.forEach((m) => pushUniqueMob(kills, m));
-      const bzKills = tryBlizzardFinalAttack(ctx, skill.id, hitMobs);
-      bzKills.forEach((m) => pushUniqueMob(kills, m));
-      const nlKills = tryNightLordFollowups(ctx, skill.id, hitMobs);
-      nlKills.forEach((m) => pushUniqueMob(kills, m));
+      notifyComboAndSync({ skipPanel: isNightLordJob() });
+      const runFaAndNl = () => {
+        const faKills = tryFinalAttack(ctx, skill.id, hitMobs);
+        faKills.forEach((m) => pushUniqueMob(kills, m));
+        const bzKills = tryBlizzardFinalAttack(ctx, skill.id, hitMobs);
+        bzKills.forEach((m) => pushUniqueMob(kills, m));
+        const nlKills = tryNightLordFollowups(ctx, skill.id, hitMobs);
+        nlKills.forEach((m) => pushUniqueMob(kills, m));
+      };
+      if (isNightLordJob()) scheduleAfterPaint(runFaAndNl);
+      else runFaAndNl();
+      const merKills = tryMercedesFollowups(ctx, skill.id, hitMobs);
+      merKills.forEach((m) => pushUniqueMob(kills, m));
       const abKills = tryAngelicBusterFollowups(ctx, skill.id, hitMobs);
       abKills.forEach((m) => pushUniqueMob(kills, m));
       if (typeof SkillBuffRuntime !== 'undefined'
@@ -3409,6 +4934,10 @@ const SkillCombat = (() => {
         if (extra?.kills?.length) {
           extra.kills.forEach((m) => pushUniqueMob(kills, m));
         }
+      }
+      if (typeof SkillBuffRuntime !== 'undefined'
+        && typeof SkillBuffRuntime.afterActiveCast === 'function') {
+        SkillBuffRuntime.afterActiveCast(skill, level, ctx);
       }
       scheduleAddAttackFollowup(
         skill,
@@ -3435,24 +4964,20 @@ const SkillCombat = (() => {
     // 投擲物：自身 effect → shootobj 飛出 → 命中目標 hit（可穿透）
     const shootFrames = shootObjFrames(fx);
     const shootMeta = fx.shootobj;
-    if (shootFrames.length && typeof SkillEffectPlayer !== 'undefined'
+    if (!usesOrbBallCast(skill, fx)
+      && shootFrames.length && typeof SkillEffectPlayer !== 'undefined'
       && typeof SkillEffectPlayer.playShootObj === 'function') {
-      if (fx.effect?.length) {
-        SkillEffectPlayer.playOnPlayer(fx.effect, { playerEl: ctx.playerEl });
-      }
-      if (fx.effect0?.length) {
-        SkillEffectPlayer.playOnPlayer(fx.effect0, { playerEl: ctx.playerEl });
-      }
+      const shootFlags = windShurikenShootFlags(skill, atkCommon, shootMeta);
+      const pierce = shootFlags.pierce;
+      const maxTargets = shootFlags.maxTargets;
+      const targets = resolveSkillTargets(ctx, skill.id, maxTargets);
+      playSkillCastFx(skillForFx, fx, ctx, { targets });
 
       const fieldEl = ctx.fieldEl || document.getElementById('idleHuntField');
-      const pierce = !!shootMeta.pierce;
-      const maxTargets = pierce
-        ? Math.max(1, atkCommon.mobCount || 1)
-        : 1;
-      const targets = resolveSkillTargets(ctx, skill.id, maxTargets);
       const kills = [];
       const hitMobs = [];
       const asyncId = registerAsyncCast();
+      let lingerAt = null;
 
       SkillEffectPlayer.playShootObj({
         fieldEl,
@@ -3460,7 +4985,7 @@ const SkillCombat = (() => {
         mobs: targets,
         frames: shootFrames,
         startOffset: shootMeta.start || [-80, -60],
-        startDelayMs: shootMeta.startDelayMs || 0,
+        startDelayMs: shootFlags.startDelayMs,
         pierce,
         maxTargets,
         moveList: shootMeta.moveList || null,
@@ -3474,12 +4999,16 @@ const SkillCombat = (() => {
             normalMobBonusPct,
             forceCritTail: form.forceCritTail || 0,
           });
-          if (hit) pushUniqueMob(hitMobs, mob);
+          if (hit) {
+            pushUniqueMob(hitMobs, mob);
+            lingerAt = mobFieldAnchor(ctx, mob) || lingerAt;
+          }
           if (mob.hp <= 0) pushUniqueMob(kills, mob);
         },
         onDone: () => {
           if (!isAsyncCastLive(asyncId)) return;
           releaseAsyncCast(asyncId);
+          startWindShurikenLinger(skill, level, atkCommon, ctx, lingerAt);
           finishAfterDamage(kills, hitMobs);
           if (typeof ctx.onProjectileResolve === 'function') {
             ctx.onProjectileResolve(kills);
@@ -3530,6 +5059,91 @@ const SkillCombat = (() => {
       };
     }
 
+    const abVResult = tryAbVWaveCast(
+      skill,
+      skillForFx,
+      formCommon,
+      fx,
+      ctx,
+      form,
+      picked,
+      finishAfterDamage,
+      {
+        segmentGapSec,
+        normalMobBonusPct,
+        mergeLink: true,
+        forceCritTail: form.forceCritTail || 0,
+      },
+    );
+    if (abVResult) {
+      return {
+        cast: true,
+        skillId: skill.id,
+        level,
+        actionDelayMs,
+        lockMs,
+        kills: [],
+        deferredKills: true,
+        enhanced: !!form.enhanced,
+        skillLink: !!picked.isSkillLink,
+      };
+    }
+
+    const ilVOpts = {
+      segmentGapSec,
+      normalMobBonusPct,
+      mergeLink: true,
+      forceCritTail: form.forceCritTail || 0,
+    };
+    const thunderbreakResult = tryIlThunderbreakCast(
+      skill,
+      skillForFx,
+      formCommon,
+      fx,
+      ctx,
+      form,
+      picked,
+      finishAfterDamage,
+      ilVOpts,
+    );
+    if (thunderbreakResult) {
+      return {
+        cast: true,
+        skillId: skill.id,
+        level,
+        actionDelayMs,
+        lockMs,
+        kills: [],
+        deferredKills: true,
+        enhanced: !!form.enhanced,
+        skillLink: !!picked.isSkillLink,
+      };
+    }
+    const jupiterResult = tryJupiterThunderCast(
+      skill,
+      skillForFx,
+      formCommon,
+      fx,
+      ctx,
+      form,
+      picked,
+      finishAfterDamage,
+      ilVOpts,
+    );
+    if (jupiterResult) {
+      return {
+        cast: true,
+        skillId: skill.id,
+        level,
+        actionDelayMs,
+        lockMs,
+        kills: [],
+        deferredKills: true,
+        enhanced: !!form.enhanced,
+        skillLink: !!picked.isSkillLink,
+      };
+    }
+
     const areaResult = tryAreaCastAttack(
       skill,
       skillForFx,
@@ -3547,6 +5161,66 @@ const SkillCombat = (() => {
       },
     );
     if (areaResult) {
+      return {
+        cast: true,
+        skillId: skill.id,
+        level,
+        actionDelayMs,
+        lockMs,
+        kills: [],
+        deferredKills: true,
+        enhanced: !!form.enhanced,
+        skillLink: !!picked.isSkillLink,
+      };
+    }
+
+    const sylvidiaResult = trySylvidiaCast(
+      skill,
+      skillForFx,
+      formCommon,
+      fx,
+      ctx,
+      form,
+      picked,
+      finishAfterDamage,
+      {
+        segmentGapSec,
+        normalMobBonusPct,
+        mergeLink: true,
+        forceCritTail: form.forceCritTail || 0,
+      },
+    );
+    if (sylvidiaResult) {
+      return {
+        cast: true,
+        skillId: skill.id,
+        level,
+        actionDelayMs,
+        lockMs,
+        kills: [],
+        deferredKills: true,
+        enhanced: !!form.enhanced,
+        skillLink: !!picked.isSkillLink,
+      };
+    }
+
+    const illusionResult = trySwordIllusionCast(
+      skill,
+      skillForFx,
+      formCommon,
+      fx,
+      ctx,
+      form,
+      picked,
+      finishAfterDamage,
+      {
+        segmentGapSec,
+        normalMobBonusPct,
+        mergeLink: true,
+        forceCritTail: form.forceCritTail || 0,
+      },
+    );
+    if (illusionResult) {
       return {
         cast: true,
         skillId: skill.id,
@@ -3734,6 +5408,7 @@ const SkillCombat = (() => {
     releaseChainReservation,
     releaseMobFromChainReservation,
     tryNlMarkBurstOnDeath,
+    foldAttackSegments,
   };
 })();
 

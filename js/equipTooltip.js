@@ -156,6 +156,7 @@ const EquipTooltipModule = {
   bindUiEquipHover() {
     this.bindUiEquipHost('uiEquipSlots');
     this.bindUiEquipHost('uiEquipTotemSlots');
+    this.bindUiEquipHost('uiEquipSymbolPanel');
   },
 
   bindUiEquipHost(hostId) {
@@ -286,7 +287,21 @@ const EquipTooltipModule = {
     return formatEquipReqJobs(item.reqJob, item.reqJob2);
   },
 
+  getSymbolCategoryLabel(item) {
+    const kind = (typeof resolveSymbolKind === 'function')
+      ? resolveSymbolKind(item?.itemId || item?.id, item)
+      : item?.subType;
+    if (kind === 'arcaneSymbol') return '祕法符文';
+    if (kind === 'grandSymbol') return '豪華真實符文';
+    if (kind === 'authenticSymbol') return '真實符文';
+    return EQUIP_SUBTYPE_LABEL[item?.subType] || '';
+  },
+
   getCategoryTags(item) {
+    if (typeof isSymbolItem === 'function' && isSymbolItem(item)) {
+      const label = this.getSymbolCategoryLabel(item);
+      return label ? [label] : [];
+    }
     const tags = [];
     const hideMainCategory = EQUIP_SUBTYPE_HIDE_MAIN_CATEGORY.has(item.subType);
     const main = EQUIP_MAIN_TYPE_LABEL[item.mainType];
@@ -359,7 +374,34 @@ const EquipTooltipModule = {
     return getBonusStatStatTotal(lines, bonusId, item) || 0;
   },
 
+  buildSymbolStatSegments(item) {
+    const info = SymbolForce.inspect(item.itemId || item.id, item, item);
+    const lines = [];
+    const push = (label, value, isPercent = false) => {
+      const total = Number(value) || 0;
+      if (!(total > 0)) return;
+      lines.push({
+        label,
+        base: total,
+        star: 0,
+        scroll: 0,
+        bonus: 0,
+        total,
+        isPercent,
+      });
+    };
+    const mains = info.mains || {};
+    ['STR', 'DEX', 'INT', 'LUK', '最大HP'].forEach((key) => push(key, mains[key]));
+    if (info.arc) push('神秘力量', info.arc);
+    if (info.aut) push('真實力量', info.aut);
+    return lines;
+  },
+
   buildStatSegments(item) {
+    if (typeof isSymbolItem === 'function' && isSymbolItem(item)
+      && typeof SymbolForce !== 'undefined') {
+      return this.buildSymbolStatSegments(item);
+    }
     const base = item.baseStats || {};
     const scrollStat = item.scrollStat || 0;
     const scrollAtk = item.scrollAtk || 0;
@@ -535,6 +577,7 @@ const EquipTooltipModule = {
     if (options.valueTone === 'fail') {
       valueEl.classList.add('is-unmet');
     }
+    if (options.rowClass) row.classList.add(options.rowClass);
     valueEl.textContent = value;
     row.appendChild(valueEl);
 
@@ -884,6 +927,7 @@ const EquipTooltipModule = {
   },
 
   canShowEnhancementUi(item) {
+    if (typeof isSymbolItem === 'function' && isSymbolItem(item)) return false;
     // 強化列一律顯示（無法強化／無／已強化三種狀態）
     return Boolean(item);
   },
@@ -1464,6 +1508,21 @@ const EquipTooltipModule = {
         unmet ? { valueTone: 'fail' } : undefined,
       ));
     }
+    if (typeof isSymbolItem === 'function' && isSymbolItem(item)
+      && typeof SymbolForce !== 'undefined') {
+      const info = SymbolForce.inspect(item.itemId || item.id, item, item);
+      const pct = info.atMax || !(info.need > 0)
+        ? 100
+        : Math.max(0, Math.min(100, Math.floor((Number(info.exp) || 0) * 100 / info.need)));
+      const expText = info.atMax
+        ? 'MAX'
+        : `${Number(info.exp) || 0} / ${Number(info.need) || 0}`;
+      reqBlock.appendChild(this.createInfoLine(
+        '成長等級',
+        `Lv : ${info.level}    EXP : ${expText} (${pct}%)`,
+        { rowClass: 'eq-tip-symbol-grow' },
+      ));
+    }
     if (item.mainType === 'WEAPON' || item.islot === 'Wp' || item.islot === 'Gw' || item.islot === 'Wpsi') {
       let wzAttackSpeed = 0;
       if (typeof WeaponTypeMap !== 'undefined' && typeof WeaponTypeMap.resolveWzAttackSpeed === 'function') {
@@ -1556,54 +1615,58 @@ const EquipTooltipModule = {
       root.appendChild(this.renderEnhanceBlock(item, starCount, maxStar));
     }
 
-    const hasMainPotential = !!(item.potential?.lines?.length);
-    const hasAddPotential = !!(item.additionalPotential?.lines?.length);
-    const canMainPot = this.itemCanHaveMainPotential(item);
-    const canAddPot = this.itemCanHaveAdditionalPotential(item);
+    const skipLockedEnhanceFooter = typeof isSymbolItem === 'function' && isSymbolItem(item);
+    const showScissorTip = !skipLockedEnhanceFooter
+      && !!(item.wz?.equipTradeBlock || item.wz?.tradeAvailable);
+    if (!skipLockedEnhanceFooter) {
+      const hasMainPotential = !!(item.potential?.lines?.length);
+      const hasAddPotential = !!(item.additionalPotential?.lines?.length);
+      const canMainPot = this.itemCanHaveMainPotential(item);
+      const canAddPot = this.itemCanHaveAdditionalPotential(item);
 
-    // 潛能區一律顯示（無／無法強化／詞條明細）
-    root.appendChild(this.createDotline());
-
-    if (hasMainPotential) {
-      this.renderPotentialBlock(root, '潛在能力', item.potential);
-    } else {
-      const mainStatus = this.renderPotentialStatusLine(
-        '潛在能力',
-        'potential',
-        canMainPot,
-        false,
-      );
-      if (mainStatus) root.appendChild(mainStatus);
-    }
-
-    if (hasAddPotential) {
-      this.renderPotentialBlock(root, '附加潛在能力', item.additionalPotential);
-    } else {
-      const addStatus = this.renderPotentialStatusLine(
-        '附加潛在能力',
-        'additionalPotential',
-        canAddPot,
-        false,
-      );
-      if (addStatus) root.appendChild(addStatus);
-    }
-
-    const hasExceptional = typeof getExceptionalLevel === 'function' && getExceptionalLevel(item) > 0;
-    const hasSoul = !!this.getSoulWeaponState(item);
-    if (hasExceptional || hasSoul) {
+      // 潛能區一律顯示（無／無法強化／詞條明細）
       root.appendChild(this.createDotline());
-      if (hasExceptional) this.renderExceptionalBlock(root, item);
-      if (hasSoul) this.renderSoulWeaponBlock(root, item);
-    }
 
-    const showScissorTip = !!(item.wz?.equipTradeBlock || item.wz?.tradeAvailable);
-    if (showScissorTip) {
-      root.appendChild(this.createDotline());
-      const footer = document.createElement('div');
-      footer.className = 'eq-tip-footer';
-      footer.textContent = '若使用白金神奇剪刀，該道具可進行一次交易！';
-      footer.style.color = '#B7BFC5';
-      root.appendChild(footer);
+      if (hasMainPotential) {
+        this.renderPotentialBlock(root, '潛在能力', item.potential);
+      } else {
+        const mainStatus = this.renderPotentialStatusLine(
+          '潛在能力',
+          'potential',
+          canMainPot,
+          false,
+        );
+        if (mainStatus) root.appendChild(mainStatus);
+      }
+
+      if (hasAddPotential) {
+        this.renderPotentialBlock(root, '附加潛在能力', item.additionalPotential);
+      } else {
+        const addStatus = this.renderPotentialStatusLine(
+          '附加潛在能力',
+          'additionalPotential',
+          canAddPot,
+          false,
+        );
+        if (addStatus) root.appendChild(addStatus);
+      }
+
+      const hasExceptional = typeof getExceptionalLevel === 'function' && getExceptionalLevel(item) > 0;
+      const hasSoul = !!this.getSoulWeaponState(item);
+      if (hasExceptional || hasSoul) {
+        root.appendChild(this.createDotline());
+        if (hasExceptional) this.renderExceptionalBlock(root, item);
+        if (hasSoul) this.renderSoulWeaponBlock(root, item);
+      }
+
+      if (showScissorTip) {
+        root.appendChild(this.createDotline());
+        const footer = document.createElement('div');
+        footer.className = 'eq-tip-footer';
+        footer.textContent = '若使用白金神奇剪刀，該道具可進行一次交易！';
+        footer.style.color = '#B7BFC5';
+        root.appendChild(footer);
+      }
     }
 
     const onlyEquipText = this.getOnlyEquipFooterText(item);

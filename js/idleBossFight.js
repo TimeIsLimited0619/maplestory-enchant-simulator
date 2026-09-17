@@ -411,6 +411,21 @@ const IdleBossFight = (() => {
     hooks?.syncHud?.();
   }
 
+  let hudSyncRaf = null;
+  function requestHudSync() {
+    if (hudSyncRaf != null) return;
+    hudSyncRaf = requestAnimationFrame(() => {
+      hudSyncRaf = null;
+      if (fight) syncHud();
+    });
+  }
+
+  function cancelHudSync() {
+    if (hudSyncRaf == null) return;
+    cancelAnimationFrame(hudSyncRaf);
+    hudSyncRaf = null;
+  }
+
   function createFight(listId) {
     const script = phaseScript(listId);
     if (!script) return null;
@@ -2902,7 +2917,7 @@ const IdleBossFight = (() => {
       const kind = mob.uid || mob.key;
       if (kind === 'body') {
         if (dmg > 0) coolSuuGaugeByDamage(dmg);
-        syncHud();
+        requestHudSync();
       }
       return;
     }
@@ -2915,7 +2930,7 @@ const IdleBossFight = (() => {
         applyDamienPoolDamage(dmg);
         noteDamienWorldTreeDamage(dmg);
         tryDamienSharedPhaseUp();
-        syncHud();
+        requestHudSync();
       }
       return;
     }
@@ -2960,6 +2975,7 @@ const IdleBossFight = (() => {
     }
     target.unit.hp = Math.max(0, target.unit.hp - dmg);
     showDmg(target.unit.key, dmg, isCritical);
+    if (typeof MobEffBarrier !== 'undefined') MobEffBarrier.playIfNeeded?.(target.unit, { isBoss: true });
     afterAppliedDamage(target.unit, dmg);
 
     syncHud();
@@ -3520,9 +3536,11 @@ const IdleBossFight = (() => {
           const touched = Array.isArray(result.kills) ? result.kills : [];
           afterExternalHits(touched);
         }
-        hooks?.syncOverlay?.();
-        // 有 CD：不佔普攻節拍、不中斷連打
-        if (picked.hasCd) continue;
+        // 有 CD：不佔普攻節拍、不中斷連打；每幀最多 2 招，避免補幀一次倒出夜使者整串爆發
+        if (picked.hasCd) {
+          if (hits >= 2) break;
+          continue;
+        }
         playerAtkAcc = 0;
         break;
       }
@@ -5522,6 +5540,7 @@ const IdleBossFight = (() => {
   }
 
   function reset(listId, nextHooks, diffId) {
+    cancelHudSync();
     clearExitCountdown();
     atkFxSeq += 1;
     busy = false;
@@ -13314,6 +13333,7 @@ const IdleBossFight = (() => {
   }
 
   function stop() {
+    cancelHudSync();
     clearExitCountdown();
     atkFxSeq += 1;
     busy = false;

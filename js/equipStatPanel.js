@@ -237,7 +237,7 @@ const EquipStatPanel = (() => {
       const amount = Number(n) || 0;
       if (!amount) return;
       if (!mainTotals[label]) {
-        mainTotals[label] = { base: 0, star: 0, scroll: 0, bonus: 0, set: 0, total: 0 };
+        mainTotals[label] = { base: 0, star: 0, scroll: 0, bonus: 0, set: 0, fixed: 0, total: 0 };
       }
       mainTotals[label].set = (mainTotals[label].set || 0) + amount;
       mainTotals[label].total += amount;
@@ -266,7 +266,7 @@ const EquipStatPanel = (() => {
 
     const mainTotals = {};
     MAIN_KEYS.forEach(({ label }) => {
-      mainTotals[label] = { base: 0, star: 0, scroll: 0, bonus: 0, set: 0, total: 0 };
+      mainTotals[label] = { base: 0, star: 0, scroll: 0, bonus: 0, set: 0, fixed: 0, total: 0 };
     });
 
     const extraTotals = {}; // label -> { total, isPercent }
@@ -304,27 +304,34 @@ const EquipStatPanel = (() => {
 
       const slotMain = {};
       MAIN_KEYS.forEach(({ label }) => {
-        slotMain[label] = { base: 0, star: 0, scroll: 0, bonus: 0, total: 0 };
+        slotMain[label] = { base: 0, star: 0, scroll: 0, bonus: 0, fixed: 0, total: 0 };
       });
       const slotExtra = [];
+      const symbolFixed = typeof isSymbolItem === 'function' && isSymbolItem(item);
 
       segments.forEach((seg) => {
         if (!seg) return;
         const label = seg.label;
         if (MAIN_LABEL_SET.has(label)) {
+          const amount = Number(seg.total) || 0;
           const row = mainTotals[label];
-          row.base += Number(seg.base) || 0;
-          row.star += Number(seg.star) || 0;
-          row.scroll += Number(seg.scroll) || 0;
-          row.bonus += Number(seg.bonus) || 0;
-          row.total += Number(seg.total) || 0;
-
           const srow = slotMain[label];
-          srow.base += Number(seg.base) || 0;
-          srow.star += Number(seg.star) || 0;
-          srow.scroll += Number(seg.scroll) || 0;
-          srow.bonus += Number(seg.bonus) || 0;
-          srow.total += Number(seg.total) || 0;
+          if (symbolFixed) {
+            row.fixed = (row.fixed || 0) + amount;
+            srow.fixed = (srow.fixed || 0) + amount;
+            srow.total += amount;
+          } else {
+            row.base += Number(seg.base) || 0;
+            row.star += Number(seg.star) || 0;
+            row.scroll += Number(seg.scroll) || 0;
+            row.bonus += Number(seg.bonus) || 0;
+            row.total += amount;
+            srow.base += Number(seg.base) || 0;
+            srow.star += Number(seg.star) || 0;
+            srow.scroll += Number(seg.scroll) || 0;
+            srow.bonus += Number(seg.bonus) || 0;
+            srow.total += amount;
+          }
         } else {
           const t = Number(seg.total) || 0;
           const isPercent = !!seg.isPercent;
@@ -438,6 +445,7 @@ const EquipStatPanel = (() => {
       ['star', '星力', Number(row?.star) || 0],
       ['scroll', '卷軸', Number(row?.scroll) || 0],
       ['bonus', '星火', Number(row?.bonus) || 0],
+      ['fixed', '符文', Number(row?.fixed) || 0],
     ].filter(([, , n]) => n !== 0);
     if (!parts.length) return '';
     return `<span class="esp-break">${parts.map(([cls, name, n]) => {
@@ -448,10 +456,11 @@ const EquipStatPanel = (() => {
 
   function renderMainBreakdown(mainTotals) {
     return MAIN_KEYS.map(({ label }) => {
-      const row = mainTotals[label] || { base: 0, star: 0, scroll: 0, bonus: 0, total: 0 };
+      const row = mainTotals[label] || { base: 0, star: 0, scroll: 0, bonus: 0, fixed: 0, total: 0 };
+      const shown = (Number(row.total) || 0) + (Number(row.fixed) || 0);
       return `<div class="esp-row esp-row-main">
         <span class="esp-k">${esc(label)}</span>
-        <span class="esp-v">${esc(formatSigned(row.total, false))}</span>
+        <span class="esp-v">${esc(formatSigned(shown, false))}</span>
         ${renderSourceBreakdown(row, false)}
       </div>`;
     }).join('');
@@ -482,7 +491,8 @@ const EquipStatPanel = (() => {
   function renderSlotDetail(slot) {
     const mainLines = MAIN_KEYS
       .filter(({ label }) => (slot.main[label]?.total || 0) !== 0
-        || (slot.main[label]?.base || 0) !== 0)
+        || (slot.main[label]?.base || 0) !== 0
+        || (slot.main[label]?.fixed || 0) !== 0)
       .map(({ label }) => {
         const r = slot.main[label];
         return `<div class="esp-row esp-row-main">

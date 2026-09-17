@@ -360,10 +360,13 @@ const CombatPower = (() => {
     const delta = {
       baseMain: 0,
       percentMain: 0,
+      noApplyMain: 0,
       baseSub: 0,
       percentSub: 0,
+      noApplySub: 0,
       baseSubtwo: 0,
       percentSubtwo: 0,
+      noApplySubtwo: 0,
       atk: 0,
       percentAtk: 0,
       dmg: 0,
@@ -444,6 +447,13 @@ const CombatPower = (() => {
       else if (labels.secondSub && statKey === labels.secondSub) delta.baseSubtwo += amount;
     };
 
+    const addStatNoApply = (statKey, amount) => {
+      if (!amount) return;
+      if (statKey === labels.main) delta.noApplyMain += amount;
+      else if (statKey === labels.sub) delta.noApplySub += amount;
+      else if (labels.secondSub && statKey === labels.secondSub) delta.noApplySubtwo += amount;
+    };
+
     const addStatPercent = (statKey, amount) => {
       if (!amount) return;
       if (statKey === labels.main) delta.percentMain += amount;
@@ -459,8 +469,10 @@ const CombatPower = (() => {
       ['LUK', ['LUK', '幸運']],
     ].forEach(([stat, keys]) => {
       addStatFlat(stat, flatOf(stat) + potFlatOf(keys));
+      addStatNoApply(stat, Number(main[stat]?.fixed) || 0);
     });
     addStatFlat('HP', flatOf('最大HP') + potFlatOf(['最大HP', 'MaxHP', 'HP']));
+    addStatNoApply('HP', Number(main['最大HP']?.fixed) || 0);
 
     // 全屬 flat／%（惡復：全屬只進副屬；其餘進主+副[+副2]）
     // 全屬性% 併入主／副 percent（與單屬 STR% 等同加總）

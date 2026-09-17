@@ -1336,6 +1336,12 @@ const InventoryModule = {
         e.stopPropagation();
         return;
       }
+      if (typeof isSymbolItem === 'function' && isSymbolItem(itemData)) {
+        if (typeof UiEquipModule !== 'undefined' && typeof UiEquipModule.wearFromBag === 'function') {
+          UiEquipModule.wearFromBag(itemId, slotIndex);
+        }
+        return;
+      }
       // 強化台開著 → 放進強化槽；否則穿到裝備欄
       if (typeof UiEquipModule !== 'undefined' && UiEquipModule.isEnchantOpen?.()) {
         loadEquipToSlot(itemId, slotIndex);

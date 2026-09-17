@@ -1,5 +1,6 @@
 {
   "version": "20260916a",
+  "githubTag": "v1.0.1",
   "packs": [
     {
       "id": "idle-bosses",

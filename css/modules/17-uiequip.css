@@ -20,6 +20,23 @@
   height: 30px;
 }
 
+.uiequip-panel[data-window="deco"] {
+  height: 444px;
+  background-image: url('../../images/UIEquip/Deco/main/backgrnd.png');
+}
+
+.uiequip-tabset-deco {
+  display: none;
+}
+
+.uiequip-panel[data-window="deco"] .uiequip-tabset-equip {
+  display: none;
+}
+
+.uiequip-panel[data-window="deco"] .uiequip-tabset-deco {
+  display: block;
+}
+
 .uiequip-tab {
   position: absolute;
   top: 31px;
@@ -31,20 +48,62 @@
   background-repeat: no-repeat;
   background-position: 0 0;
   background-size: 100% 100%;
-  cursor: default;
-  pointer-events: none;
+  cursor: pointer;
+  pointer-events: auto;
   image-rendering: pixelated;
   z-index: 4;
 }
 
 .uiequip-tab-equip {
   left: 11px;
+  background-image: url('../../images/UIEquip/main/tab_detailTab/main_tab_detailTab_normal_0.png');
+}
+
+.uiequip-tab-equip.is-selected {
   background-image: url('../../images/UIEquip/main/tab_detailTab/main_tab_detailTab_selected_0.png');
 }
 
-.uiequip-tab-cash {
+.uiequip-tab-pet {
   left: 184px;
   background-image: url('../../images/UIEquip/main/tab_detailTab/main_tab_detailTab_normal_1.png');
+}
+
+.uiequip-tab-pet.is-selected {
+  background-image: url('../../images/UIEquip/main/tab_detailTab/main_tab_detailTab_selected_1.png');
+}
+
+.uiequip-tab-coordi,
+.uiequip-tab-android,
+.uiequip-tab-skin {
+  width: 113px;
+}
+
+.uiequip-tab-coordi {
+  left: 12px;
+  background-image: url('../../images/UIEquip/Deco/tab_detailTab/normal_0.png');
+}
+
+.uiequip-tab-coordi.is-selected {
+  background-image: url('../../images/UIEquip/Deco/tab_detailTab/selected_0.png');
+}
+
+.uiequip-tab-android {
+  left: 127px;
+  width: 114px;
+  background-image: url('../../images/UIEquip/Deco/tab_detailTab/normal_1.png');
+}
+
+.uiequip-tab-android.is-selected {
+  background-image: url('../../images/UIEquip/Deco/tab_detailTab/selected_1.png');
+}
+
+.uiequip-tab-skin {
+  left: 243px;
+  background-image: url('../../images/UIEquip/Deco/tab_detailTab/normal_2.png');
+}
+
+.uiequip-tab-skin.is-selected {
+  background-image: url('../../images/UIEquip/Deco/tab_detailTab/selected_2.png');
 }
 
 .uiequip-canvas {
@@ -413,5 +472,740 @@
   left: 126px;
   top: 147px;
   background-image: url('../../images/UIEquip/EquipTab/totemEquip/SlotName/5002.png');
+}
+
+.uiequip-slot.is-inert {
+  pointer-events: auto;
+  cursor: default;
+}
+
+.uiequip-panel[data-window="deco"] .uiequip-canvas,
+.uiequip-panel[data-window="deco"] #uiEquipSlots,
+.uiequip-panel[data-window="deco"] .uiequip-preset-selected,
+.uiequip-panel[data-window="deco"] .uiequip-preset-btn,
+.uiequip-panel[data-window="deco"] .uiequip-preset-apply,
+.uiequip-panel[data-window="deco"] .uiequip-totem-btn,
+.uiequip-panel[data-window="deco"] .uiequip-totem-panel,
+.uiequip-panel[data-window="deco"] .uiequip-deco-ui-btn,
+.uiequip-panel[data-window="deco"] .uiequip-symbol-btn,
+.uiequip-panel[data-window="deco"] .uiequip-symbol-panel,
+.uiequip-panel[data-equip-tab="pet"] .uiequip-canvas,
+.uiequip-panel[data-equip-tab="pet"] #uiEquipSlots,
+.uiequip-panel[data-equip-tab="pet"] .uiequip-preset-selected,
+.uiequip-panel[data-equip-tab="pet"] .uiequip-preset-btn,
+.uiequip-panel[data-equip-tab="pet"] .uiequip-preset-apply,
+.uiequip-panel[data-equip-tab="pet"] .uiequip-totem-btn,
+.uiequip-panel[data-equip-tab="pet"] .uiequip-totem-panel,
+.uiequip-panel[data-equip-tab="pet"] .uiequip-deco-ui-btn,
+.uiequip-panel[data-equip-tab="pet"] .uiequip-symbol-btn,
+.uiequip-panel[data-equip-tab="pet"] .uiequip-symbol-panel {
+  display: none;
+}
+
+.uiequip-deco-ui-btn,
+.uiequip-equip-ui-btn,
+.uiequip-symbol-btn {
+  position: absolute;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  cursor: pointer;
+  image-rendering: pixelated;
+  z-index: 6;
+}
+
+.uiequip-deco-ui-btn {
+  left: 251px;
+  top: 72px;
+  width: 89px;
+  height: 22px;
+  background-size: 89px 22px;
+  background-image: url('../../images/UIEquip/EquipTab/button_DecoUI/normal_0.png');
+}
+
+.uiequip-deco-ui-btn:hover {
+  background-image: url('../../images/UIEquip/EquipTab/button_DecoUI/mouseOver_0.png');
+}
+
+.uiequip-deco-ui-btn:active {
+  background-image: url('../../images/UIEquip/EquipTab/button_DecoUI/pressed_0.png');
+}
+
+.uiequip-symbol-btn {
+  left: 272px;
+  top: 443px;
+  width: 84px;
+  height: 23px;
+  background-size: 84px 23px;
+  background-image: url('../../images/UIEquip/EquipTab/button_symbol/normal_0.png');
+}
+
+.uiequip-symbol-btn:hover {
+  background-image: url('../../images/UIEquip/EquipTab/button_symbol/mouseOver_0.png');
+}
+
+.uiequip-symbol-btn:active,
+.uiequip-symbol-btn.is-open,
+.uiequip-symbol-btn.is-open:hover {
+  background-image: url('../../images/UIEquip/EquipTab/button_symbol/pressed_0.png');
+}
+
+.uiequip-equip-ui-btn {
+  left: 251px;
+  top: 72px;
+  width: 89px;
+  height: 22px;
+  background-size: 89px 22px;
+  background-image: url('../../images/UIEquip/Deco/CoordiTab/button_EquipUI/normal_0.png');
+  display: none;
+  z-index: 7;
+}
+
+.uiequip-panel[data-window="deco"][data-deco-tab="coordi"] .uiequip-equip-ui-btn {
+  display: block;
+}
+
+.uiequip-equip-ui-btn:hover {
+  background-image: url('../../images/UIEquip/Deco/CoordiTab/button_EquipUI/mouseOver_0.png');
+}
+
+.uiequip-equip-ui-btn:active {
+  background-image: url('../../images/UIEquip/Deco/CoordiTab/button_EquipUI/pressed_0.png');
+}
+
+/* ===== PetTab ===== */
+.uiequip-pet-page {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  image-rendering: pixelated;
+}
+
+.uiequip-panel[data-window="equip"][data-equip-tab="pet"] .uiequip-pet-page {
+  display: block;
+}
+
+.uiequip-pet-canvas {
+  position: absolute;
+  left: 12px;
+  top: 61px;
+  width: 342px;
+  height: 401px;
+  background: url('../../images/UIEquip/PetTab/PetTab.canvas_pet.png') no-repeat 0 0;
+  pointer-events: none;
+}
+
+.uiequip-inert-slots {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.uiequip-pet-slot[data-pet-slot="Pet1"] { left: 31px; top: 114px; background-image: url('../../images/UIEquip/PetTab/Slots/Pet1.png'); }
+.uiequip-pet-slot[data-pet-slot="Pet2"] { left: 139px; top: 114px; background-image: url('../../images/UIEquip/PetTab/Slots/Pet2.png'); }
+.uiequip-pet-slot[data-pet-slot="Pet3"] { left: 247px; top: 114px; background-image: url('../../images/UIEquip/PetTab/Slots/Pet3.png'); }
+.uiequip-pet-slot[data-pet-slot="114"] { left: 77px; top: 114px; background-image: url('../../images/UIEquip/PetTab/Slots/114.png'); }
+.uiequip-pet-slot[data-pet-slot="124"] { left: 185px; top: 114px; background-image: url('../../images/UIEquip/PetTab/Slots/114.png'); }
+.uiequip-pet-slot[data-pet-slot="126"] { left: 293px; top: 114px; background-image: url('../../images/UIEquip/PetTab/Slots/114.png'); }
+.uiequip-pet-slot[data-pet-slot="Skill1_1"] { left: 31px; top: 200px; background-image: url('../../images/UIEquip/PetTab/Slots/Skill1_1.png'); }
+.uiequip-pet-slot[data-pet-slot="Skill1_2"] { left: 77px; top: 200px; background-image: url('../../images/UIEquip/PetTab/Slots/Skill1_1.png'); }
+.uiequip-pet-slot[data-pet-slot="Skill2_1"] { left: 139px; top: 200px; background-image: url('../../images/UIEquip/PetTab/Slots/Skill1_1.png'); }
+.uiequip-pet-slot[data-pet-slot="Skill2_2"] { left: 185px; top: 200px; background-image: url('../../images/UIEquip/PetTab/Slots/Skill1_1.png'); }
+.uiequip-pet-slot[data-pet-slot="Skill3_1"] { left: 247px; top: 200px; background-image: url('../../images/UIEquip/PetTab/Slots/Skill1_1.png'); }
+.uiequip-pet-slot[data-pet-slot="Skill3_2"] { left: 293px; top: 200px; background-image: url('../../images/UIEquip/PetTab/Slots/Skill1_1.png'); }
+.uiequip-pet-slot[data-pet-slot="200"] { left: 236px; top: 304px; background-image: url('../../images/UIEquip/PetTab/Slots/200.png'); }
+.uiequip-pet-slot[data-pet-slot="201"] { left: 295px; top: 304px; background-image: url('../../images/UIEquip/PetTab/Slots/201.png'); }
+
+.uiequip-pet-check {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: url('../../images/UIEquip/Basic/CheckBox22/0.png') no-repeat 0 0;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.uiequip-pet-check[data-pet-check="AutoSkill"] { left: 26px; top: 306px; }
+.uiequip-pet-check[data-pet-check="petPotion"] { left: 26px; top: 328px; }
+.uiequip-pet-check[data-pet-check="PetFood"] { left: 26px; top: 350px; }
+.uiequip-pet-check[data-pet-check="ItemRoot"] { left: 26px; top: 372px; }
+
+.uiequip-pet-label {
+  position: absolute;
+  height: 12px;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.uiequip-pet-label[data-pet-label="AutoSkill"] {
+  left: 43px;
+  top: 305px;
+  width: 167px;
+  background-image: url('../../images/UIEquip/PetTab/AutoSkill/0.png');
+}
+
+.uiequip-pet-label[data-pet-label="petPotion"] {
+  left: 43px;
+  top: 327px;
+  width: 170px;
+  background-image: url('../../images/UIEquip/PetTab/petPotion/0.png');
+}
+
+.uiequip-pet-label[data-pet-label="PetFood"] {
+  left: 43px;
+  top: 349px;
+  width: 70px;
+  background-image: url('../../images/UIEquip/PetTab/PetFood/0.png');
+}
+
+.uiequip-pet-label[data-pet-label="ItemRoot"] {
+  left: 43px;
+  top: 371px;
+  width: 71px;
+  background-image: url('../../images/UIEquip/PetTab/ItemRoot/0.png');
+}
+
+/* ===== Deco 視窗 ===== */
+.uiequip-deco-pages {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  image-rendering: pixelated;
+}
+
+.uiequip-panel[data-window="deco"] .uiequip-deco-pages {
+  display: block;
+}
+
+.uiequip-deco-page {
+  display: none;
+  position: absolute;
+  inset: 0;
+}
+
+.uiequip-deco-page.is-active {
+  display: block;
+}
+
+.uiequip-coordi-canvas,
+.uiequip-android-canvas,
+.uiequip-skin-canvas {
+  position: absolute;
+  left: 12px;
+  top: 61px;
+  width: 342px;
+  height: 349px;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.uiequip-coordi-canvas {
+  background: url('../../images/UIEquip/Deco/CoordiTab/canvas_coordi.png') no-repeat 0 0;
+}
+
+.uiequip-android-canvas {
+  background: url('../../images/UIEquip/Deco/AndroidTab/canvas_and.png') no-repeat 0 0;
+}
+
+.uiequip-android-empty {
+  position: absolute;
+  left: 116px;
+  top: 99px;
+  width: 134px;
+  height: 179px;
+  background: url('../../images/UIEquip/Deco/AndroidTab/canvas_empty.png') no-repeat 0 0;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.uiequip-skin-canvas {
+  background: url('../../images/UIEquip/Deco/DamageSkinTab/canvas_and.png') no-repeat 0 0;
+}
+
+.uiequip-coordi-slot[data-coordi-slot="101"] { left: 252px; top: 100px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_1.png'); }
+.uiequip-coordi-slot[data-coordi-slot="102"] { left: 72px; top: 100px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_2.png'); }
+.uiequip-coordi-slot[data-coordi-slot="103"] { left: 72px; top: 145px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_3.png'); }
+.uiequip-coordi-slot[data-coordi-slot="104"] { left: 72px; top: 190px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_4.png'); }
+.uiequip-coordi-slot[data-coordi-slot="105"] { left: 252px; top: 145px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_5.png'); }
+.uiequip-coordi-slot[data-coordi-slot="106"] { left: 252px; top: 190px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_6.png'); }
+.uiequip-coordi-slot[data-coordi-slot="107"] { left: 297px; top: 190px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_7.png'); }
+.uiequip-coordi-slot[data-coordi-slot="108"] { left: 297px; top: 145px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_8.png'); }
+.uiequip-coordi-slot[data-coordi-slot="109"] { left: 297px; top: 100px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_9.png'); }
+.uiequip-coordi-slot[data-coordi-slot="110"] { left: 297px; top: 235px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_10.png'); }
+.uiequip-coordi-slot[data-coordi-slot="111"] { left: 252px; top: 235px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_11.png'); }
+.uiequip-coordi-slot[data-coordi-slot="112"] { left: 27px; top: 235px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_12.png'); }
+.uiequip-coordi-slot[data-coordi-slot="113"] { left: 27px; top: 190px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_12.png'); }
+.uiequip-coordi-slot[data-coordi-slot="115"] { left: 27px; top: 145px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_12.png'); }
+.uiequip-coordi-slot[data-coordi-slot="116"] { left: 27px; top: 100px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_12.png'); }
+.uiequip-coordi-slot[data-coordi-slot="hair"] { left: 117px; top: 280px; background-image: url('../../images/UIEquip/Deco/CoordiTab/SlotName_hair.png'); }
+.uiequip-coordi-slot[data-coordi-slot="face"] { left: 162px; top: 280px; background-image: url('../../images/UIEquip/Deco/CoordiTab/SlotName_face.png'); }
+.uiequip-coordi-slot[data-coordi-slot="skin"] { left: 207px; top: 280px; background-image: url('../../images/UIEquip/Deco/CoordiTab/SlotName_skin.png'); }
+
+.uiequip-android-slot[data-android-slot="1200"] { left: 252px; top: 100px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_1.png'); }
+.uiequip-android-slot[data-android-slot="1201"] { left: 297px; top: 100px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_9.png'); }
+.uiequip-android-slot[data-android-slot="1202"] { left: 72px; top: 100px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_2.png'); }
+.uiequip-android-slot[data-android-slot="1203"] { left: 252px; top: 145px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_5.png'); }
+.uiequip-android-slot[data-android-slot="1204"] { left: 252px; top: 190px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_6.png'); }
+.uiequip-android-slot[data-android-slot="1205"] { left: 297px; top: 190px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_7.png'); }
+.uiequip-android-slot[data-android-slot="1206"] { left: 297px; top: 145px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_8.png'); }
+.uiequip-android-slot[data-android-slot="1207"] { left: 252px; top: 235px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_28.png'); }
+.uiequip-android-slot[data-android-slot="1208"] { left: 72px; top: 145px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_3.png'); }
+.uiequip-android-slot[data-android-slot="1209"] { left: 72px; top: 190px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_4.png'); }
+.uiequip-android-slot[data-android-slot="1210"] { left: 27px; top: 235px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_12.png'); }
+.uiequip-android-slot[data-android-slot="1211"] { left: 27px; top: 190px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_12.png'); }
+.uiequip-android-slot[data-android-slot="1212"] { left: 27px; top: 145px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_12.png'); }
+.uiequip-android-slot[data-android-slot="1213"] { left: 27px; top: 100px; background-image: url('../../images/UIEquip/EquipTab/SlotName/SlotName_12.png'); }
+.uiequip-android-slot[data-android-slot="hair"] { left: 117px; top: 280px; background-image: url('../../images/UIEquip/Deco/CoordiTab/SlotName_hair.png'); }
+.uiequip-android-slot[data-android-slot="face"] { left: 162px; top: 280px; background-image: url('../../images/UIEquip/Deco/CoordiTab/SlotName_face.png'); }
+.uiequip-android-slot[data-android-slot="skin"] { left: 207px; top: 280px; background-image: url('../../images/UIEquip/Deco/CoordiTab/SlotName_skin.png'); }
+
+.uiequip-android-shop {
+  position: absolute;
+  left: 255px;
+  top: 414px;
+  width: 101px;
+  height: 23px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 101px 23px;
+  background-image: url('../../images/UIEquip/Deco/AndroidTab/button_Shop/normal/0.png');
+  image-rendering: pixelated;
+  z-index: 6;
+}
+
+.uiequip-android-shop:disabled,
+.uiequip-android-shop.is-disabled {
+  background-image: url('../../images/UIEquip/Deco/AndroidTab/button_Shop/disabled/0.png');
+  cursor: default;
+  pointer-events: none;
+}
+
+.uiequip-skin-slot {
+  width: 42px;
+  height: 43px;
+  background-image: url('../../images/UIEquip/Deco/DamageSkinTab/disabled.png');
+  background-size: 42px 43px;
+}
+
+.uiequip-skin-slot[data-skin-slot="0"] { left: 22px; top: 144px; }
+.uiequip-skin-slot[data-skin-slot="1"] { left: 66px; top: 144px; }
+.uiequip-skin-slot[data-skin-slot="2"] { left: 110px; top: 144px; }
+.uiequip-skin-slot[data-skin-slot="3"] { left: 154px; top: 144px; }
+.uiequip-skin-slot[data-skin-slot="4"] { left: 198px; top: 144px; }
+.uiequip-skin-slot[data-skin-slot="5"] { left: 22px; top: 190px; }
+.uiequip-skin-slot[data-skin-slot="6"] { left: 66px; top: 190px; }
+.uiequip-skin-slot[data-skin-slot="7"] { left: 110px; top: 190px; }
+.uiequip-skin-slot[data-skin-slot="8"] { left: 154px; top: 190px; }
+.uiequip-skin-slot[data-skin-slot="9"] { left: 198px; top: 190px; }
+.uiequip-skin-slot[data-skin-slot="10"] { left: 22px; top: 236px; }
+.uiequip-skin-slot[data-skin-slot="11"] { left: 66px; top: 236px; }
+.uiequip-skin-slot[data-skin-slot="12"] { left: 110px; top: 236px; }
+.uiequip-skin-slot[data-skin-slot="13"] { left: 154px; top: 236px; }
+.uiequip-skin-slot[data-skin-slot="14"] { left: 198px; top: 236px; }
+
+.uiequip-skin-faq,
+.uiequip-skin-regist,
+.uiequip-skin-gather {
+  position: absolute;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  image-rendering: pixelated;
+  z-index: 6;
+}
+
+.uiequip-skin-faq {
+  left: 12px;
+  top: 353px;
+  width: 37px;
+  height: 23px;
+  background-size: 37px 23px;
+  background-image: url('../../images/UIEquip/Deco/DamageSkinTab/button_faq/normal/0.png');
+}
+
+.uiequip-skin-regist {
+  left: 272px;
+  top: 18px;
+  width: 54px;
+  height: 22px;
+  background-size: 54px 22px;
+  background-image: url('../../images/UIEquip/Deco/DamageSkinTab/button_regist/normal/0.png');
+}
+
+.uiequip-skin-gather {
+  left: 242px;
+  top: 318px;
+  width: 92px;
+  height: 22px;
+  background-size: 92px 22px;
+  background-image: url('../../images/UIEquip/Deco/DamageSkinTab/button_gather/normal/0.png');
+}
+
+.uiequip-skin-faq:disabled,
+.uiequip-skin-faq.is-disabled,
+.uiequip-skin-regist:disabled,
+.uiequip-skin-regist.is-disabled {
+  cursor: default;
+  pointer-events: none;
+}
+
+.uiequip-skin-gather:disabled,
+.uiequip-skin-gather.is-disabled {
+  background-image: url('../../images/UIEquip/Deco/DamageSkinTab/button_gather/disabled/0.png');
+  cursor: default;
+  pointer-events: none;
+}
+
+.uiequip-skin-search {
+  position: absolute;
+  left: 141px;
+  top: 358px;
+  width: 191px;
+  height: 15px;
+  background: url('../../images/UIEquip/Deco/DamageSkinTab/search/layer_default.png') no-repeat 0 0;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+/* ===== Symbol 側欄（往右 dock，主殼維持 366px）=====
+   外殼 228×339；內頁 childLT 22,46（184×272）
+   slotPos／nextPos 相對內頁
+*/
+.uiequip-symbol-panel {
+  position: absolute;
+  left: 366px;
+  top: 0;
+  width: 228px;
+  height: 339px;
+  background: url('../../images/UIEquip/Symbol/backgrnd.png') no-repeat 0 0;
+  image-rendering: pixelated;
+  z-index: 8;
+}
+
+.uiequip-symbol-panel.is-hidden {
+  display: none;
+}
+
+.uiequip-symbol-tab {
+  position: absolute;
+  top: 19px;
+  width: 92px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 92px 20px;
+  cursor: pointer;
+  image-rendering: pixelated;
+  z-index: 3;
+}
+
+.uiequip-symbol-tab-arc {
+  left: 22px;
+  background-image: url('../../images/UIEquip/Symbol/tab_categoryTab/normal_0.png');
+}
+
+.uiequip-symbol-tab-arc.is-selected {
+  background-image: url('../../images/UIEquip/Symbol/tab_categoryTab/selected_0.png');
+}
+
+.uiequip-symbol-tab-aut {
+  left: 114px;
+  background-image: url('../../images/UIEquip/Symbol/tab_categoryTab/normal_1.png');
+}
+
+.uiequip-symbol-tab-aut.is-selected {
+  background-image: url('../../images/UIEquip/Symbol/tab_categoryTab/selected_1.png');
+}
+
+.uiequip-symbol-page {
+  display: none;
+  position: absolute;
+  inset: 0;
+}
+
+.uiequip-symbol-page.is-active {
+  display: block;
+}
+
+.uiequip-symbol-inner {
+  position: absolute;
+  left: 22px;
+  top: 46px;
+  width: 184px;
+  height: 272px;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  image-rendering: pixelated;
+}
+
+.uiequip-symbol-inner-arc {
+  background-image: url('../../images/UIEquip/Symbol/ArcEquip/backgrnd.png');
+}
+
+.uiequip-symbol-inner-aut {
+  background-image: url('../../images/UIEquip/Symbol/AutEquip/backgrnd.png');
+}
+
+.uiequip-symbol-inner-grand {
+  background-image: url('../../images/UIEquip/Symbol/GrandAutEquip/backgrnd.png');
+}
+
+.uiequip-symbol-slot {
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  overflow: visible;
+}
+
+.uiequip-symbol-slot-arc {
+  width: 46px;
+  height: 86px;
+  background-size: 46px 86px;
+  background-image: url('../../images/UIEquip/Symbol/ArcEquip/disablebox.png');
+}
+
+.uiequip-symbol-slot-aut {
+  width: 44px;
+  height: 89px;
+  background-size: 44px 89px;
+  background-image: url('../../images/UIEquip/Symbol/AutEquip/disablebox.png');
+}
+
+.uiequip-symbol-slot-grand {
+  width: 44px;
+  height: 89px;
+  background-size: 44px 89px;
+  background-image: url('../../images/UIEquip/Symbol/GrandAutEquip/disablebox.png');
+}
+
+.uiequip-symbol-slot[data-symbol-slot="arc-0"] { left: 18px; top: 79px; }
+.uiequip-symbol-slot[data-symbol-slot="arc-1"] { left: 68px; top: 79px; }
+.uiequip-symbol-slot[data-symbol-slot="arc-2"] { left: 118px; top: 79px; }
+.uiequip-symbol-slot[data-symbol-slot="arc-3"] { left: 18px; top: 171px; }
+.uiequip-symbol-slot[data-symbol-slot="arc-4"] { left: 68px; top: 171px; }
+.uiequip-symbol-slot[data-symbol-slot="arc-5"] { left: 118px; top: 171px; }
+.uiequip-symbol-slot[data-symbol-slot="aut-0"] { left: 20px; top: 79px; }
+.uiequip-symbol-slot[data-symbol-slot="aut-1"] { left: 70px; top: 79px; }
+.uiequip-symbol-slot[data-symbol-slot="aut-2"] { left: 120px; top: 79px; }
+.uiequip-symbol-slot[data-symbol-slot="aut-3"] { left: 20px; top: 171px; }
+.uiequip-symbol-slot[data-symbol-slot="aut-4"] { left: 70px; top: 171px; }
+.uiequip-symbol-slot[data-symbol-slot="aut-5"] { left: 120px; top: 171px; }
+.uiequip-symbol-slot[data-symbol-slot="grand-0"] { left: 20px; top: 148px; }
+.uiequip-symbol-slot[data-symbol-slot="grand-1"] { left: 70px; top: 148px; }
+.uiequip-symbol-slot[data-symbol-slot="grand-2"] { left: 120px; top: 148px; }
+
+.uiequip-symbol-enchant {
+  position: absolute;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  image-rendering: pixelated;
+  cursor: default;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.uiequip-symbol-enchant.is-disabled {
+  display: none;
+}
+
+.uiequip-symbol-enchant-arc {
+  left: 4px;
+  top: 60px;
+  width: 39px;
+  height: 20px;
+  background-size: 39px 20px;
+  background-image: url('../../images/UIEquip/Symbol/ArcEquip/button_enchant/disabled_0.png');
+}
+
+.uiequip-symbol-enchant-aut {
+  left: 0;
+  top: 60px;
+  width: 44px;
+  height: 20px;
+  background-size: 44px 20px;
+  background-image: url('../../images/UIEquip/Symbol/AutEquip/button_enchant/disabled_0.png');
+}
+
+.uiequip-symbol-enchant-grand {
+  left: 0;
+  top: 60px;
+  width: 42px;
+  height: 22px;
+  background-size: 42px 22px;
+  background-image: url('../../images/UIEquip/Symbol/GrandAutEquip/button_enchant/disabled_0.png');
+}
+
+.uiequip-symbol-next {
+  position: absolute;
+  left: 154px;
+  top: 7px;
+  width: 24px;
+  height: 11px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 24px 11px;
+  cursor: pointer;
+  image-rendering: pixelated;
+  z-index: 3;
+}
+
+.uiequip-symbol-next-aut {
+  background-image: url('../../images/UIEquip/Symbol/AutEquip/button_next/normal_0.png');
+}
+
+.uiequip-symbol-slot.is-filled.uiequip-symbol-slot-arc {
+  background-image: url('../../images/UIEquip/Symbol/ArcEquip/box.png');
+}
+
+.uiequip-symbol-slot.is-filled.uiequip-symbol-slot-aut {
+  background-image: url('../../images/UIEquip/Symbol/AutEquip/box.png');
+}
+
+.uiequip-symbol-slot.is-filled.uiequip-symbol-slot-grand {
+  background-image: url('../../images/UIEquip/Symbol/GrandAutEquip/box.png');
+}
+
+.uiequip-symbol-slot .uiequip-slot-icon {
+  top: 8px;
+  transform: translate(-50%, 0);
+  cursor: pointer;
+}
+
+.uiequip-symbol-slot-aut .uiequip-slot-icon,
+.uiequip-symbol-slot-grand .uiequip-slot-icon {
+  top: 8px;
+}
+
+.uiequip-symbol-textup,
+.uiequip-symbol-textdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  pointer-events: none;
+  z-index: 2;
+  line-height: 0;
+}
+
+.uiequip-symbol-textdown {
+  top: 46px;
+  height: 10px;
+}
+
+.uiequip-symbol-glyph {
+  display: block;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+.uiequip-symbol-gauge {
+  position: absolute;
+  left: 12px;
+  top: 65px;
+  width: 24px;
+  height: 3px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.uiequip-symbol-slot-aut .uiequip-symbol-gauge {
+  left: 10px;
+  top: 65px;
+}
+
+.uiequip-symbol-slot-grand .uiequip-symbol-gauge {
+  left: 10px;
+  top: 63px;
+}
+
+.uiequip-symbol-gauge img {
+  display: block;
+  width: 24px;
+  height: 3px;
+  image-rendering: pixelated;
+}
+
+.uiequip-symbol-max {
+  position: absolute;
+  left: 10px;
+  top: 61px;
+  width: 27px;
+  height: 12px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.uiequip-symbol-slot-aut .uiequip-symbol-max,
+.uiequip-symbol-slot-grand .uiequip-symbol-max {
+  left: 8px;
+  top: 61px;
+}
+
+.uiequip-symbol-max img {
+  display: block;
+  width: 27px;
+  height: 12px;
+  image-rendering: pixelated;
+}
+
+.uiequip-symbol-totals {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 184px;
+  height: 72px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.uiequip-symbol-total-line {
+  position: absolute;
+  display: flex;
+  align-items: flex-end;
+  height: 10px;
+  line-height: 0;
+}
+
+.uiequip-symbol-enchant:not(.is-disabled) {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.uiequip-symbol-enchant-arc:not(.is-disabled) {
+  background-image: url('../../images/UIEquip/Symbol/ArcEquip/button_enchant/normal_0.png');
+}
+
+.uiequip-symbol-enchant-aut:not(.is-disabled) {
+  background-image: url('../../images/UIEquip/Symbol/AutEquip/button_enchant/normal_0.png');
+}
+
+.uiequip-symbol-enchant-grand:not(.is-disabled) {
+  background-image: url('../../images/UIEquip/Symbol/GrandAutEquip/button_enchant/normal_0.png');
 }
 

@@ -257,6 +257,26 @@ function missingPacks() {
   return (ASSET_MANIFEST.packs || []).filter((pack) => !packIsReady(pack));
 }
 
+function assetGithubTags(appVersion) {
+  const tags = [];
+  const add = (tag) => {
+    const t = String(tag || '').trim();
+    if (!t || tags.includes(t)) return;
+    tags.push(t);
+  };
+  add(ASSET_MANIFEST.githubTag);
+  add(`v${appVersion}`);
+  add('v1.0.1');
+  add('v1.0.0');
+  return tags;
+}
+
+function packDownloadUrls(fileName, appVersion) {
+  return assetGithubTags(appVersion).map((tag) => (
+    `https://github.com/${GH_OWNER}/${GH_REPO}/releases/download/${tag}/${fileName}`
+  ));
+}
+
 function addSearchDir(dirs, candidate) {
   if (!candidate) return;
   try {
@@ -614,7 +634,7 @@ async function ensureLargeAssets() {
       continue;
     }
 
-    const url = `https://github.com/${GH_OWNER}/${GH_REPO}/releases/download/v${version}/${fileName}`;
+    const urls = packDownloadUrls(fileName, version);
     const zipPath = path.join(assetRoot(), 'tmp', fileName);
     sendSplash({
       state: 'download',
@@ -622,19 +642,31 @@ async function ensureLargeAssets() {
       message: `正在下載${pack.label || pack.id}（${i + 1}/${needed.length}）…`,
       detail: '使用多連線下載以加快速度。',
     });
-    await downloadToFile(url, zipPath, (received, total, speed) => {
-      const packPct = total > 0 ? received / total : 0;
-      const percent = ((i + packPct) / needed.length) * 100;
-      const spd = formatSpeed(speed);
-      sendSplash({
-        state: 'download',
-        percent,
-        message: `正在下載${pack.label || pack.id}（${i + 1}/${needed.length}）…`,
-        detail: total > 0
-          ? `${formatBytes(received)} / ${formatBytes(total)}${spd ? ` · ${spd}` : ''}`
-          : `${formatBytes(received)}${spd ? ` · ${spd}` : ''}`,
-      });
-    });
+    let downloaded = false;
+    let lastErr = null;
+    for (const url of urls) {
+      try {
+        await downloadToFile(url, zipPath, (received, total, speed) => {
+          const packPct = total > 0 ? received / total : 0;
+          const percent = ((i + packPct) / needed.length) * 100;
+          const spd = formatSpeed(speed);
+          sendSplash({
+            state: 'download',
+            percent,
+            message: `正在下載${pack.label || pack.id}（${i + 1}/${needed.length}）…`,
+            detail: total > 0
+              ? `${formatBytes(received)} / ${formatBytes(total)}${spd ? ` · ${spd}` : ''}`
+              : `${formatBytes(received)}${spd ? ` · ${spd}` : ''}`,
+          });
+        });
+        downloaded = true;
+        lastErr = null;
+        break;
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    if (!downloaded) throw lastErr || new Error('下載資源包失敗');
     sendSplash({
       state: 'extract',
       percent: ((i + 0.92) / needed.length) * 100,

@@ -36,6 +36,8 @@ const IdleBossDiff = (() => {
         // 史烏等：pattern／shield CD＝基準秒 × 此倍率（Hard＝1 方便之後微調）
         patternCdMult: Number(row.patternCdMult) > 0 ? Number(row.patternCdMult) : 1,
         reqLevel: Math.max(0, Math.floor(Number(row.reqLevel) || 0)),
+        reqArc: Math.max(0, Math.floor(Number(row.reqArc) || 0)),
+        reqAut: Math.max(0, Math.floor(Number(row.reqAut) || 0)),
         timeLimitSec: Math.max(1, Math.floor(Number(row.timeLimitSec) || Number(script?.timeLimitSec) || 1800)),
         rewards: Array.isArray(row.rewards) ? row.rewards : [],
       });
@@ -47,6 +49,8 @@ const IdleBossDiff = (() => {
       hpMult: 1,
       dmgMult: 1,
       reqLevel: Math.max(0, Math.floor(Number(script?.reqLevel) || 0)),
+      reqArc: Math.max(0, Math.floor(Number(script?.reqArc) || 0)),
+      reqAut: Math.max(0, Math.floor(Number(script?.reqAut) || 0)),
       timeLimitSec: Math.max(1, Math.floor(Number(script?.timeLimitSec) || 1800)),
       rewards: Array.isArray(script?.rewards) ? script.rewards : [],
     }];
@@ -2396,7 +2400,7 @@ const IDLE_BOSS_PHASE = {
           '8880100': 25000000000000,
           '8880101': 75008000000000,
         },
-        dmgMult: 60,
+        dmgMult: 50,
         patternCdMult: 0.6,
         reqLevel: 190,
         timeLimitSec: 1800,

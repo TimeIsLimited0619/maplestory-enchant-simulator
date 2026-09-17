@@ -179,6 +179,9 @@ const SessionPersistenceModule = {
       inventoryEquip: playerInventoryEquip,
       inventoryState: playerInventoryState,
       bodyWearByPreset,
+      symbolWear: typeof UiEquipModule !== 'undefined' && typeof UiEquipModule.exportState === 'function'
+        ? (UiEquipModule.exportState().symbolWear || null)
+        : null,
       trunkSlots: typeof playerTrunkSlots !== 'undefined' ? playerTrunkSlots : null,
       enchantFocus: focusUid,
       focusBagIndex,
@@ -204,6 +207,8 @@ const SessionPersistenceModule = {
       bodyWearActive: snap.bodyWearExpanded[
         (typeof UiEquipModule !== 'undefined' && UiEquipModule.getActivePreset?.()) || 1
       ] || {},
+      symbolWearUids: snap.symbolWearUids || {},
+      symbolWear: snap.symbolWearExpanded || {},
       inventoryEquip: playerInventoryEquip.slice(),
       inventoryState: playerInventoryState.slice(),
       equippedItem: null,
@@ -1926,6 +1931,7 @@ const SessionPersistenceModule = {
       this._pendingUiEquipState = {
         bodyWearActive: null,
         bodyWearByPreset: imported.bodyWearExpanded || session.bodyWearByPreset || null,
+        symbolWear: imported.symbolWearExpanded || session.symbolWear || null,
         activeEquipPreset: session.activeEquipPreset,
         pendingEquipPreset: session.pendingEquipPreset,
       };
@@ -1949,6 +1955,7 @@ const SessionPersistenceModule = {
       this._pendingUiEquipState = {
         bodyWearActive: session.bodyWearActive || null,
         bodyWearByPreset: session.bodyWearByPreset || null,
+        symbolWear: session.symbolWear || null,
         activeEquipPreset: session.activeEquipPreset,
         pendingEquipPreset: session.pendingEquipPreset,
       };
@@ -1985,7 +1992,8 @@ const SessionPersistenceModule = {
     this._pendingUiEquipState = null;
     if (!pending || typeof UiEquipModule === 'undefined') return;
     if (typeof UiEquipModule.importState !== 'function') return;
-    if (!pending.bodyWearActive && !pending.bodyWearByPreset && pending.activeEquipPreset == null) {
+    if (!pending.bodyWearActive && !pending.bodyWearByPreset
+      && !pending.symbolWear && pending.activeEquipPreset == null) {
       return;
     }
     UiEquipModule.importState(pending);

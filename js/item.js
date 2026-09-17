@@ -87,6 +87,8 @@ const WZ_CHARACTER_PART = {
   Medal: { islot: 'Me', mainType: EQUIP_TYPE.ACCESSORY, subType: 'medal' },
   /** 徽章／紋章（WZ islot Em；舊碼 En 已移除） */
   Emblem: { islot: 'Em', mainType: EQUIP_TYPE.Emblem, subType: 'emblem' },
+  ArcaneForce: { islot: 'ArS', mainType: EQUIP_TYPE.ACCESSORY, subType: 'arcaneSymbol' },
+  AuthenticForce: { islot: 'AuS', mainType: EQUIP_TYPE.ACCESSORY, subType: 'authenticSymbol' },
   // Accessory 資料夾內含多種 islot，以 XML info.islot 為準
 };
 
@@ -123,8 +125,33 @@ const ISLOT_TO_MAIN_TYPE = {
   Face: EQUIP_TYPE.ACCESSORY,
   Md: EQUIP_TYPE.ACCESSORY, // 舊碼相容 → medal
   Em: EQUIP_TYPE.Emblem,
-  Ba: EQUIP_TYPE.ACCESSORY
+  Ba: EQUIP_TYPE.ACCESSORY,
+  ArS: EQUIP_TYPE.ACCESSORY,
+  AuS: EQUIP_TYPE.ACCESSORY,
 };
+
+function numericEquipId(itemId) {
+  const n = Number(String(itemId || '').replace(/^0+/, ''));
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** arcaneSymbol / authenticSymbol / grandSymbol；無法判定回傳空字串 */
+function resolveSymbolKind(itemId, info) {
+  const n = numericEquipId(itemId);
+  const part = String(info?.wzPart || info?.wz?.wzPart || '');
+  if (n >= 1714000 && n <= 1714999) return 'grandSymbol';
+  if (n >= 1713000 && n <= 1713999) return 'authenticSymbol';
+  if (n >= 1712000 && n <= 1712999) return 'arcaneSymbol';
+  if (part === 'ArcaneForce') return 'arcaneSymbol';
+  if (part === 'AuthenticForce') return 'authenticSymbol';
+  return '';
+}
+
+function isSymbolItem(item) {
+  if (!item) return false;
+  const kind = item.subType || resolveSymbolKind(item.itemId || item.id, item);
+  return kind === 'arcaneSymbol' || kind === 'authenticSymbol' || kind === 'grandSymbol';
+}
 
 /** 是否為圖騰（wzPart Totem / subType totem；islot 可能仍為 Po） */
 function isTotemItem(item) {
@@ -206,6 +233,7 @@ function canHaveMainPotential(item) {
   if (isMedalItem(item)) return false;
   if (isTotemItem(item)) return false;
   if (isPocketItem(item)) return false;
+  if (isSymbolItem(item)) return false;
   return true;
 }
 
@@ -275,6 +303,8 @@ const ISLOT_TO_SUB_TYPE = {
   Md: 'medal', // 舊碼相容
   Em: 'emblem',
   Ba: 'badge', // 胸章
+  ArS: 'arcaneSymbol',
+  AuS: 'authenticSymbol',
 };
 
 /**
@@ -288,15 +318,21 @@ const ISLOT_TO_SUB_TYPE = {
  * @param {object} info - XML info 節點對應的 plain object
  */
 function buildEquipFromWzInfo(itemId, name, info) {
-  const islot = info.islot || info.vslot || 'Wp';
+  const symbolKind = resolveSymbolKind(itemId, info);
+  const isSymbol = !!symbolKind;
+  const islot = isSymbol
+    ? (symbolKind === 'arcaneSymbol' ? 'ArS' : 'AuS')
+    : (info.islot || info.vslot || 'Wp');
   const partHint = info.wzPart ? WZ_CHARACTER_PART[info.wzPart] : null;
   const isTotem = info.wzPart === 'Totem' || partHint?.subType === 'totem';
   const isAndroid = info.wzPart === 'Android' || partHint?.subType === 'android' || islot === 'An';
   const mainType = ISLOT_TO_MAIN_TYPE[islot] || partHint?.mainType || EQUIP_TYPE.ARMOR;
-  const subType = isTotem
-    ? 'totem'
-    : (ISLOT_TO_SUB_TYPE[islot] || partHint?.subType || 'unknown');
-  const tuc = Number(info.tuc) || 0;
+  const subType = isSymbol
+    ? symbolKind
+    : (isTotem
+      ? 'totem'
+      : (ISLOT_TO_SUB_TYPE[islot] || partHint?.subType || 'unknown'));
+  const tuc = isSymbol ? 0 : (Number(info.tuc) || 0);
   const isDestinyWeapon = mainType === EQUIP_TYPE.WEAPON && Boolean(info.exceptUpgrade);
   const isPin = islot === 'Ba';
   const displayName = name || itemId;
@@ -320,13 +356,13 @@ function buildEquipFromWzInfo(itemId, name, info) {
     price: Math.max(0, Math.floor(Number(info.price) || 0)),
     star: 0,
     superiorEqp: Boolean(info.superiorEqp),
-    // 胸章不可星力；其餘依需求等級／Superior 建檔
-    maxStar: isPin ? 0 : 30,
+    // 胸章／符文不可星力；其餘依需求等級／Superior 建檔
+    maxStar: (isPin || isSymbol) ? 0 : 30,
     upgradeSlots: tuc,
     maxUpgradeSlots: tuc,
     hammerSlots: 0,
-    maxGoldenHammer: 1,
-    maxPlatinumHammer: 5,
+    maxGoldenHammer: isSymbol ? 0 : 1,
+    maxPlatinumHammer: isSymbol ? 0 : 5,
     baseStats: {
       str: Number(info.incSTR) || 0,
       dex: Number(info.incDEX) || 0,
@@ -348,6 +384,8 @@ function buildEquipFromWzInfo(itemId, name, info) {
       incSpeed: Number(info.incSpeed) || 0,
       incJump: Number(info.incJump) || 0,
       incMHPr: Number(info.incMHPr) || 0,
+      incARC: Number(info.incARC) || 0,
+      incAUT: Number(info.incAUT) || 0,
       setItemID: Number(info.setItemID) || 0,
       sfx: info.sfx || '',
       afterImage: info.afterImage || '',
@@ -362,7 +400,7 @@ function buildEquipFromWzInfo(itemId, name, info) {
       exItem: Boolean(info.exItem),
       charmEXP: Number(info.charmEXP) || 0,
       exceptUpgrade: Boolean(info.exceptUpgrade),
-      onlyEquip: Boolean(info.onlyEquip),
+      onlyEquip: isSymbol ? true : Boolean(info.onlyEquip),
       jokerToSetItem: Boolean(info.jokerToSetItem),
       // WZ 原拼法 unsyntesizable
       unsyntesizable: Boolean(info.unsyntesizable || info.unsynthesizable),
@@ -428,6 +466,7 @@ function canUseStarForce(item) {
   if (isStarforceBrokenItem(item)) return false;
   if (isEnhancementLockedItem(item)) return false;
   if (isPinItem(item)) return false;
+  if (isSymbolItem(item)) return false;
   return hasBaseUpgradeSlots(item) || isAtlasOffHandWeapon(item);
 }
 
@@ -460,6 +499,7 @@ function canUseBonusStat(item) {
   if (!item) return false;
   if (isEnhancementLockedItem(item)) return false;
   if (isPinItem(item)) return false;
+  if (isSymbolItem(item)) return false;
   if (item.mainType === EQUIP_TYPE.offHandWeapon) return false;
   if (item.mainType === EQUIP_TYPE.Emblem) return false;
   if (BONUS_STAT_BLOCKED_SUBTYPES.has(item.subType)) return false;

@@ -1,6 +1,6 @@
 /**
  * Maple 技能 common 公式求值（安全解析，不用任意 eval）
- * 支援：x、+ - * /、括號、d(n) 向下取整、u(n) 向上取整
+ * 支援：x、+ - * /、括號、d(n) 向下取整、u(n) 向上取整、logN(x)（等級達 N 為 1 否則 0）
  */
 const SkillFormula = (() => {
   function tokenize(input) {
@@ -21,6 +21,13 @@ const SkillFormula = (() => {
       if (ch === 'x' || ch === 'X') {
         tokens.push({ type: 'x' });
         i += 1;
+        continue;
+      }
+      if (s.startsWith('log', i) && i + 3 < s.length && /[0-9]/.test(s[i + 3])) {
+        let j = i + 3;
+        while (j < s.length && /[0-9]/.test(s[j])) j += 1;
+        tokens.push({ type: 'fn', value: s.slice(i, j) });
+        i = j;
         continue;
       }
       if (ch === 'd' || ch === 'D' || ch === 'u' || ch === 'U') {
@@ -121,6 +128,11 @@ const SkillFormula = (() => {
     if (ast.op === 'neg') return -evalAst(ast.arg, x);
     if (ast.fn === 'd') return Math.floor(evalAst(ast.arg, x));
     if (ast.fn === 'u') return Math.ceil(evalAst(ast.arg, x));
+    if (typeof ast.fn === 'string' && ast.fn.startsWith('log')) {
+      const cap = Number(ast.fn.slice(3));
+      if (!(cap > 0)) return 0;
+      return evalAst(ast.arg, x) >= cap ? 1 : 0;
+    }
     if (ast.op === '+') return evalAst(ast.left, x) + evalAst(ast.right, x);
     if (ast.op === '-') return evalAst(ast.left, x) - evalAst(ast.right, x);
     if (ast.op === '*') return evalAst(ast.left, x) * evalAst(ast.right, x);
@@ -211,6 +223,7 @@ const SkillFormula = (() => {
     return {
       padX: num('padX'),
       indiePad: num('indiePad'),
+      indieAllStat: num('indieAllStat'),
       strX: num('strX') + num('indieStr'),
       dexX: num('dexX') + num('indieDex'),
       intX: num('intX') + num('indieInt'),
@@ -265,13 +278,17 @@ const SkillFormula = (() => {
       w: Math.max(0, Math.floor(num('w'))),
       u2: Math.max(0, Math.floor(num('u2'))),
       u: num('u'),
+      q: num('q'),
+      t: num('t'),
       s: num('s'),
       v: num('v'),
+      v2: num('v2'),
       y: num('y'),
       z: num('z'),
       ballDelayMs: Math.max(0, Math.floor(num('ballDelay')) || 0),
       xVal: num('x'),
       shadowPartnerR: num('shadowPartnerR'),
+      nbdR: num('nbdR'),
       dotSuperpos: Math.max(1, Math.floor(num('dotSuperpos', 1)) || 1),
       actionSpeed: num('actionSpeed'),
       damAbsorbShieldR: num('damAbsorbShieldR'),
@@ -279,9 +296,11 @@ const SkillFormula = (() => {
       indiePMdR: num('indiePMdR'),
       indieBDR: num('indieBDR'),
       indieIgnoreMobpdpR: num('indieIgnoreMobpdpR'),
-      asrR: num('asrR'),
+      asrR: num('asrR') + num('indieAsrR'),
       terR: num('terR'),
+      indieCooltimeReduce: num('indieCooltimeReduce'),
       damagePct: num('damage'),
+      selfDestruction: num('selfDestruction'),
       attackCount: (() => {
         const hasAtk = c.attackCount != null && String(c.attackCount) !== '';
         const hasBullet = c.bulletCount != null && String(c.bulletCount) !== '';
@@ -297,6 +316,11 @@ const SkillFormula = (() => {
       targetPlus: Math.max(0, Math.floor(num('targetPlus')) || 0),
       /** 楓葉祝福等：直接投入 AP 的能力值 +X% */
       basicStatUp: Math.max(0, num('basicStatUp')),
+      /** 實用的祈禱等：狩獵經驗 +% */
+      huntExpR: Math.max(0, num('huntExpR')),
+      /** 五轉 1～4 轉強化核心：對 psdSkill 的終傷％／隻數 */
+      damR_5th: Math.max(0, num('damR_5th')),
+      targetPlus_5th: Math.max(0, Math.floor(num('targetPlus_5th')) || 0),
       /** 超技冷卻減免％（地獄爆發／魔力彩帶等） */
       coolTimeR: Math.max(0, num('coolTimeR')),
       attackDelayBaseMs: (() => {
@@ -331,11 +355,13 @@ const SkillFormula = (() => {
 
   /** WZ 說明常漏寫 %：這些 key 顯示時自動補上 */
   const PCT_PLACEHOLDER_KEYS = new Set([
-    'pdR', 'mdR', 'damR', 'indieDamR', 'indiePMdR', 'indiePadR', 'indieBDR',
+      'pdR', 'mdR', 'damR', 'indieDamR', 'indiePMdR', 'indiePadR', 'indieBDR',
+      'indieAsrR', 'indieCooltimeReduce',
     'cr', 'indieCr', 'criticaldamage', 'ignoreMobpdpR', 'indieIgnoreMobpdpR',
     'bdR', 'prop', 'subProp', 'asrR', 'terR', 'stanceProp', 'damAbsorbShieldR',
     'indiePowerGuard', 'coolTimeR', 'mastery', 'basicStatUp', 'mhpR', 'mmpR',
-    'costmpR', 'nbdR', 'bufftimeR', 'dot', 'shadowPartnerR',
+    'costmpR', 'nbdR', 'bufftimeR', 'dot', 'shadowPartnerR', 'huntExpR',
+    'damR_5th',
   ]);
 
   function formatSkillText(template, common, level) {
@@ -360,7 +386,7 @@ const SkillFormula = (() => {
 
     // 先替換 #cr / #costmpR 等占位符，再處理 #c…# 色碼
     // （若先吃色碼，#costmpR%…#damR% 會被誤判成 #c…#）
-    raw = raw.replace(/#([a-zA-Z][a-zA-Z0-9]*)(%p|%)?/g, (match, key, suffix) => {
+    raw = raw.replace(/#([a-zA-Z][a-zA-Z0-9_]*)(%p|%)?/g, (match, key, suffix) => {
       if (key.toLowerCase() === 'c') return match;
       const val = evalPlaceholder(common, key, level);
       if (val == null) return match;

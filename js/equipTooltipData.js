@@ -161,7 +161,10 @@ const EQUIP_MAIN_TYPE_LABEL = {
 };
 
 /** 僅顯示子類型標籤，不顯示主分類（飾品／防具） */
-const EQUIP_SUBTYPE_HIDE_MAIN_CATEGORY = new Set(['medal', 'android', 'heart', 'shoulder', 'badge', 'pocket', 'totem']);
+const EQUIP_SUBTYPE_HIDE_MAIN_CATEGORY = new Set([
+  'medal', 'android', 'heart', 'shoulder', 'badge', 'pocket', 'totem',
+  'arcaneSymbol', 'authenticSymbol', 'grandSymbol',
+]);
 
 const EQUIP_SUBTYPE_LABEL = {
   weapon: '單手',
@@ -193,6 +196,9 @@ const EQUIP_SUBTYPE_LABEL = {
   unknown: '裝備',
   medal: '勳章',
   pin: '胸章', // 舊 subType 相容
+  arcaneSymbol: '祕法符文',
+  authenticSymbol: '真實符文',
+  grandSymbol: '豪華真實符文',
 };
 
 const EQUIP_STAT_LABELS = [

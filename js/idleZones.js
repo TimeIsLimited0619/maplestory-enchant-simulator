@@ -80,6 +80,18 @@ const IdleZones = {
     return `${z.regionId}-${z.mapId}`;
   },
 
+  forceReq(zone) {
+    const z = zone && (zone.regionId != null && zone.regionId !== '' || zone.mapId != null && zone.mapId !== '')
+      ? zone
+      : this.get(zone);
+    if (!z) return { reqArc: 0, reqAut: 0 };
+    const cfg = this.configFor(z);
+    return {
+      reqArc: Math.max(0, Math.floor(Number(cfg?.reqArc) || 0)),
+      reqAut: Math.max(0, Math.floor(Number(cfg?.reqAut) || 0)),
+    };
+  },
+
   mapIndex(zone) {
     const z = zone && (zone.regionId || zone.mapId) ? zone : this.get(zone);
     const n = Number(z?.mapIndex || z?.mapId || z?.unlockLevel);
@@ -672,6 +684,8 @@ const IdleZones = {
       smallKills: Number.isFinite(Number(z.smallKills)) && Number(z.smallKills) >= 0
         ? Math.floor(Number(z.smallKills))
         : this.SMALL_KILLS,
+      reqArc: Math.max(0, Math.floor(Number(z.reqArc) || 0)),
+      reqAut: Math.max(0, Math.floor(Number(z.reqAut) || 0)),
       mobAtk1Dmg: this.atkNum(z.mobAtk1Dmg != null ? z.mobAtk1Dmg : z.mobHitDmg, 5),
       mobAtk1Cd: this.atkNum(z.mobAtk1Cd != null ? z.mobAtk1Cd : z.mobHitCd, 0.6),
       mobAtk2Dmg: this.atkNum(z.mobAtk2Dmg, 0),
@@ -830,6 +844,8 @@ const IdleZones = {
         over.bossSkill1Cd != null ? over.bossSkill1Cd : over.bossSkillCd,
         fallback.bossSkillCd,
       ),
+      reqArc: this.atkOver(over.reqArc, fallback.reqArc),
+      reqAut: this.atkOver(over.reqAut, fallback.reqAut),
     };
   },
 
@@ -875,6 +891,7 @@ const IdleZones = {
         'bossAtk1Dmg', 'bossAtk1Cd', 'bossAtk2Dmg', 'bossAtk2Cd', 'bossAtk3Dmg', 'bossAtk3Cd',
         'bossSkill1Dmg', 'bossSkill1Cd', 'bossSkill2Dmg', 'bossSkill2Cd', 'bossSkill3Dmg', 'bossSkill3Cd',
         'bossSkillDmg', 'bossSkillCd',
+        'reqArc', 'reqAut',
       ];
       const atkDefaults = {
         mobAtk1Dmg: 5, mobAtk1Cd: 0.6, mobAtk2Dmg: 0, mobAtk2Cd: 0, mobAtk3Dmg: 0, mobAtk3Cd: 0,
@@ -915,6 +932,11 @@ const IdleZones = {
         if (key === 'smallKills') {
           const def = this.SMALL_KILLS;
           if (Number(cur) !== Number(base ?? def)) keep[key] = Number(cur);
+          return;
+        }
+        if (key === 'reqArc' || key === 'reqAut') {
+          const n = Math.max(0, Math.floor(Number(cur) || 0));
+          if (n > 0) keep[key] = n;
           return;
         }
         if (Object.prototype.hasOwnProperty.call(atkDefaults, key)) {

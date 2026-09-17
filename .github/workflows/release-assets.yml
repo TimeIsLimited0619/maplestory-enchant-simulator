@@ -1,0 +1,48 @@
+name: Release asset packs
+
+on:
+  push:
+    tags:
+      - 'assets-*'
+
+jobs:
+  assets:
+    runs-on: windows-latest
+    timeout-minutes: 180
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Pack large image assets
+        run: npm run pack:assets
+
+      - name: Publish asset packs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          TAG="${GITHUB_REF_NAME}"
+          FILES=(dist-assets/*)
+          if [ "${#FILES[@]}" -eq 0 ]; then
+            echo "No asset packs found" >&2
+            exit 1
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${FILES[@]}" --clobber
+          else
+            gh release create "$TAG" "${FILES[@]}" --title "$TAG" --prerelease --notes "BOSS／技能資源包（不作為程式自動更新來源）。"
+          fi

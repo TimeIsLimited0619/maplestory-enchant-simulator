@@ -20,6 +20,7 @@ function getItemStarForceMaxStar(item) {
   if (!item) return 30;
   if (typeof isPinItem === 'function' ? isPinItem(item) : item.islot === 'Ba') return 0;
   if (item.subType === 'android' || item.islot === 'An') return 0;
+  if (typeof isSymbolItem === 'function' ? isSymbolItem(item) : /Symbol$/.test(item.subType || '')) return 0;
   if (typeof isSuperiorStarForceItem === 'function' && isSuperiorStarForceItem(item)) {
     return getSuperiorStarForceMaxStar(item);
   }

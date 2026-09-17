@@ -308,7 +308,10 @@ const CharacterProgression = (() => {
       && Number.isFinite(Number(mobLevel))) {
       levelDiffMult = MapleExpTable.levelDiffExpMultiplier(state.level, mobLevel);
     }
-    const gained = n * levelDiffMult * (1 + hyperExp / 100);
+    const huntExpR = (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getHuntExpR === 'function')
+      ? (Number(SkillModifiers.getHuntExpR()) || 0)
+      : 0;
+    const gained = n * levelDiffMult * (1 + (hyperExp + huntExpR) / 100);
     const result = addExp(gained);
     return { levels: result.levels, gained, multiplier: levelDiffMult };
   }
@@ -320,7 +323,10 @@ const CharacterProgression = (() => {
     const need = expToNext();
     const rate = MapleExpTable.killExpRate(state.level);
     const hyperExp = hyperBonusAt('exp', activeHyper().exp);
-    const gained = need * rate * (1 + hyperExp / 100);
+    const huntExpR = (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getHuntExpR === 'function')
+      ? (Number(SkillModifiers.getHuntExpR()) || 0)
+      : 0;
+    const gained = need * rate * (1 + (hyperExp + huntExpR) / 100);
     const result = addExp(gained);
     return { levels: result.levels, gained };
   }

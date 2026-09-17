@@ -19,6 +19,8 @@ const ItemStore = (() => {
   /** @type {string[]} */
   let orphanBenchUids = [];
   let seq = 0;
+  /** @type {Record<string, string|null>} 角色共用符文槽 */
+  let symbolBySlot = Object.create(null);
 
   function emptyBodyPresets() {
     return { 1: {}, 2: {}, 3: {} };
@@ -89,6 +91,7 @@ const ItemStore = (() => {
     trunkEquipUids = new Array(trunkCount()).fill(null);
     enchantFocus = null;
     orphanBenchUids = [];
+    symbolBySlot = Object.create(null);
   }
 
   function get(uid) {
@@ -130,6 +133,9 @@ const ItemStore = (() => {
     for (let i = 0; i < trunkEquipUids.length; i += 1) {
       if (trunkEquipUids[i] === uid) trunkEquipUids[i] = null;
     }
+    Object.keys(symbolBySlot).forEach((slot) => {
+      if (symbolBySlot[slot] === uid) symbolBySlot[slot] = null;
+    });
   }
 
   function findBagIndex(uid) {
@@ -148,6 +154,12 @@ const ItemStore = (() => {
     return null;
   }
 
+  function findSymbolLoc(uid) {
+    if (!uid) return null;
+    const slot = Object.keys(symbolBySlot).find((id) => symbolBySlot[id] === uid);
+    return slot ? { slot } : null;
+  }
+
   function findTrunkIndex(uid) {
     if (!uid) return -1;
     return trunkEquipUids.indexOf(uid);
@@ -162,7 +174,8 @@ const ItemStore = (() => {
     const inBag = findBagIndex(uid) >= 0;
     const inBody = !!findBodyLoc(uid);
     const inOrphan = orphanBenchUids.includes(uid);
-    if (!inBag && !inBody && !inOrphan) return false;
+    const inSymbol = !!findSymbolLoc(uid);
+    if (!inBag && !inBody && !inOrphan && !inSymbol) return false;
     enchantFocus = uid;
     return true;
   }
@@ -236,8 +249,27 @@ const ItemStore = (() => {
     return uid;
   }
 
+  function ensureSymbolUid(slotId, entry) {
+    const slot = String(slotId || '');
+    if (!slot || !entry?.itemId) return null;
+    const baseId = resolveId(entry.itemId);
+    if (!baseId) return null;
+    const existing = symbolBySlot[slot];
+    if (existing && byUid[existing] && byUid[existing].baseId === baseId) {
+      if (entry.state) replaceState(existing, entry.state);
+      return existing;
+    }
+    if (existing) {
+      clearUidFromLocations(existing);
+      delete byUid[existing];
+    }
+    const uid = createInstance(baseId, entry.state);
+    symbolBySlot[slot] = uid;
+    return uid;
+  }
+
   /**
-   * 移動實體位置（不含 enchant）。to: { type:'bag', index } | { type:'body', preset, slot } | { type:'trunk', index } | { type:'orphan' }
+   * 移動實體位置（不含 enchant）。to: { type:'bag', index } | { type:'body', preset, slot } | { type:'trunk', index } | { type:'orphan' } | { type:'symbol', slot }
    */
   function move(uid, to) {
     if (!byUid[uid] || !to) return false;
@@ -272,6 +304,13 @@ const ItemStore = (() => {
       if (!orphanBenchUids.includes(uid)) orphanBenchUids.push(uid);
       return true;
     }
+    if (to.type === 'symbol') {
+      const slot = String(to.slot || '');
+      if (!slot) return false;
+      if (symbolBySlot[slot]) return false;
+      symbolBySlot[slot] = uid;
+      return true;
+    }
     return false;
   }
 
@@ -285,6 +324,9 @@ const ItemStore = (() => {
       });
     });
     trunkEquipUids.forEach((u) => { if (u) set.add(u); });
+    Object.keys(symbolBySlot).forEach((slot) => {
+      if (symbolBySlot[slot]) set.add(symbolBySlot[slot]);
+    });
     orphanBenchUids.forEach((u) => { if (u) set.add(u); });
     return set;
   }
@@ -315,6 +357,7 @@ const ItemStore = (() => {
       Object.keys(map).forEach((slot) => mark(map[slot], `body[${p}].${slot}`));
     });
     trunkEquipUids.forEach((u, i) => mark(u, `trunk[${i}]`));
+    Object.keys(symbolBySlot).forEach((slot) => mark(symbolBySlot[slot], `symbol.${slot}`));
     orphanBenchUids.forEach((u, i) => mark(u, `orphan[${i}]`));
 
     Object.keys(byUid).forEach((uid) => {
@@ -324,8 +367,9 @@ const ItemStore = (() => {
     if (enchantFocus) {
       const ok = findBagIndex(enchantFocus) >= 0
         || !!findBodyLoc(enchantFocus)
+        || !!findSymbolLoc(enchantFocus)
         || orphanBenchUids.includes(enchantFocus);
-      if (!ok) errors.push(`enchantFocus not in bag/body/orphan: ${enchantFocus}`);
+      if (!ok) errors.push(`enchantFocus not in bag/body/symbol/orphan: ${enchantFocus}`);
       if (!byUid[enchantFocus]) errors.push(`enchantFocus missing item: ${enchantFocus}`);
     }
 
@@ -378,6 +422,7 @@ const ItemStore = (() => {
     const prevTrunk = trunkEquipUids.slice();
     const prevFocus = enchantFocus;
     const prevOrphans = orphanBenchUids.slice();
+    const prevSymbol = { ...symbolBySlot };
     const prevByUid = byUid;
 
     byUid = Object.create(null);
@@ -386,6 +431,7 @@ const ItemStore = (() => {
     bodyByPreset = emptyBodyPresets();
     ensureTrunkSize();
     trunkEquipUids = new Array(trunkCount()).fill(null);
+    symbolBySlot = Object.create(null);
     orphanBenchUids = [];
     enchantFocus = null;
 
@@ -429,6 +475,25 @@ const ItemStore = (() => {
       });
     }
 
+    const symbols = opts.symbolWear;
+    if (symbols && typeof symbols === 'object') {
+      Object.keys(symbols).forEach((slot) => {
+        const entry = symbols[slot];
+        if (!entry?.itemId) return;
+        const oldUid = entry.instanceUid || prevSymbol[slot];
+        const uid = reuseOrCreate(oldUid, entry.itemId, entry.state);
+        if (uid) symbolBySlot[slot] = uid;
+      });
+    } else {
+      Object.keys(prevSymbol).forEach((slot) => {
+        const oldUid = prevSymbol[slot];
+        const inst = oldUid && prevByUid[oldUid];
+        if (!inst) return;
+        const uid = reuseOrCreate(oldUid, inst.baseId, inst.state);
+        if (uid) symbolBySlot[slot] = uid;
+      });
+    }
+
     const trunk = opts.trunkSlots || (typeof playerTrunkSlots !== 'undefined' ? playerTrunkSlots : []);
     ensureTrunkSize(Math.max(trunkCount(), trunk.length || 0));
     for (let i = 0; i < trunkEquipUids.length; i += 1) {
@@ -448,7 +513,8 @@ const ItemStore = (() => {
           state: stampState(prevByUid[uid].state, prevByUid[uid].baseId),
         };
         orphanBenchUids.push(uid);
-      } else if (byUid[uid] && findBagIndex(uid) < 0 && !findBodyLoc(uid) && findTrunkIndex(uid) < 0) {
+      } else if (byUid[uid] && findBagIndex(uid) < 0 && !findBodyLoc(uid)
+        && findTrunkIndex(uid) < 0 && !findSymbolLoc(uid)) {
         if (!orphanBenchUids.includes(uid)) orphanBenchUids.push(uid);
       }
     });
@@ -517,6 +583,18 @@ const ItemStore = (() => {
     return out;
   }
 
+  function exportSymbolWearExpanded() {
+    return expandWearUids(symbolBySlot);
+  }
+
+  function exportSymbolWearUids() {
+    const slim = {};
+    Object.keys(symbolBySlot).forEach((slot) => {
+      if (symbolBySlot[slot]) slim[slot] = symbolBySlot[slot];
+    });
+    return slim;
+  }
+
   function exportTrunkSlotsMerged(legacyTrunk) {
     const count = trunkCount();
     const src = Array.isArray(legacyTrunk) ? legacyTrunk : [];
@@ -566,6 +644,8 @@ const ItemStore = (() => {
       bagSlots: bagSlots.slice(),
       bodyWearByPreset: exportBodyWearByPresetUids(),
       bodyWearExpanded: exportBodyWearByPresetExpanded(),
+      symbolWearUids: exportSymbolWearUids(),
+      symbolWearExpanded: exportSymbolWearExpanded(),
       enchantFocus,
       orphanBenchUids: orphanBenchUids.slice(),
       trunkEquipUids: trunkEquipUids.slice(),
@@ -828,6 +908,34 @@ const ItemStore = (() => {
       });
     }
 
+    symbolBySlot = Object.create(null);
+    const uidSymbols = data.symbolWearUids;
+    const expSymbols = data.symbolWear || data.symbolWearExpanded;
+    if (uidSymbols && typeof uidSymbols === 'object'
+      && Object.values(uidSymbols).some((v) => typeof v === 'string' && byUid[v])) {
+      Object.keys(uidSymbols).forEach((slot) => {
+        const uid = uidSymbols[slot];
+        if (uid && byUid[uid]) symbolBySlot[slot] = uid;
+      });
+    } else if (expSymbols && typeof expSymbols === 'object') {
+      Object.keys(expSymbols).forEach((slot) => {
+        const entry = expSymbols[slot];
+        if (!entry) return;
+        if (typeof entry === 'string' && byUid[entry]) {
+          symbolBySlot[slot] = entry;
+          return;
+        }
+        if (entry.instanceUid && byUid[entry.instanceUid]) {
+          symbolBySlot[slot] = entry.instanceUid;
+          return;
+        }
+        if (entry.itemId) {
+          const uid = createInstance(entry.itemId, entry.state);
+          if (uid) symbolBySlot[slot] = uid;
+        }
+      });
+    }
+
     ensureTrunkSize();
     const trunk = Array.isArray(data.trunkSlots) ? data.trunkSlots : [];
     for (let i = 0; i < trunkEquipUids.length; i += 1) {
@@ -861,6 +969,7 @@ const ItemStore = (() => {
       enchantFocus,
       orphanBenchUids: orphanBenchUids.slice(),
       bodyWearExpanded: exportBodyWearByPresetExpanded(),
+      symbolWearExpanded: exportSymbolWearExpanded(),
       trunkSlots: exportTrunkSlotsMerged(data.trunkSlots),
       sessionMeta: {
         activeEquipPreset: data.activeEquipPreset,
@@ -906,14 +1015,17 @@ const ItemStore = (() => {
     replaceState,
     ensureBagUid,
     ensureBodyUid,
+    ensureSymbolUid,
     findBagIndex,
     findBodyLoc,
+    findSymbolLoc,
     findTrunkIndex,
     assertInvariants,
     rebuildFromRuntime,
     projectToLegacyArrays,
     exportEquipSnapshot,
     exportBodyWearByPresetExpanded,
+    exportSymbolWearExpanded,
     exportTrunkSlotsMerged,
     migrateSessionV1toV2,
     importSnapshot,
@@ -925,6 +1037,7 @@ const ItemStore = (() => {
       2: { ...(bodyByPreset[2] || {}) },
       3: { ...(bodyByPreset[3] || {}) },
     }),
+    getSymbolBySlot: () => ({ ...symbolBySlot }),
   };
 })();
 

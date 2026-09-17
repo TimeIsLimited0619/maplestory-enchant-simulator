@@ -7,6 +7,7 @@
   /* 掛在 idle-hunt-damage-fx（z=110）；各數字 z-index 仍依怪物前後排序 */
   pointer-events: none;
   overflow: visible;
+  contain: layout style;
 }
 
 .idle-damage-pop {
@@ -19,6 +20,7 @@
   transform-origin: center bottom;
   pointer-events: none;
   line-height: 0;
+  contain: layout style;
 }
 
 .idle-damage-glyph {

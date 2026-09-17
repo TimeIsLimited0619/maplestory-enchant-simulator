@@ -84,7 +84,14 @@ const IdleHunt = (() => {
   const MEM_RELEASE_MS = 30000;
   /** 解碼圖快取軟上限。偏高可減少大量擊殺時重 decode 卡頓（用記憶體換順暢） */
   const IMAGE_CACHE_SOFT_MAX = 1800;
+  /** Electron 本機解碼便宜，前景掛機用較低上限避免 GPU 記憶體越積越厚 */
+  const IMAGE_CACHE_SOFT_MAX_DESKTOP = 900;
+  /** 待生成掉落佇列上限；超過就立刻吐出，避免連殺越積越長 */
+  const MAX_PENDING_DROP_JOBS = 24;
+  const MAX_PENDING_DROP_JOBS_LOD = 12;
   let lastMemReleaseAt = 0;
+  /** 場上活怪／屍體簽名；沒變就只同步血條，避免每 tick 整場重排 */
+  let lastFieldActorSig = '';
   /** @type {ReturnType<typeof setInterval>|null} */
   let memReleaseTimer = null;
   let saveTimer = 0;
@@ -98,6 +105,8 @@ const IdleHunt = (() => {
   let playerHurtIframeUntil = 0;
   /** 受擊後基礎無敵時間（ms；會套用遊戲倍速） */
   const PLAYER_HURT_IFRAME_MS = 500;
+  /** 擊殺後補位／新怪進場再等這段，避免畫面瞬間補滿 */
+  const MOB_RESPAWN_DELAY_MS = 200;
   /** 補位時每格錯開多久，營造一隻一隻往前走的節奏 */
   const MOB_STEP_STAGGER_MS = 100;
   /** 隊列補位／進場移動速度倍率（2 = 快一倍） */
@@ -306,14 +315,20 @@ const IdleHunt = (() => {
   }
 
   /**
-   * 最終套用傷害：GM OHK → BOSS 血線 cap。
+   * 最終套用傷害：ARC／AUT 出傷倍率 → GM OHK → BOSS 血線 cap。
    * 怪物防禦（IED×PDRate）暫不套用——面板／技能無視尚未完善。
    * opts.skillIed 保留參數以相容呼叫端，目前忽略。
    */
   function resolveMobHitDamage(mob, dmg, opts = {}) {
     let base = Math.max(0, Math.floor(Number(dmg) || 0));
-    // 暫關：UiCharacterInfo.applyMobDefense（等 IED 來源／合併完整再開）
     void opts;
+    if (base > 0 && typeof SymbolForce !== 'undefined' && typeof SymbolForce.mapMult === 'function') {
+      const isBoss = !!mob?.isBoss || state.huntMode === 'boss'
+        || (typeof IdleBoss !== 'undefined' && IdleBoss.isRunning?.());
+      const mult = SymbolForce.mapMult({ isBoss, zone: currentZone() });
+      const dealt = Number(mult.dealt);
+      base = Math.max(0, Math.floor(base * (Number.isFinite(dealt) ? dealt : 1)));
+    }
     if (gmOneHitKill && mob) {
       const hp = Math.max(1, Math.floor(Number(mob.hp) || 0));
       base = Math.max(base, hp);
@@ -332,7 +347,12 @@ const IdleHunt = (() => {
    */
   function applyPlayerHitToMob(mob, rawDmg, opts = {}) {
     if (!mob) return 0;
-    const finalDmg = resolveMobHitDamage(mob, rawDmg, {
+    if (!mob.isBoss && !(Number(mob.hp) > 0)) return 0;
+    const incoming = Math.max(0, Math.floor(Number(rawDmg) || 0));
+    if (incoming > 0 && typeof MobEffBarrier !== 'undefined') {
+      MobEffBarrier.playIfNeeded?.(mob);
+    }
+    const finalDmg = resolveMobHitDamage(mob, incoming, {
       skillIed: opts.skillIed,
     });
     if (typeof opts.showMobDamage === 'function') {
@@ -350,8 +370,80 @@ const IdleHunt = (() => {
       && typeof IdleBossFight.afterAppliedDamage === 'function') {
       IdleBossFight.afterAppliedDamage(mob, finalDmg);
     }
-    if (mob.isBoss) syncBossTopHud();
+    if (mob.isBoss) scheduleBossTopHud();
     return finalDmg;
+  }
+
+  /**
+   * 小怪超殺段：只保留打到死的段數（全職業共用）。BOSS 仍打滿段。
+   */
+  function trimOverkillHitList(mob, hits, opts = {}) {
+    const list = Array.isArray(hits) ? hits : [];
+    if (!mob || mob.isBoss || list.length <= 1) return list;
+    let hpLeft = Number(mob.hp) || 0;
+    if (!(hpLeft > 0)) return [];
+    const trimmed = [];
+    for (let i = 0; i < list.length; i += 1) {
+      const row = list[i] || {};
+      trimmed.push(row);
+      const incoming = Math.max(0, Math.floor(Number(row.dmg) || 0));
+      if (!(incoming > 0)) continue;
+      hpLeft -= resolveMobHitDamage(mob, incoming, { skillIed: opts.skillIed });
+      if (!(hpLeft > 0)) break;
+    }
+    return trimmed;
+  }
+
+  /**
+   * 多段同一目標：數字／暴擊仍逐段顯示，HP／HUD／afterAppliedDamage 只結一次。
+   */
+  function applyPlayerHitsToMob(mob, hits, opts = {}) {
+    if (!mob) return 0;
+    if (!mob.isBoss && !(Number(mob.hp) > 0)) return 0;
+    let list = Array.isArray(hits) ? hits : [];
+    if (!list.length) return 0;
+    if (!mob.isBoss && list.length > 1) list = trimOverkillHitList(mob, list, opts);
+    if (list.length === 1) {
+      const row = list[0] || {};
+      return applyPlayerHitToMob(mob, row.dmg, {
+        ...opts,
+        isCritical: !!row.isCritical,
+        dmgOpts: row.dmgOpts || opts.dmgOpts || {},
+      });
+    }
+    let total = 0;
+    let barrierArmed = false;
+    for (let i = 0; i < list.length; i += 1) {
+      const row = list[i] || {};
+      const incoming = Math.max(0, Math.floor(Number(row.dmg) || 0));
+      if (incoming > 0 && !barrierArmed && typeof MobEffBarrier !== 'undefined') {
+        MobEffBarrier.playIfNeeded?.(mob);
+        barrierArmed = true;
+      }
+      const finalDmg = resolveMobHitDamage(mob, incoming, {
+        skillIed: opts.skillIed,
+      });
+      if (typeof opts.showMobDamage === 'function') {
+        opts.showMobDamage(mob, finalDmg, !!row.isCritical, row.dmgOpts || {});
+      }
+      if (typeof opts.onDamage === 'function') opts.onDamage(finalDmg);
+      if (opts.reportDungeonDamage !== false
+        && finalDmg > 0
+        && state.dungeon
+        && typeof IdleDungeon !== 'undefined') {
+        IdleDungeon.onHuntDamage?.(finalDmg);
+      }
+      total += finalDmg;
+    }
+    if (total) {
+      mob.hp = (Number(mob.hp) || 0) - total;
+      if (typeof IdleBossFight !== 'undefined'
+        && typeof IdleBossFight.afterAppliedDamage === 'function') {
+        IdleBossFight.afterAppliedDamage(mob, total);
+      }
+      if (mob.isBoss) scheduleBossTopHud();
+    }
+    return total;
   }
 
   function syncGameSpeedInput() {
@@ -445,7 +537,57 @@ const IdleHunt = (() => {
     }
     ensureBuffBar();
     ensureCdBar();
+    ensureForceHud();
     ensureChapterBossTimerHost();
+  }
+
+  function ensureForceHud() {
+    const field = $('idleHuntField');
+    if (!field || field.querySelector('#idleHuntForceHud')) return;
+    field.insertAdjacentHTML('beforeend', `
+      <div class="idle-hunt-force-hud" id="idleHuntForceHud" hidden>
+        <span class="idle-hunt-force-hud__gem" aria-hidden="true"></span>
+        <span class="idle-hunt-force-hud__text" id="idleHuntForceHudText">0/0</span>
+        <div class="idle-hunt-force-hud__tip" id="idleHuntForceHudTip" role="tooltip"></div>
+      </div>
+    `);
+  }
+
+  function formatForceHudPct(mult) {
+    const pct = Number(mult) * 100;
+    if (!Number.isFinite(pct)) return '100%';
+    if (Math.abs(pct - Math.round(pct)) < 0.05) return `${Math.round(pct)}%`;
+    return `${pct.toFixed(1)}%`;
+  }
+
+  function syncForceHud() {
+    ensureForceHud();
+    const wrap = $('idleHuntForceHud');
+    const textEl = $('idleHuntForceHudText');
+    const tipEl = $('idleHuntForceHudTip');
+    if (!wrap) return;
+    const info = (typeof SymbolForce !== 'undefined' && typeof SymbolForce.hudInfo === 'function')
+      ? SymbolForce.hudInfo()
+      : null;
+    if (!info || !info.kind) {
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    wrap.classList.toggle('is-arc', info.kind === 'arc');
+    wrap.classList.toggle('is-aut', info.kind === 'aut');
+    wrap.classList.toggle('is-short', !!info.short);
+    if (textEl) textEl.textContent = `${info.have}/${info.need}`;
+    if (!tipEl) return;
+    const label = info.kind === 'arc' ? '神秘力量' : '真實力量';
+    const dealtCls = info.dealt < 1 ? 'is-down' : (info.dealt > 1 ? 'is-up' : '');
+    const takenText = info.taken <= 0 ? '固定 1' : formatForceHudPct(info.taken);
+    const takenCls = info.taken <= 0
+      ? 'is-zero'
+      : (info.taken > 1 ? 'is-down' : (info.taken < 1 ? 'is-up' : ''));
+    tipEl.innerHTML = `<div class="idle-hunt-force-hud__tip-title">${label} ${info.have} / ${info.need}</div>`
+      + `<div>對怪物傷害 <span class="${dealtCls}">${formatForceHudPct(info.dealt)}</span></div>`
+      + `<div>受到傷害 <span class="${takenCls}">${takenText}</span></div>`;
   }
 
   function ensureChapterBossTimerHost() {
@@ -653,6 +795,7 @@ const IdleHunt = (() => {
     syncBuffBarUi();
     syncCdBarUi();
     syncBossTopHud();
+    syncForceHud();
   }
 
   function formatBossTopHp(hp, maxHp) {
@@ -673,6 +816,15 @@ const IdleHunt = (() => {
     const live = (state.queue || []).find((m) => m && m.isBoss && Number(m.hp) > 0);
     if (live) return live;
     return (state.dying || []).find((m) => m && m.isBoss) || null;
+  }
+
+  let bossTopHudRaf = null;
+  function scheduleBossTopHud() {
+    if (bossTopHudRaf != null) return;
+    bossTopHudRaf = requestAnimationFrame(() => {
+      bossTopHudRaf = null;
+      syncBossTopHud();
+    });
   }
 
   function syncBossTopHud() {
@@ -1377,6 +1529,26 @@ const IdleHunt = (() => {
     return state.afkMode === 'push' || state.afkMode === 'farm';
   }
 
+  function isDesktopClient() {
+    return typeof window !== 'undefined' && !!window.mssDesktop;
+  }
+
+  function imageCacheSoftMax() {
+    return isDesktopClient() ? IMAGE_CACHE_SOFT_MAX_DESKTOP : IMAGE_CACHE_SOFT_MAX;
+  }
+
+  /** 掛機／背景：降視覺預算，模擬照常結算 */
+  function isCombatLodActive() {
+    if (typeof document !== 'undefined' && document.hidden) return true;
+    return isAfkActive() && !!state.running;
+  }
+
+  function syncCombatLod() {
+    const lod = isCombatLodActive();
+    try { DamageNumber.setPerfLod?.(lod); } catch (_) { /* ignore */ }
+    try { ItemDropController.setPerfLod?.(lod); } catch (_) { /* ignore */ }
+  }
+
   function syncAfkFlag() {
     state.afk = isAfkActive();
   }
@@ -1426,6 +1598,7 @@ const IdleHunt = (() => {
       }
     }
     save();
+    syncCombatLod();
     render();
     if (isAfkActive() && state.running) scheduleAfkStep(0);
   }
@@ -1448,6 +1621,7 @@ const IdleHunt = (() => {
       afkStepTimer = null;
     }
     save();
+    syncCombatLod();
     if (opts.resume !== false) {
       if (!open) setOpen(true);
       if (!state.running && !isPlayerDead() && canFight() && !jobLinePickerOpen && !isBlockingPanelOpen()) {
@@ -2237,6 +2411,20 @@ const IdleHunt = (() => {
     let dmg = Math.max(0, Math.floor(Number(amount) || 0));
     if (!(dmg > 0) || isPlayerDead()) return;
 
+    let forceOneHp = false;
+    if (typeof SymbolForce !== 'undefined' && typeof SymbolForce.mapMult === 'function') {
+      const isBoss = !!opts.isBoss || state.huntMode === 'boss'
+        || (typeof IdleBoss !== 'undefined' && IdleBoss.isRunning?.());
+      const mult = SymbolForce.mapMult({ isBoss, zone: currentZone() });
+      const taken = Number(mult.taken);
+      const takenMult = Number.isFinite(taken) ? taken : 1;
+      if (takenMult <= 0) {
+        forceOneHp = true;
+      } else {
+        dmg = Math.max(0, Math.floor(dmg * takenMult));
+      }
+    }
+
     const ignoreMitigation = !!(opts.ignoreMitigation || opts.trueDamage);
     const mobLevel = Number.isFinite(Number(opts.mobLevel))
       ? Number(opts.mobLevel)
@@ -2280,6 +2468,8 @@ const IdleHunt = (() => {
         dmg = mitigateMobDamage(dmg, false, mobLevel);
       }
     }
+
+    if (forceOneHp) dmg = 1;
 
     if (!(dmg > 0)) {
       if (typeof SkillModifiers !== 'undefined' && typeof SkillModifiers.getTotals === 'function') {
@@ -2459,14 +2649,64 @@ const IdleHunt = (() => {
   }
 
   let huntRenderRaf = 0;
+  function fieldActorSignature() {
+    const live = state.queue.slice(0, VISIBLE_QUEUE_LEN).map((m) => String(m?.uid ?? '')).join(',');
+    const dying = (state.dying || []).map((d) => String(d?.uid ?? '')).join(',');
+    return `${state.zoneId || ''}|${state.huntMode || ''}|${live}|${dying}`;
+  }
+
+  function syncVisibleMobHpBars() {
+    const stage = $('idleHuntField')?.querySelector('.idle-hunt-stage');
+    if (!stage) return;
+    state.queue.slice(0, VISIBLE_QUEUE_LEN).forEach((mob) => {
+      if (!mob) return;
+      const el = stage.querySelector(`.idle-actor--mob[data-uid="${mob.uid}"]`);
+      if (!el || el.classList.contains('is-dying')) return;
+      const hpPct = Math.max(0, Math.min(100, (mob.hp / mob.maxHp) * 100));
+      const bar = queryMobHpWrap(el)?.querySelector('span');
+      if (bar) bar.style.width = `${hpPct}%`;
+    });
+  }
+
+  function renderFieldSmart() {
+    const sig = fieldActorSignature();
+    const stage = $('idleHuntField')?.querySelector('.idle-hunt-stage');
+    if (stage && sig === lastFieldActorSig) {
+      syncVisibleMobHpBars();
+      return;
+    }
+    renderField();
+  }
+
   function scheduleHuntRender() {
     if (!open) return;
     if (typeof document !== 'undefined' && document.hidden) return;
     if (huntRenderRaf) return;
     huntRenderRaf = requestAnimationFrame(() => {
       huntRenderRaf = 0;
-      if (open && !(typeof document !== 'undefined' && document.hidden)) render();
+      if (open && !(typeof document !== 'undefined' && document.hidden)) {
+        renderFieldSmart();
+        renderHud();
+      }
     });
+  }
+
+  let huntHudRaf = 0;
+  function scheduleHuntHud() {
+    if (!open || huntHudRaf) return;
+    huntHudRaf = requestAnimationFrame(() => {
+      huntHudRaf = 0;
+      if (open) renderHud();
+    });
+  }
+
+  let mesoDisplayTimer = 0;
+  function scheduleInventoryMesoDisplay() {
+    if (mesoDisplayTimer) return;
+    mesoDisplayTimer = window.setTimeout(() => {
+      mesoDisplayTimer = 0;
+      syncInventoryMesoDisplay();
+    }, 120);
   }
 
   function applyProjectileKills(kills) {
@@ -2488,28 +2728,31 @@ const IdleHunt = (() => {
     if (!(state.deferredKills || []).some((d) => d.mob === mob)) {
       state.deferredKills.push({ mob, origin });
     }
-    // 先播死亡動畫，避免 render 清掉 DOM
-    if (!(state.dying || []).some((d) => String(d.uid) === String(mob.uid))) {
-      state.dying.push({
-        uid: mob.uid,
-        name: mob.name,
-        iconId: mob.iconId,
-        isBoss: !!mob.isBoss,
-        bossScaleSprite: !!mob.bossScaleSprite,
-        bossScaleHud: !!mob.bossScaleHud,
-        x: origin.x,
-        y: origin.y,
-        elapsed: 0,
-        deferred: true,
-      });
+    // 先播死亡動畫，避免 render 清掉 DOM；超過上限只移出 actor
+    const alreadyDying = (state.dying || []).some((d) => String(d.uid) === String(mob.uid));
+    if (!alreadyDying) {
+      if ((state.dying || []).length >= MAX_DYING_VISUAL) {
+        deadEl?.remove();
+      } else {
+        state.dying.push({
+          uid: mob.uid,
+          name: mob.name,
+          iconId: mob.iconId,
+          isBoss: !!mob.isBoss,
+          bossScaleSprite: !!mob.bossScaleSprite,
+          bossScaleHud: !!mob.bossScaleHud,
+          x: origin.x,
+          y: origin.y,
+          elapsed: 0,
+          deferred: true,
+        });
+        beginMobDeathVisual(mob, origin);
+      }
+    } else {
+      beginMobDeathVisual(mob, origin);
     }
-    beginMobDeathVisual(mob, origin);
     state.queue = state.queue.filter((m) => m !== mob);
     const front = state.queue[0];
-    if (front && state.mobFrontUid !== front.uid) {
-      state.mobFrontUid = front.uid;
-      resetMobAtkAccums();
-    }
     fillQueue();
     scheduleHuntRender();
   }
@@ -2737,13 +2980,15 @@ const IdleHunt = (() => {
     return formatCount(power);
   }
 
-  /** 掉落生成比死亡動畫／場刷晚一點，並在多殺時錯開，避免同幀尖峰 */
-  const DROP_SPAWN_DELAY_MS = 28;
-  const DROP_SPAWN_STAGGER_MS = 12;
-  /** @type {Array<{ origin: { x: number, y: number }, rows: object[] }>} */
-  const pendingDropSpawns = [];
+  /** 掉落堆疊：滿 10 隻或滿 1 秒再生成一次 */
+  const DROP_FLUSH_MS = 1000;
+  const DROP_FLUSH_KILLS = 10;
+  /** @type {object[]} */
+  let dropAccRows = [];
+  let dropAccOrigin = null;
+  let dropAccKills = 0;
   /** @type {ReturnType<typeof setTimeout>|null} */
-  let dropSpawnTimer = null;
+  let dropAccTimer = null;
 
   function formatDropRowsLabel(rows) {
     return (rows || []).map((r) => {
@@ -2819,29 +3064,67 @@ const IdleHunt = (() => {
     state.lastDrop = parts.join('、') || '無';
   }
 
-  function clearPendingDropSpawns({ grant = false } = {}) {
-    if (dropSpawnTimer != null) {
-      clearTimeout(dropSpawnTimer);
-      dropSpawnTimer = null;
+  function mergeDropAccRow(row) {
+    if (!row) return;
+    if (row.kind === 'meso') {
+      const add = Math.max(0, Math.floor(Number(row.amount) || 0));
+      if (!(add > 0)) return;
+      const exist = dropAccRows.find((r) => r && r.kind === 'meso');
+      if (exist) exist.amount = Math.max(0, Math.floor(Number(exist.amount) || 0)) + add;
+      else dropAccRows.push({ kind: 'meso', amount: add });
+      return;
     }
-    const jobs = pendingDropSpawns.splice(0, pendingDropSpawns.length);
-    if (!grant || !jobs.length) return;
-    jobs.forEach((job) => {
-      if (typeof ItemDropController !== 'undefined') {
-        spawnDropRowsVisual(job.origin, job.rows);
-      } else {
-        grantDropRowsFallback(job.rows);
-      }
-    });
+    if (row.kind === 'equip') {
+      dropAccRows.push({ ...row });
+      return;
+    }
+    const key = `${row.kind || ''}:${String(row.itemId || row.name || '')}`;
+    const exist = dropAccRows.find((r) => (
+      r && r.kind !== 'meso' && r.kind !== 'equip'
+      && `${r.kind || ''}:${String(r.itemId || r.name || '')}` === key
+    ));
+    const addAmt = Math.max(1, Math.floor(Number(row.amount) || 1));
+    if (exist) {
+      exist.amount = Math.max(1, Math.floor(Number(exist.amount) || 1)) + addAmt;
+      return;
+    }
+    dropAccRows.push({ ...row, amount: addAmt });
   }
 
-  function pumpPendingDropSpawns() {
-    dropSpawnTimer = null;
-    const job = pendingDropSpawns.shift();
-    if (!job) return;
-    spawnDropRowsVisual(job.origin, job.rows);
-    if (pendingDropSpawns.length) {
-      dropSpawnTimer = window.setTimeout(pumpPendingDropSpawns, DROP_SPAWN_STAGGER_MS);
+  function flushDropAcc() {
+    if (dropAccTimer != null) {
+      clearTimeout(dropAccTimer);
+      dropAccTimer = null;
+    }
+    const rows = dropAccRows;
+    const origin = dropAccOrigin;
+    dropAccRows = [];
+    dropAccOrigin = null;
+    dropAccKills = 0;
+    if (!rows.length) return;
+    state.lastDrop = formatDropRowsLabel(rows);
+    if (typeof ItemDropController !== 'undefined') {
+      spawnDropRowsVisual(origin, rows);
+    } else {
+      grantDropRowsFallback(rows);
+    }
+  }
+
+  function clearPendingDropSpawns({ grant = false } = {}) {
+    if (dropAccTimer != null) {
+      clearTimeout(dropAccTimer);
+      dropAccTimer = null;
+    }
+    const rows = dropAccRows;
+    const origin = dropAccOrigin;
+    dropAccRows = [];
+    dropAccOrigin = null;
+    dropAccKills = 0;
+    if (!grant || !rows.length) return;
+    if (typeof ItemDropController !== 'undefined') {
+      spawnDropRowsVisual(origin, rows);
+    } else {
+      grantDropRowsFallback(rows);
     }
   }
 
@@ -2853,29 +3136,21 @@ const IdleHunt = (() => {
       x: Number.isFinite(ox) ? ox : 360,
       y: Number.isFinite(oy) ? oy : 390,
     };
-    // 背景分頁不需錯開，直接生成以免切回時堆積
     if (typeof document !== 'undefined' && document.hidden) {
       spawnDropRowsVisual(point, rows);
       return;
     }
-    // 高速連殺：純楓幣併入上一包，減少場上掉落實體
-    const onlyMeso = rows.length === 1 && rows[0]?.kind === 'meso';
-    if (onlyMeso && pendingDropSpawns.length) {
-      const last = pendingDropSpawns[pendingDropSpawns.length - 1];
-      const meso = (last.rows || []).find((r) => r && r.kind === 'meso');
-      const add = Math.max(0, Math.floor(Number(rows[0].amount) || 0));
-      if (meso && add > 0) {
-        meso.amount = Math.max(0, Math.floor(Number(meso.amount) || 0)) + add;
-        return;
-      }
-      if (add > 0) {
-        last.rows = [{ kind: 'meso', amount: add }, ...(last.rows || [])];
-        return;
-      }
+    rows.forEach(mergeDropAccRow);
+    dropAccOrigin = dropAccOrigin || point;
+    dropAccKills += 1;
+    state.lastDrop = formatDropRowsLabel(dropAccRows);
+    if (dropAccKills >= DROP_FLUSH_KILLS) {
+      flushDropAcc();
+      return;
     }
-    pendingDropSpawns.push({ origin: point, rows });
-    if (dropSpawnTimer != null) return;
-    dropSpawnTimer = window.setTimeout(pumpPendingDropSpawns, DROP_SPAWN_DELAY_MS);
+    if (dropAccTimer == null) {
+      dropAccTimer = window.setTimeout(flushDropAcc, DROP_FLUSH_MS);
+    }
   }
 
   function grantDrop(isBoss, origin, extraRows = [], opts = {}) {
@@ -2893,7 +3168,7 @@ const IdleHunt = (() => {
       grantDropRowsFallback(rows);
       return;
     }
-    if (opts.immediate) {
+    if (opts.immediate || isBoss) {
       spawnDropRowsVisual(origin, rows);
       return;
     }
@@ -2925,8 +3200,8 @@ const IdleHunt = (() => {
         if (v > 0) {
           state.gold += v;
           save();
-          if (open) renderHud();
-          syncInventoryMesoDisplay();
+          if (open) scheduleHuntHud();
+          scheduleInventoryMesoDisplay();
         }
       },
       onGrantItem: (info) => {
@@ -2983,16 +3258,17 @@ const IdleHunt = (() => {
         ? DamageSkinCatalog.pinnedUrls?.()
         : null;
       if (soft) {
-        EnchantImagePreload.softTrim?.(IMAGE_CACHE_SOFT_MAX, pin);
+        EnchantImagePreload.softTrim?.(imageCacheSoftMax(), pin);
       } else {
         // 轉場：較積極修剪，但不整庫清空（避免換圖後全白等回暖）
-        EnchantImagePreload.softTrim?.(Math.min(220, IMAGE_CACHE_SOFT_MAX), pin);
+        EnchantImagePreload.softTrim?.(Math.min(220, imageCacheSoftMax()), pin);
       }
       // 傷害字圖若被踢掉就補載（100% 暴擊副本特別容易踩到）
       try { DamageSkinCatalog?.warmUpAll?.(); } catch (_) { /* ignore */ }
     }
 
     if (!soft) {
+      lastFieldActorSig = '';
       const player = $('idleHuntField')?.querySelector('.idle-actor--player');
       if (player && typeof IdleMobAnim !== 'undefined') {
         IdleMobAnim.clearAreaWarning?.(player);
@@ -3021,35 +3297,24 @@ const IdleHunt = (() => {
     if (!force && lastMemReleaseAt > 0 && (now - lastMemReleaseAt) < MEM_RELEASE_MS) return;
 
     const hidden = typeof document !== 'undefined' && document.hidden;
-    // 前景戰鬥：多留解碼圖／特效快取，避免 trim 後下一波擊殺重解碼卡頓
-    if (!force && !hidden) {
-      try { SkillMobStatus.prune?.(); } catch (_) { /* ignore */ }
-      lastMemReleaseAt = now;
-      return;
-    }
+    const pin = typeof DamageSkinCatalog !== 'undefined'
+      ? DamageSkinCatalog.pinnedUrls?.()
+      : null;
 
-    // 輕量例行：修剪圖快取／狀態鍵，不整清傷害數字（避免畫面閃一下）
+    // 前景只修剪解碼圖與已脫離畫面的特效；不要清掉正在播的數字／飛鏢
     try {
-      const pin = typeof DamageSkinCatalog !== 'undefined'
-        ? DamageSkinCatalog.pinnedUrls?.()
-        : null;
-      EnchantImagePreload.softTrim?.(IMAGE_CACHE_SOFT_MAX, pin);
+      EnchantImagePreload.softTrim?.(imageCacheSoftMax(), pin);
       SkillEffectPlayer.clearLocalPreloadCache?.();
+      SkillEffectPlayer.pruneStaleFx?.();
       SkillMobStatus.prune?.();
       DamageNumber.pruneStaleStacks?.(8000);
     } catch (_) { /* ignore */ }
 
-    const fxN = typeof SkillEffectPlayer !== 'undefined'
-      ? (Number(SkillEffectPlayer.activeInstanceCount?.()) || 0)
-      : 0;
-    const dmgN = typeof DamageNumber !== 'undefined'
-      ? (Number(DamageNumber.activeCount?.()) || 0)
-      : 0;
-    if (!force && fxN < 36 && dmgN < 120) {
-      lastMemReleaseAt = now;
+    if (hidden || force) {
+      releaseCombatVisuals({ soft: true });
       return;
     }
-    releaseCombatVisuals({ soft: true });
+    lastMemReleaseAt = now;
   }
 
   function startMemReleaseTimer() {
@@ -3172,6 +3437,15 @@ const IdleHunt = (() => {
   function flashDie(uid, mob) {
     const el = mobActorEl(uid);
     if (!el && !mob) return;
+    const id = mob?.uid != null ? String(mob.uid) : String(uid || '');
+    const alreadyDying = !!(id && (state.dying || []).some((d) => String(d.uid) === id));
+    if (!alreadyDying && (state.dying || []).length >= MAX_DYING_VISUAL) {
+      if (el) {
+        stopMobMovement(el);
+        el.remove();
+      }
+      return;
+    }
     if (el) stopMobMovement(el);
     const origin = (() => {
       if (!el) return null;
@@ -3183,8 +3457,7 @@ const IdleHunt = (() => {
     const mobRef = mob || { uid, iconId: el?.querySelector('.idle-actor-sprite')?.dataset?.iconId };
     beginMobDeathVisual(mobRef, origin);
     // 先掛上 dying 清單，避免多箭延遲 applyKill 期間屍體不在 dying、又占佇列時無法被 prune
-    const id = mobRef?.uid != null ? String(mobRef.uid) : String(uid || '');
-    if (id && !(state.dying || []).some((d) => String(d.uid) === id)) {
+    if (id && !alreadyDying) {
       state.dying.push({
         uid: id,
         name: mobRef.name,
@@ -3208,6 +3481,7 @@ const IdleHunt = (() => {
     let el = stage?.querySelector(`.idle-actor--mob[data-uid="${uid}"]`);
     // 只對「場上已有 actor」或明確可見座標補 DOM；避免螢幕外怪憑空長出死亡殼
     if (!el && stage && origin && Number.isFinite(Number(origin.x))) {
+      if ((state.dying || []).length >= MAX_DYING_VISUAL) return null;
       const stillVisible = isMobVisibleInField(mob)
         || (mobQueueIndex(mob) >= 0 && mobQueueIndex(mob) < VISIBLE_QUEUE_LEN);
       if (stillVisible) {
@@ -3331,7 +3605,7 @@ const IdleHunt = (() => {
       live.add(String(mob.uid));
       let el = actorsByUid.get(String(mob.uid));
       const point = spawn.mobs[i] || spawn.mobs[spawn.mobs.length - 1];
-      const stagger = i * MOB_STEP_STAGGER_MS;
+      const stagger = MOB_RESPAWN_DELAY_MS + i * MOB_STEP_STAGGER_MS;
       if (!el) {
         stage.insertAdjacentHTML('beforeend', actorMarkup('mob', mob, i, entryPoint));
         el = stage.querySelector(`.idle-actor--mob[data-uid="${mob.uid}"]`);
@@ -3423,6 +3697,7 @@ const IdleHunt = (() => {
     syncComboOrbsUi();
     syncHuntOverlayBars();
     syncBossTopHud();
+    lastFieldActorSig = fieldActorSignature();
   }
 
   function bindArtFallback(field) {
@@ -3712,6 +3987,11 @@ const IdleHunt = (() => {
       SkillCombat.tryNlMarkBurstOnDeath(huntCombatCtx(), dead);
     }
     if (typeof SkillMobStatus !== 'undefined') SkillMobStatus.clearMob?.(dead);
+    if (typeof SkillBuffRuntime !== 'undefined' && typeof SkillBuffRuntime.onHuntKill === 'function') {
+      try {
+        SkillBuffRuntime.onHuntKill(dead, huntCombatCtx({ quietFx: !!(typeof document !== 'undefined' && document.hidden) }));
+      } catch (_) { /* ignore */ }
+    }
     const idx = mobQueueIndex(dead);
     const originOverride = opts.origin;
     const deadEl = mobActorEl(dead.uid);
@@ -3882,8 +4162,8 @@ const IdleHunt = (() => {
     }
     const dt = scaleDtSec(TICK_MS / 1000);
     if (fieldTransition) {
+      pruneDying();
       if (!skipVisual) {
-        pruneDying();
         advanceAllSprites(dt);
         if (open) render();
       }
@@ -3901,7 +4181,10 @@ const IdleHunt = (() => {
     }
     state.power = readPower();
     fillQueue();
-    const combatCtx = skipVisual ? huntCombatCtx({ quietFx: true }) : huntCombatCtx();
+    const fxBusy = typeof SkillEffectPlayer !== 'undefined'
+      && (Number(SkillEffectPlayer.activeInstanceCount?.()) || 0) >= 40;
+    const quietFx = skipVisual || fxBusy;
+    const combatCtx = quietFx ? huntCombatCtx({ quietFx: true }) : huntCombatCtx();
     if (typeof SkillBuffRuntime !== 'undefined') {
       SkillBuffRuntime.tick?.(undefined, combatCtx);
     }
@@ -3927,8 +4210,8 @@ const IdleHunt = (() => {
         const result = SkillCombat.cast(picked, huntCombatCtx({
           wzAttackSpeed: currentWzAttackSpeed(),
           attackSpeedStage: currentWzAttackSpeed(),
-          // 背景：略過傷害數字／受擊閃光，保留結算
-          quietFx: skipVisual,
+          // 背景／特效過載：略過傷害數字／受擊閃光，保留結算
+          quietFx,
         }));
         // 與 BOSS tickPlayer：result.cast 後 afterExternalHits 同一套——依實際 hp 清隊
         if (result?.cast) applySkillMobStateSync(result.kills || []);
@@ -3972,7 +4255,10 @@ const IdleHunt = (() => {
       }
       const dmg = resolveMobHitDamage(front, rolled);
       if (!(dmg > 0)) break;
-      if (!skipVisual) showMobDamage(front, dmg, hit.isCritical);
+      if (!skipVisual && !fxBusy) {
+        showMobDamage(front, dmg, hit.isCritical);
+        if (typeof MobEffBarrier !== 'undefined') MobEffBarrier.playIfNeeded?.(front);
+      }
       if (state.dungeon && typeof IdleDungeon !== 'undefined') IdleDungeon.onHuntDamage?.(dmg);
       front.hp -= dmg;
       if (typeof SkillMobStatus !== 'undefined'
@@ -3984,27 +4270,26 @@ const IdleHunt = (() => {
         if (!skipVisual) syncComboOrbsUi();
       }
       if (keepDamageTrialBossAlive(front)) {
-        if (!skipVisual) flashHit(front.uid);
+        if (!skipVisual && !fxBusy) flashHit(front.uid);
         continue;
       }
       if (front.hp <= 0) {
         applyKill(state.queue.shift());
         continue;
       }
-      if (!skipVisual) flashHit(front.uid);
+      if (!skipVisual && !fxBusy) flashHit(front.uid);
     }
     tickMobAttacks(dt);
     if (state.dungeon && typeof IdleDungeon !== 'undefined') IdleDungeon.onHuntTick?.(dt);
+    pruneDying();
     if (isPlayerDead()) {
       if (!skipVisual) {
-        pruneDying();
         advanceAllSprites(dt);
         if (open) render();
       }
       return;
     }
     if (!skipVisual) {
-      pruneDying();
       const huntPlayer = $('idleHuntField')?.querySelector('.idle-actor--player');
       if (huntPlayer && typeof IdleMobAnim !== 'undefined' && typeof IdleMobAnim.tickAreaWarning === 'function') {
         IdleMobAnim.tickAreaWarning(huntPlayer, dt);
@@ -4041,6 +4326,7 @@ const IdleHunt = (() => {
   function startTimer() {
     bindVisibilityCatchUp();
     startMemReleaseTimer();
+    syncCombatLod();
     lastSimAt = (typeof performance !== 'undefined' && performance.now)
       ? performance.now()
       : Date.now();
@@ -4072,11 +4358,16 @@ const IdleHunt = (() => {
     }
     if (timer === 'worker') {
       timer = null;
+      syncCombatLod();
       return;
     }
-    if (timer == null) return;
+    if (timer == null) {
+      syncCombatLod();
+      return;
+    }
     window.clearInterval(timer);
     timer = null;
+    syncCombatLod();
   }
 
   function ensureHuntWorker() {
@@ -4174,6 +4465,7 @@ const IdleHunt = (() => {
     if (visibilityBound || typeof document === 'undefined') return;
     visibilityBound = true;
     document.addEventListener('visibilitychange', () => {
+      syncCombatLod();
       if (document.visibilityState === 'visible') {
         if (state.running) scheduleCatchUp();
       } else if (state.running) {
@@ -5171,6 +5463,12 @@ const IdleHunt = (() => {
         title: '拖曳放置狩獵',
       });
     }
+    window.addEventListener('resize', () => {
+      if (!open) return;
+      layoutHpBar();
+      layoutActionsBar();
+      applyHeaderLayout();
+    });
     render();
   }
 
@@ -5395,10 +5693,12 @@ const IdleHunt = (() => {
     setOneHitKill,
     resolveMobHitDamage,
     applyPlayerHitToMob,
+    applyPlayerHitsToMob,
     setPickerOpen,
     setAfkMode,
     getAfkMode: () => state.afkMode,
     getZoneId: () => state.zoneId,
+    getHuntMode: () => state.huntMode,
   };
 })();
 

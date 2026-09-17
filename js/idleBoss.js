@@ -29,6 +29,9 @@ const IdleBoss = (() => {
   let arenaParts = null;
   let spriteTimer = null;
   let combatTimer = null;
+  let lastPlayerHpHudKey = '';
+  let lastBossHpHudKey = '';
+  let overlayHudAcc = 0;
   let arenaRunning = false;
   /** 開始戰鬥後鎖側欄「挑戰」，直到倒數結束／失敗／關閉場地 */
   let challengeLocked = false;
@@ -1234,6 +1237,9 @@ const IdleBoss = (() => {
       maxHp = 100;
       hp = 100;
     }
+    const key = `${hp}/${maxHp}`;
+    if (key === lastPlayerHpHudKey) return;
+    lastPlayerHpHudKey = key;
     const pct = Math.max(0, Math.min(100, (hp / maxHp) * 100));
     fill.style.width = `${pct}%`;
     text.textContent = formatHp(hp, maxHp);
@@ -1265,14 +1271,17 @@ const IdleBoss = (() => {
         const pct = Number.isFinite(barRatio)
           ? Math.max(0, Math.min(100, barRatio * 100))
           : Math.max(0, Math.min(100, (hp / maxHp) * 100));
+        const shHp = Math.max(0, Number(body.shieldHp) || 0);
+        const shMax = Math.max(0, Number(body.shieldMax) || 0);
+        const hudKey = `${hp}/${maxHp}/${pct.toFixed(2)}/${shHp}/${!!body.shieldActive}`;
+        if (hudKey === lastBossHpHudKey) return;
+        lastBossHpHudKey = hudKey;
         if (fill) fill.style.width = `${pct}%`;
         if (text) text.textContent = formatHp(hp, maxHp);
         if (pctEl) pctEl.textContent = formatHpPct(
           Number.isFinite(barRatio) ? barRatio * maxHp : hp,
           maxHp,
         );
-        const shHp = Math.max(0, Number(body.shieldHp) || 0);
-        const shMax = Math.max(0, Number(body.shieldMax) || 0);
         if (shieldEl) {
           if (body.shieldActive && shMax > 0 && shHp > 0) {
             // 池＝maxHp×0.5%；白條寬＝剩餘護盾比例（才看得清包覆層）
@@ -1784,7 +1793,11 @@ const IdleBoss = (() => {
       IdleBossFight.tick(dt);
       syncBossHpHud(getBoss(arenaBossId));
       syncPlayerHpHud();
-      syncBossOverlayBars();
+      overlayHudAcc += dt;
+      if (overlayHudAcc >= 0.25) {
+        overlayHudAcc = 0;
+        syncBossOverlayBars();
+      }
       return;
     }
     tickPlayerAttacks(dt);
@@ -2542,6 +2555,13 @@ const IdleBoss = (() => {
     isOpen: () => open && !arenaOpen,
     isArenaOpen: () => arenaOpen,
     isRunning: () => arenaRunning,
+    getForceReq() {
+      const diff = currentDiff(arenaBossId || selectedId);
+      return {
+        reqArc: Math.max(0, Math.floor(Number(diff?.reqArc) || 0)),
+        reqAut: Math.max(0, Math.floor(Number(diff?.reqAut) || 0)),
+      };
+    },
     syncBossOverlayBars,
     setRunning: setArenaRunning,
     closeAll() {

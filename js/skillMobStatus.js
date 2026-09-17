@@ -46,6 +46,11 @@ const SkillMobStatus = (() => {
     '2211011', // 閃電球（命中不扣層，另判）
     '2221006', // 閃電連擊
     '2221052', // 雷霆萬鈞
+    '400021002', // 極冰雷域電擊（冰雷雙屬；加層優先、不扣層）
+    '400021030', // 落雷凝聚
+    '400021031',
+    '400021040',
+    '400021094', // 眾神之雷（命中不扣層，每 v 次另判）
   ]);
 
   /** 冰屬性命中：加結冰層（含召喚冰魔） */
@@ -57,7 +62,13 @@ const SkillMobStatus = (() => {
     '2221005', // 召喚冰魔
     '2221007', // 暴風雪主動
     '2221012', // 冰鋒刃
+    '400021002', // 極冰雷域電擊
+    '400021067', // 冰雪之精神
   ]);
+  const JUPITER_THUNDER_ID = '400021094';
+  const ICE_AGE_ID = '400021002';
+  /** 眾神之雷觸電：其他雷屬對該目標終傷 +v2% */
+  const jupiterShock = new Map();
 
   /** @type {Map<string, { expiresAt: number, atkDownPct: number, fxId: number|null, timerId: any }>} */
   const scars = new Map();
@@ -316,6 +327,9 @@ const SkillMobStatus = (() => {
     pruneMap(defDown, t);
     pruneMap(nlMarks, t);
     pruneMap(freeze, t);
+    jupiterShock.forEach((expiresAt, uid) => {
+      if (!(Number(expiresAt) > t)) jupiterShock.delete(uid);
+    });
   }
 
   function hasScar(mob, t = nowMs()) {
@@ -422,6 +436,7 @@ const SkillMobStatus = (() => {
     nlMarks.clear();
     freeze.forEach((row, uid) => stopStatusFx(row, uid));
     freeze.clear();
+    jupiterShock.clear();
     statusFxOffsetById.clear();
     iceBarrierAcc = 0;
   }
@@ -432,6 +447,8 @@ const SkillMobStatus = (() => {
     clearDefDown(mobOrUid);
     clearNlMark(mobOrUid);
     clearFreeze(mobOrUid);
+    const uid = uidOf(mobOrUid) || String(mobOrUid || '');
+    if (uid) jupiterShock.delete(uid);
   }
 
   function readSkillLevel(skillId) {
@@ -554,7 +571,7 @@ const SkillMobStatus = (() => {
   function applyOrConsumeFreeze(mob, skillId) {
     if (!mob) return;
     const sid = String(skillId || '');
-    if (sid === THUNDER_ORB_ID) return;
+    if (sid === THUNDER_ORB_ID || sid === JUPITER_THUNDER_ID) return;
 
     if (FREEZE_APPLY_SKILL_IDS.has(sid)) {
       const fury = resolveGlacialFuryMods();
@@ -571,6 +588,40 @@ const SkillMobStatus = (() => {
     if (isLightningSkill(sid) && hasFreeze(mob)) {
       consumeFreeze(mob, 1);
     }
+  }
+
+  function applyJupiterShock(mob, durationMs) {
+    const uid = uidOf(mob);
+    if (!uid) return false;
+    const ms = scaleGameMs(Math.max(0, Number(durationMs) || 0));
+    if (!(ms > 0)) return false;
+    const t = nowMs();
+    const prev = Number(jupiterShock.get(uid)) || 0;
+    jupiterShock.set(uid, Math.max(prev, t + ms));
+    return true;
+  }
+
+  function hasJupiterShock(mob, t = nowMs()) {
+    const uid = uidOf(mob);
+    if (!uid) return false;
+    const expiresAt = Number(jupiterShock.get(uid)) || 0;
+    if (!(expiresAt > t)) {
+      if (expiresAt) jupiterShock.delete(uid);
+      return false;
+    }
+    return true;
+  }
+
+  function resolveJupiterShockFinalDamR() {
+    const info = evalSkillStat(JUPITER_THUNDER_ID);
+    if (!info?.stat) return 0;
+    const fromStat = Number(info.stat.v2);
+    if (Number.isFinite(fromStat) && fromStat > 0) return fromStat;
+    if (info.skill?.common?.v2 != null && typeof SkillFormula !== 'undefined') {
+      const n = SkillFormula.evalExpr(info.skill.common.v2, { x: info.level });
+      if (Number.isFinite(n) && n > 0) return n;
+    }
+    return 0;
   }
 
   /** 結凍粉碎：每層 subProp% 機率疊 prop% IED（等效增傷） */
@@ -804,11 +855,15 @@ const SkillMobStatus = (() => {
       && typeof SkillModifiers.getSkillDamPlusBonus === 'function')
       ? SkillModifiers.getSkillDamPlusBonus(passiveId)
       : 0;
-    const damagePct = (Number(st.damagePct) || Number(passiveSt.damagePct) || 0) + damPlus;
-    const bulletCount = Math.max(
+    let damagePct = (Number(st.damagePct) || Number(passiveSt.damagePct) || 0) + damPlus;
+    let bulletCount = Math.max(
       1,
       Math.floor(Number(passiveSt.bulletCount) || Number(st.bulletCount) || 2),
     );
+    if (bulletCount > 4) {
+      damagePct *= bulletCount / 4;
+      bulletCount = 4;
+    }
     const mobCount = Math.max(
       1,
       Math.floor(Number(passiveSt.mobCount) || Number(st.mobCount) || 1),
@@ -977,6 +1032,17 @@ const SkillMobStatus = (() => {
       const sid = String(opts.skillId || '');
       if (sid && sid !== THUNDER_ORB_ID && isLightningSkill(sid) && frost.finalDamPerStack > 0) {
         out = Math.max(0, Math.floor(out * (1 + (stacks * frost.finalDamPerStack) / 100)));
+      }
+    }
+    const jSid = String(opts.skillId || '');
+    if (hasJupiterShock(mob)
+      && jSid
+      && jSid !== JUPITER_THUNDER_ID
+      && jSid !== ICE_AGE_ID
+      && isLightningSkill(jSid)) {
+      const jFd = resolveJupiterShockFinalDamR();
+      if (jFd > 0) {
+        out = Math.max(0, Math.floor(out * (1 + jFd / 100)));
       }
     }
     return out;
@@ -1174,6 +1240,8 @@ const SkillMobStatus = (() => {
     applyFreeze,
     consumeFreeze,
     applyOrConsumeFreeze,
+    applyJupiterShock,
+    hasJupiterShock,
     tryApplyScarOnHit,
     tryApplyIncisingOnHit,
     tryApplyDefDownOnHit,

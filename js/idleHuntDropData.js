@@ -296,6 +296,8 @@ const IdleZoneDropStore = {
       bandMax: raw.bandMax,
       replayBossKills: raw.replayBossKills,
       smallKills: raw.smallKills,
+      reqArc: raw.reqArc,
+      reqAut: raw.reqAut,
       mobAtk1Dmg: raw.mobAtk1Dmg != null ? raw.mobAtk1Dmg : raw.mobHitDmg,
       mobAtk1Cd: raw.mobAtk1Cd != null ? raw.mobAtk1Cd : raw.mobHitCd,
       mobAtk2Dmg: raw.mobAtk2Dmg,

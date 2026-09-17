@@ -43,11 +43,21 @@ npm install
 npm start
 ```
 
-打 tag 發佈 Windows 安裝檔與資源包（`package.json` 的 `version` 必須與 tag 相同，例如 `1.0.0` 對 `v1.0.0`）：
+打 tag 只發**程式更新包**（`package.json` 的 `version` 必須與 tag 相同，例如 `1.0.2` 對 `v1.0.2`）：
 
 ```
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.0.2
+git push origin v1.0.2
 ```
 
-GitHub Actions 會建 NSIS 安裝檔，並上傳 `idle-bosses`／`skills` 兩個 zip（各低於 GitHub 單檔 2GB）。全包 `images` 約 2.2GB，不能整包塞進單一安裝檔。
+GitHub Actions 只建 NSIS 安裝檔與 `latest.yml`，**不會**重壓 1.7GB 的 BOSS／技能 zip。玩家已安裝的圖還在；新安裝會從 `desktop/asset-manifest.json` 的 `githubTag`（目前 `v1.0.1`）下載舊資源包。
+
+只有換 BOSS／技能圖時才打資源 tag（會標成 prerelease，不影響自動更新）：
+
+```
+# 先改 asset-manifest.json 的 version 與 githubTag，例如 assets-20260917a
+git tag assets-20260917a
+git push origin assets-20260917a
+```
+
+全包 `images` 約 2.2GB，不能整包塞進單一安裝檔。

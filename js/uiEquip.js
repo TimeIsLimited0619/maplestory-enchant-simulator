@@ -13,6 +13,11 @@ const UiEquipModule = (() => {
 
   /** 身體 + 圖騰全部槽（穿著 map / 持久化） */
   const SLOT_IDS = BODY_SLOT_IDS.concat(TOTEM_SLOT_IDS);
+  const SYMBOL_SLOT_IDS = [
+    'arc-0', 'arc-1', 'arc-2', 'arc-3', 'arc-4', 'arc-5',
+    'aut-0', 'aut-1', 'aut-2', 'aut-3', 'aut-4', 'aut-5',
+    'grand-0', 'grand-1', 'grand-2',
+  ];
 
   const SLOT_LABELS = {
     1: '帽子', 2: '臉飾', 3: '眼飾', 4: '耳環', 5: '上衣', 6: '褲/裙',
@@ -80,6 +85,11 @@ const UiEquipModule = (() => {
   let activePreset = 1;
   let inited = false;
   let totemPanelOpen = false;
+  let windowMode = 'equip';
+  let equipTab = 'equip';
+  let decoTab = 'coordi';
+  let symbolOpen = false;
+  let symbolPage = 'arc';
 
   /** 三組 preset 各自保留完整穿著 { itemId, state }；切換只換顯示，不拆回背包 */
   const presetWear = {
@@ -89,11 +99,22 @@ const UiEquipModule = (() => {
   };
   /** 目前顯示中的穿著（永遠指向 presetWear[activePreset]） */
   let activeWear = presetWear[1];
+  let symbolWear = emptySymbolWear();
 
   function emptyWearMap() {
     const map = Object.create(null);
     SLOT_IDS.forEach((id) => { map[id] = null; });
     return map;
+  }
+
+  function emptySymbolWear() {
+    const map = Object.create(null);
+    SYMBOL_SLOT_IDS.forEach((id) => { map[id] = null; });
+    return map;
+  }
+
+  function isSymbolSlotId(id) {
+    return SYMBOL_SLOT_IDS.includes(String(id || ''));
   }
 
   function setActivePreset(n) {
@@ -131,6 +152,12 @@ const UiEquipModule = (() => {
 
   function getCandidateSlots(item) {
     if (!item) return [];
+    if (typeof isSymbolItem === 'function' ? isSymbolItem(item) : /Symbol$/.test(item.subType || '')) {
+      const slot = typeof SymbolForce !== 'undefined'
+        ? SymbolForce.slotForItemId(item.itemId || item.id)
+        : '';
+      return slot ? [slot] : [];
+    }
     if (typeof isTotemItem === 'function' ? isTotemItem(item) : item.subType === 'totem') {
       return TOTEM_SLOTS.slice();
     }
@@ -172,7 +199,7 @@ const UiEquipModule = (() => {
       const pref = String(preferredSlotId);
       return candidates.includes(pref) ? pref : null;
     }
-    const empty = candidates.find((id) => !activeWear[id]);
+    const empty = candidates.find((id) => !(isSymbolSlotId(id) ? symbolWear[id] : activeWear[id]));
     return empty || candidates[0];
   }
 
@@ -354,10 +381,264 @@ const UiEquipModule = (() => {
     return true;
   }
 
+  function spendSymbolMeso(cost) {
+    const n = Math.max(0, Math.floor(Number(cost) || 0));
+    if (!n) return true;
+    if (typeof trySpendIdleMeso === 'function') return trySpendIdleMeso(n);
+    if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.spendGold === 'function') {
+      return IdleHunt.spendGold(n);
+    }
+    return true;
+  }
+
+  function putOnSymbol(slotId, entry) {
+    const id = String(slotId);
+    if (!isSymbolSlotId(id) || !entry?.itemId) return false;
+    const itemId = (typeof resolveEquipItemId === 'function'
+      ? resolveEquipItemId(entry.itemId)
+      : entry.itemId) || entry.itemId;
+    let state = cloneState(entry.state) || {};
+    if (typeof SymbolForce !== 'undefined') {
+      state = SymbolForce.normalizeState(itemId, state, getItemData(itemId));
+    }
+    if (typeof stampEnchantItemId === 'function') stampEnchantItemId(state, itemId);
+    else {
+      state.itemId = itemId;
+      state.id = itemId;
+    }
+    let uid = entry.instanceUid || state.instanceUid || null;
+    if (typeof ItemStore !== 'undefined') {
+      if (uid && ItemStore.get(uid)) {
+        ItemStore.replaceState(uid, state);
+        ItemStore.move(uid, { type: 'symbol', slot: id });
+      } else {
+        uid = ItemStore.ensureSymbolUid(id, { itemId, state, instanceUid: uid });
+        if (uid) ItemStore.move(uid, { type: 'symbol', slot: id });
+      }
+      if (uid && state && typeof state === 'object') state.instanceUid = uid;
+    }
+    symbolWear[id] = { itemId, state, instanceUid: uid };
+    return true;
+  }
+
+  function destroyEntry(entry) {
+    const uid = entry?.instanceUid || entry?.state?.instanceUid;
+    if (uid && typeof ItemStore !== 'undefined') ItemStore.destroy(uid);
+  }
+
+  function sameEquipId(a, b) {
+    if (!a || !b) return false;
+    const ra = (typeof resolveEquipItemId === 'function' ? resolveEquipItemId(a) : a) || a;
+    const rb = (typeof resolveEquipItemId === 'function' ? resolveEquipItemId(b) : b) || b;
+    return String(ra) === String(rb)
+      || String(ra).replace(/^0+/, '') === String(rb).replace(/^0+/, '');
+  }
+
+  function listBagIndexesForSymbol(itemId) {
+    const out = [];
+    if (!itemId || typeof playerInventoryEquip === 'undefined') return out;
+    for (let i = 0; i < playerInventoryEquip.length; i += 1) {
+      if (sameEquipId(playerInventoryEquip[i], itemId)) out.push(i);
+    }
+    return out;
+  }
+
+  let symbolFeedPending = false;
+  let symbolEnhancePending = false;
+
+  function applyFeedToEquipped(slotId, taken, bagItem) {
+    const equipped = symbolWear[String(slotId)];
+    if (!equipped?.itemId || !taken) return 0;
+    const add = typeof SymbolForce !== 'undefined'
+      ? SymbolForce.expValue(taken.itemId, taken.state, bagItem)
+      : 1;
+    const gained = Math.max(1, add);
+    const state = cloneState(equipped.state) || {};
+    state.symbolExp = Math.max(0, Math.floor(Number(state.symbolExp) || 0)) + gained;
+    if (typeof SymbolForce !== 'undefined') {
+      Object.assign(state, SymbolForce.normalizeState(equipped.itemId, state, getItemData(equipped.itemId)));
+    }
+    equipped.state = state;
+    if (equipped.instanceUid && typeof ItemStore !== 'undefined') {
+      ItemStore.replaceState(equipped.instanceUid, state);
+    }
+    destroyEntry(taken);
+    return gained;
+  }
+
+  function feedSymbols(slotId, bagIndexes, bagItem) {
+    const equipped = symbolWear[String(slotId)];
+    if (!equipped?.itemId) return false;
+    const unique = [...new Set((bagIndexes || []).filter((i) => Number.isInteger(i) && i >= 0))];
+    unique.sort((a, b) => b - a);
+    let count = 0;
+    let gained = 0;
+    unique.forEach((idx) => {
+      if (!sameEquipId(playerInventoryEquip[idx], equipped.itemId)
+        && !sameEquipId(playerInventoryEquip[idx], bagItem?.itemId || bagItem?.id)) {
+        return;
+      }
+      const taken = takeFromBag(idx);
+      if (!taken) return;
+      gained += applyFeedToEquipped(slotId, taken, bagItem || getItemData(taken.itemId));
+      count += 1;
+    });
+    if (!count) return false;
+    const name = bagItem?.name || getItemData(equipped.itemId)?.name || equipped.itemId;
+    if (typeof addLog === 'function') {
+      addLog(`[符文] 已將 ${count} 個【${name}】轉為成長經驗（+${gained}）。`, 'log-success');
+    }
+    refresh();
+    scheduleSave();
+    return true;
+  }
+
+  async function confirmAndFeedSymbol(slotId, bagIndex, bagItem) {
+    if (symbolFeedPending) return false;
+    const itemId = bagItem?.itemId || bagItem?.id;
+    const indexes = listBagIndexesForSymbol(itemId);
+    if (Number.isInteger(bagIndex) && bagIndex >= 0 && !indexes.includes(bagIndex)) {
+      indexes.push(bagIndex);
+    }
+    indexes.sort((a, b) => a - b);
+    let feedAll = indexes.length <= 1;
+    if (indexes.length > 1) {
+      const name = bagItem?.name || itemId;
+      const confirmFn = typeof showAppConfirm === 'function'
+        ? showAppConfirm
+        : ({ message }) => Promise.resolve(window.confirm(message));
+      symbolFeedPending = true;
+      try {
+        feedAll = await confirmFn({
+          title: '符文成長',
+          message: `背包中有 ${indexes.length} 個【${name}】。要一次全部轉為成長經驗嗎？`,
+          confirmText: '全部餵入',
+          cancelText: '只餵這個',
+        });
+      } finally {
+        symbolFeedPending = false;
+      }
+    }
+    const targets = feedAll ? indexes : [bagIndex];
+    return feedSymbols(slotId, targets, bagItem);
+  }
+
+  function wearSymbolFromBag(item, bagIndex) {
+    if (isIdleDeathEquipLocked()) {
+      warnDeathEquipLocked();
+      return false;
+    }
+    if (!meetsLevelReq(item)) {
+      if (typeof addLog === 'function') {
+        addLog(`[裝備欄] 角色等級不足，無法穿上【${item.name}】（需要 Lv.${item.reqLevel}）。`, 'log-fail');
+      }
+      return false;
+    }
+    const itemId = item.itemId || item.id;
+    const slotId = typeof SymbolForce !== 'undefined' ? SymbolForce.slotForItemId(itemId) : '';
+    if (!slotId) {
+      if (typeof addLog === 'function') {
+        addLog(`[裝備欄]【${item.name}】沒有對應可穿符文槽。`, 'log-fail');
+      }
+      return false;
+    }
+    const occupied = symbolWear[slotId];
+    if (occupied?.itemId) {
+      const same = String(occupied.itemId) === String(itemId)
+        || String(occupied.itemId).replace(/^0+/, '') === String(itemId).replace(/^0+/, '');
+      if (same) {
+        void confirmAndFeedSymbol(slotId, bagIndex, item);
+        return true;
+      }
+      if (typeof addLog === 'function') {
+        addLog(`[符文] 該槽已穿著其他符文。`, 'log-fail');
+      }
+      return false;
+    }
+    const taken = takeFromBag(bagIndex);
+    if (!taken) return false;
+    if (!putOnSymbol(slotId, taken)) {
+      putToBag(taken);
+      return false;
+    }
+    if (typeof addLog === 'function') {
+      addLog(`[裝備欄] 已穿上【${item.name}】`, 'log-success');
+    }
+    refresh();
+    scheduleSave();
+    return true;
+  }
+
+  async function enhanceSymbolSlot(slotId) {
+    if (symbolEnhancePending) return false;
+    const id = String(slotId);
+    const entry = symbolWear[id];
+    if (!entry?.itemId || typeof SymbolForce === 'undefined') return false;
+    const item = getItemData(entry.itemId);
+    const info = SymbolForce.inspect(entry.itemId, entry.state, item);
+    if (!info.canEnhance) {
+      if (typeof addLog === 'function') {
+        addLog(info.atMax ? '[符文] 已達最高等級。' : '[符文] 成長經驗不足，無法強化。', 'log-fail');
+      }
+      return false;
+    }
+    const name = item?.name || entry.itemId;
+    const nextLv = info.level + 1;
+    const costText = formatSymbolNum(info.meso);
+    const confirmFn = typeof showAppConfirm === 'function'
+      ? showAppConfirm
+      : ({ message }) => Promise.resolve(window.confirm(message));
+    symbolEnhancePending = true;
+    let ok = false;
+    try {
+      ok = await confirmFn({
+        title: '符文強化',
+        message: `要將【${name}】從 Lv.${info.level} 強化至 Lv.${nextLv} 嗎？\n需要 ${costText} 楓幣。`,
+        confirmText: '強化',
+        cancelText: '取消',
+      });
+    } finally {
+      symbolEnhancePending = false;
+    }
+    if (!ok) return false;
+    const live = symbolWear[id];
+    if (!live?.itemId || String(live.itemId) !== String(entry.itemId)) return false;
+    const liveInfo = SymbolForce.inspect(live.itemId, live.state, getItemData(live.itemId));
+    if (!liveInfo.canEnhance || liveInfo.level !== info.level || liveInfo.meso !== info.meso) {
+      if (typeof addLog === 'function') {
+        addLog('[符文] 狀態已變更，請再試一次。', 'log-fail');
+      }
+      return false;
+    }
+    if (!spendSymbolMeso(liveInfo.meso)) {
+      if (typeof addLog === 'function') {
+        addLog('[符文] 楓幣不足，無法強化。', 'log-fail');
+      }
+      return false;
+    }
+    const state = cloneState(live.state) || {};
+    state.symbolLevel = liveInfo.level + 1;
+    state.symbolExp = Math.max(0, liveInfo.exp - liveInfo.need);
+    Object.assign(state, SymbolForce.normalizeState(live.itemId, state, getItemData(live.itemId)));
+    live.state = state;
+    if (live.instanceUid && typeof ItemStore !== 'undefined') {
+      ItemStore.replaceState(live.instanceUid, state);
+    }
+    if (typeof addLog === 'function') {
+      addLog(`[符文]【${name}】強化至 Lv.${state.symbolLevel}。`, 'log-success');
+    }
+    refresh();
+    scheduleSave();
+    return true;
+  }
+
   function findSlotByItemId(itemId) {
     if (!itemId) return null;
     for (const id of SLOT_IDS) {
       if (activeWear[id]?.itemId === itemId) return id;
+    }
+    for (const id of SYMBOL_SLOT_IDS) {
+      if (symbolWear[id]?.itemId === itemId) return id;
     }
     return null;
   }
@@ -430,6 +711,10 @@ const UiEquipModule = (() => {
     const resolvedId = itemId || playerInventoryEquip[bagIndex];
     const item = getItemData(resolvedId);
     if (!item) return false;
+
+    if (typeof isSymbolItem === 'function' ? isSymbolItem(item) : /Symbol$/.test(item.subType || '')) {
+      return wearSymbolFromBag(item, bagIndex);
+    }
 
     if (!meetsLevelReq(item)) {
       if (typeof addLog === 'function') {
@@ -577,7 +862,7 @@ const UiEquipModule = (() => {
       EquipTooltipModule.hide(true);
     }
     const id = String(uiSlotId);
-    const entry = activeWear[id];
+    const entry = isSymbolSlotId(id) ? symbolWear[id] : activeWear[id];
     if (!entry) return false;
 
     if (typeof currentEnchantItem !== 'undefined' && currentEnchantItem
@@ -587,7 +872,8 @@ const UiEquipModule = (() => {
     }
 
     if (!returnEntryToBagOrWarn(entry)) return false;
-    activeWear[id] = null;
+    if (isSymbolSlotId(id)) symbolWear[id] = null;
+    else activeWear[id] = null;
 
     if (!silent && typeof addLog === 'function') {
       const item = getItemData(entry.itemId);
@@ -786,6 +1072,91 @@ const UiEquipModule = (() => {
     }
 
     bindSlotInteractions();
+    syncShellUi();
+  }
+
+  function isEquipBodyVisible() {
+    return windowMode === 'equip' && equipTab === 'equip';
+  }
+
+  function setWindowMode(mode) {
+    if (mode !== 'equip' && mode !== 'deco') return;
+    windowMode = mode;
+    syncShellUi();
+  }
+
+  function setEquipTab(tab) {
+    if (tab !== 'equip' && tab !== 'pet') return;
+    equipTab = tab;
+    if (tab !== 'equip') {
+      symbolOpen = false;
+    }
+    syncShellUi();
+  }
+
+  function setDecoTab(tab) {
+    if (tab !== 'coordi' && tab !== 'android' && tab !== 'damageSkin') return;
+    decoTab = tab;
+    syncShellUi();
+  }
+
+  function setSymbolOpen(next) {
+    symbolOpen = !!next;
+    if (symbolOpen) {
+      windowMode = 'equip';
+      equipTab = 'equip';
+    }
+    syncShellUi();
+  }
+
+  function toggleSymbolPanel() {
+    setSymbolOpen(!symbolOpen);
+  }
+
+  function setSymbolPage(page) {
+    if (page !== 'arc' && page !== 'aut' && page !== 'grand') return;
+    symbolPage = page;
+    syncShellUi();
+  }
+
+  function toggleSymbolNext() {
+    if (symbolPage === 'grand') setSymbolPage('aut');
+    else if (symbolPage === 'aut') setSymbolPage('grand');
+  }
+
+  function syncShellUi() {
+    const panel = $('uiEquipPanel');
+    if (panel) {
+      panel.dataset.window = windowMode;
+      panel.dataset.equipTab = equipTab;
+      panel.dataset.decoTab = decoTab;
+      panel.dataset.symbolPage = symbolPage;
+    }
+
+    $('uiEquipTabEquip')?.classList.toggle('is-selected', equipTab === 'equip');
+    $('uiEquipTabPet')?.classList.toggle('is-selected', equipTab === 'pet');
+    $('uiEquipTabCoordi')?.classList.toggle('is-selected', decoTab === 'coordi');
+    $('uiEquipTabAndroid')?.classList.toggle('is-selected', decoTab === 'android');
+    $('uiEquipTabDamageSkin')?.classList.toggle('is-selected', decoTab === 'damageSkin');
+
+    document.querySelectorAll('#uiEquipDecoPages .uiequip-deco-page').forEach((el) => {
+      el.classList.toggle('is-active', el.getAttribute('data-deco-page') === decoTab);
+    });
+
+    const symbolVisible = symbolOpen && isEquipBodyVisible();
+    const symbolPanel = $('uiEquipSymbolPanel');
+    const symbolBtn = $('uiEquipSymbolBtn');
+    if (symbolPanel) symbolPanel.classList.toggle('is-hidden', !symbolVisible);
+    if (symbolBtn) {
+      symbolBtn.classList.toggle('is-open', symbolVisible);
+      symbolBtn.setAttribute('aria-pressed', symbolVisible ? 'true' : 'false');
+    }
+    $('uiEquipSymbolTabArc')?.classList.toggle('is-selected', symbolPage === 'arc');
+    $('uiEquipSymbolTabAut')?.classList.toggle('is-selected', symbolPage === 'aut' || symbolPage === 'grand');
+    document.querySelectorAll('#uiEquipSymbolPanel .uiequip-symbol-page').forEach((el) => {
+      el.classList.toggle('is-active', el.getAttribute('data-symbol-page') === symbolPage);
+    });
+
     syncTotemPanelUi();
   }
 
@@ -801,10 +1172,11 @@ const UiEquipModule = (() => {
   function syncTotemPanelUi() {
     const panel = $('uiEquipTotemPanel');
     const btn = $('uiEquipTotemBtn');
-    if (panel) panel.classList.toggle('is-hidden', !totemPanelOpen);
+    const visible = totemPanelOpen && isEquipBodyVisible();
+    if (panel) panel.classList.toggle('is-hidden', !visible);
     if (btn) {
-      btn.classList.toggle('is-open', totemPanelOpen);
-      btn.setAttribute('aria-pressed', totemPanelOpen ? 'true' : 'false');
+      btn.classList.toggle('is-open', visible);
+      btn.setAttribute('aria-pressed', visible ? 'true' : 'false');
     }
   }
 
@@ -885,6 +1257,175 @@ const UiEquipModule = (() => {
         el.removeAttribute('title');
       } else {
         el.title = SLOT_LABELS[id] || `槽位 ${id}`;
+      }
+    });
+    refreshSymbolSlots();
+  }
+
+  function formatSymbolNum(n) {
+    const v = Math.max(0, Math.floor(Number(n) || 0));
+    return v.toLocaleString('en-US');
+  }
+
+  function symbolFontDir(kind) {
+    if (kind === 'arcaneSymbol') return 'ArcEquip';
+    if (kind === 'grandSymbol') return 'GrandAutEquip';
+    return 'AutEquip';
+  }
+
+  function symbolKindForPage(pageId) {
+    if (pageId === 'arc') return 'arcaneSymbol';
+    if (pageId === 'grand') return 'grandSymbol';
+    return 'authenticSymbol';
+  }
+
+  function symbolGlyphFile(ch) {
+    if (ch === '+') return 'plus';
+    if (ch === '%') return 'pct';
+    if (ch === 'lv') return 'lv';
+    return String(ch);
+  }
+
+  function jobStatGlyph(job) {
+    if (job?.mode === 'da') return 'hp';
+    const lab = String(job?.labels?.[0] || 'STR').toUpperCase();
+    if (lab === 'DEX') return 'dex';
+    if (lab === 'INT') return 'int';
+    if (lab === 'LUK') return 'luk';
+    if (lab === '最大HP' || lab === 'HP') return 'hp';
+    return 'str';
+  }
+
+  function textDownTokensFor(info) {
+    const lv = Math.max(1, Math.floor(Number(info?.level) || 1));
+    return ['lv', ...String(lv).split('')];
+  }
+
+  function appendGlyphs(parent, kind, band, tokens) {
+    const dir = symbolFontDir(kind);
+    tokens.forEach((ch) => {
+      const img = document.createElement('img');
+      img.className = 'uiequip-symbol-glyph';
+      img.src = `images/UIEquip/Symbol/${dir}/${band}/${symbolGlyphFile(ch)}.png`;
+      img.alt = '';
+      img.draggable = false;
+      parent.appendChild(img);
+    });
+  }
+
+  function appendSymbolFont(el, kind, band, tokens) {
+    const wrap = document.createElement('span');
+    wrap.className = band === 'textUp' ? 'uiequip-symbol-textup' : 'uiequip-symbol-textdown';
+    wrap.setAttribute('aria-hidden', 'true');
+    appendGlyphs(wrap, kind, band, tokens);
+    el.appendChild(wrap);
+  }
+
+  function renderSymbolTotals(page, totals) {
+    const box = page.querySelector('.uiequip-symbol-totals');
+    if (!box) return;
+    box.replaceChildren();
+    const pageId = page.getAttribute('data-symbol-page');
+    const kind = symbolKindForPage(pageId);
+    const job = totals?.job;
+    const lines = [];
+    const forceVal = pageId === 'arc' ? (Number(totals?.arc) || 0) : (Number(totals?.aut) || 0);
+    lines.push({ name: 'force', value: forceVal });
+    if (pageId !== 'grand') {
+      if (job?.mode === 'xenon') {
+        lines.push({ name: 'str', value: Number(totals?.mains?.STR) || 0 });
+        lines.push({ name: 'dex', value: Number(totals?.mains?.DEX) || 0 });
+        lines.push({ name: 'luk', value: Number(totals?.mains?.LUK) || 0 });
+      } else {
+        lines.push({ name: jobStatGlyph(job), value: Number(totals?.displayMain) || 0 });
+      }
+    }
+    const startY = lines.length === 1 ? 33 : 22;
+    lines.forEach((line, i) => {
+      const y = startY + (i * 16);
+      const nameRow = document.createElement('span');
+      nameRow.className = 'uiequip-symbol-total-line';
+      nameRow.style.left = '46px';
+      nameRow.style.top = `${y}px`;
+      appendGlyphs(nameRow, kind, 'textUp', [line.name]);
+      box.appendChild(nameRow);
+      const numRow = document.createElement('span');
+      numRow.className = 'uiequip-symbol-total-line';
+      numRow.style.left = '78px';
+      numRow.style.top = `${y}px`;
+      appendGlyphs(numRow, kind, 'textUp', ['+', ...String(Math.max(0, Math.floor(line.value))).split('')]);
+      box.appendChild(numRow);
+    });
+  }
+
+  function refreshSymbolSlots() {
+    const totals = typeof SymbolForce !== 'undefined' ? SymbolForce.totals() : null;
+    document.querySelectorAll('#uiEquipSymbolPanel .uiequip-symbol-page').forEach((page) => {
+      renderSymbolTotals(page, totals);
+    });
+
+    document.querySelectorAll('#uiEquipSymbolPanel .uiequip-symbol-slot').forEach((el) => {
+      const slotId = el.getAttribute('data-symbol-slot');
+      const entry = symbolWear[slotId];
+      const item = getItemData(entry?.itemId);
+      const info = (item && typeof SymbolForce !== 'undefined')
+        ? SymbolForce.inspect(entry.itemId, entry.state, item)
+        : null;
+      el.classList.toggle('is-filled', !!item);
+      el.querySelectorAll('.uiequip-slot-icon, .uiequip-symbol-lv, .uiequip-symbol-textup, .uiequip-symbol-textdown, .uiequip-symbol-gauge, .uiequip-symbol-max').forEach((node) => node.remove());
+
+      const enchant = el.querySelector('.uiequip-symbol-enchant');
+      if (enchant) {
+        const can = !!info?.canEnhance;
+        enchant.hidden = !can;
+        enchant.disabled = !can;
+        enchant.classList.toggle('is-disabled', !can);
+        enchant.setAttribute('aria-disabled', can ? 'false' : 'true');
+        enchant.title = can
+          ? `強化（${formatSymbolNum(info.meso)} 楓幣）`
+          : (info?.atMax ? '已達最高等級' : '強化');
+      }
+
+      if (item) {
+        el.title = `${item.name}  Lv.${info?.level || 1}`;
+        const img = document.createElement('img');
+        img.className = 'uiequip-slot-icon';
+        img.src = item.icon || '';
+        img.alt = item.name;
+        img.draggable = false;
+        img.dataset.uiSlot = slotId;
+        img.dataset.itemId = entry.itemId;
+        el.appendChild(img);
+        if (info) {
+          appendSymbolFont(el, info.kind, 'textDown', textDownTokensFor(info));
+          const dir = symbolFontDir(info.kind);
+          if (info.atMax) {
+            const maxEl = document.createElement('span');
+            maxEl.className = 'uiequip-symbol-max';
+            const maxImg = document.createElement('img');
+            maxImg.src = `images/UIEquip/Symbol/${dir}/maxLv.png`;
+            maxImg.alt = 'MAX';
+            maxImg.draggable = false;
+            maxEl.appendChild(maxImg);
+            el.appendChild(maxEl);
+          } else if (!info.canEnhance) {
+            const need = Number(info.need) || 0;
+            const ratio = need > 0 ? Math.max(0, Math.min(1, (Number(info.exp) || 0) / need)) : 0;
+            const gauge = document.createElement('span');
+            gauge.className = 'uiequip-symbol-gauge';
+            gauge.style.width = `${Math.round(24 * ratio)}px`;
+            const fill = document.createElement('img');
+            fill.src = `images/UIEquip/Symbol/${dir}/gauge.png`;
+            fill.alt = '';
+            fill.draggable = false;
+            gauge.appendChild(fill);
+            el.appendChild(gauge);
+          }
+        }
+      } else {
+        el.title = el.classList.contains('uiequip-symbol-slot-arc')
+          ? '神秘符文'
+          : (el.classList.contains('uiequip-symbol-slot-grand') ? '豪華真實符文' : '真實符文');
       }
     });
   }
@@ -1078,7 +1619,7 @@ const UiEquipModule = (() => {
 
   /** 目前預設已穿裝備（唯讀列表，供屬性統計面板） */
   function getActiveWearEntries() {
-    return SLOT_IDS.map((id) => {
+    const body = SLOT_IDS.map((id) => {
       const entry = activeWear[id];
       if (!entry?.itemId) return null;
       return {
@@ -1086,6 +1627,21 @@ const UiEquipModule = (() => {
         label: SLOT_LABELS[id] || `槽位 ${id}`,
         itemId: entry.itemId,
         state: entry.state || null,
+      };
+    }).filter(Boolean);
+    return body.concat(getSymbolWearEntries());
+  }
+
+  function getSymbolWearEntries() {
+    return SYMBOL_SLOT_IDS.map((id) => {
+      const entry = symbolWear[id];
+      if (!entry?.itemId) return null;
+      return {
+        slotId: id,
+        label: id,
+        itemId: entry.itemId,
+        state: entry.state || null,
+        instanceUid: entry.instanceUid || null,
       };
     }).filter(Boolean);
   }
@@ -1122,6 +1678,97 @@ const UiEquipModule = (() => {
       e.preventDefault();
       applyPendingPreset();
     });
+    $('uiEquipTabEquip')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      setWindowMode('equip');
+      setEquipTab('equip');
+    });
+    $('uiEquipTabPet')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      setWindowMode('equip');
+      setEquipTab('pet');
+    });
+    $('uiEquipTabCoordi')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      setDecoTab('coordi');
+    });
+    $('uiEquipTabAndroid')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      setDecoTab('android');
+    });
+    $('uiEquipTabDamageSkin')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      setDecoTab('damageSkin');
+    });
+    $('uiEquipDecoUiBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      setWindowMode('deco');
+    });
+    $('uiEquipEquipUiBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      setWindowMode('equip');
+    });
+    $('uiEquipSymbolBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleSymbolPanel();
+    });
+    $('uiEquipSymbolTabArc')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      setSymbolPage('arc');
+    });
+    $('uiEquipSymbolTabAut')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      setSymbolPage('aut');
+    });
+    $('uiEquipSymbolNext')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleSymbolNext();
+    });
+    $('uiEquipSymbolNextGrand')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleSymbolNext();
+    });
+    const symbolPanel = $('uiEquipSymbolPanel');
+    if (symbolPanel && !symbolPanel.dataset.symbolReady) {
+      symbolPanel.dataset.symbolReady = '1';
+      symbolPanel.addEventListener('click', (e) => {
+        const btn = e.target.closest('.uiequip-symbol-enchant');
+        if (!btn || btn.disabled) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const slot = btn.closest('.uiequip-symbol-slot')?.getAttribute('data-symbol-slot');
+        if (slot) enhanceSymbolSlot(slot);
+      });
+      symbolPanel.addEventListener('dblclick', (e) => {
+        if (e.target.closest('.uiequip-symbol-enchant')) return;
+        const slotEl = e.target.closest('.uiequip-symbol-slot');
+        if (!slotEl) return;
+        const slotId = slotEl.getAttribute('data-symbol-slot');
+        if (symbolWear[slotId]?.itemId) unequipSlot(slotId);
+      });
+      symbolPanel.addEventListener('dragover', (e) => {
+        const slotEl = e.target.closest('.uiequip-symbol-slot');
+        if (!slotEl) return;
+        e.preventDefault();
+        slotEl.classList.add('is-drag-over');
+      });
+      symbolPanel.addEventListener('dragleave', (e) => {
+        const slotEl = e.target.closest('.uiequip-symbol-slot');
+        if (!slotEl) return;
+        slotEl.classList.remove('is-drag-over');
+      });
+      symbolPanel.addEventListener('drop', (e) => {
+        const slotEl = e.target.closest('.uiequip-symbol-slot');
+        if (!slotEl) return;
+        e.preventDefault();
+        e.stopPropagation();
+        slotEl.classList.remove('is-drag-over');
+        handleBodyDrop(e, slotEl.getAttribute('data-symbol-slot'));
+      });
+      if (typeof EquipTooltipModule !== 'undefined' && typeof EquipTooltipModule.bindUiEquipHost === 'function') {
+        EquipTooltipModule.bindUiEquipHost('uiEquipSymbolPanel');
+      }
+    }
     $('uiEquipTotemBtn')?.addEventListener('click', (e) => {
       e.preventDefault();
       toggleTotemPanel();
@@ -1145,6 +1792,7 @@ const UiEquipModule = (() => {
     inited = true;
     renderSlots();
     syncPresetSelected();
+    syncShellUi();
     bind();
     refreshSlotContents();
     if (typeof Paperdoll !== 'undefined' && typeof Paperdoll.initEquip === 'function') {
@@ -1154,9 +1802,9 @@ const UiEquipModule = (() => {
     setEquipOpen(false);
   }
 
-  function serializeWearMap(map) {
+  function serializeWearMap(map, ids = SLOT_IDS) {
     const out = {};
-    SLOT_IDS.forEach((id) => {
+    ids.forEach((id) => {
       const entry = map?.[id];
       if (!entry?.itemId) return;
       const itemId = (typeof resolveEquipItemId === 'function'
@@ -1185,11 +1833,11 @@ const UiEquipModule = (() => {
    * - { itemId, state }（新存檔）：穿著本體已在存檔內，不可再依 itemId 從背包抽，
    *   否則背包若另有同 ID 會被誤拿走（重新載入後物品欄少一件）
    */
-  function hydrateWearMap(map, src, { pullFromBag = false } = {}) {
-    SLOT_IDS.forEach((id) => { map[id] = null; });
+  function hydrateWearMap(map, src, { pullFromBag = false, ids = SLOT_IDS } = {}) {
+    ids.forEach((id) => { map[id] = null; });
     if (!src || typeof src !== 'object') return;
 
-    SLOT_IDS.forEach((id) => {
+    ids.forEach((id) => {
       const raw = src[id];
       let itemId = null;
       let state = null;
@@ -1228,7 +1876,11 @@ const UiEquipModule = (() => {
         return;
       }
 
-      map[id] = { itemId, state };
+      map[id] = {
+        itemId,
+        state,
+        ...(raw && typeof raw === 'object' && raw.instanceUid ? { instanceUid: raw.instanceUid } : {}),
+      };
     });
   }
 
@@ -1242,6 +1894,7 @@ const UiEquipModule = (() => {
       // 相容舊欄位：active = 目前 preset 的完整穿著
       bodyWearActive: serializeWearMap(activeWear),
       bodyWearByPreset: byPreset,
+      symbolWear: serializeWearMap(symbolWear, SYMBOL_SLOT_IDS),
       activeEquipPreset: activePreset,
       pendingEquipPreset: pendingPreset,
     };
@@ -1305,6 +1958,17 @@ const UiEquipModule = (() => {
     }
 
     setActivePreset(presetNo);
+    hydrateWearMap(symbolWear, data.symbolWear, { pullFromBag: false, ids: SYMBOL_SLOT_IDS });
+    SYMBOL_SLOT_IDS.forEach((id) => {
+      const entry = symbolWear[id];
+      if (!entry?.itemId || typeof ItemStore === 'undefined') return;
+      if (entry.instanceUid && ItemStore.get(entry.instanceUid)) {
+        ItemStore.move(entry.instanceUid, { type: 'symbol', slot: id });
+      } else {
+        const uid = ItemStore.ensureSymbolUid(id, entry);
+        if (uid) entry.instanceUid = uid;
+      }
+    });
     syncPresetSelected();
     refresh();
   }
@@ -1325,15 +1989,21 @@ const UiEquipModule = (() => {
         if (entry?.itemId) fn(entry, id, n);
       });
     });
+    SYMBOL_SLOT_IDS.forEach((id) => {
+      const entry = symbolWear[id];
+      if (entry?.itemId) fn(entry, id, 'symbol');
+    });
   }
 
   function getWornEntry(uiSlotId) {
-    return activeWear[String(uiSlotId)] || null;
+    const id = String(uiSlotId);
+    if (isSymbolSlotId(id)) return symbolWear[id] || null;
+    return activeWear[id] || null;
   }
 
   function saveWornEntryState(uiSlotId, state) {
     const id = String(uiSlotId);
-    const entry = activeWear[id];
+    const entry = isSymbolSlotId(id) ? symbolWear[id] : activeWear[id];
     if (!entry?.itemId || !state) return false;
     entry.state = cloneState(state);
     if (typeof syncEnchantStateFromModules === 'function') {
@@ -1348,7 +2018,7 @@ const UiEquipModule = (() => {
     const candidates = getCandidateSlots(item);
     if (!candidates.length) return null;
     for (const id of candidates) {
-      const entry = activeWear[id];
+      const entry = isSymbolSlotId(id) ? symbolWear[id] : activeWear[id];
       if (entry?.itemId) {
         return {
           slotId: String(id),
@@ -1399,7 +2069,13 @@ const UiEquipModule = (() => {
     saveWornEntryState,
     findWornCompareEntry,
     getActiveWearEntries,
+    getSymbolWearEntries,
     previewWearEntries,
     refresh,
+    setWindowMode,
+    setEquipTab,
+    setDecoTab,
+    setSymbolOpen,
+    setSymbolPage,
   };
 })();

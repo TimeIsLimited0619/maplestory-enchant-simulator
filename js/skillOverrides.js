@@ -573,32 +573,351 @@ const SkillOverrides = (() => {
     '65121009': {
       h: '消耗HP #mpCon，使格蘭蒂斯的女神現身\\n[被動效果：直接投入AP的所有能力值增加#basicStatUp%]',
     },
+
+    // —— 天使破壞者五轉 ——
+    // 能量爆炸：v 次爆炸；無敵段放置不做
+    '400051011': {
+      blizzardCast: false,
+    },
+    // 聚光燈：面板主動；戰鬥仍走時限場地（V_FORCE_TIMED）
+    '400051018': {
+      type: 'active',
+    },
+    '400051019': { skipPanel: true, equipable: false },
+    '400051020': { skipPanel: true, equipable: false },
+    '400051027': { skipPanel: true, equipable: false },
+    // 小萌新吉祥物：長按 t 秒、tick 120ms；結束爆炸走 097
+    '400051046': {
+      areaAttack: false,
+      channelCast: {
+        prepareMs: 360,
+        keydownLoopMs: 1080,
+        channelSecKey: 't',
+        tickMs: 120,
+        sideFx: 'keydown0',
+        sideOffset: [150, -50],
+      },
+    },
+    '400051097': { skipPanel: true, equipable: false },
+    // 三位一體融合：y 波龍息
+    '400051072': {
+      blizzardCast: false,
+    },
+    // 滿載骰子：不做選骰／幸運骰連動；骰子效果改常駐傷害／經驗
+    '400051000': {
+      type: 'passive',
+      equipable: false,
+      h: '永久：傷害增加#indieDamR%，獲得經驗值增加#huntExpR%\\n[被動效果：攻擊力增加#padX]',
+      desc: '習得後永久套用骰子效果，增加傷害與狩獵經驗值。',
+      common: {
+        indieDamR: 'd(2*x/3)',
+        huntExpR: 'x',
+      },
+      commonRemove: ['x', 'hpCon', 'cooltime'],
+    },
+    // 格蘭蒂斯女神的祝福：時限傷害／超新星之勇士加乘
+    '400001047': {
+      type: 'buff',
+      skipPanel: false,
+      equipable: true,
+      h: '消耗HP #hpCon，#time秒內傷害增加#indieDamR%，額外增加因超新星之勇士而增加的#x%所有能力值\\n冷卻時間#cooltime秒',
+    },
+
+    // —— 冰雷大魔導士五轉 ——
+    // 極冰雷域：構造物，閃電觸發電擊；勿走暴風雪／area 全圖
+    '400021002': {
+      blizzardCast: false,
+      areaAttack: false,
+    },
+    // 落雷凝聚：WZ 誤標 buff；8 道落雷走主動
+    '400021030': {
+      type: 'active',
+      blizzardCast: false,
+      areaAttack: false,
+    },
+    '400021031': { skipPanel: true, equipable: false },
+    '400021040': { skipPanel: true, equipable: false },
+    // 冰雪之精神：WZ subTime 9 會被當成 9 秒；攻擊間隔 900ms
+    '400021067': {
+      common: { subTime: '900' },
+    },
+    // 眾神之雷：infoType 0，勿當一般 ball／暴風雪
+    '400021094': {
+      blizzardCast: false,
+      areaAttack: false,
+    },
+    // 超載魔力：改常駐被動（習得即套用終傷／額外耗血）
+    '400021000': {
+      type: 'passive',
+      toggle: false,
+      skipPanel: false,
+      equipable: false,
+      h: '永久：使用攻擊技能時額外消耗最大HP的#x%，最終傷害增加#z%',
+      desc: '習得後永久超載魔力，提升最終傷害。',
+      commonRemove: ['cooltime'],
+    },
+    // 虛無型態：不做
+    '400021060': {
+      skipPanel: true,
+      equipable: false,
+    },
+    '400001021': {
+      type: 'buff',
+    },
+
+    // —— 五轉全職業／職業共用：省格子，改常駐或隱藏 ——
+    // 連接繩索／實用的時空之門／瞬移／艾爾達斯的新星／愛爾達斯的意志／實用的神聖之泉
+    '400001000': { skipPanel: true, equipable: false },
+    '400001001': { skipPanel: true, equipable: false },
+    '400001007': { skipPanel: true, equipable: false },
+    '400001008': { skipPanel: true, equipable: false },
+    '400001009': { skipPanel: true, equipable: false },
+    '400001097': { skipPanel: true, equipable: false },
+    // 艾爾達斯的降臨（雙型態本體）：只做噴泉
+    '400001036': { skipPanel: true, equipable: false },
+    '400001064': {
+      type: 'active',
+      skipPanel: false,
+      equipable: true,
+      h: '消耗HP#hpCon，#time秒間召喚艾爾達斯噴泉。消滅#u名以上時釋出攻擊，最多向#mobCount名敵人以#damage%傷害攻擊#attackCount次\\n冷卻時間#cooltime秒',
+      desc: '召喚積聚著純粹艾爾達斯的物體。消滅周圍的敵人時，物體會被敵人釋出的艾爾達斯吸引；濃度足夠時釋放攻擊。',
+      common: {
+        attackCount: '4',
+        mobCount: '10',
+      },
+    },
+    // 突擊之盾爆炸段（隱藏 companion）
+    '400001010': {
+      extraSkill: [{ skill: '400001011' }],
+    },
+    '400001011': { skipPanel: true, equipable: false },
+    // 蜘蛛之鏡：先空間崩壞，再召喚鏡中蜘蛛
+    // hitMs＝WZ hit/0 delayedTime 1350（不是 effect 第 6 幀）
+    '400001039': {
+      summonSkillId: '400001040',
+      areaCast: { hitMs: 1350, layers: ['effect', 'screen'], fieldFx: true },
+    },
+    // 空間斬：screen 為客戶端視窗 overlay（WZ origin、蓋滿 IdleZone）
+    // special 0–3 切圖光效用原尺寸；hitMs＝WZ hit/0 delayedTime 2040
+    '400011027': {
+      areaCast: { hitMs: 2040, fieldFx: true, mapCut: true },
+    },
+    '400011124': {
+      extraSkill: [{ skill: '400011125' }, { skill: '400011126' }],
+    },
+    '400011125': { skipPanel: true, equipable: false },
+    '400011126': { skipPanel: true, equipable: false },
+    // 燃燒靈魂之劍：x 是冷卻秒數，不是等級公式
+    '400011001': {
+      common: {
+        cooltime: '120',
+      },
+      commonRemove: ['x'],
+    },
+    // 實用的會心之眼：常駐爆擊／爆傷／全屬
+    '400001002': {
+      type: 'passive',
+      equipable: false,
+      h: '永久：爆擊機率#cr%、爆擊傷害#criticaldamage%增加\\n[被動效果：全屬性 #strX增加]',
+      desc: '永久找出敵人弱點造成致命傷。不能跟會心之眼重複使用。',
+      common: {
+        cr: '10',
+        criticaldamage: '8',
+      },
+      commonRemove: ['x', 'y', 'time', 'hpCon', 'cooltime', 'lt', 'rb'],
+    },
+    // 實用的神聖之火：常駐最大HP%／全屬（不套 MP%）
+    '400001003': {
+      type: 'passive',
+      equipable: false,
+      h: '永久：最大HP#mhpR%增加\\n[被動效果：全屬性 #strX增加]',
+      desc: '永久增加最大HP。不會與神聖之火重複使用。',
+      common: {
+        mhpR: '40',
+      },
+      commonRemove: ['x', 'y', 'time', 'hpCon', 'cooltime', 'lt', 'rb'],
+    },
+    // 實用的戰鬥命令：常駐 1～4 轉已學技能 +1（4 轉可超上限）
+    '400001004': {
+      type: 'passive',
+      equipable: false,
+      h: '永久：1～4轉已學習技能等級+1（4轉可超過上限）\\n超技能、五轉、六轉與本技能不受影響\\n[被動效果：狀態異常抗性 #asrR增加]',
+      desc: '永久提升自身 1～4 轉已學習技能等級。4 轉可超過最大等級，其餘以最大等級為限。',
+      commonRemove: ['x', 'time', 'hpCon', 'cooltime', 'lt', 'rb'],
+    },
+    // 實用的祈禱：只保留經驗加乘
+    '400001020': {
+      type: 'passive',
+      equipable: false,
+      h: '永久：獲得經驗值增加#huntExpR%',
+      desc: '狩獵怪物時永久獲得更多經驗值。不能跟神聖祈禱重複使用。',
+      common: {
+        huntExpR: '20+d(x/2)',
+      },
+      commonRemove: ['x', 'v', 'time', 'hpCon', 'cooltime'],
+    },
+    // 鋼鐵之軀：只保留力量／最大HP 被動
+    '400011066': {
+      type: 'passive',
+      equipable: false,
+      h: '永久：力量增加#strX、最大HP增加#mhpX',
+      desc: '肉體變得如鋼鐵般強韌，永久增加力量與最大HP。',
+      commonRemove: ['time', 'hpCon', 'cooltime', 'indieAsrR'],
+    },
+    // 風魔手裏劍：WZ attackDelay／subTime／z／shootobj moveList；施放比照冰鋒刃 orb
+    '400041020': {
+      areaAttack: false,
+      ballFromShootobj: true,
+      ballCast: {
+        launchFrame: 0,
+        launchMs: 420,
+        ballMode: 'orb',
+        travel: 'horizontal',
+        travelDistancePx: 600,
+        durationMs: 2000,
+        tickMs: 180,
+        aoeRadius: 140,
+        specialOnFirstHit: false,
+        aoeOnSpecial: false,
+        chain: false,
+        speedPxPerMs: 25 / 30,
+        startOffset: [-180, -58],
+        tickWhileTravel: true,
+        keepStage: true,
+      },
+    },
+    // 散式投擲：時限內投擲技追加方向
+    '400041001': {
+      type: 'buff',
+    },
+    '400041000': { skipPanel: true, equipable: false },
+    '400041062': { skipPanel: true, equipable: false },
+    '400041079': { skipPanel: true, equipable: false },
+    '400031000': { skipPanel: true, equipable: false },
+    // 元素精靈：攻擊出殘像；子技不進面板
+    '400031007': {
+      type: 'buff',
+    },
+    '400031008': { skipPanel: true, equipable: false },
+    '400031009': { skipPanel: true, equipable: false },
+    '400031011': { skipPanel: true, equipable: false },
+    // 西皮迪亞：衝鋒後殘影（400031018）
+    '400031017': {
+      extraSkill: [{ skill: '400031018', delay: 30 }],
+    },
+    '400031018': { skipPanel: true, equipable: false },
+    // 爆擊強化：依爆擊機率加爆傷
+    '400031023': {
+      type: 'buff',
+    },
+    // 伊里加爾的氣息：按住引導，最多 u 次／s 秒（tick＝WZ attackDelay）
+    '400031024': {
+      channelCast: {
+        prepareMs: 630,
+        keydownLoopMs: 810,
+        channelSecKey: 's',
+        tickMs: 90,
+        maxTicksKey: 'u',
+      },
+    },
+    // 皇家騎士：攻擊命中召喚騎士
+    '400031044': {
+      type: 'buff',
+      summonSkillId: '400031045',
+    },
+    '400031045': { skipPanel: true, equipable: false },
+    // 普力特的祝福：一次套 1～5 層、180 秒；不做 6 層無敵／疊層
+    '400001024': {
+      type: 'buff',
+      notCooltimeReset: 1,
+      common: {
+        time: '180',
+        cooltime: '240',
+      },
+      h: '消耗MP#mpCon，持續#time秒獲得1～5層效果\\n不受冷卻時間初始化影響的技能之外，其餘技能冷卻時間縮短#w%\\n狀態異常耐性增加#z\\n全屬性增加#q\\n攻擊力/魔力增加#u\\n攻擊Boss怪物時傷害增加#v%\\n冷卻時間 #cooltime秒',
+    },
+    '400001025': { skipPanel: true, equipable: false },
+    '400001026': { skipPanel: true, equipable: false },
+    '400001027': { skipPanel: true, equipable: false },
+    '400001028': { skipPanel: true, equipable: false },
+    '400001029': { skipPanel: true, equipable: false },
+    '400001030': { skipPanel: true, equipable: false },
   };
+
+  function isVBoostSkill(skill) {
+    if (!skill) return false;
+    if (Number(skill.hyper) === 1 || Number(skill.hyper) === 2) return false;
+    if (skill.common?.damR_5th == null || String(skill.common.damR_5th) === '') return false;
+    if (Number(skill.infoType) === 50) return true;
+    return Array.isArray(skill.psdSkill) && skill.psdSkill.length > 0;
+  }
+
+  function vBoostTargetName(skill) {
+    const n = String(skill?.name || '').replace(/強化$/, '').trim();
+    return n || '對應技能';
+  }
+
+  /** 五轉 1～4 轉強化核心：補齊 20／40 級門檻（上限 60，不顯示 70 級） */
+  function applyVBoostCopy(skill) {
+    if (!isVBoostSkill(skill)) return skill;
+    const name = vBoostTargetName(skill);
+    const c = skill.common || {};
+    const has = (key) => c[key] != null && String(c[key]) !== '';
+    const hLines = [
+      `${name}的最終傷害增加#damR_5th%`,
+    ];
+    if (has('targetPlus_5th')) hLines.push('最大可攻擊對象+#targetPlus_5th');
+    if (has('cr')) hLines.push('爆擊機率增加#cr%');
+    if (has('ignoreMobpdpR')) hLines.push('無視怪物防禦率增加#ignoreMobpdpR%');
+    const milestones = [];
+    if (has('cr')) milestones.push('20級：爆擊機率增加5%');
+    if (has('targetPlus_5th')) milestones.push('20級：最大可攻擊對象+1');
+    if (has('ignoreMobpdpR')) milestones.push('40級：無視怪物防禦率增加20%');
+    const descParts = [
+      `強化${name}。`,
+    ];
+    if (milestones.length) {
+      descParts.push('');
+      descParts.push(`#c${milestones.join('\n')}#`);
+    }
+    return {
+      ...skill,
+      h: hLines.join('\n'),
+      desc: descParts.join('\n'),
+    };
+  }
 
   function apply(skill) {
     if (!skill?.id) return skill;
     const patch = PATCHES[String(skill.id)];
-    if (!patch) return skill;
+    let out = skill;
+    if (patch) {
+      out = { ...skill };
+      Object.keys(patch).forEach((key) => {
+        if (key === 'common' || key === 'commonRemove'
+          || key === 'addAttackRemove' || key === 'channelCastRemove'
+          || key === 'replacesSkillRemove' || key === 'ballFromShootobj') return;
+        out[key] = patch[key];
+      });
 
-    const out = { ...skill };
-    Object.keys(patch).forEach((key) => {
-      if (key === 'common' || key === 'commonRemove'
-        || key === 'addAttackRemove' || key === 'channelCastRemove'
-        || key === 'replacesSkillRemove') return;
-      out[key] = patch[key];
-    });
+      if (patch.addAttackRemove) delete out.addAttack;
+      if (patch.channelCastRemove) delete out.channelCast;
+      if (patch.replacesSkillRemove) delete out.replacesSkill;
 
-    if (patch.addAttackRemove) delete out.addAttack;
-    if (patch.channelCastRemove) delete out.channelCast;
-    if (patch.replacesSkillRemove) delete out.replacesSkill;
-
-    if (patch.common || patch.commonRemove) {
-      out.common = { ...(skill.common || {}) };
-      if (patch.common) Object.assign(out.common, patch.common);
-      (patch.commonRemove || []).forEach((k) => { delete out.common[k]; });
+      if (patch.common || patch.commonRemove) {
+        out.common = { ...(skill.common || {}) };
+        if (patch.common) Object.assign(out.common, patch.common);
+        (patch.commonRemove || []).forEach((k) => { delete out.common[k]; });
+      }
+      if (patch.ballFromShootobj) {
+        const frames = (out.fx || skill.fx)?.shootobj?.layers?.[0]?.frames;
+        if (frames?.length) {
+          out.fx = { ...(skill.fx || {}), ...(out.fx || {}), ball: { frames } };
+        }
+      }
     }
 
-    return out;
+    return applyVBoostCopy(out);
   }
 
   return { apply, PATCHES };

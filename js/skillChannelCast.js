@@ -70,10 +70,15 @@ const SkillChannelCast = (() => {
     const channelSec = Number(plan.channelSec) > 0
       ? Number(plan.channelSec)
       : Math.max(0.5, expr(plan.channelSecKey || 'q', 2));
+    let maxTicks = Math.max(0, Math.floor(Number(plan.maxTicks) || 0));
+    if (!(maxTicks > 0) && plan.maxTicksKey) {
+      maxTicks = Math.max(0, Math.floor(expr(plan.maxTicksKey, 0)));
+    }
     return {
       prepareMs,
       channelMs: Math.round(channelSec * 1000),
       tickMs: tick,
+      maxTicks,
       sustain: false,
     };
   }
@@ -134,7 +139,9 @@ const SkillChannelCast = (() => {
     // 背景：引導改為一次結算數波，避免長 timeout 鏈被節流
     if (typeof document !== 'undefined' && document.hidden) {
       const batchMs = Number.isFinite(timing.channelMs) ? timing.channelMs : 2000;
-      const waves = Math.max(1, Math.min(8, Math.round((batchMs || 1000) / Math.max(120, timing.tickMs || 240))));
+      const byTime = Math.max(1, Math.round((batchMs || 1000) / Math.max(120, timing.tickMs || 240)));
+      const cap = Math.max(0, Math.floor(Number(timing.maxTicks) || 0));
+      const waves = Math.max(1, Math.min(8, cap > 0 ? Math.min(cap, byTime) : byTime));
       for (let i = 0; i < waves; i += 1) {
         if (typeof onTick === 'function') onTick(mobs.slice(0, maxTargets), []);
       }
@@ -237,14 +244,25 @@ const SkillChannelCast = (() => {
       const channelEnd = Number.isFinite(channelMs)
         ? performance.now() + channelMs
         : Number.POSITIVE_INFINITY;
+      const maxTicks = Math.max(0, Math.floor(Number(timing.maxTicks) || Number(plan.maxTicks) || 0));
+      let tickCount = 0;
       const runTick = () => {
         if (ended) return;
         if (Number.isFinite(channelEnd) && performance.now() >= channelEnd) {
           endChannel();
           return;
         }
+        if (maxTicks > 0 && tickCount >= maxTicks) {
+          endChannel();
+          return;
+        }
+        tickCount += 1;
         if (typeof onTick === 'function') {
           onTick(mobs.slice(0, maxTargets), kills);
+        }
+        if (maxTicks > 0 && tickCount >= maxTicks) {
+          endChannel();
+          return;
         }
         setTimeout(runTick, tickMs);
       };

@@ -113,6 +113,8 @@
 .skb-rank-tab[data-rank="hyper"].is-active { background-image: url('../../images/UIskillboard/tab_skill_level_hyper_check.png'); }
 .skb-rank-tab[data-rank="hexa"] { background-image: url('../../images/UIskillboard/tab_skill_level_hexa_normal.png'); }
 .skb-rank-tab[data-rank="hexa"].is-active { background-image: url('../../images/UIskillboard/tab_skill_level_hexa_check.png'); }
+.skb-rank-tab[data-rank="200"] { background-image: url('../../images/UIskillboard/tab_skill_level_200_normal.png'); }
+.skb-rank-tab[data-rank="200"].is-active { background-image: url('../../images/UIskillboard/tab_skill_level_200_check.png'); }
 
 .skb-rank-lock {
   position: absolute;
@@ -128,7 +130,7 @@
   display: none;
 }
 
-/* ---- 左欄：裝備預設 + 3×3（內容區 x≈156–638） ---- */
+/* ---- 左欄：裝備預設 + 5×5（內容區 x≈156–638） ---- */
 .skb-equip-panel {
   position: absolute;
   left: 156px;
@@ -232,21 +234,21 @@
 
 .skb-equip-grid {
   position: absolute;
-  left: 54px;
-  top: 78px;
-  width: 340px;
+  left: 53px;
+  top: 64px;
+  width: 376px;
   display: grid;
-  grid-template-columns: repeat(3, 96px);
-  grid-template-rows: repeat(3, 96px);
-  gap: 16px;
+  grid-template-columns: repeat(5, 72px);
+  grid-template-rows: repeat(5, 72px);
+  gap: 4px;
   z-index: 2;
 }
 
-/* 技能連鎖：九宮格下方（素材原尺寸，由 .skb-frame --skb-scale 縮放） */
+/* 技能連鎖：5×5 下方（素材 382×125，由 .skb-frame --skb-scale 縮放） */
 .skb-skill-link {
   position: absolute;
   left: 49px; /* 原 54，整體左移 5px */
-  top: 418px;
+  top: 448px;
   width: max-content;
   z-index: 3;
   line-height: 0;
@@ -344,12 +346,13 @@
 
 .skb-equip-slot {
   position: relative;
-  width: 96px;
-  height: 96px;
+  width: 72px;
+  height: 72px;
   margin: 0;
   padding: 0;
   border: none;
   background: url('../../images/UIskillboard/slot_skill_equipment.png') no-repeat 0 0;
+  background-size: 100% 100%;
   background-color: transparent;
   cursor: pointer;
   overflow: hidden;
@@ -361,10 +364,10 @@
 
 .skb-equip-slot .skb-equip-icon {
   position: absolute;
-  left: 8px;
-  top: 8px;
-  width: 80px;
-  height: 80px;
+  left: 6px;
+  top: 6px;
+  width: 60px;
+  height: 60px;
   object-fit: contain;
   image-rendering: pixelated;
   pointer-events: none;
@@ -372,16 +375,16 @@
 
 .skb-equip-slot .skb-equip-icon-fallback {
   position: absolute;
-  left: 8px;
-  top: 8px;
-  width: 80px;
-  height: 80px;
+  left: 6px;
+  top: 6px;
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 6px;
   color: #fff;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 700;
   pointer-events: none;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);

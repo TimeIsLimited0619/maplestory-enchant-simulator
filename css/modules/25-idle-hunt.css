@@ -409,6 +409,107 @@
   pointer-events: none;
 }
 
+/* 左上角 ARC／AUT：自身／地圖需求；有頂部 BOSS 血條時下移 */
+.idle-hunt-force-hud {
+  position: absolute;
+  top: calc(8px + var(--idle-hunt-boss-top-shift, 0px));
+  left: 8px;
+  z-index: 100030;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 22px;
+  padding: 0 10px 0 6px;
+  box-sizing: border-box;
+  background: rgba(8, 12, 22, 0.82);
+  border: 1px solid rgba(58, 78, 128, 0.42);
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+  cursor: default;
+  user-select: none;
+}
+
+.idle-hunt-force-hud[hidden] {
+  display: none !important;
+}
+
+.idle-hunt-force-hud__gem {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transform: rotate(45deg);
+  border-radius: 2px;
+  background: radial-gradient(circle at 32% 28%, #f3edff 0%, #9b7cff 28%, #5b3ad6 58%, #24106a 100%);
+  box-shadow:
+    0 0 6px 1px rgba(140, 110, 255, 0.95),
+    0 0 12px 2px rgba(90, 60, 220, 0.42);
+}
+
+.idle-hunt-force-hud.is-aut .idle-hunt-force-hud__gem {
+  background: radial-gradient(circle at 32% 28%, #ecfff8 0%, #5eead4 28%, #0d9488 58%, #115e59 100%);
+  box-shadow:
+    0 0 6px 1px rgba(45, 212, 191, 0.95),
+    0 0 12px 2px rgba(13, 148, 136, 0.42);
+}
+
+.idle-hunt-force-hud__text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f4f7fb;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  text-shadow: 0 1px 1px #000;
+}
+
+.idle-hunt-force-hud__tip {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 1;
+  min-width: 148px;
+  padding: 8px 10px;
+  background: rgba(8, 12, 20, 0.94);
+  border: 1px solid rgba(120, 140, 180, 0.45);
+  border-radius: 4px;
+  color: #e8eef6;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+.idle-hunt-force-hud:hover .idle-hunt-force-hud__tip,
+.idle-hunt-force-hud:focus-within .idle-hunt-force-hud__tip {
+  display: block;
+}
+
+.idle-hunt-force-hud__tip-title {
+  color: #c4b5fd;
+  margin-bottom: 2px;
+}
+
+.idle-hunt-force-hud.is-aut .idle-hunt-force-hud__tip-title {
+  color: #5eead4;
+}
+
+.idle-hunt-force-hud__tip .is-down {
+  color: #ff6b6b;
+}
+
+.idle-hunt-force-hud__tip .is-up {
+  color: #7dff9a;
+}
+
+.idle-hunt-force-hud__tip .is-zero {
+  color: #9ad0ff;
+}
+
 /* 作用中 buff：畫面右上，由右往左排；有頂部 BOSS 血條時下移 */
 .idle-hunt-buffs {
   position: absolute;
@@ -496,7 +597,8 @@
 }
 
 .idle-hunt-skill-fx > .idle-skill-fx-stage,
-.idle-hunt-skill-fx-behind > .idle-skill-fx-stage {
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage,
+.idle-hunt-shell-fx > .idle-skill-fx-stage {
   opacity: var(--idle-skill-fx-opacity, 1);
 }
 
@@ -752,7 +854,7 @@
   transform: translate(-50%, -100%);
   z-index: 3;
   line-height: 0;
-  will-change: left, top, opacity;
+  will-change: transform, opacity;
 }
 
 .idle-drop-qty {
@@ -916,6 +1018,43 @@
   display: none;
 }
 
+.paperdoll-stage--hunt.paperdoll-stage--shadow-partner.paperdoll-stage--elemental-ghost {
+  top: 0;
+  filter: hue-rotate(85deg) saturate(1.5) brightness(1.08);
+  opacity: 0.7;
+}
+
+.paperdoll-stage--hunt.paperdoll-stage--shadow-partner.paperdoll-stage--elemental-ghost[data-clone-index="0"] {
+  left: -56px;
+  z-index: 1;
+}
+
+.paperdoll-stage--hunt.paperdoll-stage--shadow-partner.paperdoll-stage--elemental-ghost[data-clone-index="1"] {
+  left: -112px;
+  z-index: 0;
+}
+
+.paperdoll-stage--hunt.paperdoll-stage--shadow-partner.paperdoll-stage--elemental-ghost[data-clone-index="2"] {
+  left: -168px;
+  z-index: 0;
+}
+
+.idle-actor--player.is-flip-x .paperdoll-stage--hunt.paperdoll-stage--shadow-partner:not(.paperdoll-stage--elemental-ghost) {
+  left: 42px;
+}
+
+.idle-actor--player.is-flip-x .paperdoll-stage--hunt.paperdoll-stage--shadow-partner.paperdoll-stage--elemental-ghost[data-clone-index="0"] {
+  left: 56px;
+}
+
+.idle-actor--player.is-flip-x .paperdoll-stage--hunt.paperdoll-stage--shadow-partner.paperdoll-stage--elemental-ghost[data-clone-index="1"] {
+  left: 112px;
+}
+
+.idle-actor--player.is-flip-x .paperdoll-stage--hunt.paperdoll-stage--shadow-partner.paperdoll-stage--elemental-ghost[data-clone-index="2"] {
+  left: 168px;
+}
+
 .paperdoll-stage--hunt .paperdoll-layers {
   position: absolute;
   inset: 0;
@@ -1002,7 +1141,8 @@
 }
 
 /* 技能施放／命中特效（掛在 skill-fx 層，高於怪物） */
-.idle-hunt-skill-fx > .idle-skill-fx-stage {
+.idle-hunt-skill-fx > .idle-skill-fx-stage,
+.idle-hunt-shell-fx > .idle-skill-fx-stage {
   position: absolute;
   left: 0;
   top: 0;
@@ -1075,6 +1215,156 @@
 .idle-hunt-skill-fx > .idle-skill-fx-stage--summon-orbit,
 .idle-hunt-skill-fx > .idle-skill-fx-stage--summon-attack.idle-skill-fx-stage--summon-orbit {
   z-index: 52;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--screen,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--screen,
+.idle-hunt-shell-fx > .idle-skill-fx-stage--screen {
+  z-index: 70;
+}
+
+/* 空間斬 screen：客戶端加色混合，黃線才會像實機白／青斜斬 */
+.idle-hunt-skill-fx > .idle-skill-fx-stage--screen > .idle-skill-fx-sprite,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--screen > .idle-skill-fx-sprite,
+.idle-hunt-shell-fx > .idle-skill-fx-stage--screen > .idle-skill-fx-sprite {
+  mix-blend-mode: plus-lighter;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--map-cut-special,
+.idle-hunt-shell-fx > .idle-skill-fx-stage--map-cut-special {
+  z-index: 74;
+}
+
+.idle-hunt-shell-fx {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 40;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.idle-hunt-zone-cut {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 30;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.idle-hunt-zone-cut__slice {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: none;
+  image-rendering: pixelated;
+  transform: none;
+  opacity: 1;
+}
+
+.idle-hunt-shell.is-zone-cut > :not(.idle-hunt-zone-cut):not(.idle-hunt-shell-fx) {
+  visibility: hidden;
+}
+
+.idle-hunt-map-cut {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 68;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.idle-hunt-map-cut__slice {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  image-rendering: pixelated;
+  transform: none;
+  opacity: 1;
+}
+
+.idle-hunt-field.is-map-cut > .idle-hunt-map,
+.idle-hunt-field.is-map-cut > .idle-hunt-stage {
+  visibility: hidden;
+}
+
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--erda-fountain,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--summon-attack.idle-skill-fx-stage--erda-fountain {
+  z-index: 34;
+}
+
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--spider-mirror,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon-attack.idle-skill-fx-stage--spider-mirror {
+  z-index: 36;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--burning-soul,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon-attack.idle-skill-fx-stage--burning-soul {
+  z-index: 44;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--aura-weapon,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon.idle-skill-fx-stage--aura-weapon {
+  z-index: 46;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--guided-arrow,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon.idle-skill-fx-stage--guided-arrow {
+  z-index: 40;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--elemental-ghost,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon.idle-skill-fx-stage--elemental-ghost {
+  z-index: 42;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--royal-knights,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--summon.idle-skill-fx-stage--royal-knights,
+.idle-hunt-skill-fx > .idle-skill-fx-stage--royal-knights-hit {
+  z-index: 50;
+}
+
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--screen.idle-skill-fx-stage--royal-knights,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--royal-knights {
+  z-index: 16;
+}
+
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--elemental-blossom,
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--elemental-ghost.idle-skill-fx-stage--elemental-blossom {
+  z-index: 32;
+}
+
+.idle-hunt-skill-fx-behind > .idle-skill-fx-stage--sylvidia-screen {
+  z-index: 18;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--sylvidia-after {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: visible;
+  z-index: 50;
+}
+
+.idle-hunt-skill-fx > .idle-skill-fx-stage--sylvidia-after > .idle-skill-fx-sprite--beam {
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  flex: 0 0 auto;
+  --ox: 0px;
+  --oy: 0px;
 }
 
 .idle-hunt-skill-fx > .idle-skill-fx-stage--nl-domain,

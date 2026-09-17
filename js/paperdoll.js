@@ -92,11 +92,36 @@ const Paperdoll = (() => {
     return mode === 'hunt' || mode === 'hunt-clone';
   }
 
-  function syncShadowPartnerClone() {
-    const on = typeof SkillModifiers !== 'undefined' && SkillModifiers.hasBuff?.('4111002');
-    document.querySelectorAll('[data-paperdoll="hunt-clone"]').forEach((clone) => {
-      clone.classList.toggle('is-hidden', !on);
+  function listHuntClones(root) {
+    const scope = root || (typeof document !== 'undefined' ? document : null);
+    if (!scope?.querySelectorAll) return [];
+    return [...scope.querySelectorAll('[data-paperdoll="hunt-clone"]')]
+      .sort((a, b) => (
+        (Number(a.getAttribute('data-clone-index')) || 0)
+        - (Number(b.getAttribute('data-clone-index')) || 0)
+      ));
+  }
+
+  function applyCloneVisibility() {
+    const partner = typeof SkillModifiers !== 'undefined' && SkillModifiers.hasBuff?.('4111002');
+    const ghost = typeof SkillModifiers !== 'undefined' && SkillModifiers.hasBuff?.('400031007');
+    const ghostCount = ghost && !partner ? 3 : 0;
+    listHuntClones().forEach((clone) => {
+      const idx = Number(clone.getAttribute('data-clone-index') || 0);
+      const show = partner ? idx === 0 : (idx < ghostCount);
+      clone.classList.toggle('is-hidden', !show);
+      clone.classList.toggle('paperdoll-stage--elemental-ghost', !!(show && ghost && !partner));
     });
+  }
+
+  function syncShadowPartnerClone() {
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('[data-sprite-slot="player"]').forEach((slot) => {
+        const hunt = slot.querySelector('[data-paperdoll="hunt"]');
+        if (hunt) ensureShadowPartnerClone(slot, hunt);
+      });
+    }
+    applyCloneVisibility();
   }
 
   /** 腳底／命中錨點：只用傳入角色內的 hunt／分身，避免跨場景抓到隱藏紙娃娃 */
@@ -871,8 +896,18 @@ const Paperdoll = (() => {
     }
     if (mode === 'hunt') setHuntBodyHidden(host, false);
 
-    const w = host.clientWidth || 160;
-    const h = host.clientHeight || 200;
+    let w = Number(host.dataset.pdBoxW);
+    let h = Number(host.dataset.pdBoxH);
+    if (!(w > 0) || !(h > 0)) {
+      const cw = host.clientWidth;
+      const ch = host.clientHeight;
+      w = cw || 160;
+      h = ch || 200;
+      if (cw > 0 && ch > 0) {
+        host.dataset.pdBoxW = String(cw);
+        host.dataset.pdBoxH = String(ch);
+      }
+    }
     // cx/cy = 身體 origin（腳底）；商店預覽腳底貼齊 clip 底邊
     const cx = Math.round(w * 0.5);
     const cy = mode === 'shop' ? h : Math.round(h * 0.78);
@@ -1005,8 +1040,10 @@ const Paperdoll = (() => {
         : 'paperdoll-hit-anchor';
       host.appendChild(marker);
     }
-    marker.style.left = `${x}px`;
-    marker.style.top = `${y}px`;
+    const left = `${x}px`;
+    const top = `${y}px`;
+    if (marker.style.left !== left) marker.style.left = left;
+    if (marker.style.top !== top) marker.style.top = top;
     return marker;
   }
 
@@ -1046,14 +1083,24 @@ const Paperdoll = (() => {
     };
   }
 
+  let feetAnchorPlayer = null;
+  let feetAnchorFrame = -1;
+  let feetAnchorResult = null;
+
   /**
    * 紙娃娃腳底錨點（升級特效等）；stage 掛在 player 上，不受 scaleX 鏡像影響。
    */
   function getHuntFeetAnchor(playerEl) {
     const host = huntAnchorHost(playerEl);
     if (!host || !playerEl) return null;
-    const w = host.clientWidth || 120;
-    const h = host.clientHeight || 160;
+    const frame = Math.floor(performance.now() / 16);
+    if (feetAnchorResult && feetAnchorPlayer === playerEl && feetAnchorFrame === frame) {
+      return feetAnchorResult;
+    }
+    const boxW = Number(host.dataset.pdBoxW);
+    const boxH = Number(host.dataset.pdBoxH);
+    const w = boxW > 0 ? boxW : (host.clientWidth || 120);
+    const h = boxH > 0 ? boxH : (host.clientHeight || 160);
     const fx = Number(host.dataset.bodyOx);
     const fy = Number(host.dataset.bodyOy);
     const x = Number.isFinite(fx) ? fx : Math.round(w * 0.5);
@@ -1061,12 +1108,15 @@ const Paperdoll = (() => {
     const marker = syncFeetMarker(host, x, y);
     const pr = playerEl.getBoundingClientRect();
     const mr = marker.getBoundingClientRect();
-    return {
+    feetAnchorPlayer = playerEl;
+    feetAnchorFrame = frame;
+    feetAnchorResult = {
       host,
       player: playerEl,
       x: Math.round(mr.left - pr.left),
       y: Math.round(mr.top - pr.top),
     };
+    return feetAnchorResult;
   }
 
   /** @deprecated 改用 getHuntHitAnchor */
@@ -1204,15 +1254,24 @@ const Paperdoll = (() => {
 
   function ensureShadowPartnerClone(slot, huntStage) {
     if (!slot || !huntStage) return;
-    let clone = slot.querySelector('[data-paperdoll="hunt-clone"]');
-    if (!clone) {
-      clone = document.createElement('div');
-      clone.setAttribute('data-paperdoll', 'hunt-clone');
-      clone.className = 'paperdoll-stage paperdoll-stage--hunt paperdoll-stage--shadow-partner is-hidden';
-      huntStage.insertAdjacentElement('afterend', clone);
+    let after = huntStage;
+    for (let i = 0; i < 3; i += 1) {
+      let clone = slot.querySelector(`[data-paperdoll="hunt-clone"][data-clone-index="${i}"]`);
+      if (!clone && i === 0) {
+        clone = slot.querySelector('[data-paperdoll="hunt-clone"]:not([data-clone-index])');
+        if (clone) clone.setAttribute('data-clone-index', '0');
+      }
+      if (!clone) {
+        clone = document.createElement('div');
+        clone.setAttribute('data-paperdoll', 'hunt-clone');
+        clone.setAttribute('data-clone-index', String(i));
+        clone.className = 'paperdoll-stage paperdoll-stage--hunt paperdoll-stage--shadow-partner is-hidden';
+        after.insertAdjacentElement('afterend', clone);
+      }
+      after = clone;
+      if (!hosts.has(clone)) mount(clone);
     }
-    if (!hosts.has(clone)) mount(clone);
-    syncShadowPartnerClone();
+    applyCloneVisibility();
   }
 
   /** NPC 商店右側預覽：固定 stand，腳底對齊 avatarPreview */
@@ -1254,6 +1313,7 @@ const Paperdoll = (() => {
     stopHuntSwingLoop,
     setComboMoveHold,
     syncShadowPartnerClone,
+    listHuntClones,
     resolveHuntAction,
     resolveBasicAttackAction,
     pickBasicAttackAction,

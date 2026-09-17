@@ -146,6 +146,10 @@ const DamageNumber = (() => {
     layerEl = null;
 
     layerEl = field.querySelector('.idle-hunt-damage-fx .idle-damage-layer');
+    if (layerEl && layerEl.tagName === 'CANVAS') {
+      layerEl.remove();
+      layerEl = null;
+    }
     if (!layerEl) {
       let container = field.querySelector('.idle-hunt-damage-fx');
       if (!container) {
@@ -265,7 +269,7 @@ const DamageNumber = (() => {
     const stackYOffset = -capped * STACK_Y_STEP;
 
     if (animAge < 0) {
-      return { yOff: stackYOffset, scale: 0.5, alpha: 0 };
+      return { yOff: stackYOffset, scale: 1, alpha: 0 };
     }
     if (animAge >= TOTAL_DUR) {
       return false;
@@ -275,18 +279,8 @@ const DamageNumber = (() => {
       const t = animAge / PHASE1_END;
       const yEase = easeOutBack(t);
       const yOff = -POP_Y * yEase + stackYOffset;
-
-      let scale;
-      if (t < 0.62) {
-        const ts = t / 0.62;
-        scale = 0.5 + (1.3 - 0.5) * easeOutExpo(ts);
-      } else {
-        const ts = (t - 0.62) / 0.38;
-        scale = 1.3 + (1.0 - 1.3) * easeOutBack(ts, 2.2);
-      }
-
       const alpha = easeOutExpo(t);
-      return { yOff, scale, alpha };
+      return { yOff, scale: 1, alpha };
     }
 
     const holdDur = PHASE2_END - PHASE1_END;
@@ -321,8 +315,10 @@ const DamageNumber = (() => {
     }
 
     const { yOff, scale, alpha } = pose;
+    const x = Number.isFinite(inst.x) ? inst.x : 0;
+    const y = Number.isFinite(inst.y) ? inst.y : 0;
     inst.el.style.opacity = String(Math.max(0, Math.min(1, alpha)));
-    inst.el.style.transform = `translate(-50%, -100%) translateY(${yOff}px) scale(${scale})`;
+    inst.el.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -100%) translateY(${yOff}px) scale(${scale})`;
     return true;
   }
 
@@ -426,13 +422,13 @@ const DamageNumber = (() => {
       const el = buildPopEl(glyphs, skinId);
       const z = Number(item.opts.zIndex);
       if (Number.isFinite(z)) el.style.zIndex = String(Math.round(z));
-      el.style.left = `${Math.round(Number(item.targetX) || 0)}px`;
-      el.style.top = `${Math.round(Number(item.targetY) || 0)}px`;
       frag.appendChild(el);
 
       const waited = Math.max(0, (performance.now() - item.queuedAt) / 1000);
       const inst = {
         el,
+        x: Math.round(Number(item.targetX) || 0),
+        y: Math.round(Number(item.targetY) || 0),
         age: waited,
         delay: Math.max(0, Number(item.opts.delay) || 0),
         stackIndex: Math.max(0, Math.floor(Number(item.opts.stackIndex) || 0)),
@@ -730,12 +726,12 @@ const DamageNumber = (() => {
       const { stackIndex, delay } = resolveStackOpts(opts, PLAYER_STACK_KEY);
       const zIndex = resolveActorStackZ(player, 3) + 1;
       pop.style.zIndex = String(zIndex);
-      pop.style.left = `${Math.round(point.x + jitter)}px`;
-      pop.style.top = `${Math.round(point.y)}px`;
       layer.appendChild(pop);
 
       const inst = {
         el: pop,
+        x: Math.round(point.x + jitter),
+        y: Math.round(point.y),
         age: 0,
         delay: Number.isFinite(opts.delay) ? Math.max(0, Number(opts.delay)) : delay,
         stackIndex,

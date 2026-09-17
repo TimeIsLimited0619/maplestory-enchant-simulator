@@ -46,6 +46,21 @@ const SkillComboOrbs = (() => {
     return 40;
   }
 
+  const COMBO_INSTINCT_ID = '400011073';
+
+  /** 鬥氣本能期間：充能機率 ×(1 − common.x%) */
+  function instinctChargeMultiplier() {
+    if (typeof SkillModifiers === 'undefined' || !SkillModifiers.hasBuff?.(COMBO_INSTINCT_ID)) {
+      return 1;
+    }
+    const skill = skillOf(COMBO_INSTINCT_ID);
+    const lv = levelOf(COMBO_INSTINCT_ID);
+    if (!skill || !(lv > 0) || typeof SkillFormula === 'undefined') return 1;
+    const st = SkillFormula.evalStatCommon(skill.common, lv);
+    const cut = Math.max(0, Number(st.xVal) || 0);
+    return Math.max(0, 1 - cut / 100);
+  }
+
   function defendPropFromMid() {
     const mid = evalStat(IDS.mid);
     return mid ? (Number(mid.subProp) || 0) : 0;
@@ -159,7 +174,7 @@ const SkillComboOrbs = (() => {
   function onAttackHit() {
     const cfg = getConfig();
     if (!cfg) return { gained: 0, stacks: 0 };
-    if (!rollPercent(cfg.chargeProp)) return { gained: 0, stacks: getStacks() };
+    if (!rollPercent(cfg.chargeProp * instinctChargeMultiplier())) return { gained: 0, stacks: getStacks() };
     let gain = 1;
     if (cfg.doubleProp > 0 && rollPercent(cfg.doubleProp)) gain = 2;
     const before = getStacks();
@@ -192,6 +207,15 @@ const SkillComboOrbs = (() => {
     setStacks(before - used);
     afterStackChange();
     return used;
+  }
+
+  function fillToMax() {
+    const cfg = getConfig();
+    if (!cfg) return 0;
+    const before = getStacks();
+    setStacks(cfg.max);
+    afterStackChange();
+    return getStacks() - before;
   }
 
   function isMaxed() {
@@ -382,13 +406,18 @@ const SkillComboOrbs = (() => {
           cy = a.y + st.relY;
         }
       }
-      const left = `${Math.round(cx)}px`;
-      const top = `${Math.round(cy)}px`;
+      const placeHost = (el) => {
+        if (!el) return;
+        if (typeof SkillEffectPlayer !== 'undefined' && typeof SkillEffectPlayer.setGpuPos === 'function') {
+          SkillEffectPlayer.setGpuPos(el, Math.round(cx), Math.round(cy));
+          return;
+        }
+        el.style.transform = `translate3d(${Math.round(cx)}px, ${Math.round(cy)}px, 0)`;
+      };
 
       // special：人物背後固定一層（不轉圈）
       if (st.specialEl) {
-        st.specialEl.style.left = left;
-        st.specialEl.style.top = top;
+        placeHost(st.specialEl);
         if (st.specialFrames?.length) {
           st.specialAcc = (Number(st.specialAcc) || 0) + dt;
           let idx = Number(st.specialIdx) || 0;
@@ -409,15 +438,14 @@ const SkillComboOrbs = (() => {
 
       // 球：正圓公轉（radius 相同，不壓扁）
       if (st.orbitEl) {
-        st.orbitEl.style.left = left;
-        st.orbitEl.style.top = top;
+        placeHost(st.orbitEl);
         const balls = st.orbitEl.querySelectorAll('.idle-combo-orb-ball');
         const n = Math.max(1, balls.length);
         balls.forEach((ball, i) => {
           const base = st.angle + (i * Math.PI * 2) / n;
           const x = Math.cos(base) * st.radius;
           const y = Math.sin(base) * st.radius;
-          ball.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+          ball.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
           // 下方球略後、上方球略前，仍維持正圓軌跡
           ball.style.zIndex = y > 0 ? '1' : '3';
         });
@@ -575,7 +603,9 @@ const SkillComboOrbs = (() => {
     onAttackHit,
     onPlayerHit,
     consume,
+    fillToMax,
     isMaxed,
+    getPerStackFinalDamR: () => Number(getConfig()?.perStackFinal) || 0,
     getModifierBonus,
     getVisualFx,
     getVisualPalettes,
