@@ -1,7 +1,7 @@
 {
   "name": "maplestory-enchant-simulator",
   "productName": "MapleEnchantSimulator",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "description": "楓之谷做裝模擬器桌面版（本機離線執行）。",
   "author": "時閒人",
@@ -32,6 +32,9 @@
     "start": "electron .",
     "desktop": "electron .",
     "pack:assets": "node desktop/pack-assets.cjs",
+    "cdn:sync": "node desktop/sync-cdn-config.cjs",
+    "upload:r2:desktop": "node desktop/upload-r2.cjs desktop",
+    "upload:r2:assets": "node desktop/upload-r2.cjs assets",
     "dist": "electron-builder --win nsis --publish never",
     "dist:dir": "electron-builder --win dir"
   },
@@ -40,6 +43,8 @@
     "extract-zip": "^2.0.1"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.758.0",
+    "@aws-sdk/lib-storage": "^3.758.0",
     "archiver": "^7.0.1",
     "electron": "^32.2.1",
     "electron-builder": "^25.1.8",
@@ -59,6 +64,8 @@
       "css/**",
       "desktop/**",
       "!desktop/pack-assets.cjs",
+      "!desktop/upload-r2.cjs",
+      "!desktop/sync-cdn-config.cjs",
       "!js/uiIdleGmDrops.js",
       "!css/modules/27-idle-gm-drops.css"
     ],
@@ -106,10 +113,8 @@
       "include": "desktop/installer.nsh"
     },
     "publish": {
-      "provider": "github",
-      "owner": "TimeIsLimited0619",
-      "repo": "maplestory-enchant-simulator",
-      "releaseType": "release"
+      "provider": "generic",
+      "url": "https://example.invalid/desktop"
     }
   }
 }

@@ -27,37 +27,33 @@ jobs:
       - name: Pack large image assets
         run: npm run pack:assets
 
-      - name: Publish asset packs
+      - name: Upload asset packs to Cloudflare R2
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
+        run: npm run upload:r2:assets
+
+      - name: Publish GitHub release notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
         shell: bash
         run: |
           set -euo pipefail
-          shopt -s nullglob
           TAG="${GITHUB_REF_NAME}"
-          FILES=(dist-assets/*)
-          if [ "${#FILES[@]}" -eq 0 ]; then
-            echo "No asset packs found" >&2
-            exit 1
+          BASE="${R2_PUBLIC_BASE_URL%/}"
+          NOTES="資源包 ${TAG}
+
+BOSS／技能 zip 已上傳到 R2：
+${BASE}/assets/
+
+此 GitHub Release 為備註用（prerelease），不作為程式自動更新來源。"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --notes "$NOTES"
+          else
+            gh release create "$TAG" --title "$TAG" --prerelease --notes "$NOTES"
           fi
-          ls -lh "${FILES[@]}"
-          if ! gh release view "$TAG" >/dev/null 2>&1; then
-            gh release create "$TAG" --title "$TAG" --prerelease --notes "Asset packs for ${TAG}"
-          fi
-          for f in "${FILES[@]}"; do
-            echo "Uploading ${f} ..."
-            ok=0
-            for i in 1 2 3 4 5; do
-              if gh release upload "$TAG" "$f" --clobber; then
-                ok=1
-                break
-              fi
-              echo "Upload failed attempt ${i}, waiting before retry..."
-              sleep $((i * 15))
-            done
-            if [ "$ok" -ne 1 ]; then
-              echo "Failed to upload ${f}" >&2
-              exit 1
-            fi
-          done

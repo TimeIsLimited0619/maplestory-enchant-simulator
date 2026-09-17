@@ -19,7 +19,26 @@ const { autoUpdater } = require('electron-updater');
 const GH_OWNER = 'TimeIsLimited0619';
 const GH_REPO = 'maplestory-enchant-simulator';
 const ASSET_MANIFEST = require('./asset-manifest.json');
+const CDN_CONFIG = (() => {
+  try {
+    return require('./cdn-config.json');
+  } catch (_) {
+    return { updateBaseUrl: '', assetsBaseUrl: '' };
+  }
+})();
 const LARGE_PACK_IDS = new Set((ASSET_MANIFEST.packs || []).map((p) => p.dest));
+
+function trimUrlSlash(u) {
+  return String(u || '').trim().replace(/\/+$/, '');
+}
+
+function cdnUpdateBaseUrl() {
+  return trimUrlSlash(CDN_CONFIG.updateBaseUrl);
+}
+
+function cdnAssetsBaseUrl() {
+  return trimUrlSlash(CDN_CONFIG.assetsBaseUrl);
+}
 
 protocol.registerSchemesAsPrivileged([{
   scheme: 'mss',
@@ -272,9 +291,16 @@ function assetGithubTags(appVersion) {
 }
 
 function packDownloadUrls(fileName, appVersion) {
-  return assetGithubTags(appVersion).map((tag) => (
-    `https://github.com/${GH_OWNER}/${GH_REPO}/releases/download/${tag}/${fileName}`
-  ));
+  const urls = [];
+  const assetsBase = cdnAssetsBaseUrl();
+  if (assetsBase) {
+    urls.push(`${assetsBase}/${fileName}`);
+  }
+  // 舊版相容：R2 沒設定或檔案尚未上傳時，再試 GitHub Release
+  assetGithubTags(appVersion).forEach((tag) => {
+    urls.push(`https://github.com/${GH_OWNER}/${GH_REPO}/releases/download/${tag}/${fileName}`);
+  });
+  return urls;
 }
 
 function addSearchDir(dirs, candidate) {
@@ -386,7 +412,7 @@ function splashReadyPayload() {
     return {
       state: 'ready',
       percent: 0,
-      message: `已找到 ${st.found.length}/${st.needed.length} 個本機資源包，其餘改從網路下載。也可再指定 Google Drive 下載的資料夾。`,
+      message: `已找到 ${st.found.length}/${st.needed.length} 個本機資源包，其餘改從網路下載。也可再指定已下載的資料夾。`,
       detail: dest,
       path: dest,
       startLabel: '開始安裝／下載',
@@ -395,7 +421,7 @@ function splashReadyPayload() {
   return {
     state: 'ready',
     percent: 0,
-    message: '首次啟動需要 BOSS 動畫與技能特效（約 1.7GB）。可先從 Google Drive 下載 zip 再選資料夾，或直接下載。',
+    message: '首次啟動需要 BOSS 動畫與技能特效（約 1.7GB）。可先下載 zip 再選「已下載的資源」，或直接從 CDN 下載。',
     detail: dest,
     path: dest,
     startLabel: '開始下載',
@@ -825,8 +851,23 @@ function createMainWindow() {
 function setupAutoUpdater() {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
+  const feed = cdnUpdateBaseUrl();
+  if (feed) {
+    try {
+      autoUpdater.setFeedURL({ provider: 'generic', url: feed });
+    } catch (err) {
+      console.error('[desktop] setFeedURL failed', err);
+    }
+  }
   autoUpdater.on('checking-for-update', () => {
     if (updateDownloaded) return;
+    if (!cdnUpdateBaseUrl()) {
+      sendUpdate({
+        state: 'error',
+        message: '尚未設定更新 CDN（desktop/cdn-config.json）。',
+      });
+      return;
+    }
     sendUpdate({ state: 'checking', message: '正在檢查更新…' });
   });
   autoUpdater.on('update-available', (info) => {
@@ -897,7 +938,15 @@ function bindIpc() {
 
   ipcMain.handle('desktop:check-updates', async () => {
     if (!app.isPackaged) {
-      const payload = { state: 'idle', message: '開發模式不會檢查 GitHub 更新。' };
+      const payload = { state: 'idle', message: '開發模式不會檢查 CDN 更新。' };
+      sendUpdate(payload);
+      return payload;
+    }
+    if (!cdnUpdateBaseUrl()) {
+      const payload = {
+        state: 'error',
+        message: '尚未設定更新 CDN（desktop/cdn-config.json 的 updateBaseUrl）。',
+      };
       sendUpdate(payload);
       return payload;
     }
@@ -1000,7 +1049,7 @@ async function startAppWindows() {
         state: 'error',
         percent: 0,
         message: `資源準備失敗：${err?.message || err}`,
-        detail: '請確認網路後重試。大型動畫包與安裝檔放在同一個 GitHub Release。',
+        detail: '請確認網路後重試。資源包優先從 CDN（R2）下載。',
         path: downloadedImagesRoot(),
       });
       throw err;
