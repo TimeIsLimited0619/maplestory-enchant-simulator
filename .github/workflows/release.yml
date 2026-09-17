@@ -49,8 +49,23 @@ jobs:
             echo "No release artifacts found" >&2
             exit 1
           fi
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "${FILES[@]}" --clobber
-          else
-            gh release create "$TAG" "${FILES[@]}" --title "$TAG" --generate-notes
+          ls -lh "${FILES[@]}"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --title "$TAG" --notes "Desktop release ${TAG}"
           fi
+          for f in "${FILES[@]}"; do
+            echo "Uploading ${f} ..."
+            ok=0
+            for i in 1 2 3 4 5; do
+              if gh release upload "$TAG" "$f" --clobber; then
+                ok=1
+                break
+              fi
+              echo "Upload failed attempt ${i}, waiting before retry..."
+              sleep $((i * 15))
+            done
+            if [ "$ok" -ne 1 ]; then
+              echo "Failed to upload ${f}" >&2
+              exit 1
+            fi
+          done

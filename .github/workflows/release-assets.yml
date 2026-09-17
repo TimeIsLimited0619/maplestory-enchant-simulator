@@ -8,7 +8,7 @@ on:
 jobs:
   assets:
     runs-on: windows-latest
-    timeout-minutes: 180
+    timeout-minutes: 360
     permissions:
       contents: write
     steps:
@@ -41,8 +41,23 @@ jobs:
             echo "No asset packs found" >&2
             exit 1
           fi
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "${FILES[@]}" --clobber
-          else
-            gh release create "$TAG" "${FILES[@]}" --title "$TAG" --prerelease --notes "BOSS／技能資源包（不作為程式自動更新來源）。"
+          ls -lh "${FILES[@]}"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --title "$TAG" --prerelease --notes "Asset packs for ${TAG}"
           fi
+          for f in "${FILES[@]}"; do
+            echo "Uploading ${f} ..."
+            ok=0
+            for i in 1 2 3 4 5; do
+              if gh release upload "$TAG" "$f" --clobber; then
+                ok=1
+                break
+              fi
+              echo "Upload failed attempt ${i}, waiting before retry..."
+              sleep $((i * 15))
+            done
+            if [ "$ok" -ne 1 ]; then
+              echo "Failed to upload ${f}" >&2
+              exit 1
+            fi
+          done
