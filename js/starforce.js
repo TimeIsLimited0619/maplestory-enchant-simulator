@@ -123,6 +123,9 @@ const StarForceModule = {
     this.currentStars = Math.min(item.star ?? 0, this.getMaxStar());
     this.setStarConsecutiveDrops(item.starConsecutiveDrops ?? 0);
     this.updateUI();
+    if (typeof AutoEnchantStarForceModule !== 'undefined') {
+      AutoEnchantStarForceModule.tryOpenIfPreferred?.();
+    }
   },
 
   getStarConsecutiveDrops() {
@@ -305,6 +308,7 @@ const StarForceModule = {
     const startStars = this.currentStars;
     let attempts = 0;
     let destroyed = false;
+    let destroyAtStar = startStars;
 
     try {
       while (
@@ -329,6 +333,7 @@ const StarForceModule = {
           || (typeof isStarforceBrokenItem === 'function' && isStarforceBrokenItem(this.itemData))
           || (typeof currentEnchantItem !== 'undefined' && !currentEnchantItem)) {
           destroyed = true;
+          destroyAtStar = prev;
           this.autoRunning = false;
           break;
         }
@@ -356,7 +361,7 @@ const StarForceModule = {
 
     if (destroyed) {
       addLog(
-        `💥 自動強化因裝備損壞中止：★ ${startStars} → ★ ${this.currentStars || startStars}（共 ${attempts} 次）`,
+        `💥 自動強化因裝備損壞中止：於 ★ ${destroyAtStar} 損壞（自 ★ ${startStars}，共 ${attempts} 次）`,
         'log-fail'
       );
     } else if (wasCancelled) {
@@ -1147,6 +1152,17 @@ const StarForceModule = {
 
     if (typeof unloadEquipFromSlot === 'function' && typeof currentEnchantItem !== 'undefined' && currentEnchantItem) {
       unloadEquipFromSlot({ silent: true });
+    }
+
+    if (typeof getActiveCategory === 'function' && getActiveCategory() !== 'star') {
+      const btn = document.getElementById('tabStar');
+      if (typeof switchCategoryTab === 'function') {
+        switchCategoryTab('star', btn);
+      }
+    }
+
+    if (typeof AutoEnchantStarForceModule !== 'undefined' && AutoEnchantStarForceModule.isOpen) {
+      AutoEnchantStarForceModule.close?.({ keepPrefer: true });
     }
   },
 

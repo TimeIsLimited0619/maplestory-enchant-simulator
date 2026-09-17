@@ -1,5 +1,5 @@
 /**
- * InventoryModule - 背包 UI（分頁 / 128 格 / 滾輪 / min-full）
+ * InventoryModule - 背包 UI（分頁 / 384 格 / 滾輪 / min-full）
  */
 const InventoryModule = {
   mode: 'min',
@@ -19,12 +19,13 @@ const InventoryModule = {
   _renderRaf: 0,
 
   SLOT_COUNT: INVENTORY_SLOT_COUNT,
-  /** 小背包：4 欄 × 32 列 */
+  /** 小背包：4 欄 × 96 列（384 格） */
   COLS: 4,
-  ROWS: 32,
-  /** 大背包：4 個 4×8 區塊橫向排列 → 16 欄 × 8 列 */
+  ROWS: 96,
+  /** 大背包：4 個 4×8 區塊橫向排列，再往下 3 段 → 16 欄 × 24 列 */
   FULL_COLS: 16,
   FULL_ROWS: 8,
+  FULL_BANDS: 3,
   BLOCK_SIZE: 32,
   SLOT_SIZE: 42,
   ITEM_SIZE: 40,
@@ -708,7 +709,7 @@ const InventoryModule = {
 
     document.getElementById('invBtnFull')?.classList.toggle('hidden', mode === 'full');
     document.getElementById('invBtnMin')?.classList.toggle('hidden', mode === 'min');
-    document.getElementById('invScrollbar')?.classList.toggle('hidden', mode === 'full');
+    document.getElementById('invScrollbar')?.classList.remove('hidden');
 
     this.render();
     this.syncTabUi();
@@ -762,6 +763,14 @@ const InventoryModule = {
       return typeof RECOVERY_CARD !== 'undefined'
         ? String(RECOVERY_CARD.id || 'recovery_card')
         : 'recovery_card';
+    }
+    const vSpType = typeof CONSUME_ITEM_TYPE !== 'undefined'
+      ? CONSUME_ITEM_TYPE.V_SKILL_POINT
+      : 'v_skill_point';
+    if (type === vSpType || type === 'v_skill_point') {
+      return typeof V_SKILL_POINT_ITEM !== 'undefined'
+        ? String(V_SKILL_POINT_ITEM.id || 'v_skill_point')
+        : 'v_skill_point';
     }
     return type;
   },
@@ -843,6 +852,10 @@ const InventoryModule = {
     if (entry.type === (T.THROWING_STAR || 'throwing_star')) {
       if (typeof getPlayerThrowingStarCount !== 'function') return null;
       return getPlayerThrowingStarCount(entry.itemId);
+    }
+    if (entry.type === (T.V_SKILL_POINT || 'v_skill_point')) {
+      if (typeof getPlayerVSkillPointCount !== 'function') return null;
+      return getPlayerVSkillPointCount();
     }
     return null;
   },
@@ -938,6 +951,9 @@ const InventoryModule = {
 
     if (typeof ensureRecoveryCardConsumeInventory === 'function') {
       ensureRecoveryCardConsumeInventory();
+    }
+    if (typeof ensureVSkillPointConsumeInventory === 'function') {
+      ensureVSkillPointConsumeInventory();
     }
     if (typeof IdlePotionStore !== 'undefined' && typeof getPlayerPotionCount === 'function') {
       IdlePotionStore.list().forEach((potion) => {
@@ -1095,8 +1111,11 @@ const InventoryModule = {
   getFullGridPlacement(slotIndex) {
     const block = Math.floor(slotIndex / this.BLOCK_SIZE);
     const inBlock = slotIndex % this.BLOCK_SIZE;
-    const row = Math.floor(inBlock / this.COLS) + 1;
-    const col = block * 8 + (inBlock % this.COLS) * 2 + 1;
+    const blocksPerBand = 4;
+    const band = Math.floor(block / blocksPerBand);
+    const blockInBand = block % blocksPerBand;
+    const row = band * this.FULL_ROWS + Math.floor(inBlock / this.COLS) + 1;
+    const col = blockInBand * 8 + (inBlock % this.COLS) * 2 + 1;
     return { row, col };
   },
 
@@ -1403,6 +1422,10 @@ const InventoryModule = {
     }
     if (entry && entry.type === (typeof CONSUME_ITEM_TYPE !== 'undefined' ? CONSUME_ITEM_TYPE.THROWING_STAR : 'throwing_star')) {
       this.renderThrowingStarConsumeSlot(slot, entry, slotIndex);
+      return;
+    }
+    if (entry && entry.type === (typeof CONSUME_ITEM_TYPE !== 'undefined' ? CONSUME_ITEM_TYPE.V_SKILL_POINT : 'v_skill_point')) {
+      this.renderVSkillPointConsumeSlot(slot, entry, slotIndex);
     }
   },
 
@@ -1986,6 +2009,27 @@ const InventoryModule = {
     this.renderGenericConsumeIcon(slot, slotIndex, card.icon, card.name, showQty ? count : 0);
   },
 
+  renderVSkillPointConsumeSlot(slot, entry, slotIndex) {
+    const item = typeof V_SKILL_POINT_ITEM !== 'undefined' ? V_SKILL_POINT_ITEM : null;
+    if (!item) return;
+    const count = typeof getPlayerVSkillPointCount === 'function' ? getPlayerVSkillPointCount() : 0;
+    if (count <= 0) return;
+    this.renderGenericConsumeIcon(slot, slotIndex, item.icon, item.name, count, {
+      onDblClick: () => {
+        if (typeof useVSkillPointItem === 'function') useVSkillPointItem();
+      },
+    });
+    const img = slot.querySelector('img');
+    if (img) {
+      // 不用 native title，改走 UIToolTip（eq-tooltip）
+      img.removeAttribute('title');
+      img.addEventListener('mouseenter', () => {
+        this.showEtcTooltip(img, item.name, item.desc || '', item.icon || '');
+      });
+      img.addEventListener('mouseleave', () => this.hideEtcTooltip());
+    }
+  },
+
   renderPotionConsumeSlot(slot, entry, slotIndex) {
     const potion = typeof IdlePotionStore !== 'undefined' ? IdlePotionStore.get(entry.itemId) : null;
     if (!potion) return;
@@ -2437,6 +2481,13 @@ const InventoryModule = {
       const star = typeof ThrowingStarStore !== 'undefined' ? ThrowingStarStore.get(row.itemId) : null;
       name = star?.name || row.itemId || '飛鏢';
       ok = grantThrowingStar(row.itemId, row.amount || 1) > 0;
+    } else if (
+      (row.consumeType === 'v_skill_point' || row.itemId === 'v_skill_point')
+      && typeof grantVSkillPointItem === 'function'
+    ) {
+      const item = typeof V_SKILL_POINT_ITEM !== 'undefined' ? V_SKILL_POINT_ITEM : null;
+      name = item?.name || '五轉技能點數';
+      ok = grantVSkillPointItem(row.amount || 1) > 0;
     }
 
     if (ok) {
@@ -2583,6 +2634,9 @@ const InventoryModule = {
           ? ThrowingStarStore.padId(e.itemId) === sid
           : String(e.itemId) === String(row.itemId)));
     }
+    if (row.consumeType === 'v_skill_point' || row.itemId === 'v_skill_point') {
+      return !match((e) => e.type === T.V_SKILL_POINT || e.type === 'v_skill_point');
+    }
     return true;
   },
 
@@ -2727,6 +2781,9 @@ const InventoryModule = {
   },
 
   getContentHeight() {
+    if (this.mode === 'full') {
+      return this.gridHeight(this.FULL_ROWS * this.FULL_BANDS);
+    }
     return this.gridHeight(this.ROWS);
   },
 
@@ -2736,12 +2793,10 @@ const InventoryModule = {
   },
 
   getMaxScroll() {
-    if (this.mode === 'full') return 0;
     return Math.max(0, this.getContentHeight() - this.getViewportHeight());
   },
 
   onWheel(e) {
-    if (this.mode !== 'min') return;
     e.preventDefault();
     const maxScroll = this.getMaxScroll();
     if (maxScroll <= 0) return;
@@ -2752,7 +2807,6 @@ const InventoryModule = {
   },
 
   onTrackMouseDown(e) {
-    if (this.mode !== 'min') return;
     const track = document.getElementById('invScrollTrack');
     if (!track || e.target.id === 'invScrollThumb') return;
 
@@ -2766,7 +2820,6 @@ const InventoryModule = {
   },
 
   onThumbMouseDown(e) {
-    if (this.mode !== 'min') return;
     e.preventDefault();
     this.draggingThumb = true;
     this.dragStartY = e.clientY;
@@ -2804,15 +2857,6 @@ const InventoryModule = {
     const thumb = document.getElementById('invScrollThumb');
     const track = document.getElementById('invScrollTrack');
     if (!grid) return;
-
-    if (this.mode === 'full') {
-      grid.style.transform = '';
-      if (thumb) {
-        thumb.style.top = '0px';
-        thumb.style.height = '28px';
-      }
-      return;
-    }
 
     const maxScroll = this.getMaxScroll();
     grid.style.transform = maxScroll > 0 ? `translateY(-${this.scrollTop}px)` : '';

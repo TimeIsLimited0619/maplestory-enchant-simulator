@@ -1015,10 +1015,10 @@ const EquipTooltipModule = {
     const enhanceBlock = document.createElement('section');
     enhanceBlock.className = 'eq-tip-block eq-tip-enhance-block';
 
-    // 星力
-    const canStar = typeof canUseStarForce === 'function'
-      ? canUseStarForce(item)
-      : true;
+    // 星力（已損壞仍顯示損壞當下星數）
+    const canStar = typeof itemShowsStarForceStars === 'function'
+      ? itemShowsStarForceStars(item)
+      : (typeof canUseStarForce === 'function' ? canUseStarForce(item) : true);
     if (!canStar) {
       enhanceBlock.appendChild(this.createEnhanceLine(
         this.getEnhanceTextIcon('starForce', false),
@@ -1365,9 +1365,9 @@ const EquipTooltipModule = {
     const showEnhancement = this.canShowEnhancementUi(item);
 
     let starEffectImg = null;
-    const showStarGrid = typeof canUseStarForce === 'function'
-      ? canUseStarForce(item)
-      : showEnhancement;
+    const showStarGrid = typeof itemShowsStarForceStars === 'function'
+      ? itemShowsStarForceStars(item)
+      : (typeof canUseStarForce === 'function' ? canUseStarForce(item) : showEnhancement);
     if (showStarGrid) {
       const starsHost = document.createElement('div');
       starsHost.className = 'eq-tip-stars-host';

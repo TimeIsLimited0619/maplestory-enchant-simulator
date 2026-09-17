@@ -925,9 +925,15 @@
 }
 
 .ms-inventory.inv-mode-full .inv-viewport {
-  right: 0;
-  height: 100%;
+  right: 10px;
+  height: 364px;
   overflow: hidden;
+}
+
+.ms-inventory.inv-mode-full .inv-scrollbar {
+  top: 0;
+  right: 0;
+  height: 364px;
 }
 
 /* 背包網格 */
@@ -943,7 +949,7 @@
 .ms-inventory.inv-mode-full .ms-inventory-grid {
   column-gap: 0;
   row-gap: 4px;
-  /* 底圖為 16 欄；每 4 欄區塊間距 6px，欄內間距 4px */
+  /* 底圖為 16 欄；每 4 欄區塊間距 6px，欄內間距 4px；往下 3 段（384 格） */
   grid-template-columns:
     42px 4px 42px 4px 42px 4px 42px
     6px
@@ -952,7 +958,7 @@
     42px 4px 42px 4px 42px 4px 42px
     6px
     42px 4px 42px 4px 42px 4px 42px;
-  grid-template-rows: repeat(8, 42px);
+  grid-template-rows: repeat(24, 42px);
   grid-auto-rows: 42px;
   will-change: auto;
 }

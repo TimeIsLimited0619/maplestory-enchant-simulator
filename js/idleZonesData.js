@@ -2937,6 +2937,54 @@ const IDLE_ZONE_BAND_DEFS = [
     "name": "test",
     "mobDrops": [],
     "bossDrops": []
+  },
+  {
+    "id": "band-1789647169637",
+    "min": 200,
+    "max": 210,
+    "name": "消逝的旅途",
+    "mobDrops": [
+      {
+        "kind": "equip",
+        "itemId": "01712001",
+        "chance": 0.1,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "v_skill_point",
+        "scrollId": "",
+        "cubeId": "",
+        "itemId": "v_skill_point",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-v-skill-point",
+        "name": "V技能核心",
+        "chance": 0.3,
+        "amount": 1
+      }
+    ],
+    "bossDrops": [
+      {
+        "kind": "equip",
+        "itemId": "01712001",
+        "chance": 3,
+        "amount": 1
+      },
+      {
+        "kind": "consume",
+        "consumeType": "v_skill_point",
+        "scrollId": "",
+        "cubeId": "",
+        "itemId": "v_skill_point",
+        "hammerId": "",
+        "soulId": "",
+        "catalogId": "consume-v-skill-point",
+        "name": "V技能核心",
+        "chance": 5,
+        "amount": 1
+      }
+    ]
   }
 ];
 
@@ -3010,7 +3058,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "綠水靈",
         "icon": "0210100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787462987374",
@@ -3079,7 +3129,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "藍水靈",
         "icon": "1210103"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787462987374",
@@ -3148,7 +3200,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "紅水靈",
         "icon": "7120103"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787462987374",
@@ -3219,7 +3273,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "菇菇寶貝",
         "icon": "1210102"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787462987374",
@@ -3290,7 +3346,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "憤世菇菇寶貝",
         "icon": "2300102"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -3359,7 +3417,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "綠菇菇",
         "icon": "1110100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -3428,7 +3488,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "挫折菇菇",
         "icon": "1110130"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -3497,7 +3559,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "刺菇菇",
         "icon": "2110200"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -3566,7 +3630,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "憤怒的刺菇菇",
         "icon": "2300101"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -3637,7 +3703,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "蝴蝶精",
         "icon": "3000001"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -3708,7 +3776,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "皇家蝴蝶精",
         "icon": "3000007"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -3779,7 +3849,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "木妖",
         "icon": "0130100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -3848,7 +3920,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "斧木妖",
         "icon": "1130100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -3917,7 +3991,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "火獨眼獸",
         "icon": "2230100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -3986,7 +4062,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "風獨眼獸",
         "icon": "3230100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -4055,7 +4133,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "冰獨眼獸",
         "icon": "4230100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -4124,7 +4204,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "暗獨眼獸",
         "icon": "2230113"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -4193,7 +4275,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "猴子",
         "icon": "2700311"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -4268,7 +4352,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "天使猴",
         "icon": "4230101"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -4339,7 +4425,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "黑木妖",
         "icon": "1110101"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -4408,7 +4496,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "黑斧木妖",
         "icon": "2130100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -4477,7 +4567,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "發芽木妖",
         "icon": "1140100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -4548,7 +4640,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "肥肥",
         "icon": "1210100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787490270340",
@@ -4619,7 +4713,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "黑肥肥",
         "icon": "2230102"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -4690,7 +4786,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "火肥肥",
         "icon": "3210100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -4761,7 +4859,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "鋼之肥肥",
         "icon": "4090000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -4832,7 +4932,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "三眼章魚",
         "icon": "1120100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -4901,7 +5003,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "地下室蝙蝠",
         "icon": "2400610"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -4970,7 +5074,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "小幽靈",
         "icon": "3230101"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -5039,7 +5145,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "大幽靈",
         "icon": "4230102"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -5108,7 +5216,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "冥界幽靈",
         "icon": "5090000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -5179,7 +5289,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "青蛇",
         "icon": "2130103"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -5248,7 +5360,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "鱷魚",
         "icon": "3110100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -5317,7 +5431,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "黑鱷魚",
         "icon": "5130103"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787462987374",
@@ -5386,7 +5502,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "銀水靈",
         "icon": "7120104"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787462987374",
@@ -5468,7 +5586,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "金水靈",
         "icon": "7120105"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -5537,7 +5657,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "藍菇菇",
         "icon": "2220100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -5612,7 +5734,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "藍菇菇",
         "icon": "2220110"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -5681,7 +5805,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "沼澤爛泥怪物",
         "icon": "2230114"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -5750,7 +5876,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "嫩芽爛泥怪物",
         "icon": "2230115"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -5819,7 +5947,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "鋼之黑肥肥",
         "icon": "4230400"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -5890,7 +6020,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "土龍",
         "icon": "4130100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787736998035",
@@ -5961,7 +6093,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "青龍",
         "icon": "3645307"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787736998035",
@@ -6032,7 +6166,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "赤龍",
         "icon": "6130100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787736998035",
@@ -6103,7 +6239,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "冰龍",
         "icon": "6230600"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787736998035",
@@ -6174,7 +6312,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "黑龍",
         "icon": "6230601"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787736998035",
@@ -6245,7 +6385,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "魔龍",
         "icon": "3645311"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787736998035",
@@ -6316,7 +6458,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "月牙牛魔王",
         "icon": "3645314"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787736998035",
@@ -6387,7 +6531,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "長槍牛魔王",
         "icon": "3645313"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787736998035",
@@ -6458,7 +6604,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "巴洛古",
         "icon": "8130100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787736998035",
@@ -6535,7 +6683,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "地域巴洛古",
         "icon": "8150000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787736998035",
@@ -6602,7 +6752,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "木面怪人",
         "icon": "2230110"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -6669,7 +6821,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "石面怪人",
         "icon": "2230111"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -6736,7 +6890,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "骷髏犬",
         "icon": "4230125"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -6803,7 +6959,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "木乃伊犬",
         "icon": "4230126"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -6870,7 +7028,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "骷髏士兵",
         "icon": "5150001"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787736998035",
@@ -6937,7 +7097,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "稻草堆",
         "icon": "3501103"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787780051528",
@@ -7004,7 +7166,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "灰塵堆",
         "icon": "3501104"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787780051528",
@@ -7071,7 +7235,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "尖尖黑櫟",
         "icon": "3501100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787780051528",
@@ -7138,7 +7304,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "森林愛哭鬼",
         "icon": "3501101"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787780051528",
@@ -7205,7 +7373,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "夜晚愛哭鬼",
         "icon": "3501102"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787780051528",
@@ -7272,7 +7442,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "森林深處小精靈",
         "icon": "3501009"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787780051528",
@@ -7339,7 +7511,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "森林守護人",
         "icon": "3501106"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787780051528",
@@ -7406,7 +7580,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "夜晚守護人",
         "icon": "3501107"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787780051528",
@@ -7473,7 +7649,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "藍色泉之精靈",
         "icon": "3501108"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1787780051528",
@@ -7540,7 +7718,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "深處泉之精靈",
         "icon": "3501109"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -7607,7 +7787,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "骷髏士官",
         "icon": "6230602"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -7674,7 +7856,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "骷髏指揮官",
         "icon": "7130103"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788134145465",
@@ -7741,7 +7925,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "星光精靈",
         "icon": "3230200"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788134145465",
@@ -7808,7 +7994,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "月光精靈",
         "icon": "4230106"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788134145465",
@@ -7875,7 +8063,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "日光精靈",
         "icon": "5120000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788134145465",
@@ -7942,7 +8132,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "幼紅獨角獅",
         "icon": "3210200"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788134145465",
@@ -8009,7 +8201,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "幼黃獨角獅",
         "icon": "3210201"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788134145465",
@@ -8076,7 +8270,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "幼紫獨角獅",
         "icon": "3210202"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788134145465",
@@ -8143,7 +8339,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "紅獨角獅",
         "icon": "5120001"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788134145465",
@@ -8210,7 +8408,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "黃獨角獅",
         "icon": "5120002"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788134145465",
@@ -8277,7 +8477,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "籃獨角獅",
         "icon": "5120003"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788134145465",
@@ -8344,7 +8546,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "黑格里芬",
         "icon": "7130000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788134145465",
@@ -8411,7 +8615,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "小石球",
         "icon": "5200000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788202749324",
@@ -8478,7 +8684,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "石球",
         "icon": "3000000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -8545,7 +8753,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "火石球",
         "icon": "5200002"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -8612,7 +8822,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "冰石球",
         "icon": "5200001"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -8679,7 +8891,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "利提",
         "icon": "5300000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -8746,7 +8960,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "黑利提",
         "icon": "5300001"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -8813,7 +9029,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "雪吉拉",
         "icon": "6300000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -8880,7 +9098,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "小雪球",
         "icon": "5100000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -8947,7 +9167,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "黑色小雪球",
         "icon": "5130105"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -9014,7 +9236,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "小企鵝王",
         "icon": "5400000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -9081,7 +9305,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "企鵝王",
         "icon": "6130102"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -9148,7 +9374,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "野狼",
         "icon": "5130104"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -9215,7 +9443,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "白狼",
         "icon": "5140000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788226925937",
@@ -9282,7 +9512,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "黑吉拉",
         "icon": "6400000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788226925937",
@@ -9349,7 +9581,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "雪吉拉戰車",
         "icon": "7130102"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788226925937",
@@ -9416,7 +9650,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "黑吉拉戰車",
         "icon": "8140100"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788226925937",
@@ -9483,7 +9719,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "狼人",
         "icon": "7130200"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788226925937",
@@ -9550,7 +9788,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "白狼人",
         "icon": "8140000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788226925937",
@@ -9617,7 +9857,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "殭屍",
         "icon": "5130107"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788226925937",
@@ -9684,7 +9926,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "礦山殭屍",
         "icon": "5130108"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788226925937",
@@ -9751,7 +9995,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "小獵犬",
         "icon": "4230108"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788226925937",
@@ -9818,7 +10064,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "地獄獵犬",
         "icon": "7130001"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788226925937",
@@ -9885,7 +10133,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "煉獄獵犬",
         "icon": "8140500"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788226925937",
@@ -9952,7 +10202,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "褐色發條熊",
         "icon": "3000005"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -10019,7 +10271,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "粉色發條熊",
         "icon": "3110101"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -10086,7 +10340,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "發條熊貓",
         "icon": "3210203"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -10153,7 +10409,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "鼬鼠",
         "icon": "3210207"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -10220,7 +10478,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "鼬鼠鬧鐘",
         "icon": "4230113"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -10287,7 +10547,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "藍色機器人",
         "icon": "4230111"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -10354,7 +10616,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "紅色機器人",
         "icon": "4230112"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -10421,7 +10685,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "妖魔",
         "icon": "3230306"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -10488,7 +10754,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "進化妖魔",
         "icon": "4230114"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -10555,7 +10823,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "妖魔隊長",
         "icon": "4230115"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -10622,7 +10892,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "百烈",
         "icon": "7140000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -10689,7 +10961,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "維京",
         "icon": "8141000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -10756,7 +11030,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "幽魂發條熊",
         "icon": "6230400"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -10823,7 +11099,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "幽魂發條熊隊長",
         "icon": "6230500"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -10890,7 +11168,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "怨靈發條熊",
         "icon": "7130010"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -10957,7 +11237,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "怨靈發條熊隊長",
         "icon": "7130300"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -11024,7 +11306,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "橡木甲蟲",
         "icon": "7130002"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -11091,7 +11375,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "金屬甲蟲",
         "icon": "7130003"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -11158,7 +11444,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "哈維",
         "icon": "8140001"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -11225,7 +11513,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "血腥哈維",
         "icon": "8140002"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -11292,7 +11582,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "邪惡綿羊",
         "icon": "8140110"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -11359,7 +11651,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "惡魔綿羊",
         "icon": "8140111"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -11426,7 +11720,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "妖怪綿羊",
         "icon": "9300481"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -11493,7 +11789,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "寒冰半人馬",
         "icon": "8140103"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -11560,7 +11858,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "幽魂女巫",
         "icon": "8142000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -11627,7 +11927,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "怨靈女巫",
         "icon": "8143000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -11694,7 +11996,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "火焰半人馬",
         "icon": "8140102"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -11761,7 +12065,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "達納托斯",
         "icon": "8170000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -11828,7 +12134,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "通道守門人",
         "icon": "8160000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -11895,7 +12203,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "暗黑半人馬",
         "icon": "8140101"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -11962,7 +12272,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "暗黑三角龍",
         "icon": "8140701"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -12029,7 +12341,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "雙刀龍戰士",
         "icon": "8150201"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -12096,7 +12410,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "進化迅猛龍",
         "icon": "8140703"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -12163,7 +12479,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "藍翼龍",
         "icon": "8150301"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -12230,7 +12548,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "赤翼龍",
         "icon": "8150300"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -12297,7 +12617,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "黑翼龍",
         "icon": "8150302"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -12364,7 +12686,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "幼龍",
         "icon": "8190000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -12431,7 +12755,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "幼龍守護者",
         "icon": "8190002"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -12498,7 +12824,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "化石龍",
         "icon": "8190003"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -12565,7 +12893,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "化石龍長老",
         "icon": "8190004"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -12672,7 +13002,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "回憶的祭司",
         "icon": "8200001"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -12739,7 +13071,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "紅色勝利者的被造物",
         "icon": "2400116"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -12806,7 +13140,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "藍色勝利者的被造物",
         "icon": "2400117"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -12873,7 +13209,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "紫色試藥的被造物",
         "icon": "2400118"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -12940,7 +13278,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "紅色試藥的被造物",
         "icon": "2400119"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -13007,7 +13347,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "戰士幽靈",
         "icon": "2400018"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -13074,7 +13416,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "魔法師幽靈",
         "icon": "2400019"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -13141,7 +13485,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "死神幽靈",
         "icon": "2400020"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -13208,7 +13554,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "回憶的神官",
         "icon": "8200002"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -13275,7 +13623,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "回憶守護兵",
         "icon": "8200003"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -13342,7 +13692,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "回憶守護隊長",
         "icon": "8200004"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -13409,7 +13761,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "悔恨的祭司",
         "icon": "8200005"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -13476,7 +13830,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "悔恨的神官",
         "icon": "8200006"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -13543,7 +13899,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "悔恨守護兵",
         "icon": "8200007"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -13610,7 +13968,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "悔恨守護隊長",
         "icon": "8200008"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -13677,7 +14037,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "忘卻的祭司",
         "icon": "8200009"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -13744,7 +14106,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "忘卻的神官",
         "icon": "8200010"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -13811,7 +14175,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "魂",
         "icon": "8610000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -13878,7 +14244,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "忘卻守護兵",
         "icon": "8200011"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -13945,7 +14313,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "忘卻守護隊長",
         "icon": "8200012"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -14012,7 +14382,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "正式騎士A",
         "icon": "8610009"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -14079,7 +14451,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "火牢術",
         "icon": "8610001"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -14146,7 +14520,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "正式騎士B",
         "icon": "8610006"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -14213,7 +14589,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "暴風",
         "icon": "8610002"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -14280,7 +14658,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "正式騎士C",
         "icon": "8610008"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -14347,7 +14727,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "黑暗雷鳥",
         "icon": "8610003"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -14414,7 +14796,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "正式騎士D",
         "icon": "8610005"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -14481,7 +14865,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "閃電",
         "icon": "8610004"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -14548,7 +14934,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "正式騎士E",
         "icon": "8610007"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -14615,7 +15003,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "馬堤安",
         "icon": "4230127"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873229534",
@@ -14682,7 +15072,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "培利堤安",
         "icon": "4230128"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873229534",
@@ -14749,7 +15141,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "葛雷族人",
         "icon": "4230129"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873229534",
@@ -14816,7 +15210,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "葛雷士兵",
         "icon": "4230117"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873229534",
@@ -14883,7 +15279,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "葛雷隊長",
         "icon": "4230130"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873229534",
@@ -14950,7 +15348,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "新葛雷白",
         "icon": "4230131"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873229534",
@@ -15017,7 +15417,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "新葛雷黑",
         "icon": "4230132"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873229534",
@@ -15084,7 +15486,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "梅卡堤安",
         "icon": "4230133"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873229534",
@@ -15151,7 +15555,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "機器人 MT-09",
         "icon": "4230134"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873229534",
@@ -15218,7 +15624,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "無人機白",
         "icon": "4230137"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873229534",
@@ -15285,7 +15693,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "最新型的音響",
         "icon": "4310002"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873703017",
@@ -15352,7 +15762,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "蘇打味膠凍果汁",
         "icon": "4310004"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873703017",
@@ -15419,7 +15831,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "葡萄味膠凍果汁",
         "icon": "4310005"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873703017",
@@ -15486,7 +15900,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "噴蒸氣的咖啡機",
         "icon": "4310006"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873703017",
@@ -15553,7 +15969,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "綠色本子",
         "icon": "4310007"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873703017",
@@ -15620,7 +16038,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "藍色本子",
         "icon": "4310008"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873703017",
@@ -15687,7 +16107,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "黃色耳機",
         "icon": "4310009"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873703017",
@@ -15754,7 +16176,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "紅色耳機",
         "icon": "4310010"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873703017",
@@ -15821,7 +16245,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "暴躁的化妝品",
         "icon": "4310011"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873703017",
@@ -15888,7 +16314,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "暴躁的化妝台",
         "icon": "4310012"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873703017",
@@ -15955,7 +16383,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "變形的提諾",
         "icon": "8600004"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -16022,7 +16452,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "變形的提魯",
         "icon": "8600005"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -16089,7 +16521,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "變形的提古爾",
         "icon": "8600006"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -16156,7 +16590,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "變形的嫩寶",
         "icon": "8600000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -16223,7 +16659,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "變形的菇菇寶貝",
         "icon": "8600001"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -16290,7 +16728,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "變形的綠水靈",
         "icon": "8600002"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -16357,7 +16797,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "變形的緞帶肥肥",
         "icon": "8600003"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -16424,7 +16866,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "變形木妖",
         "icon": "8620000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -16491,7 +16935,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "變形黑木妖",
         "icon": "8620001"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -16558,7 +17004,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "變形斧木妖",
         "icon": "8620002"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -16625,7 +17073,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "藍機器狩獵犬",
         "icon": "8250006"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876265095",
@@ -16692,7 +17142,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "紅機器狩獵犬",
         "icon": "8250005"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876265095",
@@ -16759,7 +17211,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "藍追隨者機器人",
         "icon": "8250004"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876265095",
@@ -16826,7 +17280,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "紅追隨者機器人",
         "icon": "8250003"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876265095",
@@ -16893,7 +17349,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "修理機器人",
         "icon": "8240084"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876265095",
@@ -16960,7 +17418,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "失敗作機器人",
         "icon": "8250001"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876265095",
@@ -17027,7 +17487,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "雷射機器人",
         "icon": "8250002"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876265095",
@@ -17094,7 +17556,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "龍族雜兵·6",
         "icon": "8250010"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876265095",
@@ -17161,7 +17625,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "內部警衛機器人",
         "icon": "8250011"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876265095",
@@ -17228,7 +17694,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "固鐵新時代機器人A",
         "icon": "8250019"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876265095",
@@ -17295,7 +17763,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "受汙染的樹液",
         "icon": "3503000"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876290721",
@@ -17362,7 +17832,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "腐敗的樹液",
         "icon": "3503001"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876290721",
@@ -17429,7 +17901,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "墮落魔族劍兵",
         "icon": "3503002"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876290721",
@@ -17496,7 +17970,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "墮落魔族強化劍兵",
         "icon": "3503003"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876290721",
@@ -17563,7 +18039,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "墮落魔族斧頭兵",
         "icon": "3503004"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876290721",
@@ -17630,7 +18108,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "墮落魔族強化斧頭兵",
         "icon": "3503005"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876290721",
@@ -17697,7 +18177,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "墮落魔族盾牌兵",
         "icon": "3503006"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876290721",
@@ -17764,7 +18246,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "墮落魔族強化盾牌兵",
         "icon": "3503007"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876290721",
@@ -17831,7 +18315,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "墮落魔族狼旗手",
         "icon": "3503008"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876290721",
@@ -17898,7 +18384,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "墮落魔族強化狼旗手",
         "icon": "3503009"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873703017",
@@ -17965,7 +18453,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "簡易的美髮捲",
         "icon": "4310013"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873703017",
@@ -18032,7 +18522,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "簡易的美髮器",
         "icon": "4310014"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788873229534",
@@ -18099,7 +18591,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "無人機黑",
         "icon": "4230138"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -18166,7 +18660,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "變形黑肥肥",
         "icon": "8620003"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -18233,7 +18729,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "變形鋼鐵肥肥",
         "icon": "8620004"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -18298,7 +18796,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 0
+    "bossSkillCd": 0,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -18363,7 +18863,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 0
+    "bossSkillCd": 0,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -18428,7 +18930,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 0
+    "bossSkillCd": 0,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -18493,7 +18997,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 0
+    "bossSkillCd": 0,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "custom",
@@ -18558,7 +19064,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 10,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788938795162",
@@ -18625,7 +19133,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 10,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788938795162",
@@ -18692,7 +19202,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 160,
-    "bandMax": 170
+    "bandMax": 170,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788938795162",
@@ -18759,7 +19271,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 160,
-    "bandMax": 170
+    "bandMax": 170,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788938795162",
@@ -18826,7 +19340,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 160,
-    "bandMax": 170
+    "bandMax": 170,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788938795162",
@@ -18893,7 +19409,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 160,
-    "bandMax": 170
+    "bandMax": 170,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788938795162",
@@ -18960,7 +19478,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 160,
-    "bandMax": 170
+    "bandMax": 170,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788938795162",
@@ -19027,7 +19547,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 160,
-    "bandMax": 170
+    "bandMax": 170,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788938795162",
@@ -19094,7 +19616,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 160,
-    "bandMax": 170
+    "bandMax": 170,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788938795162",
@@ -19161,7 +19685,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 160,
-    "bandMax": 170
+    "bandMax": 170,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788938795162",
@@ -19228,7 +19754,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkillDmg": 0,
     "bossSkillCd": 0,
     "bandMin": 160,
-    "bandMax": 170
+    "bandMax": 170,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788938795162",
@@ -19293,7 +19821,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 0
+    "bossSkillCd": 0,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788938795162",
@@ -19358,7 +19888,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 0
+    "bossSkillCd": 0,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788938795162",
@@ -19423,7 +19955,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 0
+    "bossSkillCd": 0,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788938795162",
@@ -19488,7 +20022,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 0
+    "bossSkillCd": 0,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788938795162",
@@ -19553,7 +20089,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 0
+    "bossSkillCd": 0,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -19620,7 +20158,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "變形火肥肥",
         "icon": "8620005"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -19687,7 +20227,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "變形木面怪人",
         "icon": "8620006"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -19754,7 +20296,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "變形石面怪人",
         "icon": "8620007"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -19821,7 +20365,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "變形鐵面怪人",
         "icon": "8620008"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -19888,7 +20434,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "古代石巨人",
         "icon": "8620009"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -19955,7 +20503,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "古代石黑曜石巨人",
         "icon": "8620010"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876212731",
@@ -20022,7 +20572,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
         "name": "古代混種石巨人",
         "icon": "8620011"
       }
-    ]
+    ],
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876290721",
@@ -20040,12 +20592,19 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossName": "銅甲石人·7",
     "bossIcon": "4130100",
     "monsterHp": 100,
-    "bossHp": 500000,
+    "bossHp": 5e+22,
     "killExp": 223,
     "killGold": 10,
     "bossKillExp": 4460,
     "bossKillGold": 892,
-    "mobDrops": [],
+    "mobDrops": [
+      {
+        "kind": "equip",
+        "itemId": "01372222",
+        "chance": 5,
+        "amount": 1
+      }
+    ],
     "bossDrops": [],
     "drops": [],
     "custom": true,
@@ -20060,7 +20619,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bandName": "test",
     "bandMin": 300,
     "bandMax": 300,
-    "replayBossKills": 100000000000000,
+    "replayBossKills": 10,
     "smallKills": 1,
     "mobAtk1Dmg": 5500,
     "mobAtk1Cd": 0.1,
@@ -20076,7 +20635,7 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "mobSkill3Cd": 0,
     "mobSkillDmg": 0,
     "mobSkillCd": 8,
-    "bossAtk1Dmg": 15,
+    "bossAtk1Dmg": 15000,
     "bossAtk1Cd": 2,
     "bossAtk2Dmg": 0,
     "bossAtk2Cd": 0,
@@ -20089,7 +20648,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 10,
+    "reqArc": 300,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876265095",
@@ -20154,7 +20715,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 10,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876265095",
@@ -20219,7 +20782,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 10,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876265095",
@@ -20284,7 +20849,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 10,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876265095",
@@ -20349,7 +20916,9 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 10,
+    "reqArc": 0,
+    "reqAut": 0
   },
   {
     "regionId": "band-1788876265095",
@@ -20414,7 +20983,1064 @@ const IDLE_ZONE_CUSTOM_MAPS = [
     "bossSkill3Dmg": 0,
     "bossSkill3Cd": 0,
     "bossSkillDmg": 0,
-    "bossSkillCd": 10
+    "bossSkillCd": 10,
+    "reqArc": 0,
+    "reqAut": 0
+  },
+  {
+    "regionId": "band-1789647169637",
+    "regionName": "消逝的旅途",
+    "name": "風化的開心之地",
+    "mapId": "c389",
+    "mapIndex": 389,
+    "unlockLevel": 200,
+    "dropMin": 200,
+    "dropMax": 200,
+    "artId": "VanishingJourney-10000",
+    "bandKey": "band-1789647169637",
+    "mobName": "喜悅的艾爾達斯",
+    "mobIcon": "8641000",
+    "bossName": "喜悅的艾爾達斯",
+    "bossIcon": "8641000",
+    "monsterHp": 20000000000,
+    "bossHp": 400000000000,
+    "killExp": 61000,
+    "killGold": 610000,
+    "bossKillExp": 610000,
+    "bossKillGold": 610000,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "喜悅的艾爾達斯",
+        "icon": "8641000"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "消逝的旅途",
+    "bandMin": 200,
+    "bandMax": 210,
+    "replayBossKills": 250,
+    "smallKills": 5000,
+    "mobAtk1Dmg": 410000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 820000,
+    "bossAtk1Cd": 0.6,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "reqArc": 30,
+    "reqAut": 0
+  },
+  {
+    "regionId": "band-1789647169637",
+    "regionName": "消逝的旅途",
+    "name": "風化的憤怒之地",
+    "mapId": "c390",
+    "mapIndex": 390,
+    "unlockLevel": 201,
+    "dropMin": 201,
+    "dropMax": 210,
+    "artId": "VanishingJourney-10001",
+    "bandKey": "band-1789647169637",
+    "mobName": "憤怒的艾爾達斯",
+    "mobIcon": "8641001",
+    "bossName": "憤怒的艾爾達斯",
+    "bossIcon": "8641001",
+    "monsterHp": 21430000000,
+    "bossHp": 428600000000,
+    "killExp": 61650,
+    "killGold": 616500,
+    "bossKillExp": 616500,
+    "bossKillGold": 616500,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "憤怒的艾爾達斯",
+        "icon": "8641001"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "消逝的旅途",
+    "replayBossKills": 250,
+    "smallKills": 5000,
+    "mobAtk1Dmg": 420000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 840000,
+    "bossAtk1Cd": 0.6,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "reqArc": 30,
+    "reqAut": 0,
+    "bandMin": 200,
+    "bandMax": 210
+  },
+  {
+    "regionId": "band-1789647169637",
+    "regionName": "消逝的旅途",
+    "name": "開心與憤怒之地",
+    "mapId": "c391",
+    "mapIndex": 391,
+    "unlockLevel": 201,
+    "dropMin": 201,
+    "dropMax": 210,
+    "artId": "VanishingJourney-10001",
+    "bandKey": "band-1789647169637",
+    "mobName": "開心的艾爾達斯",
+    "mobIcon": "8641000",
+    "bossName": "憤怒的艾爾達斯",
+    "bossIcon": "8641001",
+    "monsterHp": 22860000000,
+    "bossHp": 457200000000,
+    "killExp": 62300,
+    "killGold": 623000,
+    "bossKillExp": 623000,
+    "bossKillGold": 623000,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "開心的艾爾達斯",
+        "icon": "8641000"
+      },
+      {
+        "name": "憤怒的艾爾達斯",
+        "icon": "8641001"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "消逝的旅途",
+    "replayBossKills": 250,
+    "smallKills": 5000,
+    "mobAtk1Dmg": 430000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 860000,
+    "bossAtk1Cd": 0.6,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "reqArc": 30,
+    "reqAut": 0,
+    "bandMin": 200,
+    "bandMax": 210
+  },
+  {
+    "regionId": "band-1789647169637",
+    "regionName": "消逝的旅途",
+    "name": "風化的歡樂之地",
+    "mapId": "c392",
+    "mapIndex": 392,
+    "unlockLevel": 202,
+    "dropMin": 202,
+    "dropMax": 210,
+    "artId": "VanishingJourney-10002",
+    "bandKey": "band-1789647169637",
+    "mobName": "悲傷的艾爾達斯",
+    "mobIcon": "8641002",
+    "bossName": "悲傷的艾爾達斯",
+    "bossIcon": "8641002",
+    "monsterHp": 24290000000,
+    "bossHp": 485800000000,
+    "killExp": 62950,
+    "killGold": 629500,
+    "bossKillExp": 629500,
+    "bossKillGold": 629500,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "悲傷的艾爾達斯",
+        "icon": "8641002"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "消逝的旅途",
+    "replayBossKills": 250,
+    "smallKills": 5000,
+    "mobAtk1Dmg": 440000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 880000,
+    "bossAtk1Cd": 0.6,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "reqArc": 30,
+    "reqAut": 0,
+    "bandMin": 200,
+    "bandMax": 210
+  },
+  {
+    "regionId": "band-1789647169637",
+    "regionName": "消逝的旅途",
+    "name": "風化的歡樂之地",
+    "mapId": "c393",
+    "mapIndex": 393,
+    "unlockLevel": 203,
+    "dropMin": 203,
+    "dropMax": 210,
+    "artId": "VanishingJourney-10003",
+    "bandKey": "band-1789647169637",
+    "mobName": "喜悅的艾爾達斯",
+    "mobIcon": "8641003",
+    "bossName": "喜悅的艾爾達斯",
+    "bossIcon": "8641003",
+    "monsterHp": 25710000000,
+    "bossHp": 514200000000,
+    "killExp": 63550,
+    "killGold": 635500,
+    "bossKillExp": 635500,
+    "bossKillGold": 635500,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "喜悅的艾爾達斯",
+        "icon": "8641003"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "消逝的旅途",
+    "replayBossKills": 250,
+    "smallKills": 5000,
+    "mobAtk1Dmg": 450000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 900000,
+    "bossAtk1Cd": 0.6,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "reqArc": 30,
+    "reqAut": 0,
+    "bandMin": 200,
+    "bandMax": 210
+  },
+  {
+    "regionId": "band-1789647169637",
+    "regionName": "消逝的旅途",
+    "name": "悲傷與歡樂之地",
+    "mapId": "c394",
+    "mapIndex": 394,
+    "unlockLevel": 204,
+    "dropMin": 204,
+    "dropMax": 210,
+    "artId": "VanishingJourney-10003",
+    "bandKey": "band-1789647169637",
+    "mobName": "悲傷的艾爾達斯",
+    "mobIcon": "8641002",
+    "bossName": "喜悅的艾爾達斯",
+    "bossIcon": "8641003",
+    "monsterHp": 27140000000,
+    "bossHp": 542800000000,
+    "killExp": 64200,
+    "killGold": 642000,
+    "bossKillExp": 642000,
+    "bossKillGold": 642000,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "悲傷的艾爾達斯",
+        "icon": "8641002"
+      },
+      {
+        "name": "喜悅的艾爾達斯",
+        "icon": "8641003"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "消逝的旅途",
+    "replayBossKills": 250,
+    "smallKills": 5000,
+    "mobAtk1Dmg": 460000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 920000,
+    "bossAtk1Cd": 2,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "reqArc": 40,
+    "reqAut": 0,
+    "bandMin": 200,
+    "bandMax": 210
+  },
+  {
+    "regionId": "band-1789647169637",
+    "regionName": "消逝的旅途",
+    "name": "岩石領土",
+    "mapId": "c395",
+    "mapIndex": 395,
+    "unlockLevel": 204,
+    "dropMin": 204,
+    "dropMax": 210,
+    "artId": "VanishingJourney-10006",
+    "bandKey": "band-1789647169637",
+    "mobName": "岩石艾爾達斯",
+    "mobIcon": "8641004",
+    "bossName": "岩石艾爾達斯",
+    "bossIcon": "8641004",
+    "monsterHp": 28570000000,
+    "bossHp": 571400000000,
+    "killExp": 64850,
+    "killGold": 648500,
+    "bossKillExp": 648500,
+    "bossKillGold": 648500,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "岩石艾爾達斯",
+        "icon": "8641004"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "消逝的旅途",
+    "replayBossKills": 250,
+    "smallKills": 5000,
+    "mobAtk1Dmg": 470000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 940000,
+    "bossAtk1Cd": 0.6,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "reqArc": 40,
+    "reqAut": 0,
+    "bandMin": 200,
+    "bandMax": 210
+  },
+  {
+    "regionId": "band-1789647169637",
+    "regionName": "消逝的旅途",
+    "name": "火焰領土",
+    "mapId": "c396",
+    "mapIndex": 396,
+    "unlockLevel": 205,
+    "dropMin": 205,
+    "dropMax": 210,
+    "artId": "VanishingJourney-10005",
+    "bandKey": "band-1789647169637",
+    "mobName": "火焰艾爾達斯",
+    "mobIcon": "8641005",
+    "bossName": "火焰艾爾達斯",
+    "bossIcon": "8641005",
+    "monsterHp": 30000000000,
+    "bossHp": 600000000000,
+    "killExp": 65500,
+    "killGold": 655000,
+    "bossKillExp": 655000,
+    "bossKillGold": 655000,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "火焰艾爾達斯",
+        "icon": "8641005"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "消逝的旅途",
+    "replayBossKills": 250,
+    "smallKills": 5000,
+    "mobAtk1Dmg": 480000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 960000,
+    "bossAtk1Cd": 0.6,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "reqArc": 40,
+    "reqAut": 0,
+    "bandMin": 200,
+    "bandMax": 210
+  },
+  {
+    "regionId": "band-1789647169637",
+    "regionName": "消逝的旅途",
+    "name": "岩石和火焰領土",
+    "mapId": "c397",
+    "mapIndex": 397,
+    "unlockLevel": 206,
+    "dropMin": 206,
+    "dropMax": 210,
+    "artId": "VanishingJourney-10005",
+    "bandKey": "band-1789647169637",
+    "mobName": "岩石艾爾達斯",
+    "mobIcon": "8641004",
+    "bossName": "火焰艾爾達斯",
+    "bossIcon": "8641005",
+    "monsterHp": 31430000000,
+    "bossHp": 628600000000,
+    "killExp": 66150,
+    "killGold": 661500,
+    "bossKillExp": 661500,
+    "bossKillGold": 661500,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "岩石艾爾達斯",
+        "icon": "8641004"
+      },
+      {
+        "name": "火焰艾爾達斯",
+        "icon": "8641005"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "消逝的旅途",
+    "replayBossKills": 250,
+    "smallKills": 5000,
+    "mobAtk1Dmg": 490000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 980000,
+    "bossAtk1Cd": 0.6,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "reqArc": 40,
+    "reqAut": 0,
+    "bandMin": 200,
+    "bandMax": 210
+  },
+  {
+    "regionId": "band-1789647169637",
+    "regionName": "消逝的旅途",
+    "name": "靈魂領土",
+    "mapId": "c398",
+    "mapIndex": 398,
+    "unlockLevel": 206,
+    "dropMin": 206,
+    "dropMax": 210,
+    "artId": "VanishingJourney-10006",
+    "bandKey": "band-1789647169637",
+    "mobName": "強悍的靈魂艾爾達斯",
+    "mobIcon": "8641006",
+    "bossName": "強悍的靈魂艾爾達斯",
+    "bossIcon": "8641006",
+    "monsterHp": 328600000000,
+    "bossHp": 657200000000,
+    "killExp": 66800,
+    "killGold": 668000,
+    "bossKillExp": 668000,
+    "bossKillGold": 668000,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "強悍的靈魂艾爾達斯",
+        "icon": "8641006"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "消逝的旅途",
+    "replayBossKills": 250,
+    "smallKills": 5000,
+    "mobAtk1Dmg": 500000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 1000000,
+    "bossAtk1Cd": 2,
+    "bossAtk2Dmg": 1000000,
+    "bossAtk2Cd": 0.6,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 1000000,
+    "bossSkill1Cd": 5,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 1000000,
+    "bossSkillCd": 5,
+    "reqArc": 50,
+    "reqAut": 0,
+    "bandMin": 200,
+    "bandMax": 210
+  },
+  {
+    "regionId": "band-1789647169637",
+    "regionName": "消逝的旅途",
+    "name": "火焰和靈魂領土",
+    "mapId": "c399",
+    "mapIndex": 399,
+    "unlockLevel": 207,
+    "dropMin": 207,
+    "dropMax": 210,
+    "artId": "VanishingJourney-10006",
+    "bandKey": "band-1789647169637",
+    "mobName": "火焰艾爾達斯",
+    "mobIcon": "8641005",
+    "bossName": "強悍的靈魂艾爾達斯",
+    "bossIcon": "8641006",
+    "monsterHp": 34290000000,
+    "bossHp": 685800000000,
+    "killExp": 67450,
+    "killGold": 674500,
+    "bossKillExp": 674500,
+    "bossKillGold": 674500,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "火焰艾爾達斯",
+        "icon": "8641005"
+      },
+      {
+        "name": "強悍的靈魂艾爾達斯",
+        "icon": "8641006"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "消逝的旅途",
+    "replayBossKills": 250,
+    "smallKills": 5000,
+    "mobAtk1Dmg": 510000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 1020000,
+    "bossAtk1Cd": 2,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "reqArc": 50,
+    "reqAut": 0,
+    "bandMin": 200,
+    "bandMax": 210
+  },
+  {
+    "regionId": "band-1789647169637",
+    "regionName": "消逝的旅途",
+    "name": "三岔路",
+    "mapId": "c400",
+    "mapIndex": 400,
+    "unlockLevel": 208,
+    "dropMin": 208,
+    "dropMax": 210,
+    "artId": "VanishingJourney-10008",
+    "bandKey": "band-1789647169637",
+    "mobName": "艾爾達斯的燈火",
+    "mobIcon": "8641008",
+    "bossName": "艾爾達斯的燈火",
+    "bossIcon": "8641008",
+    "monsterHp": 35710000000,
+    "bossHp": 714200000000,
+    "killExp": 68050,
+    "killGold": 680500,
+    "bossKillExp": 680500,
+    "bossKillGold": 680500,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "艾爾達斯的燈火",
+        "icon": "8641008"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "消逝的旅途",
+    "replayBossKills": 250,
+    "smallKills": 5000,
+    "mobAtk1Dmg": 520000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 1040000,
+    "bossAtk1Cd": 0.6,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "reqArc": 60,
+    "reqAut": 0,
+    "bandMin": 200,
+    "bandMax": 210
+  },
+  {
+    "regionId": "band-1789647169637",
+    "regionName": "消逝的旅途",
+    "name": "新狩獵場",
+    "mapId": "c401",
+    "mapIndex": 401,
+    "unlockLevel": 209,
+    "dropMin": 209,
+    "dropMax": 210,
+    "artId": "VanishingJourney-10007",
+    "bandKey": "band-1789647169637",
+    "mobName": "安息的艾爾達斯",
+    "mobIcon": "8641007",
+    "bossName": "安息的艾爾達斯",
+    "bossIcon": "8641007",
+    "monsterHp": 37140000000,
+    "bossHp": 742800000000,
+    "killExp": 68700,
+    "killGold": 687000,
+    "bossKillExp": 687000,
+    "bossKillGold": 687000,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "安息的艾爾達斯",
+        "icon": "8641007"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "消逝的旅途",
+    "replayBossKills": 250,
+    "smallKills": 5000,
+    "mobAtk1Dmg": 530000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 1060000,
+    "bossAtk1Cd": 0.6,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "reqArc": 60,
+    "reqAut": 0,
+    "bandMin": 200,
+    "bandMax": 210
+  },
+  {
+    "regionId": "band-1789647169637",
+    "regionName": "消逝的旅途",
+    "name": "新狩獵場",
+    "mapId": "c402",
+    "mapIndex": 402,
+    "unlockLevel": 209,
+    "dropMin": 209,
+    "dropMax": 210,
+    "artId": "VanishingJourney-10008",
+    "bandKey": "band-1789647169637",
+    "mobName": "安息的艾爾達斯",
+    "mobIcon": "8641007",
+    "bossName": "安息的艾爾達斯",
+    "bossIcon": "8641007",
+    "monsterHp": 38570000000,
+    "bossHp": 771400000000,
+    "killExp": 69350,
+    "killGold": 693500,
+    "bossKillExp": 693500,
+    "bossKillGold": 693500,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "安息的艾爾達斯",
+        "icon": "8641007"
+      },
+      {
+        "name": "艾爾達斯的燈火",
+        "icon": "8641008"
+      }
+    ],
+    "bossScaleSprite": true,
+    "bossScaleHud": true,
+    "bandName": "消逝的旅途",
+    "replayBossKills": 250,
+    "smallKills": 5000,
+    "mobAtk1Dmg": 540000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 1080000,
+    "bossAtk1Cd": 0.6,
+    "bossAtk2Dmg": 0,
+    "bossAtk2Cd": 0,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 0,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 0,
+    "bossSkillCd": 10,
+    "reqArc": 60,
+    "reqAut": 0,
+    "bandMin": 200,
+    "bandMax": 210
+  },
+  {
+    "regionId": "band-1789647169637",
+    "regionName": "消逝的旅途",
+    "name": "亞勒瑪的隱身處",
+    "mapId": "c403",
+    "mapIndex": 403,
+    "unlockLevel": 210,
+    "dropMin": 210,
+    "dropMax": 210,
+    "artId": "VanishingJourney-10009",
+    "bandKey": "band-1789647169637",
+    "mobName": "亞勒瑪的部下",
+    "mobIcon": "8641009",
+    "bossName": "亞勒瑪",
+    "bossIcon": "8641010",
+    "monsterHp": 40000000000,
+    "bossHp": 800000000000,
+    "killExp": 70000,
+    "killGold": 700000,
+    "bossKillExp": 700000,
+    "bossKillGold": 700000,
+    "mobDrops": [],
+    "bossDrops": [],
+    "drops": [],
+    "custom": true,
+    "mobPool": [
+      {
+        "name": "亞勒瑪的部下",
+        "icon": "8641009"
+      }
+    ],
+    "bossScaleSprite": false,
+    "bossScaleHud": false,
+    "bandName": "消逝的旅途",
+    "replayBossKills": 250,
+    "smallKills": 5000,
+    "mobAtk1Dmg": 550000,
+    "mobAtk1Cd": 0.6,
+    "mobAtk2Dmg": 0,
+    "mobAtk2Cd": 0,
+    "mobAtk3Dmg": 0,
+    "mobAtk3Cd": 0,
+    "mobSkill1Dmg": 0,
+    "mobSkill1Cd": 8,
+    "mobSkill2Dmg": 0,
+    "mobSkill2Cd": 0,
+    "mobSkill3Dmg": 0,
+    "mobSkill3Cd": 0,
+    "mobSkillDmg": 0,
+    "mobSkillCd": 8,
+    "bossAtk1Dmg": 1100000,
+    "bossAtk1Cd": 2,
+    "bossAtk2Dmg": 1100000,
+    "bossAtk2Cd": 0.6,
+    "bossAtk3Dmg": 0,
+    "bossAtk3Cd": 0,
+    "bossSkill1Dmg": 1100000,
+    "bossSkill1Cd": 10,
+    "bossSkill2Dmg": 0,
+    "bossSkill2Cd": 0,
+    "bossSkill3Dmg": 0,
+    "bossSkill3Cd": 0,
+    "bossSkillDmg": 1100000,
+    "bossSkillCd": 10,
+    "reqArc": 80,
+    "reqAut": 0,
+    "bandMin": 200,
+    "bandMax": 210
   }
 ];
 

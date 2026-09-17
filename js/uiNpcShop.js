@@ -320,6 +320,14 @@ const UiNpcShop = (() => {
       if (!star) return null;
       return { kind: 'throwing_star', star };
     }
+    if (entry.type === T.V_SKILL_POINT || entry.type === 'v_skill_point') {
+      const item = typeof V_SKILL_POINT_ITEM !== 'undefined' ? V_SKILL_POINT_ITEM : null;
+      if (!item) return null;
+      return etcTipFromDisplay(
+        { name: item.name, icon: item.icon },
+        item.desc || '',
+      );
+    }
 
     const disp = typeof IdleNpcShopCatalog !== 'undefined'
       ? IdleNpcShopCatalog.resolveConsumeEntryDisplay(entry)
@@ -344,6 +352,9 @@ const UiNpcShop = (() => {
     }
     if (row.consumeType === 'recovery_card' || row.itemId === 'recovery_card') {
       return { type: T.RECOVERY_CARD };
+    }
+    if (row.consumeType === 'v_skill_point' || row.itemId === 'v_skill_point') {
+      return { type: T.V_SKILL_POINT || 'v_skill_point', itemId: 'v_skill_point' };
     }
     if (row.consumeType === 'throwing_star'
       || (row.kind === 'consume'
@@ -409,6 +420,9 @@ const UiNpcShop = (() => {
     }
     if (row.consumeType === 'recovery_card' || row.itemId === 'recovery_card') {
       return { consumeType: 'recovery_card', amount };
+    }
+    if (row.consumeType === 'v_skill_point' || row.itemId === 'v_skill_point') {
+      return { consumeType: 'v_skill_point', itemId: 'v_skill_point', amount };
     }
     if (row.consumeType === 'potion'
       || (row.kind === 'consume' && typeof IdlePotionStore !== 'undefined' && IdlePotionStore.isPotionId?.(row.itemId))) {
@@ -962,6 +976,9 @@ const UiNpcShop = (() => {
     if (entry.type === T.RECOVERY_CARD || entry.type === 'recovery_card') {
       return { consumeType: 'recovery_card', amount: qty };
     }
+    if (entry.type === T.V_SKILL_POINT || entry.type === 'v_skill_point') {
+      return { consumeType: 'v_skill_point', itemId: 'v_skill_point', amount: qty };
+    }
     if (entry.type === T.POTION || entry.type === 'potion') {
       return { consumeType: 'potion', itemId: entry.itemId, amount: qty };
     }
@@ -1064,6 +1081,9 @@ const UiNpcShop = (() => {
     if (entry.type === T.RECOVERY_CARD || entry.type === 'recovery_card') {
       return Math.max(0, Math.floor(Number(typeof playerRecoveryCardCount !== 'undefined' ? playerRecoveryCardCount : 0) || 0)) > 0;
     }
+    if (entry.type === T.V_SKILL_POINT || entry.type === 'v_skill_point') {
+      return typeof getPlayerVSkillPointCount === 'function' ? getPlayerVSkillPointCount() > 0 : false;
+    }
     if (entry.type === T.POTION || entry.type === 'potion') {
       return typeof getPlayerPotionCount === 'function' ? getPlayerPotionCount(entry.itemId) > 0 : false;
     }
@@ -1105,6 +1125,9 @@ const UiNpcShop = (() => {
     }
     if (entry.type === T.RECOVERY_CARD || entry.type === 'recovery_card') {
       return Math.max(0, Math.floor(Number(typeof playerRecoveryCardCount !== 'undefined' ? playerRecoveryCardCount : 0) || 0));
+    }
+    if (entry.type === T.V_SKILL_POINT || entry.type === 'v_skill_point') {
+      return typeof getPlayerVSkillPointCount === 'function' ? getPlayerVSkillPointCount() : 0;
     }
     if (entry.type === T.POTION || entry.type === 'potion') {
       return typeof getPlayerPotionCount === 'function' ? getPlayerPotionCount(entry.itemId) : 0;
@@ -1158,6 +1181,9 @@ const UiNpcShop = (() => {
       if (c < amt) return false;
       playerRecoveryCardCount = c - amt;
       return true;
+    }
+    if (entry.type === T.V_SKILL_POINT || entry.type === 'v_skill_point') {
+      return typeof consumeVSkillPointItem === 'function' && consumeVSkillPointItem(amt);
     }
     if (entry.type === T.POTION || entry.type === 'potion') {
       return typeof takePotion === 'function' && takePotion(entry.itemId, amt);

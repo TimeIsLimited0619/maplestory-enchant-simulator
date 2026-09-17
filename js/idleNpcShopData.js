@@ -385,6 +385,16 @@ const IdleNpcShopCatalog = {
       meta = typeof getSoulMaterialById === 'function' ? getSoulMaterialById(entry.soulId) : null;
     } else if (entry.type === T.RECOVERY_CARD || entry.type === 'recovery_card') {
       meta = typeof RECOVERY_CARD !== 'undefined' ? RECOVERY_CARD : null;
+    } else if (entry.type === T.V_SKILL_POINT || entry.type === 'v_skill_point') {
+      meta = typeof V_SKILL_POINT_ITEM !== 'undefined' ? V_SKILL_POINT_ITEM : null;
+      if (meta) {
+        return {
+          name: meta.name,
+          icon: meta.icon || '',
+          desc: meta.desc || '',
+          price: this.normalizeSellPrice(meta?.price ?? entry?.price),
+        };
+      }
     } else if (entry.type === T.POTION || entry.type === 'potion') {
       meta = typeof IdlePotionStore !== 'undefined' ? IdlePotionStore.get(entry.itemId) : null;
       if (meta) {
@@ -454,6 +464,15 @@ const IdleNpcShopCatalog = {
       if (row.itemId === 'recovery_card' || row.consumeType === 'recovery_card') {
         const card = typeof RECOVERY_CARD !== 'undefined' ? RECOVERY_CARD : null;
         return { name: card?.name || '恢復卡', icon: card?.icon || '', price };
+      }
+      if (row.itemId === 'v_skill_point' || row.consumeType === 'v_skill_point') {
+        const item = typeof V_SKILL_POINT_ITEM !== 'undefined' ? V_SKILL_POINT_ITEM : null;
+        return {
+          name: item?.name || '五轉技能點數',
+          icon: item?.icon || '',
+          price,
+          desc: item?.desc || '',
+        };
       }
       if (row.consumeType === 'potion'
         || (typeof IdlePotionStore !== 'undefined' && IdlePotionStore.isPotionId?.(row.itemId))) {

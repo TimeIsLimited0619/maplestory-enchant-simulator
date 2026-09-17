@@ -116,6 +116,19 @@ function idleConsumeFromRecoveryCard() {
   }];
 }
 
+function idleConsumeFromVSkillPoint() {
+  if (typeof V_SKILL_POINT_ITEM === 'undefined') return [];
+  return [{
+    id: 'consume-v-skill-point',
+    consumeType: 'v_skill_point',
+    itemId: V_SKILL_POINT_ITEM.id,
+    name: V_SKILL_POINT_ITEM.name,
+    icon: V_SKILL_POINT_ITEM.icon || '',
+    rate: 100,
+    boost: '雙擊一次消耗全部；每顆五轉技能點 +1',
+  }];
+}
+
 function idleConsumeFromGloryScrolls() {
   const catalogs = [
     ...(typeof getSpecialScrollCatalog === 'function' ? getSpecialScrollCatalog() : []),
@@ -189,6 +202,7 @@ function buildIdleConsumeDatabase() {
     ...idleConsumeFromHammers(),
     ...idleConsumeFromGloryScrolls(),
     ...idleConsumeFromRecoveryCard(),
+    ...idleConsumeFromVSkillPoint(),
     ...idleConsumeFromPotions(),
     ...idleConsumeFromThrowingStars(),
     ...idleConsumeFromBonusStat(),

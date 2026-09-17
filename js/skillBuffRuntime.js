@@ -1424,49 +1424,44 @@ const SkillBuffRuntime = (() => {
       }
       let any = false;
       const hitRows = [];
-      const foldOverkill = !mob.isBoss && Number(mob.hp) > 0;
-      let hpLeft = foldOverkill ? Number(mob.hp) : 0;
-      outer: for (let s = 0; s < state.swordsPerProc; s += 1) {
-        for (let i = 0; i < state.attackCount; i += 1) {
-          let hit = { dmg: 0, isCritical: false };
-          if (typeof UiCharacterInfo !== 'undefined' && UiCharacterInfo.rollHuntHit) {
-            hit = UiCharacterInfo.rollHuntHit(!!mob.isBoss, {
-              damagePct: state.damagePct,
-              skillBdR: Number(state.skillBdR) || 0,
-            });
-          }
-          let dmg = hit.dmg;
-          if (!(dmg > 0)) continue;
-          if (typeof SkillMobStatus !== 'undefined'
-            && typeof SkillMobStatus.applyOutgoingDamageMods === 'function') {
-            dmg = SkillMobStatus.applyOutgoingDamageMods(mob, dmg, {
-              isCritical: !!hit.isCritical,
-              skillId: state.parentSkillId || state.summonSkillId || null,
-            });
-          }
-          const fdMult = Number(opts.outgoingMult);
-          if (Number.isFinite(fdMult) && fdMult !== 1) {
-            dmg = Math.max(0, Math.round(dmg * fdMult));
-          }
-          if (!(dmg > 0)) continue;
-          any = true;
-          hitRows.push({
-            dmg,
-            isCritical: !!hit.isCritical,
-            dmgOpts: {
-              multiHit: true,
-              stackIndex: s * state.attackCount + i,
-            },
+      const foldToOne = !mob.isBoss && Number(mob.hp) > 0;
+      const swords = Math.max(1, Number(state.swordsPerProc) || 1);
+      const atkN = Math.max(1, Number(state.attackCount) || 1);
+      const settleLoops = foldToOne ? 1 : (swords * atkN);
+      const settlePct = foldToOne
+        ? (Number(state.damagePct) || 0) * swords * atkN
+        : (Number(state.damagePct) || 0);
+      for (let i = 0; i < settleLoops; i += 1) {
+        let hit = { dmg: 0, isCritical: false };
+        if (typeof UiCharacterInfo !== 'undefined' && UiCharacterInfo.rollHuntHit) {
+          hit = UiCharacterInfo.rollHuntHit(!!mob.isBoss, {
+            damagePct: settlePct,
+            skillBdR: Number(state.skillBdR) || 0,
           });
-          if (foldOverkill) {
-            const preview = (typeof IdleHunt !== 'undefined'
-              && typeof IdleHunt.resolveMobHitDamage === 'function')
-              ? IdleHunt.resolveMobHitDamage(mob, dmg)
-              : dmg;
-            hpLeft -= preview;
-            if (!(hpLeft > 0)) break outer;
-          }
         }
+        let dmg = hit.dmg;
+        if (!(dmg > 0)) continue;
+        if (typeof SkillMobStatus !== 'undefined'
+          && typeof SkillMobStatus.applyOutgoingDamageMods === 'function') {
+          dmg = SkillMobStatus.applyOutgoingDamageMods(mob, dmg, {
+            isCritical: !!hit.isCritical,
+            skillId: state.parentSkillId || state.summonSkillId || null,
+          });
+        }
+        const fdMult = Number(opts.outgoingMult);
+        if (Number.isFinite(fdMult) && fdMult !== 1) {
+          dmg = Math.max(0, Math.round(dmg * fdMult));
+        }
+        if (!(dmg > 0)) continue;
+        any = true;
+        hitRows.push({
+          dmg,
+          isCritical: !!hit.isCritical,
+          dmgOpts: {
+            multiHit: !foldToOne && settleLoops > 1,
+            stackIndex: i,
+          },
+        });
       }
       if (hitRows.length) {
         if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.applyPlayerHitsToMob === 'function') {

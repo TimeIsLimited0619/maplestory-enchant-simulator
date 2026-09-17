@@ -2555,16 +2555,9 @@ const SkillCombat = (() => {
     return { dmg: 0, isCritical: false };
   }
 
-  /** 章節／副本小怪：多餘段數只是超殺，顯示與結算都壓到剛好擊殺（全職業；BOSS 仍打滿段） */
-  function shouldFoldOverkillHits(mob) {
+  /** 章節／副本小怪：不論技能幾段都只結算 1 段（總傷×段數；BOSS 仍打滿段） */
+  function shouldFoldChapterHitsToOne(mob) {
     return !!(mob && !mob.isBoss && Number(mob.hp) > 0);
-  }
-
-  function previewHitDamage(mob, rawDmg, skillIed) {
-    if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.resolveMobHitDamage === 'function') {
-      return IdleHunt.resolveMobHitDamage(mob, rawDmg, { skillIed });
-    }
-    return Math.max(0, Math.floor(Number(rawDmg) || 0));
   }
 
   function applyHitsToMob(mob, opts = {}) {
@@ -2591,7 +2584,10 @@ const SkillCombat = (() => {
     if (!mob) return false;
     if (!mob.isBoss && !(Number(mob.hp) > 0)) return false;
     const pct = (Number(damagePct) || 0) + (Number(damagePctBonus) || 0);
-    const n = Math.max(1, Number(attackCount) || 1);
+    const rawN = Math.max(1, Number(attackCount) || 1);
+    const foldToOne = shouldFoldChapterHitsToOne(mob);
+    const n = foldToOne ? 1 : rawN;
+    const settlePct = foldToOne ? pct * rawN : pct;
     const critTail = Math.max(0, Math.min(n, Math.floor(Number(forceCritTail) || 0)));
     const hitFx = fxHitOpt !== undefined ? fxHitOpt : null;
     if (hitFx?.length && typeof SkillEffectPlayer !== 'undefined') {
@@ -2626,11 +2622,10 @@ const SkillCombat = (() => {
 
     let any = false;
     const hitRows = [];
-    const foldOverkill = shouldFoldOverkillHits(mob);
-    let hpLeft = foldOverkill ? Number(mob.hp) : 0;
     for (let i = 0; i < n; i += 1) {
-      const forceCritical = critTail > 0 && i >= n - critTail;
-      const hit = rollSkillHit(!!mob.isBoss, pct, {
+      const forceCritical = (critTail > 0 && i >= n - critTail)
+        || (foldToOne && Number(forceCritTail) > 0);
+      const hit = rollSkillHit(!!mob.isBoss, settlePct, {
         forceCritical,
         critRateBonus,
         skillBdR,
@@ -2654,18 +2649,14 @@ const SkillCombat = (() => {
         dmg,
         isCritical: !!hit.isCritical,
         dmgOpts: {
-          multiHit: true,
+          multiHit: !foldToOne && n > 1,
           stackIndex: startIndex + i,
           stackGroup,
-          ...(segmentGapSec != null
+          ...(!foldToOne && segmentGapSec != null
             ? { delay: i * segmentGapSec }
             : {}),
         },
       });
-      if (foldOverkill) {
-        hpLeft -= previewHitDamage(mob, dmg, skillIed);
-        if (!(hpLeft > 0)) break;
-      }
     }
     if (hitRows.length) {
       if (typeof IdleHunt !== 'undefined' && typeof IdleHunt.applyPlayerHitsToMob === 'function') {

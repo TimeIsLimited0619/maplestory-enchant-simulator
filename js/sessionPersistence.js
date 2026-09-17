@@ -290,6 +290,9 @@ const SessionPersistenceModule = {
     if (typeof playerRecoveryCardCount !== 'undefined') {
       payload.playerRecoveryCardCount = Math.max(0, Math.floor(Number(playerRecoveryCardCount) || 0));
     }
+    if (typeof playerVSkillPointCount !== 'undefined') {
+      payload.playerVSkillPointCount = Math.max(0, Math.floor(Number(playerVSkillPointCount) || 0));
+    }
     if (typeof playerPotionCounts !== 'undefined') {
       payload.playerPotionCounts = { ...playerPotionCounts };
     }
@@ -1184,6 +1187,7 @@ const SessionPersistenceModule = {
       playerHammerInventory: {},
       playerGloryScrollInventory: {},
       playerRecoveryCardCount: 0,
+      playerVSkillPointCount: 0,
       playerPotionCounts: {},
       playerThrowingStarCounts: {},
       playerBonusStatItemCounts: {},
@@ -1552,6 +1556,12 @@ const SessionPersistenceModule = {
       playerRecoveryCardCount = Math.max(0, Math.floor(Number(data.playerRecoveryCardCount) || 0));
       if (typeof ensureRecoveryCardConsumeInventory === 'function') {
         ensureRecoveryCardConsumeInventory();
+      }
+    }
+    if (typeof playerVSkillPointCount !== 'undefined') {
+      playerVSkillPointCount = Math.max(0, Math.floor(Number(data.playerVSkillPointCount) || 0));
+      if (typeof ensureVSkillPointConsumeInventory === 'function') {
+        ensureVSkillPointConsumeInventory();
       }
     }
     if (data.playerPotionCounts && typeof playerPotionCounts !== 'undefined') {

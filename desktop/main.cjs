@@ -756,6 +756,14 @@ function createTray() {
     },
     { type: 'separator' },
     {
+      label: '重新整理',
+      click: () => {
+        if (!mainWindow || mainWindow.isDestroyed()) return;
+        showMainWindow();
+        mainWindow.webContents.reload();
+      },
+    },
+    {
       label: '結束遊戲',
       click: () => {
         isQuitting = true;

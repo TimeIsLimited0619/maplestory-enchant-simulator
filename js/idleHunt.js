@@ -375,23 +375,29 @@ const IdleHunt = (() => {
   }
 
   /**
-   * 小怪超殺段：只保留打到死的段數（全職業共用）。BOSS 仍打滿段。
+   * 章節小怪：多段傷害併成 1 段顯示／結算（總傷不變）。BOSS 仍逐段。
    */
-  function trimOverkillHitList(mob, hits, opts = {}) {
+  function collapseChapterHitsToOne(mob, hits) {
     const list = Array.isArray(hits) ? hits : [];
     if (!mob || mob.isBoss || list.length <= 1) return list;
-    let hpLeft = Number(mob.hp) || 0;
-    if (!(hpLeft > 0)) return [];
-    const trimmed = [];
+    let total = 0;
+    let anyCrit = false;
+    const first = list[0] || {};
     for (let i = 0; i < list.length; i += 1) {
       const row = list[i] || {};
-      trimmed.push(row);
-      const incoming = Math.max(0, Math.floor(Number(row.dmg) || 0));
-      if (!(incoming > 0)) continue;
-      hpLeft -= resolveMobHitDamage(mob, incoming, { skillIed: opts.skillIed });
-      if (!(hpLeft > 0)) break;
+      total += Math.max(0, Math.floor(Number(row.dmg) || 0));
+      if (row.isCritical) anyCrit = true;
     }
-    return trimmed;
+    if (!(total > 0)) return [];
+    return [{
+      dmg: total,
+      isCritical: anyCrit,
+      dmgOpts: {
+        ...(first.dmgOpts || {}),
+        multiHit: false,
+        delay: undefined,
+      },
+    }];
   }
 
   /**
@@ -402,7 +408,7 @@ const IdleHunt = (() => {
     if (!mob.isBoss && !(Number(mob.hp) > 0)) return 0;
     let list = Array.isArray(hits) ? hits : [];
     if (!list.length) return 0;
-    if (!mob.isBoss && list.length > 1) list = trimOverkillHitList(mob, list, opts);
+    if (!mob.isBoss && list.length > 1) list = collapseChapterHitsToOne(mob, list);
     if (list.length === 1) {
       const row = list[0] || {};
       return applyPlayerHitToMob(mob, row.dmg, {

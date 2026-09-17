@@ -320,7 +320,9 @@ const SkillBoardPanel = (() => {
       : 0;
     el.textContent = String(Math.max(0, remain | 0));
     el.title = (rank === '200' || rank === 'hexa')
-      ? '200 等自動滿級（五轉）'
+      ? (total > 0
+        ? `五轉：剩餘 ${remain} / 累計 ${total}（使用「五轉技能點數」獲得）`
+        : '五轉：雙擊使用消耗品「五轉技能點數」獲得技能點')
       : (total > 0
         ? `${rank} 階：剩餘 ${remain} / 累計 ${total}`
         : '10 等起依等級區間獲得對應階段技能點');

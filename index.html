@@ -37,7 +37,7 @@
   <link rel="stylesheet" href="css/modules/39-disassemble.css?v=20260913process1">
   <link rel="stylesheet" href="css/modules/02-sidebar.css?v=20260829cv1">
   <link rel="stylesheet" href="css/modules/03-main-panel.css?v=20260813rateLimit3">
-  <link rel="stylesheet" href="css/modules/04-inventory.css?v=20260830sortId2">
+  <link rel="stylesheet" href="css/modules/04-inventory.css?v=20260917inv384">
   <link rel="stylesheet" href="css/modules/05-forms-modal.css?v=20260813wear3">
   <link rel="stylesheet" href="css/modules/06-starforce-extras.css?v=20260813wear3">
   <link rel="stylesheet" href="css/modules/07-starforce.css?v=20260913sfBreak1">
@@ -587,7 +587,7 @@
     <!-- 右下角選項（僅已放置裝備時顯示） -->
     <div class="sf-bottom-options">
       <label class="sf-auto-label" for="chkAutoEnhance">
-        <input type="checkbox" id="chkAutoEnhance" class="sf-auto-toggle-input">
+        <input type="checkbox" id="chkAutoEnhance" class="sf-auto-toggle-input" checked>
         <span class="sf-auto-toggle" aria-hidden="true"></span>
         自動強化
       </label>
@@ -2288,20 +2288,20 @@
   <script src="js/appNavSidebar.js?v=20260914hotkey1"></script>
   <script src="js/starforceSuperiorData.js?v=20260824sfLv1"></script>
   <script src="js/starforceRules.js?v=20260916symbol1"></script>
-  <script src="js/item.js?v=20260916symbol1"></script>
+  <script src="js/item.js?v=20260917inv384"></script>
   <script src="js/generatedEquips.js?v=20260823empty2"></script>
   <script src="js/wzImportedEquips.js?v=20260912rmWarArmor1"></script>
   <script src="js/paperdollItems.js?v=20260912rmWarArmor1"></script>
   <script src="js/generatedEquipLoader.js?v=20260825doll1"></script>
-  <script src="js/trunkData.js?v=20260914itemStore1"></script>
-  <script src="js/itemStore.js?v=20260916symbol1"></script>
-  <script src="js/sessionPersistence.js?v=20260916symbol1"></script>
+  <script src="js/trunkData.js?v=20260917vsp1"></script>
+  <script src="js/itemStore.js?v=20260917inv384"></script>
+  <script src="js/sessionPersistence.js?v=20260917vsp1"></script>
   <script src="js/equipTooltipData.js?v=20260917symbolTip1"></script>
   <script src="js/wzImportedSetItems.js?v=20260907set1"></script>
   <script src="js/equipSetData.js?v=20260907set1"></script>
   <script src="js/hoverTooltipGuard.js?v=20260912tipRight2"></script>
-  <script src="js/inventory.js?v=20260916symbol1"></script>
-  <script src="js/trunk.js?v=20260914trunk8"></script>
+  <script src="js/inventory.js?v=20260917vsp3"></script>
+  <script src="js/trunk.js?v=20260917vsp1"></script>
   <script src="js/itemRequestPanel.js?v=20260824req2"></script>
   <script src="js/symbolForce.js?v=20260916forceHud1"></script>
   <script src="js/uiEquip.js?v=20260916symbol8"></script>
@@ -2316,11 +2316,12 @@
   <script src="js/scrollEffect.js?v=20260825recQty1"></script>
   <script src="js/starforceEffectData.js?v=20260820destroy2"></script>
   <script src="js/starforceEffect.js?v=20260915sfSync1"></script>
-  <script src="js/starforceScrollData.js?v=20260915sfTip1"></script>
+  <script src="js/starforceScrollData.js?v=20260917vsp1"></script>
+  <script src="js/vSkillPointData.js?v=20260917vsp2"></script>
   <script src="js/potentialScrollData.js?v=20260824idlePot1"></script>
-  <script src="js/starforce.js?v=20260915sfSync1"></script>
+  <script src="js/starforce.js?v=20260917sfAutoStay1"></script>
   <script src="js/autoEnchantData.js?v=20260911aeDelay1"></script>
-  <script src="js/autoEnchantStarForce.js?v=20260913sfProtectClick2"></script>
+  <script src="js/autoEnchantStarForce.js?v=20260917sfAutoStay1"></script>
   <script src="js/scroll.js?v=20260912tipRight2"></script>
   <script src="js/hammerEffectData.js"></script>
   <script src="js/hammerEffect.js?v=20260910hmCap1"></script>
@@ -2350,7 +2351,7 @@
   <script src="js/throwingStarBullet.js?v=20260911starName1"></script>
   <script src="js/throwingStarStore.js?v=20260911starName1"></script>
   <script src="js/idlePotionPanel.js?v=20260904uipotion5"></script>
-  <script src="js/idleConsumeData.js?v=20260911nl4"></script>
+  <script src="js/idleConsumeData.js?v=20260917vsp2"></script>
   <script src="js/addPotentialStatValues.js"></script>
   <script src="js/lowLevelPotentialBands.js"></script>
   <script src="js/destinyWeaponRestorationCubeValues.js"></script>
@@ -2522,7 +2523,7 @@
 
   <script src="js/bonusStatInspect.js?v=20260910bsIdleSf1"></script>
   <script src="js/potentialInspect.js?v=20260814inspect1"></script>
-  <script src="js/equipTooltip.js?v=20260917symbolTip2"></script>
+  <script src="js/equipTooltip.js?v=20260917sfBrokenStar1"></script>
   <script src="js/equipStatPanel.js?v=20260916symbolFixed1"></script>
   <script src="js/panelDrag.js?v=20260823drag1"></script>
   <script src="js/formatPower.js?v=20260817padWan1"></script>
@@ -2543,19 +2544,19 @@
   <script src="js/damageNumber.js?v=20260917noscale1"></script>
   <script src="js/uiCharacterInfo.js?v=20260917exp1"></script>
   <script src="js/skillJobData.js?v=20260917merc16"></script>
-  <script src="js/skillOverrides.js?v=20260917il3"></script>
-  <script src="js/skillCatalog.js?v=20260917il3"></script>
+  <script src="js/skillOverrides.js?v=20260917spider1"></script>
+  <script src="js/skillCatalog.js?v=20260917spider1"></script>
   <script src="js/skillFormula.js?v=20260917il1"></script>
-  <script src="js/skillPoints.js?v=20260917nlv1"></script>
-  <script src="js/characterSkills.js?v=20260917slot5x5"></script>
+  <script src="js/skillPoints.js?v=20260917vsp1"></script>
+  <script src="js/characterSkills.js?v=20260917vsp1"></script>
   <script src="js/jobChangePanel.js?v=20260912ab1"></script>
   <script src="js/saveBackupPanel.js?v=20260916desktop2"></script>
   <script src="js/skillModifiers.js?v=20260917il1"></script>
   <script src="js/skillComboOrbs.js?v=20260917gpu1"></script>
-  <script src="js/skillBuffRuntime.js?v=20260917huntoverkill2"></script>
+  <script src="js/skillBuffRuntime.js?v=20260917chapone1"></script>
   <script src="js/skillMobStatus.js?v=20260917nlcap4"></script>
   <script src="js/skillTooltip.js?v=20260917vact14"></script>
-  <script src="js/skillBoardPanel.js?v=20260917slot5x5"></script>
+  <script src="js/skillBoardPanel.js?v=20260917vsp1"></script>
   <script src="js/skillEffectPlayer.js?v=20260917hithit1"></script>
   <script src="js/mobEffBarrierData.js?v=20260916barrier1"></script>
   <script src="js/mobEffBarrier.js?v=20260916barrier1"></script>
@@ -2563,20 +2564,20 @@
   <script src="js/skillAreaCast.js?v=20260917merc18"></script>
   <script src="js/skillChannelCast.js?v=20260917merc1"></script>
   <script src="js/skillBlizzardCast.js?v=20260908mercedes1"></script>
-  <script src="js/skillCombat.js?v=20260917huntoverkill2"></script>
+  <script src="js/skillCombat.js?v=20260917chapone1"></script>
   <script src="js/combatEfficiencyPanel.js?v=20260820overspeed1"></script>
   <script src="js/idleHuntProgressMaps.js?v=20260826mob2"></script>
-  <script src="js/idleZonesData.js?v=20260909twilight19"></script>
+  <script src="js/idleZonesData.js?v=20260917esfera"></script>
   <script src="js/idleZoneArtCatalog.js?v=20260823flatbg1"></script>
   <script src="js/idleZones.js?v=20260916forceReq1"></script>
   <script src="js/idleHuntDropData.js?v=20260916forceReq1"></script>
   <script src="js/idleMobData.js?v=20260831mobDmg1"></script>
   <script src="js/idleMobAnim.js?v=20260916damien36"></script>
-  <script src="js/itemDropController.js?v=20260917gpu1"></script>
+  <script src="js/itemDropController.js?v=20260917vsp3"></script>
   <script src="js/idleUiTimer.js?v=20260904timerPos1"></script>
   <script src="js/idlePlayerDeathFlow.js?v=20260905deathOpt1"></script>
   <script src="js/idlePlayerDeathFx.js?v=20260905deathOpt1"></script>
-  <script src="js/idleHunt.js?v=20260917huntoverkill2"></script>
+  <script src="js/idleHunt.js?v=20260917chapone1"></script>
   <script src="js/idleDungeonListData.js?v=20260912dgTimer1m"></script>
   <script src="js/idleDungeonData.js?v=20260912goldDmg2"></script>
   <script src="js/idleDungeon.js?v=20260913dgHudOut1"></script>
@@ -2590,8 +2591,8 @@
   <script src="js/idleBoss.js?v=20260917combatLod2"></script>
   <script src="js/appHotkeys.js?v=20260914hotkey2"></script>
   <script src="js/idleSessionRefresh.js?v=20260916desktop2"></script>
-  <script src="js/idleNpcShopData.js?v=20260911starShop1"></script>
-  <script src="js/uiNpcShop.js?v=20260915sfTip1"></script>
+  <script src="js/idleNpcShopData.js?v=20260917vsp3"></script>
+  <script src="js/uiNpcShop.js?v=20260917vsp3"></script>
   <script src="js/uiToadsHammer.js?v=20260913equipSafe1"></script>
   <script src="js/uiIdleGmDrops.js?v=20260916forceReq1"></script>
   <script src="js/appMode.js?v=20260908sfIdleCat1"></script>
@@ -2599,7 +2600,7 @@
   <script src="js/autoSessionLog.js?v=20260820tools1"></script>
   <script src="js/expectedCostCalc.js?v=20260913sfOfficial1"></script>
   <script src="js/shareCode.js?v=20260820tools1"></script>
-  <script src="js/enchantToolsPanel.js?v=20260821expect2"></script>
-  <script src="js/main.js?v=20260916huntLod1"></script>
+  <script src="js/enchantToolsPanel.js?v=20260917sfBrokenStar1"></script>
+  <script src="js/main.js?v=20260917sfAutoStay1"></script>
 </body>
 </html>

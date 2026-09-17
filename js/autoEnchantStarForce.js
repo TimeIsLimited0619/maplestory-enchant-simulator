@@ -15,6 +15,8 @@ const AutoEnchantStarForceModule = {
   loopDelayMs: 8,
   /** 正服可防爆星：15～17 */
   PROTECT_STARS: [15, 16, 17],
+  /** 自動強化開關預設開啟；卸裝／損壞後仍記住，放下一件再開窗 */
+  preferAuto: true,
 
   canOpen() {
     if (typeof AUTO_ENCHANT_USE_OVERLAY === 'undefined' || !AUTO_ENCHANT_USE_OVERLAY) return false;
@@ -67,13 +69,14 @@ const AutoEnchantStarForceModule = {
     }
 
     this.isOpen = true;
+    this.preferAuto = true;
     const chk = document.getElementById('chkAutoEnhance');
     if (chk) chk.checked = true;
     this.render();
     this.bindCancelKeys();
   },
 
-  close() {
+  close(options = {}) {
     if (this.isRunning) this.cancel();
 
     this.isOpen = false;
@@ -86,8 +89,11 @@ const AutoEnchantStarForceModule = {
       overlay.setAttribute('aria-hidden', 'true');
     }
 
+    // 預設記住自動強化；只有玩家關掉勾選才清掉
+    if (options.keepPrefer === false) this.preferAuto = false;
+    else this.preferAuto = true;
     const chk = document.getElementById('chkAutoEnhance');
-    if (chk) chk.checked = false;
+    if (chk) chk.checked = this.preferAuto;
     this.syncAutoCheckbox();
   },
 
@@ -99,18 +105,20 @@ const AutoEnchantStarForceModule = {
       if (typeof AUTO_ENCHANT_USE_OVERLAY === 'undefined' || !AUTO_ENCHANT_USE_OVERLAY) return;
 
       if (chk.checked) {
+        this.preferAuto = true;
         if (this.canOpen()) {
           this.open();
-        } else {
+        } else if (!StarForceModule?.itemData) {
+          addLog('⚠️ 請先放置裝備。', 'log-fail');
+        } else if (StarForceModule.selectedScrollId) {
           chk.checked = false;
-          if (!StarForceModule?.itemData) {
-            addLog('⚠️ 請先放置裝備。', 'log-fail');
-          } else if (StarForceModule.selectedScrollId) {
-            addLog('⚠️ 使用星力卷軸時無法開啟自動強化視窗。', 'log-fail');
-          }
+          this.preferAuto = false;
+          addLog('⚠️ 使用星力卷軸時無法開啟自動強化視窗。', 'log-fail');
         }
       } else if (this.isOpen) {
-        this.close();
+        this.close({ keepPrefer: false });
+      } else {
+        this.preferAuto = false;
       }
     });
   },
@@ -129,9 +137,16 @@ const AutoEnchantStarForceModule = {
     chk.disabled = !canEnhance
       || this.isRunning
       || StarForceModule?.autoRunning
-      || (!this.isOpen && !this.canOpen());
+      || (!this.isOpen && !this.canOpen() && !this.preferAuto);
+    if (this.preferAuto) chk.checked = true;
     if (this.isOpen && !this.isRunning) {
       chk.checked = true;
+    }
+  },
+
+  tryOpenIfPreferred() {
+    if (this.preferAuto && !this.isOpen && this.canOpen() && !this.isRunning) {
+      this.open();
     }
   },
 
@@ -282,6 +297,7 @@ const AutoEnchantStarForceModule = {
     const maxStar = this.getMaxStar();
     let attempts = 0;
     let destroyed = false;
+    let destroyAtStar = startStars;
 
     this.startProgressAlert();
     this.render();
@@ -319,6 +335,7 @@ const AutoEnchantStarForceModule = {
           || (typeof isStarforceBrokenItem === 'function' && isStarforceBrokenItem(StarForceModule.itemData))
           || (typeof currentEnchantItem !== 'undefined' && !currentEnchantItem)) {
           destroyed = true;
+          destroyAtStar = prev;
           this.isRunning = false;
           break;
         }
@@ -341,8 +358,9 @@ const AutoEnchantStarForceModule = {
     }
 
     if (destroyed) {
+      if (this.isOpen) this.close({ keepPrefer: true });
       addLog(
-        `💥 自動強化因裝備損壞中止：★ ${startStars} → ★ ${StarForceModule.currentStars || startStars}（共 ${attempts} 次）`,
+        `💥 自動強化因裝備損壞中止：於 ★ ${destroyAtStar} 損壞（自 ★ ${startStars}，共 ${attempts} 次）`,
         'log-fail'
       );
     } else if (this.cancelled) {
@@ -370,9 +388,10 @@ const AutoEnchantStarForceModule = {
       cancelled: this.cancelled,
       detail: {
         startStars,
-        endStars: StarForceModule.currentStars,
+        endStars: destroyed ? destroyAtStar : StarForceModule.currentStars,
         targetStar: target,
         destroyed,
+        destroyAtStar: destroyed ? destroyAtStar : undefined,
       },
     });
   },

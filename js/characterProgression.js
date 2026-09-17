@@ -135,7 +135,7 @@ const CharacterProgression = (() => {
     if (key === 'status') return lv <= 5 ? lv : 5 + (lv - 5) * 2;
     if (key === 'atk') return lv * 3;
     if (key === 'exp') return lv <= 10 ? lv * 0.5 : 5 + (lv - 10);
-    if (key === 'arcane') return lv <= 10 ? lv * 5 : 50 + (lv - 10) * 10;
+    if (key === 'arcane') return lv * 0.3;
     return 0;
   }
 

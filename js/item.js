@@ -461,13 +461,19 @@ function isStarforceBrokenItem(item) {
   return Boolean(item?.broken);
 }
 
-/** 是否可進行星力強化（有 tuc，或為阿特拉斯副武器；胸章／機器人除外；已損壞不可） */
-function canUseStarForce(item) {
-  if (isStarforceBrokenItem(item)) return false;
+/** tooltip／星力格子是否顯示星數（含已損壞；強化資格另見 canUseStarForce） */
+function itemShowsStarForceStars(item) {
+  if (!item) return false;
   if (isEnhancementLockedItem(item)) return false;
   if (isPinItem(item)) return false;
   if (isSymbolItem(item)) return false;
   return hasBaseUpgradeSlots(item) || isAtlasOffHandWeapon(item);
+}
+
+/** 是否可進行星力強化（有 tuc，或為阿特拉斯副武器；胸章／機器人除外；已損壞不可） */
+function canUseStarForce(item) {
+  if (isStarforceBrokenItem(item)) return false;
+  return itemShowsStarForceStars(item);
 }
 
 /** 不可使用附加能力（星火）的部位 */
@@ -5610,7 +5616,7 @@ const ORIGINAL_EQUIP_IDS = Object.freeze(Object.keys(ITEM_DATABASE));
 // 3. 當前狀態資料
 // ==========================================
 
-const INVENTORY_SLOT_COUNT = 128;
+const INVENTORY_SLOT_COUNT = 384;
 
 /** 對齊 ITEM_DATABASE 的裝備 ID（字串／補零／去零都視為同一件） */
 function resolveEquipItemId(idOrItem) {

@@ -32,6 +32,15 @@ const CharacterSkills = (() => {
   let jobLineChosen = false;
   /** 放置模式新手裝是否已發放（選完職業路線後只發一次） */
   let idleStarterGranted = false;
+  /** 五轉 SP（僅消耗品累積，不靠升級） */
+  let vSkillPointBonus = 0;
+  /** 舊自動滿級五轉：rev < 目標則清一次等級（升 rev 可再強制重置） */
+  const V_SKILL_LEVELS_RESET_REV = 1;
+  let vSkillLevelsResetRev = 0;
+
+  if (typeof SkillPoints !== 'undefined' && typeof SkillPoints.setVBonusSpProvider === 'function') {
+    SkillPoints.setVBonusSpProvider(() => vSkillPointBonus);
+  }
 
   function emptyLoadout() {
     return Array.from({ length: EQUIP_SLOT_COUNT }, () => null);
@@ -74,12 +83,33 @@ const CharacterSkills = (() => {
 
   function getSpRemainingForRank(rank) {
     if (typeof SkillPoints === 'undefined') return 0;
+    const rankKey = typeof SkillPoints.catalogRank === 'function'
+      ? SkillPoints.catalogRank(rank)
+      : (String(rank) === 'hexa' ? '200' : String(rank || ''));
     return SkillPoints.remainingSpForRank(
       state.currentJobId,
-      rank,
+      rankKey,
       characterLevel(),
       state.levels,
     );
+  }
+
+  function getVSkillPointBonus() {
+    ensureHydrated();
+    return Math.max(0, Math.floor(Number(vSkillPointBonus) || 0));
+  }
+
+  function grantVSkillPoints(amount = 1) {
+    ensureHydrated();
+    const add = Math.floor(Number(amount) || 0);
+    if (add <= 0) return 0;
+    vSkillPointBonus = getVSkillPointBonus() + add;
+    save();
+    if (typeof SessionPersistenceModule !== 'undefined') {
+      SessionPersistenceModule.scheduleSave?.();
+    }
+    if (typeof SkillBoardPanel !== 'undefined') SkillBoardPanel.refresh?.();
+    return add;
   }
 
   function ensureHydrated() {
@@ -94,6 +124,27 @@ const CharacterSkills = (() => {
     return SkillCatalog.listSkills(state.currentJobId);
   }
 
+  /** 清掉所有五轉（rank 200）技能等級；舊「自動滿級」存檔一次遷移 */
+  function resetAllVSkillLevels() {
+    let changed = false;
+    Object.keys(state.levels || {}).forEach((id) => {
+      const skill = typeof SkillCatalog !== 'undefined' ? SkillCatalog.getSkill(id) : null;
+      if (skill && String(skill.rank) === '200' && Number(state.levels[id]) !== 0) {
+        state.levels[id] = 0;
+        changed = true;
+      }
+    });
+    lineSkills().forEach((s) => {
+      if (String(s.rank) !== '200') return;
+      const id = String(s.id);
+      if (state.levels[id] == null || Number(state.levels[id]) !== 0) {
+        state.levels[id] = 0;
+        changed = true;
+      }
+    });
+    return changed;
+  }
+
   function ensureDefaults() {
     state.currentJobId = resolveJobId(state.currentJobId);
     if (typeof SkillCatalog !== 'undefined') {
@@ -102,13 +153,12 @@ const CharacterSkills = (() => {
     }
     lineSkills().forEach((s) => {
       if (state.levels[s.id] == null) state.levels[s.id] = 0;
-      if (String(s.rank) === '200'
-        && typeof SkillPoints !== 'undefined'
-        && SkillPoints.isRankUnlocked('200', characterLevel())) {
-        const max = Math.max(1, Number(s.maxLevel) || 1);
-        if (!(Number(state.levels[s.id]) > 0)) state.levels[s.id] = max;
-      }
     });
+    if (vSkillLevelsResetRev < V_SKILL_LEVELS_RESET_REV) {
+      resetAllVSkillLevels();
+      vSkillLevelsResetRev = V_SKILL_LEVELS_RESET_REV;
+      save();
+    }
     [1, 2, 3].forEach((p) => {
       state.equipped[p] = normalizeLoadout(state.equipped[p]);
       if (!Array.isArray(state.skillLinks[p]) || state.skillLinks[p].length !== 4) {
@@ -143,6 +193,8 @@ const CharacterSkills = (() => {
         // 舊存檔：已選過職業路線視為已發放，避免刷新重複給裝
         idleStarterGranted = jobLineChosen;
       }
+      vSkillPointBonus = Math.max(0, Math.floor(Number(data.vSkillPointBonus) || 0));
+      vSkillLevelsResetRev = Math.max(0, Math.floor(Number(data.vSkillLevelsResetRev) || 0));
     } catch (_) { /* ignore */ }
   }
 
@@ -156,6 +208,8 @@ const CharacterSkills = (() => {
         activePreset: state.activePreset,
         jobLineChosen,
         idleStarterGranted,
+        vSkillPointBonus,
+        vSkillLevelsResetRev,
       }));
     } catch (_) { /* ignore */ }
   }
@@ -170,6 +224,8 @@ const CharacterSkills = (() => {
       activePreset: state.activePreset,
       jobLineChosen,
       idleStarterGranted,
+      vSkillPointBonus,
+      vSkillLevelsResetRev,
     };
   }
 
@@ -189,6 +245,8 @@ const CharacterSkills = (() => {
     jobLineChosen = data.jobLineChosen !== false;
     if (data.idleStarterGranted != null) idleStarterGranted = !!data.idleStarterGranted;
     else idleStarterGranted = jobLineChosen;
+    vSkillPointBonus = Math.max(0, Math.floor(Number(data.vSkillPointBonus) || 0));
+    vSkillLevelsResetRev = Math.max(0, Math.floor(Number(data.vSkillLevelsResetRev) || 0));
     ensureDefaults();
     save();
     if (typeof SkillBoardPanel !== 'undefined') SkillBoardPanel.refresh?.();
@@ -422,6 +480,8 @@ const CharacterSkills = (() => {
     state.activePreset = 1;
     jobLineChosen = false;
     idleStarterGranted = false;
+    vSkillPointBonus = 0;
+    vSkillLevelsResetRev = V_SKILL_LEVELS_RESET_REV;
     try { localStorage.removeItem(STORAGE_KEY); } catch (_) { /* ignore */ }
     ensureDefaults();
     save();
@@ -860,8 +920,13 @@ const CharacterSkills = (() => {
   function resetSkillPoints(rank) {
     ensureHydrated();
     const rankKey = rank != null && String(rank) !== '' ? String(rank) : null;
-    const targets = rankKey
-      ? lineSkills().filter((s) => String(s.rank) === rankKey)
+    const catalog = rankKey
+      ? ((typeof SkillPoints !== 'undefined' && typeof SkillPoints.catalogRank === 'function')
+        ? SkillPoints.catalogRank(rankKey)
+        : (rankKey === 'hexa' ? '200' : rankKey))
+      : null;
+    const targets = catalog
+      ? lineSkills().filter((s) => String(s.rank) === catalog)
       : lineSkills();
     targets.forEach((s) => {
       const id = String(s.id);
@@ -895,7 +960,9 @@ const CharacterSkills = (() => {
   function getSpTotal(rank) {
     ensureHydrated();
     if (typeof SkillPoints === 'undefined') return 0;
-    const rankKey = rank != null && String(rank) !== '' ? String(rank) : '10';
+    const rankKey = (typeof SkillPoints.catalogRank === 'function')
+      ? SkillPoints.catalogRank(rank != null && String(rank) !== '' ? rank : '10')
+      : (String(rank) === 'hexa' ? '200' : (rank != null && String(rank) !== '' ? String(rank) : '10'));
     return SkillPoints.totalSpEarnedForRank(
       state.currentJobId,
       rankKey,
@@ -906,7 +973,9 @@ const CharacterSkills = (() => {
   function getSpSpent(rank) {
     ensureHydrated();
     if (typeof SkillPoints === 'undefined') return 0;
-    const rankKey = rank != null && String(rank) !== '' ? String(rank) : '10';
+    const rankKey = (typeof SkillPoints.catalogRank === 'function')
+      ? SkillPoints.catalogRank(rank != null && String(rank) !== '' ? rank : '10')
+      : (String(rank) === 'hexa' ? '200' : (rank != null && String(rank) !== '' ? String(rank) : '10'));
     return SkillPoints.spentSpForRank(state.levels, state.currentJobId, rankKey);
   }
 
@@ -947,6 +1016,8 @@ const CharacterSkills = (() => {
     unequipSlot,
     levelUp,
     resetSkillPoints,
+    grantVSkillPoints,
+    getVSkillPointBonus,
     getPanelSkills,
     getSpRemaining,
     getSpTotal,

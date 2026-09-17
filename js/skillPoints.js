@@ -2,6 +2,7 @@
  * 技能點：10 等起每級給 SP；10／30／60／100 給 4 點，其餘 3 點。
  * SP 依 rank 分池；30／60／100 轉職等級同時注入前後兩階（例：30 等→10+30 各 +4）。
  * 101～200 等一般升級 SP 皆歸四轉（100）；Hyper 僅依 reqLevel 里程碑額外 +2（獨立池）。
+ * 五轉（rank 200／hexa）不靠升級發點，只靠消耗品累積的 bonusSp。
  */
 const SkillPoints = (() => {
   const SP_START_LEVEL = 10;
@@ -20,6 +21,13 @@ const SkillPoints = (() => {
     hexa: 200,
   };
 
+  /** 額外五轉 SP（消耗品等）；由 CharacterSkills 注入 */
+  let vBonusSpProvider = () => 0;
+
+  function setVBonusSpProvider(fn) {
+    vBonusSpProvider = typeof fn === 'function' ? fn : (() => 0);
+  }
+
   function clampLevel(level) {
     return Math.max(1, Math.min(300, Math.floor(Number(level) || 1)));
   }
@@ -34,7 +42,7 @@ const SkillPoints = (() => {
   /**
    * 升到 level 當下，各 rank 池獲得的 SP 歸屬（可多池）
    * 10~29→[10]；30→[10,30]；31~59→[30]；60→[30,60]；61~99→[60]；
-   * 100→[60,100]；101~200→[100]；201+→[100]；hyper 無一般升級 SP
+   * 100→[60,100]；101~200→[100]；201+→[100]；hyper／五轉無一般升級 SP
    */
   function spRanksForLevel(level) {
     const lv = Math.floor(Number(level) || 0);
@@ -111,7 +119,8 @@ const SkillPoints = (() => {
 
   /** 指定 rank 在 characterLevel 前累積的一般升級 SP */
   function baseSpTotalForRank(rank, characterLevel) {
-    const rankKey = String(rank || '');
+    const rankKey = catalogRank(rank);
+    if (rankKey === '200') return 0;
     const lv = clampLevel(characterLevel);
     let sum = 0;
     for (let i = SP_START_LEVEL; i <= lv; i += 1) {
@@ -141,7 +150,10 @@ const SkillPoints = (() => {
   }
 
   function totalSpEarnedForRank(jobId, rank, characterLevel) {
-    const rankKey = String(rank || '');
+    const rankKey = catalogRank(rank);
+    if (rankKey === '200') {
+      return Math.max(0, Math.floor(Number(vBonusSpProvider()) || 0));
+    }
     let total = baseSpTotalForRank(rankKey, characterLevel);
     if (rankKey === 'hyper') total += hyperSpBonusAtLevel(jobId, characterLevel);
     return total;
@@ -151,12 +163,12 @@ const SkillPoints = (() => {
     return SP_RANK_ORDER.reduce(
       (sum, rank) => sum + totalSpEarnedForRank(jobId, rank, characterLevel),
       0,
-    );
+    ) + totalSpEarnedForRank(jobId, '200', characterLevel);
   }
 
   function spentSpForRank(levels, jobId, rank) {
     const map = levels || {};
-    const rankKey = String(rank || '');
+    const rankKey = catalogRank(rank);
     let sum = 0;
     lineSkills(jobId).forEach((skill) => {
       if (String(skill.rank || '') !== rankKey) return;
@@ -169,7 +181,7 @@ const SkillPoints = (() => {
     return SP_RANK_ORDER.reduce(
       (sum, rank) => sum + spentSpForRank(levels, jobId, rank),
       0,
-    );
+    ) + spentSpForRank(levels, jobId, '200');
   }
 
   function remainingSpForRank(jobId, rank, characterLevel, levels) {
@@ -183,7 +195,7 @@ const SkillPoints = (() => {
     return SP_RANK_ORDER.reduce(
       (sum, rank) => sum + remainingSpForRank(jobId, rank, characterLevel, levels),
       0,
-    );
+    ) + remainingSpForRank(jobId, '200', characterLevel, levels);
   }
 
   return {
@@ -191,6 +203,7 @@ const SkillPoints = (() => {
     SP_FOURTH_JOB_MAX_LEVEL,
     SP_RANK_ORDER,
     HYPER_SP_PER_MILESTONE,
+    setVBonusSpProvider,
     spGainForLevel,
     spRanksForLevel,
     spRankForLevel,

@@ -49,6 +49,7 @@ function trunkConsumeIdentity(entry) {
   if (type === (T.EXCEPTIONAL_HAMMER || 'exceptional_hammer')) return `eh:${entry.hammerId}`;
   if (type === (T.SOUL || 'soul')) return `soul:${entry.soulId}`;
   if (type === (T.RECOVERY_CARD || 'recovery_card')) return 'recovery_card';
+  if (type === (T.V_SKILL_POINT || 'v_skill_point')) return 'v_skill_point';
   if (type === (T.POTION || 'potion')) return `pot:${entry.itemId}`;
   if (type === (T.THROWING_STAR || 'throwing_star')) return `star:${entry.itemId}`;
   return `misc:${type}:${entry.scrollId || entry.cubeId || entry.hammerId || entry.itemId || entry.soulId || ''}`;
@@ -124,6 +125,16 @@ function trunkAdjustConsumeCount(entry, delta) {
     const cur = Math.max(0, Math.floor(Number(playerRecoveryCardCount) || 0));
     if (sign < 0 && cur < amount) return false;
     playerRecoveryCardCount = Math.max(0, cur + sign * amount);
+    return true;
+  }
+  if (type === (T.V_SKILL_POINT || 'v_skill_point')) {
+    if (typeof playerVSkillPointCount === 'undefined') return false;
+    const cur = Math.max(0, Math.floor(Number(playerVSkillPointCount) || 0));
+    if (sign < 0 && cur < amount) return false;
+    playerVSkillPointCount = Math.max(0, cur + sign * amount);
+    if (sign > 0 && typeof ensureVSkillPointConsumeInventory === 'function') {
+      ensureVSkillPointConsumeInventory();
+    }
     return true;
   }
   if (type === (T.POTION || 'potion')) {

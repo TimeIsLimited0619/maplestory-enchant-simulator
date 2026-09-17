@@ -98,6 +98,14 @@ function updateCategoryTabStates() {
 
   const activeCat = getActiveCategory();
   if (activeCat !== 'none' && isCategoryDisabled(activeCat)) {
+    // 星力損壞當下／即將卸下：不要踢回 none，方便接著衝下一件
+    if (
+      activeCat === 'star'
+      && typeof isStarforceBrokenItem === 'function'
+      && isStarforceBrokenItem(currentEnchantItem)
+    ) {
+      return;
+    }
     switchCategoryTab('none', null);
   }
 }

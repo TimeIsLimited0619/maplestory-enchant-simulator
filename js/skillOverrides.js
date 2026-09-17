@@ -691,12 +691,15 @@ const SkillOverrides = (() => {
       extraSkill: [{ skill: '400001011' }],
     },
     '400001011': { skipPanel: true, equipable: false },
-    // 蜘蛛之鏡：先空間崩壞，再召喚鏡中蜘蛛
+    // 蜘蛛之鏡：後續 BOSS 解鎖；先隱藏（戰鬥設定保留）
     // hitMs＝WZ hit/0 delayedTime 1350（不是 effect 第 6 幀）
     '400001039': {
+      skipPanel: true,
+      equipable: false,
       summonSkillId: '400001040',
       areaCast: { hitMs: 1350, layers: ['effect', 'screen'], fieldFx: true },
     },
+    '400001040': { skipPanel: true, equipable: false },
     // 空間斬：screen 為客戶端視窗 overlay（WZ origin、蓋滿 IdleZone）
     // special 0–3 切圖光效用原尺寸；hitMs＝WZ hit/0 delayedTime 2040
     '400011027': {
@@ -744,6 +747,22 @@ const SkillOverrides = (() => {
       h: '永久：1～4轉已學習技能等級+1（4轉可超過上限）\\n超技能、五轉、六轉與本技能不受影響\\n[被動效果：狀態異常抗性 #asrR增加]',
       desc: '永久提升自身 1～4 轉已學習技能等級。4 轉可超過最大等級，其餘以最大等級為限。',
       commonRemove: ['x', 'time', 'hpCon', 'cooltime', 'lt', 'rb'],
+    },
+    // 實用的進階祝福：常駐攻／魔／防／HP／MP／全屬
+    '400000005': {
+      type: 'passive',
+      equipable: false,
+      h: '永久：攻擊力#padX、魔力#madX、防禦力#pddX、最大HP#mhpX、最大MP#mmpX增加\\n[被動效果：全屬性增加#strX]',
+      desc: '永久增加攻擊力、魔力、防禦力、最大HP、最大MP。祝福、進階祝福、實用的進階祝福中，僅套用較高數值的效果。',
+      commonRemove: ['time', 'hpCon', 'cooltime', 'lt', 'rb'],
+    },
+    // 實用的最終極速：常駐攻速＋1／全屬
+    '400000006': {
+      type: 'passive',
+      equipable: false,
+      h: '永久：攻擊速度增加1階段\\n[被動效果：全屬性增加#strX]',
+      desc: '永久使自己的攻擊速度額外增加1階段。最終極速和實用的最終極速中，僅套用較高數值的效果。',
+      commonRemove: ['time', 'hpCon', 'cooltime', 'lt', 'rb'],
     },
     // 實用的祈禱：只保留經驗加乘
     '400001020': {

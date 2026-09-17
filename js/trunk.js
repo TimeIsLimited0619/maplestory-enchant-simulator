@@ -512,6 +512,10 @@ const TrunkModule = {
       const c = typeof RECOVERY_CARD !== 'undefined' ? RECOVERY_CARD : null;
       return { icon: c?.icon, name: c?.name || '恢復卡', count };
     }
+    if (type === (T.V_SKILL_POINT || 'v_skill_point')) {
+      const item = typeof V_SKILL_POINT_ITEM !== 'undefined' ? V_SKILL_POINT_ITEM : null;
+      return { icon: item?.icon, name: item?.name || '五轉技能點數', count };
+    }
     if (type === (T.POTION || 'potion')) {
       const p = typeof IdlePotionStore !== 'undefined' ? IdlePotionStore.get(entry.itemId) : null;
       return {

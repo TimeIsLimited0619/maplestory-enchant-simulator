@@ -182,6 +182,12 @@ const ItemDropController = (() => {
         icon = getExceptionalHammerById(row.hammerId)?.icon || '';
       } else if (!icon && row.consumeType === 'soul' && typeof getSoulMaterialById === 'function') {
         icon = getSoulMaterialById(row.soulId)?.icon || '';
+      } else if (!icon && (row.consumeType === 'v_skill_point' || id === 'v_skill_point')
+        && typeof V_SKILL_POINT_ITEM !== 'undefined') {
+        icon = V_SKILL_POINT_ITEM.icon || '';
+      } else if (!icon && (row.consumeType === 'recovery_card' || id === 'recovery_card')
+        && typeof RECOVERY_CARD !== 'undefined') {
+        icon = RECOVERY_CARD.icon || '';
       }
     }
 
@@ -224,6 +230,14 @@ const ItemDropController = (() => {
     }
     if (row.consumeType === 'potential_scroll' && typeof getPotentialScrollById === 'function') {
       return getPotentialScrollById(row.scrollId)?.name || row.name || row.scrollId || '潛能捲';
+    }
+    if (row.consumeType === 'v_skill_point' || id === 'v_skill_point') {
+      return (typeof V_SKILL_POINT_ITEM !== 'undefined' ? V_SKILL_POINT_ITEM.name : '')
+        || row.name || 'V技能核心';
+    }
+    if (row.consumeType === 'recovery_card' || id === 'recovery_card') {
+      return (typeof RECOVERY_CARD !== 'undefined' ? RECOVERY_CARD.name : '')
+        || row.name || '恢復卡';
     }
     return row.name || id || '掉落物';
   }

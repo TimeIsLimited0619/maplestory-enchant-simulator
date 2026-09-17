@@ -105,8 +105,8 @@ const EnchantToolsPanel = {
         ? formatMesoParts(e.estimatedCost)
         : String(Math.round(e.estimatedCost || 0));
       const time = e.ts ? new Date(e.ts).toLocaleString() : '';
-      const detail = e.detail?.cubeName || e.detail?.targetStar != null
-        ? `<span class="etp-log-sub">${e.detail.cubeName || ''}${e.detail.targetStar != null ? ` → ★${e.detail.targetStar}` : ''}</span>`
+      const detail = e.detail?.cubeName || e.detail?.targetStar != null || e.detail?.destroyed
+        ? `<span class="etp-log-sub">${e.detail.cubeName || ''}${e.detail.targetStar != null ? ` → ★${e.detail.targetStar}` : ''}${e.detail.destroyed ? ` · 於 ★${e.detail.destroyAtStar ?? e.detail.endStars ?? '?'} 損壞` : ''}</span>`
         : '';
       return `
         <div class="etp-log-item">
