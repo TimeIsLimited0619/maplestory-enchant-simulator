@@ -1,7 +1,7 @@
 {
   "name": "maplestory-enchant-simulator",
   "productName": "MapleEnchantSimulator",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "description": "楓之谷做裝模擬器桌面版（本機離線執行）。",
   "author": "時閒人",
