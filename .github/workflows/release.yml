@@ -51,13 +51,15 @@ jobs:
           set -euo pipefail
           TAG="${GITHUB_REF_NAME}"
           BASE="${R2_PUBLIC_BASE_URL%/}"
-          NOTES="桌面版 ${TAG}
-
-安裝檔與自動更新改由 Cloudflare R2 提供（較適合台灣網路）：
-- Setup: ${BASE}/desktop/MapleEnchantSimulator-Setup-${TAG#v}.exe
-- 更新目錄: ${BASE}/desktop/
-
-此 GitHub Release 只放發佈說明，不再上傳大型 zip。"
+          VER="${TAG:1}"
+          NOTES=$(printf '%s\n' \
+            "桌面版 ${TAG}" \
+            "" \
+            "安裝檔與自動更新改由 Cloudflare R2 提供（較適合台灣網路）：" \
+            "- Setup: ${BASE}/desktop/MapleEnchantSimulator-Setup-${VER}.exe" \
+            "- 更新目錄: ${BASE}/desktop/" \
+            "" \
+            "此 GitHub Release 只放發佈說明，不再上傳大型 zip。")
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release edit "$TAG" --notes "$NOTES"
           else

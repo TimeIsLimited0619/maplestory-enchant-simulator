@@ -46,12 +46,13 @@ jobs:
           set -euo pipefail
           TAG="${GITHUB_REF_NAME}"
           BASE="${R2_PUBLIC_BASE_URL%/}"
-          NOTES="資源包 ${TAG}
-
-BOSS／技能 zip 已上傳到 R2：
-${BASE}/assets/
-
-此 GitHub Release 為備註用（prerelease），不作為程式自動更新來源。"
+          NOTES=$(printf '%s\n' \
+            "資源包 ${TAG}" \
+            "" \
+            "BOSS／技能 zip 已上傳到 R2：" \
+            "${BASE}/assets/" \
+            "" \
+            "此 GitHub Release 為備註用（prerelease），不作為程式自動更新來源。")
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release edit "$TAG" --notes "$NOTES"
           else
